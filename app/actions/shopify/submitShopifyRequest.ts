@@ -22,6 +22,15 @@ export async function submitShopifyRequest(formData: {
       }
     });
 
+    // Mettre à jour ou créer l'utilisateur Shopify avec les champs name et surname
+    await prisma.shopifyUser.update({
+      where: { email: formData.email },
+      data: {
+        name: formData.lastName,
+        surname: formData.firstName
+      }
+    });
+
     // Actualiser le dashboard après modification
     revalidatePath('/dashboard');
     
