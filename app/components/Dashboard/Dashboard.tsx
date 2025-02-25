@@ -13,6 +13,7 @@ export default function Dashboard() {
   const { user, primaryWallet } = useDynamicContext();
   const [isLoading, setIsLoading] = useState(true);
   const [shopifyGranted, setShopifyGranted] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
 
@@ -47,6 +48,23 @@ export default function Dashboard() {
           if (result.data && result.data.length > 0) {
             // Utiliser seulement isShopifyGranted pour la compatibilité avec le code existant
             setShopifyGranted(result.data[0].isShopifyGranted);
+          }
+          
+          // Vérifier si l'utilisateur est admin
+          const adminResponse = await fetch('/api/shopify/isAdmin', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              walletAddress: primaryWallet.address
+            }),
+          });
+          
+          if (adminResponse.ok) {
+            const adminResult = await adminResponse.json();
+            console.log('adminResult', adminResult);
+            setIsAdmin(adminResult.isAdmin);
           }
           
           setIsLoading(false);
@@ -119,6 +137,17 @@ export default function Dashboard() {
               onClick={() => router.push('/shopify/collection')}
             >
               Ma Collection
+            </button>
+          </div>
+        ) : isAdmin ? (
+          <div className="dashboard-card">
+            <h3>Panneau d'Administration</h3>
+            <p>Accès aux fonctionnalités d'administration.</p>
+            <button 
+              className="dashboard-button" 
+              onClick={() => router.push('/notifications')}
+            >
+              Voir notifications
             </button>
           </div>
         ) : (
