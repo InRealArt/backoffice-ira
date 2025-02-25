@@ -115,3 +115,27 @@
 .container.dark .footer-image.dark {
   display: inline;
 }
+
+.content-area {
+  width: 100%;
+  transition: margin-left 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.content-area.with-sidebar {
+  margin-left: 220px;
+  width: calc(100% - 220px);
+}
+
+.welcome-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.container.dark .welcome-title {
+  color: #fff;
+}

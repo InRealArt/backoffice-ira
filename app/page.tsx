@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import DynamicMethods from "@/app/components/Methods";
 import './page.css';
 import Navbar from './components/Navbar/Navbar';
+import SideMenu from './components/SideMenu/SideMenu';
 
 const checkIsDarkSchemePreferred = () => {
   if (typeof window !== 'undefined') {
@@ -28,6 +29,7 @@ export default function Main() {
   return (
     <div className={`container ${isDarkMode ? 'dark' : 'light'}`}>
       <Navbar />
+      <SideMenu />
       <div className="header">
         {/*
         <img className="logo" src={isDarkMode ? "/logo-light.png" : "/logo-dark.png"} alt="dynamic" />
