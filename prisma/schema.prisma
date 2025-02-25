@@ -416,14 +416,14 @@ model Transaction {
 }
 
 model ShopifyUser {
-  id            Int               @id @default(autoincrement())
-  email         String?           @unique
-  walletAddress String            @unique
-  lastLogin     DateTime          @db.Timestamp(6)
-  userMetadata  Json
-  role          ShopifyUserRoles?
-  isShopifyGranted Boolean          @default(false)
-  createdAt     DateTime          @default(now()) @db.Timestamp(6)
+  id               Int               @id @default(autoincrement())
+  email            String?           @unique
+  walletAddress    String            @unique
+  lastLogin        DateTime          @db.Timestamp(6)
+  userMetadata     Json
+  role             ShopifyUserRoles?
+  isShopifyGranted Boolean           @default(false)
+  createdAt        DateTime          @default(now()) @db.Timestamp(6)
 
   @@index([email])
   @@index([walletAddress])
@@ -431,20 +431,20 @@ model ShopifyUser {
 }
 
 model Notification {
-  id       Int              @id @default(autoincrement())
+  id       Int                 @id @default(autoincrement())
   from     String
-  sentDate DateTime         @default(now())
+  sentDate DateTime            @default(now())
   subject  NotificationSubject
-  
+  complete Boolean             @default(false)
+
   @@schema("public")
 }
 
 enum NotificationSubject {
   requestShopifyMember
-  
+
   @@schema("public")
 }
-
 
 enum ShopifyUserRoles {
   admin

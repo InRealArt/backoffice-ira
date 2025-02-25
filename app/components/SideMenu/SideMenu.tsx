@@ -11,6 +11,7 @@ export default function SideMenu() {
   const { primaryWallet } = useDynamicContext();
   const [activeItem, setActiveItem] = useState('dashboard');
   const [canAccessCollection, setCanAccessCollection] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   
   useEffect(() => {
@@ -38,6 +39,22 @@ export default function SideMenu() {
           console.log('Résultat API:', result);
           console.log('hasAccess', result.hasAccess);
           setCanAccessCollection(result.hasAccess === true);
+          
+          // Vérifier si l'utilisateur est admin
+          const adminResponse = await fetch('/api/shopify/isAdmin', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              walletAddress: primaryWallet.address
+            }),
+          });
+          
+          if (adminResponse.ok) {
+            const adminResult = await adminResponse.json();
+            setIsAdmin(adminResult.isAdmin);
+          }
           
         } catch (err) {
           console.error('Erreur lors de la vérification des accès:', err);
@@ -68,12 +85,21 @@ export default function SideMenu() {
           Dashboard
         </li>
         
-        {canAccessCollection === true && (
+        {canAccessCollection && !isAdmin && (
           <li 
             className={`menu-item ${activeItem === 'collection' ? 'active' : ''}`}
             onClick={() => handleNavigation('/shopify/collection', 'collection')}
           >
             Ma Collection
+          </li>
+        )}
+        
+        {isAdmin && (
+          <li 
+            className={`menu-item ${activeItem === 'notifications' ? 'active' : ''}`}
+            onClick={() => handleNavigation('/notifications', 'notifications')}
+          >
+            Notifications
           </li>
         )}
         
