@@ -7,12 +7,14 @@ import ShopifyRequestModal from '../Shopify/ShopifyRequestModal';
 import './Dashboard.css';
 import toast from 'react-hot-toast';
 import { submitShopifyRequest } from '@/app/actions/shopify/submitShopifyRequest';
+import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const { user, primaryWallet } = useDynamicContext();
   const [isLoading, setIsLoading] = useState(true);
   const [shopifyGranted, setShopifyGranted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const router = useRouter();
 
   const truncateAddress = (address: string | undefined) => {
     if (!address) return 'Non défini';
@@ -57,7 +59,7 @@ export default function Dashboard() {
   
     checkShopifyStatus();
   }, [user, primaryWallet]);
-  
+
   const handleOpenModal = () => {
     setIsModalOpen(true);
   };
@@ -108,7 +110,18 @@ export default function Dashboard() {
           <p><strong>Statut Shopify:</strong> {shopifyGranted ? 'Connecté' : 'Non connecté'}</p>
         </div>
 
-        {!shopifyGranted && (
+         {shopifyGranted ? (
+          <div className="dashboard-card">
+            <h3>Accès Collection</h3>
+            <p>Vous êtes un membre du Shopify d'InRealArt.</p>
+            <button 
+              className="dashboard-button" 
+              onClick={() => router.push('/shopify/collection')}
+            >
+              Ma Collection
+            </button>
+          </div>
+        ) : (
           <div className="dashboard-card">
             <h3>Connexion Shopify</h3>
             <p>Vous n'êtes pas encore un membre du Shopify d'InRealArt.</p>
