@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import ShopifyRequestModal from '../Shopify/ShopifyRequestModal';
 import './Dashboard.css';
 import toast from 'react-hot-toast';
+import { submitShopifyRequest } from '@/app/actions/shopify/submitShopifyRequest';
 
 export default function Dashboard() {
   const { user, primaryWallet } = useDynamicContext();
@@ -48,34 +49,29 @@ export default function Dashboard() {
 
   const handleSubmitShopifyRequest = async (formData: { firstName: string; lastName: string }) => {
     if (user?.email) {
-      try {
-        // Enregistrer la demande d'adhésion Shopify
-        const response = await fetch('/api/shopify/registerNotifications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: user.email,
-            subject: 'requestShopifyMember'
-          }),
-        });
-  
-        if (!response.ok) {
-          throw new Error('Erreur lors de l\'envoi de la demande');
+        try {
+          // Utiliser le server action à la place de l'appel API direct
+          const result = await submitShopifyRequest({
+            email: user.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName
+          });
+    
+          if (!result.success) {
+            throw new Error(result.error || "Erreur inconnue");
+          }
+    
+          // Fermer la modale après soumission
+          setIsModalOpen(false);
+          
+          // Afficher un message de succès
+          toast.success('Votre demande a été envoyée avec succès. Nous la traiterons dans les plus brefs délais.');
+          
+        } catch (error) {
+          console.error('Erreur lors de l\'envoi du formulaire:', error);
+          toast.error('Une erreur est survenue lors de l\'envoi de votre demande. Veuillez réessayer.');
         }
-  
-        // Fermer la modale après soumission
-        setIsModalOpen(false);
-        
-        // Afficher un message de succès
-        toast.success('Votre demande a été envoyée avec succès .Nous la traiterons dans les plus brefs délais.');
-        
-      } catch (error) {
-        console.error('Erreur lors de l\'envoi du formulaire:', error);
-        toast.error('Une erreur est survenue lors de l\'envoi de votre demande. Veuillez réessayer.');
       }
-    }
   };
 
 
