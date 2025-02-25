@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
             complete: false
         }
     });
-
+    console.log('notifications', notifications);
     return NextResponse.json({ notifications }, { status: 200 });
   } catch (error) {
     console.error('Erreur lors de la récupération des notifications:', error);
