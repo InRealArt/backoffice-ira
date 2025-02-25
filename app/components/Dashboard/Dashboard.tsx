@@ -14,18 +14,37 @@ export default function Dashboard() {
   const [shopifyGranted, setShopifyGranted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const truncateAddress = (address: string | undefined) => {
+    if (!address) return 'Non défini';
+    const start = address.substring(0, 6);
+    const end = address.substring(address.length - 4);
+    return `${start}...${end}`;
+  };
+
   useEffect(() => {
     const checkShopifyStatus = async () => {
       if (user && primaryWallet) {
         try {
-          const { data, error } = await supabase
-            .from('ShopifyUser')
-            .select('isShopifyGranted')
-            .eq('walletAddress', primaryWallet.address)
-            .single();
+          // Utiliser la nouvelle route API au lieu de l'appel Supabase direct
+          const response = await fetch('/api/shopify/isArtistAndGranted', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              walletAddress: primaryWallet.address
+            }),
+          });
           
-          if (data) {
-            setShopifyGranted(data.isShopifyGranted);
+          if (!response.ok) {
+            throw new Error(`Erreur API: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          
+          if (result.data && result.data.length > 0) {
+            // Utiliser seulement isShopifyGranted pour la compatibilité avec le code existant
+            setShopifyGranted(result.data[0].isShopifyGranted);
           }
           
           setIsLoading(false);
@@ -35,10 +54,10 @@ export default function Dashboard() {
         }
       }
     };
-
+  
     checkShopifyStatus();
   }, [user, primaryWallet]);
-
+  
   const handleOpenModal = () => {
     setIsModalOpen(true);
   };
@@ -85,7 +104,7 @@ export default function Dashboard() {
         <div className="dashboard-card">
           <h3>Informations utilisateur</h3>
           <p><strong>Email:</strong> {user?.email || 'Non défini'}</p>
-          <p><strong>Adresse wallet:</strong> {primaryWallet?.address || 'Non défini'}</p>
+          <p><strong>Adresse wallet:</strong> <span className="small-text">{truncateAddress(primaryWallet?.address)}</span></p>
           <p><strong>Statut Shopify:</strong> {shopifyGranted ? 'Connecté' : 'Non connecté'}</p>
         </div>
 
