@@ -4,13 +4,15 @@ import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import './SideMenu.css';
+import { useRouter } from 'next/navigation';
 
 export default function SideMenu() {
   const isLoggedIn = useIsLoggedIn();
   const { primaryWallet } = useDynamicContext();
   const [activeItem, setActiveItem] = useState('dashboard');
   const [canAccessCollection, setCanAccessCollection] = useState(false);
-
+  const router = useRouter();
+  
   useEffect(() => {
     const checkUserAccess = async () => {
       if (isLoggedIn && primaryWallet) {
@@ -50,12 +52,18 @@ export default function SideMenu() {
   
   if (!isLoggedIn) return null;
 
+  const handleNavigation = (route: string, menuItem: string) => {
+    setActiveItem(menuItem);
+    router.push(route);
+  };
+
+
   return (
     <div className="side-menu">
       <ul className="menu-list">
         <li 
           className={`menu-item ${activeItem === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setActiveItem('dashboard')}
+          onClick={() => handleNavigation('/dashboard', 'dashboard')}
         >
           Dashboard
         </li>
@@ -63,7 +71,7 @@ export default function SideMenu() {
         {canAccessCollection === true && (
           <li 
             className={`menu-item ${activeItem === 'collection' ? 'active' : ''}`}
-            onClick={() => setActiveItem('collection')}
+            onClick={() => handleNavigation('/shopify/collection', 'collection')}
           >
             Ma Collection
           </li>
