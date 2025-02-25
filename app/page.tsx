@@ -5,6 +5,7 @@ import { DynamicWidget } from '@dynamic-labs/sdk-react-core';
 import { useState, useEffect } from 'react';
 import DynamicMethods from "@/app/components/Methods";
 import './page.css';
+import Navbar from './components/Navbar/Navbar';
 
 const checkIsDarkSchemePreferred = () => {
   if (typeof window !== 'undefined') {
@@ -26,6 +27,7 @@ export default function Main() {
 
   return (
     <div className={`container ${isDarkMode ? 'dark' : 'light'}`}>
+      <Navbar />
       <div className="header">
         {/*
         <img className="logo" src={isDarkMode ? "/logo-light.png" : "/logo-dark.png"} alt="dynamic" />
@@ -37,7 +39,7 @@ export default function Main() {
       </div>
       <div className="modal">
       <h1 className="welcome-title">Welcome to InRealArt backoffice</h1>
-        <DynamicWidget />
+        
         
       </div>
     </div> 
