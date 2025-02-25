@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core';
-import { prisma } from '@/lib/prisma';
+import { useRouter } from 'next/navigation';
 
 export default function AuthObserver() {
   const isLoggedIn = useIsLoggedIn();
   const { user, primaryWallet } = useDynamicContext();
+  const router = useRouter();
+  const [previousLoginState, setPreviousLoginState] = useState(false);
 
   useEffect(() => {
     const saveShopifyUserToPrisma = async () => {
@@ -29,6 +31,11 @@ export default function AuthObserver() {
             console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', errorData);
           } else {
             console.log('Utilisateur enregistré avec succès');
+            
+            // Si l'utilisateur vient de se connecter, rediriger vers le dashboard
+            if (!previousLoginState && isLoggedIn) {
+              router.push('/dashboard');
+            }
           }
         } catch (err) {
           console.error('Exception lors de l\'enregistrement:', err);
@@ -37,7 +44,10 @@ export default function AuthObserver() {
     };
 
     saveShopifyUserToPrisma();
-  }, [isLoggedIn, user, primaryWallet]);
+    
+    // Mettre à jour l'état précédent
+    setPreviousLoginState(isLoggedIn);
+  }, [isLoggedIn, user, primaryWallet, previousLoginState, router]);
 
   return null;
 }
