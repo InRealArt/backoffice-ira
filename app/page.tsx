@@ -7,6 +7,7 @@ import DynamicMethods from "@/app/components/Methods";
 import './page.css';
 import Navbar from './components/Navbar/Navbar';
 import SideMenu from './components/SideMenu/SideMenu';
+import AuthObserver from './components/Auth/AuthObserver';
 
 const checkIsDarkSchemePreferred = () => {
   if (typeof window !== 'undefined') {
@@ -28,6 +29,7 @@ export default function Main() {
 
   return (
     <div className={`container ${isDarkMode ? 'dark' : 'light'}`}>
+      <AuthObserver />
       <Navbar />
       <SideMenu />
       <div className="header">

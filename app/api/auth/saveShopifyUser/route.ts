@@ -23,7 +23,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, user });
   } catch (error) {
-    console.error('Error saving user:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to save user' },
       { status: 500 }
