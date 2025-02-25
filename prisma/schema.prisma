@@ -430,6 +430,22 @@ model ShopifyUser {
   @@schema("public")
 }
 
+model Notification {
+  id       Int              @id @default(autoincrement())
+  from     String
+  sentDate DateTime         @default(now())
+  subject  NotificationSubject
+  
+  @@schema("public")
+}
+
+enum NotificationSubject {
+  requestShopifyMember
+  
+  @@schema("public")
+}
+
+
 enum ShopifyUserRoles {
   admin
   artist

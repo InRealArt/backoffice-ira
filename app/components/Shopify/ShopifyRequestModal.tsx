@@ -16,11 +16,11 @@ export default function ShopifyRequestModal({ isOpen, onClose, userEmail, onSubm
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({ firstName, lastName });
   };
-
+  
   return (
     <div className="modal-overlay">
       <div className="modal-container">
@@ -30,7 +30,7 @@ export default function ShopifyRequestModal({ isOpen, onClose, userEmail, onSubm
         
         <h2 className="modal-title">Devenir membre Shopify</h2>
         
-        <form className="modal-form" onSubmit={handleSubmit}>
+        <form className="modal-form" onSubmit={handleSubmitForm}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input 

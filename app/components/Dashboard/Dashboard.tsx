@@ -5,6 +5,7 @@ import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { supabase } from '@/lib/supabase';
 import ShopifyRequestModal from '../Shopify/ShopifyRequestModal';
 import './Dashboard.css';
+import toast from 'react-hot-toast';
 
 export default function Dashboard() {
   const { user, primaryWallet } = useDynamicContext();
@@ -45,21 +46,38 @@ export default function Dashboard() {
     setIsModalOpen(false);
   };
 
-  const handleSubmitForm = async (formData: { firstName: string; lastName: string }) => {
-    if (user && primaryWallet) {
+  const handleSubmitShopifyRequest = async (formData: { firstName: string; lastName: string }) => {
+    if (user?.email) {
       try {
-        // Ici, vous pouvez envoyer les données à votre API
-        console.log('Données du formulaire:', formData);
-        
+        // Enregistrer la demande d'adhésion Shopify
+        const response = await fetch('/api/shopify/registerNotifications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: user.email,
+            subject: 'requestShopifyMember'
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Erreur lors de l\'envoi de la demande');
+        }
+  
         // Fermer la modale après soumission
         setIsModalOpen(false);
         
-        // Vous pourriez vouloir mettre à jour le statut ou afficher un message de succès
+        // Afficher un message de succès
+        toast.success('Votre demande a été envoyée avec succès .Nous la traiterons dans les plus brefs délais.');
+        
       } catch (error) {
         console.error('Erreur lors de l\'envoi du formulaire:', error);
+        toast.error('Une erreur est survenue lors de l\'envoi de votre demande. Veuillez réessayer.');
       }
     }
   };
+
 
   if (isLoading) return <div className="dashboard-loading">Chargement...</div>;
 
@@ -90,7 +108,7 @@ export default function Dashboard() {
         isOpen={isModalOpen} 
         onClose={handleCloseModal} 
         userEmail={user?.email} 
-        onSubmit={handleSubmitForm} 
+        onSubmit={handleSubmitShopifyRequest} 
       />
     </div>
   );
