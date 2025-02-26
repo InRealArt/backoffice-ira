@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import Navbar from '../components/Navbar/Navbar';
 import SideMenu from '../components/SideMenu/SideMenu';
 import './notifications.css';
+import Modal from '../components/Common/Modal';
+import { getUserByEmail, createStaffAccount, User } from '../actions/shopify/shopifyActions';
 
 // Interface basée sur le modèle Prisma
 interface Notification {
@@ -19,7 +21,12 @@ interface Notification {
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { primaryWallet } = useDynamicContext();
+  const [isProcessing, setIsProcessing] = useState<number | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isUserLoading, setIsUserLoading] = useState(false);
+  const { primaryWallet, user} = useDynamicContext();
   const router = useRouter();
 
   useEffect(() => {
@@ -57,7 +64,7 @@ export default function NotificationsPage() {
     };
 
     fetchNotifications();
-  }, [primaryWallet]);
+  }, [primaryWallet, router]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -79,6 +86,63 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleApproveClick = async (notification: Notification) => {
+    try {
+      setIsUserLoading(true);
+      
+      // Utiliser l'action serveur au lieu d'une route API
+      const result = await getUserByEmail(notification.from);
+      
+      setSelectedNotification(notification);
+      setSelectedUser({
+        id: result.user.id,
+        email: result.user.email || '',
+        firstName: result.user.name || '',
+        lastName: result.user.surname || '',
+        walletAddress: result.user.walletAddress
+      });
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données utilisateur:', error);
+      alert('Erreur: ' + (error instanceof Error ? error.message : 'Impossible de récupérer les informations utilisateur'));
+    } finally {
+      setIsUserLoading(false);
+    }
+  };
+
+  const handleConfirmApprove = async () => {
+    if (!selectedNotification || !selectedUser) return;
+    
+    try {
+      setIsProcessing(selectedNotification.id);
+      setIsModalOpen(false);
+      
+      // Utiliser l'action serveur pour créer le compte staff
+      await createStaffAccount({
+        email: selectedNotification.from,
+        firstName: selectedUser.firstName,
+        lastName: selectedUser.lastName,
+        notificationId: selectedNotification.id
+      });
+      
+      // Mettre à jour l'état local des notifications
+      setNotifications(prevNotifications => 
+        prevNotifications.map(notif => 
+          notif.id === selectedNotification.id ? { ...notif, complete: true } : notif
+        )
+      );
+      
+      alert('Compte staff créé avec succès!');
+    } catch (error) {
+      console.error('Erreur lors de l\'approbation:', error);
+      alert('Erreur lors de la création du compte: ' + (error instanceof Error ? error.message : 'Erreur inconnue'));
+    } finally {
+      setIsProcessing(null);
+      setSelectedUser(null);
+      setSelectedNotification(null);
+    }
+  };
+  
   if (isLoading) {
     return (
       <>
@@ -119,13 +183,11 @@ export default function NotificationsPage() {
                     {notification.subject === 'requestShopifyMember' && !notification.complete && (
                       <div className="notification-actions">
                         <button 
-                          className="action-button approve"
-                          onClick={() => {
-                            // Traiter l'approbation
-                            console.log('Approuver demande de', notification.from);
-                          }}
+                          className={`action-button approve ${isProcessing === notification.id ? 'processing' : ''}`}
+                          onClick={() => handleApproveClick(notification)}
+                          disabled={isProcessing !== null}
                         >
-                          Approuver
+                          {isProcessing === notification.id ? 'En cours...' : 'Approuver'}
                         </button>
                         <button 
                           className="action-button reject"
@@ -145,6 +207,48 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
+
+      {/* Modale de confirmation */}
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        title="Confirmation"
+      >
+        <div className="confirmation-modal">
+          {isUserLoading ? (
+            <p>Chargement des informations utilisateur...</p>
+          ) : (
+            <>
+              <p>
+                Rendez vous sur <strong>https://admin.shopify.com/store/inrealart-marketplace/settings/account</strong> pour créer un staff account (employé)
+                <br/><br/>
+                L'employé ne devra avoir que la permission de créer des articles.
+                <br/>
+                Après avoir créér l'artiste en tant qu'"employé", vous pourrez créer une collection pour l'artiste (qui portera son prénom + nom).
+              </p>
+              <div className="user-details">
+                <p><strong>Email:</strong> {selectedUser?.email}</p>
+                <p><strong>Prénom:</strong> {selectedUser?.firstName}</p>
+                <p><strong>Nom:</strong> {selectedUser?.lastName}</p>
+              </div>
+              <div className="modal-actions">
+                <button 
+                  className="modal-button confirm"
+                  onClick={() => window.open('https://admin.shopify.com/store/inrealart-marketplace/settings/account', '_blank')}
+                >
+                  Aller sur Shopify
+                </button>
+                <button 
+                  className="modal-button cancel"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Fermer
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>
     </>
   );
 }

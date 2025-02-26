@@ -438,12 +438,19 @@ model Notification {
   sentDate DateTime            @default(now())
   subject  NotificationSubject
   complete Boolean             @default(false)
-
+  status   NotificationStatus?
   @@schema("public")
 }
 
 enum NotificationSubject {
   requestShopifyMember
+
+  @@schema("public")
+}
+
+enum NotificationStatus {
+  APPROVED
+  REJECTED
 
   @@schema("public")
 }
