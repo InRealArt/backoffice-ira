@@ -4,17 +4,19 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   getUserByEmail, 
-  updateNotificationStatus
+  updateNotificationStatus,
 } from '../actions/shopify/shopifyActions'
 
 export interface Notification {
-  id: number
-  from: string
-  sentDate: string
-  subject: 'requestShopifyMember'
-  complete: boolean
-  status?: 'APPROVED' | 'REJECTED' | null
-}
+    id: number
+    from: string
+    sentDate: string
+    subject: 'requestShopifyMember'
+    complete: boolean
+    status?: 'APPROVED' | 'REJECTED' | null
+    isAlreadyStaff?: boolean
+    staffData?: any
+  }
 
 export interface User {
   id: number
@@ -69,7 +71,9 @@ export default function useNotifications({ walletAddress }: UseNotificationsProp
       // Récupérer les notifications
       const response = await fetch('/api/notifications/getAll')
       const data = await response.json()
+
       setNotifications(data.notifications || [])
+
     } catch (error) {
       console.error('Erreur:', error)
     } finally {

@@ -63,7 +63,7 @@ export default function Dashboard() {
           
           if (adminResponse.ok) {
             const adminResult = await adminResponse.json();
-            console.log('adminResult', adminResult);
+            
             setIsAdmin(adminResult.isAdmin);
           }
           

@@ -47,22 +47,36 @@ export default function NotificationList({
               </div>
             )}
             
+            {notification.isAlreadyStaff && (
+              <div className="notification-status already-staff">
+                Déjà membre du staff Shopify
+              </div>
+            )}
+            
             {notification.subject === 'requestShopifyMember' && !notification.complete && (
               <div className="notification-actions">
-                <button 
-                  className={`action-button approve ${isProcessing === notification.id ? 'processing' : ''}`}
-                  onClick={() => onApprove(notification)}
-                  disabled={isProcessing !== null}
-                >
-                  {isProcessing === notification.id ? 'En cours...' : 'Approuver'}
-                </button>
-                <button 
-                  className="action-button reject"
-                  onClick={() => onReject(notification)}
-                  disabled={isProcessing !== null}
-                >
-                  Rejeter
-                </button>
+                {notification.isAlreadyStaff ? (
+                  <p className="notification-warning">
+                    Cette personne est déjà membre du staff Shopify.
+                  </p>
+                ) : (
+                  <>
+                    <button 
+                      className={`action-button approve ${isProcessing === notification.id ? 'processing' : ''}`}
+                      onClick={() => onApprove(notification)}
+                      disabled={isProcessing !== null}
+                    >
+                      {isProcessing === notification.id ? 'En cours...' : 'Approuver'}
+                    </button>
+                    <button 
+                      className="action-button reject"
+                      onClick={() => onReject(notification)}
+                      disabled={isProcessing !== null}
+                    >
+                      Rejeter
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>

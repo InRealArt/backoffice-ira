@@ -18,7 +18,7 @@ export default function SideMenu() {
     const checkUserAccess = async () => {
       if (isLoggedIn && primaryWallet) {
         try {
-          console.log('Vérification accès pour:', primaryWallet.address);
+          //console.log('Vérification accès pour:', primaryWallet.address);
           
           const response = await fetch('/api/shopify/isArtistAndGranted', {
             method: 'POST',
@@ -29,15 +29,14 @@ export default function SideMenu() {
               walletAddress: primaryWallet.address
             }),
           });
-          console.log('response', response)
+          
           if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || `Erreur ${response.status}`);
           }
           
           const result = await response.json();
-          console.log('Résultat API:', result);
-          console.log('hasAccess', result.hasAccess);
+          
           setCanAccessCollection(result.hasAccess === true);
           
           // Vérifier si l'utilisateur est admin
