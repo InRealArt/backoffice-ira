@@ -26,8 +26,8 @@ export async function submitShopifyRequest(formData: {
     await prisma.shopifyUser.update({
       where: { email: formData.email },
       data: {
-        name: formData.lastName,
-        surname: formData.firstName
+        lastName: formData.lastName,
+        firstName: formData.firstName
       }
     });
 

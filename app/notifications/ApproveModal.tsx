@@ -51,7 +51,7 @@ export default function ApproveModal({
                 className="modal-button action"
                 onClick={onConfirm}
               >
-                Confirmer la création
+                {`Créer une collection pour ${userFirstName || ''} ${userLastName || ''}`}
               </button>
               <button 
                 className="modal-button cancel"

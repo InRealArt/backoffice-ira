@@ -92,8 +92,8 @@ export default function useNotifications({ walletAddress }: UseNotificationsProp
       setSelectedUser({
         id: result.user.id,
         email: result.user.email || '',
-        firstName: result.user.name || '',
-        lastName: result.user.surname || '',
+        firstName: result.user.firstName || '',
+        lastName: result.user.lastName || '',
         walletAddress: result.user.walletAddress
       })
       setIsApproveModal(true)

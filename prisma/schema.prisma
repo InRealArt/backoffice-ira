@@ -422,8 +422,8 @@ model ShopifyUser {
   lastLogin        DateTime          @db.Timestamp(6)
   userMetadata     Json
   role             ShopifyUserRoles?
-  name             String?
-  surname          String?
+  firstName        String?
+  lastName         String?
   isShopifyGranted Boolean           @default(false)
   createdAt        DateTime          @default(now()) @db.Timestamp(6)
 
