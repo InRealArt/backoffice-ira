@@ -39,27 +39,6 @@ export async function getUserByEmail(email: string) {
   }
 }
 
-export async function updateNotificationStatus(
-  notificationId: number, 
-  status: NotificationStatus
-) {
-  try {
-    await prisma.notification.update({
-      where: { id: notificationId },
-      data: { 
-        status,
-        complete: true 
-      }
-    })
-    
-    return { success: true }
-  } catch (error) {
-    console.error(`Erreur lors de la mise à jour du statut à ${status}:`, error)
-    throw error
-  }
-}
-
-
 export async function createShopifyCollection(collectionName: string): Promise<CreateCollectionResult> {
   try {
     if (!collectionName || collectionName.trim() === '') {
@@ -72,7 +51,7 @@ export async function createShopifyCollection(collectionName: string): Promise<C
     // Initialisation du client Shopify Admin API (côté serveur)
     const client = createAdminRestApiClient({
       storeDomain: 'inrealart-marketplace.myshopify.com',
-      apiVersion: '2023-10',
+      apiVersion: '2025-01',
       accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '',
     })
     

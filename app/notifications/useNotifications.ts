@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
   getUserByEmail, 
-  updateNotificationStatus,
 } from '../actions/shopify/shopifyActions'
+import { updateNotificationStatus } from '../actions/prisma/prismaActions'
 
 export interface Notification {
     id: number

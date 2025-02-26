@@ -6,7 +6,8 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { createAdminRestApiClient } from '@shopify/admin-api-client'
 import { createShopifyCollection } from '../actions/shopify/shopifyActions'
-
+import { NotificationStatus } from '@prisma/client'
+import { updateNotificationStatus } from '../actions/prisma/prismaActions'
 interface ApproveModalProps {
   isOpen: boolean
   onClose: () => void
@@ -15,6 +16,7 @@ interface ApproveModalProps {
   userFirstName?: string
   userLastName?: string
   isLoading: boolean
+  notificationId: number 
 }
 
 export default function ApproveModal({
@@ -24,7 +26,8 @@ export default function ApproveModal({
   userEmail,
   userFirstName,
   userLastName,
-  isLoading
+  isLoading,
+  notificationId
 }: ApproveModalProps) {
 
     const [showCollectionModal, setShowCollectionModal] = useState(false)
@@ -33,25 +36,32 @@ export default function ApproveModal({
     const handleCreateCollection = async () => {
         try {
         
-            setIsCreatingCollection(true)
+          setIsCreatingCollection(true)
       
-            // Création du nom de la collection basé sur le prénom et nom de l'utilisateur
-            const collectionName = `${userFirstName || ''} ${userLastName || ''}`.trim()
-            
-            // Appel à la Server Action
-            const result = await createShopifyCollection(collectionName)
-            
-            if (result.success) {
-              toast.success(result.message)
-              // Fermer la modal après création réussie
-              onClose()
-            } else {
-              toast.error(result.message)
-            }
-                
-            // Fermer la modal après création réussie
-            onClose()
-            
+          // Création du nom de la collection basé sur le prénom et nom de l'utilisateur
+          const collectionName = `${userFirstName || ''} ${userLastName || ''}`.trim()
+          
+          // 1. Créer la collection Shopify
+          const collectionResult = await createShopifyCollection(collectionName)
+          
+          if (!collectionResult.success) {
+            toast.error(collectionResult.message)
+            return
+          }
+          
+          // 2. Mettre à jour le statut de la notification séparément
+          const updateResult = await updateNotificationStatus(notificationId, NotificationStatus.APPROVED)
+          
+          if (!updateResult.success) {
+            toast.error(`Collection créée mais ${updateResult.message}`)
+            return
+          }
+          
+          // Si tout s'est bien passé
+          toast.success(`Collection créée et notification approuvée avec succès!`)
+          onClose()
+          onConfirm() // Rafraîchir les données
+
         } catch (error) {
             console.error('Erreur lors de la création de la collection:', error)
             toast.error('Échec de création de la collection. Veuillez réessayer.')

@@ -76,6 +76,7 @@ export default function NotificationsPage() {
           userFirstName={selectedUser?.firstName}
           userLastName={selectedUser?.lastName}
           isLoading={isUserLoading}
+          notificationId={selectedNotification?.id || 0}
         />
       )}
 
