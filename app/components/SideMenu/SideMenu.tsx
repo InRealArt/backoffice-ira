@@ -4,7 +4,7 @@ import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import './SideMenu.css';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function SideMenu() {
   const isLoggedIn = useIsLoggedIn();
@@ -13,6 +13,7 @@ export default function SideMenu() {
   const [canAccessCollection, setCanAccessCollection] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   
   useEffect(() => {
     const checkUserAccess = async () => {
@@ -64,6 +65,16 @@ export default function SideMenu() {
   
     checkUserAccess();
   }, [isLoggedIn, primaryWallet]);
+
+  useEffect(() => {
+    if (pathname === '/dashboard') {
+      setActiveItem('dashboard');
+    } else if (pathname === '/shopify/collection') {
+      setActiveItem('collection');
+    } else if (pathname === '/notifications') {
+      setActiveItem('notifications');
+    }
+  }, [pathname]);
 
   
   if (!isLoggedIn) return null;
