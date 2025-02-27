@@ -44,12 +44,6 @@ export default function SideMenu() {
         
         {isAdmin && (
           <>
-            <SideMenuItem 
-              label="Notifications"
-              isActive={activeItem === 'notifications'}
-              onClick={() => handleNavigation('/notifications', 'notifications')}
-            />
-            
             <ShopifySubMenu
               isActive={activeItem === 'adminShopify'}
               isOpen={showShopifySubmenu}

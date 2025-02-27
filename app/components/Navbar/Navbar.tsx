@@ -27,9 +27,6 @@ export default function Navbar() {
               <span className="menu-item-label">Connexion</span>
               <DynamicWidget variant="modal" />
             </div>
-            <div className="menu-item">
-              <span>Notifications</span>
-            </div>
           </div>
         )}
       </div>
