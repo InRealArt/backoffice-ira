@@ -281,7 +281,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         {isShopifyGranted && (
           <div className={styles.collectionSection}>
             <h2 className={styles.sectionTitle}>Collection Shopify</h2>
-            <p className={styles.sectionSubtitle}>
+            <p className={styles.sectionSubtitle}>  
               {collectionExists 
                 ? 'Modifier les informations de la collection Shopify associée' 
                 : 'Créer une collection Shopify pour cet utilisateur'}
@@ -302,6 +302,9 @@ export default function EditUserForm({ user }: EditUserFormProps) {
                 {errors.collectionDescription && (
                   <p className={styles.errorMessage}>{errors.collectionDescription.message}</p>
                 )}
+                <p className={styles.htmlNote}>
+                  Ce champ accepte le formatage HTML. Vous pouvez utiliser <a href="https://www.onetools.me/fr/html-editor/" target="_blank" rel="noopener noreferrer">cet éditeur HTML en ligne</a> pour mettre en forme votre description.
+                </p>
               </div>
             )}
           </div>

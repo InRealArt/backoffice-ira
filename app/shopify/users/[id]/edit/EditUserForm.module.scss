@@ -194,4 +194,19 @@
   &:hover {
     background-color: #e5e7eb;
   }
+}
+
+.htmlNote {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #666;
+  
+  a {
+    color: #2563eb;
+    text-decoration: underline;
+    
+    &:hover {
+      text-decoration: none;
+    }
+  }
 } 
