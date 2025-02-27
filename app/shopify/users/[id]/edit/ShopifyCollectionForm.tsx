@@ -188,13 +188,6 @@ export function ShopifyCollectionForm({ user }: { user: ShopifyUser }) {
           </div>
         </div>
         
-        <button 
-          type="submit" 
-          className={styles.submitButton} 
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Traitement en cours...' : collectionExists ? 'Mettre à jour la collection' : 'Créer la collection'}
-        </button>
       </form>
     </div>
   )
