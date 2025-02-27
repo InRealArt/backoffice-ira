@@ -30,6 +30,9 @@ export default function EditUserForm({ user }: EditUserFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [collectionId, setCollectionId] = useState<string | null>(null)
+  const [collectionTitle, setCollectionTitle] = useState<string | null>(null)
+  const [collectionDescription, setCollectionDescription] = useState<string | null>(null)
+  const [isLoadingCollection, setIsLoadingCollection] = useState(true)
 
   const {
     register,
@@ -46,13 +49,16 @@ export default function EditUserForm({ user }: EditUserFormProps) {
     }
   })
 
-  // Récupérer l'ID de la collection basée sur le nom de l'utilisateur
-  // Cette partie est déplacée en dehors du flux de soumission
+  // Récupérer les informations de la collection basée sur le nom de l'utilisateur
   useEffect(() => {
     let isMounted = true
+    setIsLoadingCollection(true)
     
-    const fetchCollectionId = async () => {
-      if (!user.firstName || !user.lastName) return
+    const fetchCollectionInfo = async () => {
+      if (!user.firstName || !user.lastName) {
+        setIsLoadingCollection(false)
+        return
+      }
 
       try {
         const collectionTitle = `${user.firstName} ${user.lastName}`.trim()
@@ -60,16 +66,22 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         
         if (result.success && result.collection && isMounted) {
           setCollectionId(result.collection.id)
-          console.log('Collection trouvée:', result.collection.id)
+          setCollectionTitle(result.collection.title)
+          setCollectionDescription(result.collection.body_html || '')
+          console.log('Collection trouvée:', result.collection)
         } else if (isMounted) {
           console.log('Aucune collection trouvée pour:', collectionTitle)
         }
       } catch (error) {
         console.error('Erreur lors de la récupération de la collection:', error)
+      } finally {
+        if (isMounted) {
+          setIsLoadingCollection(false)
+        }
       }
     }
 
-    fetchCollectionId()
+    fetchCollectionInfo()
     
     // Nettoyage pour éviter des mises à jour sur un composant démonté
     return () => {
@@ -205,9 +217,46 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           )}
         </div>
 
-        {collectionId && (
-          <div className={styles.infoBox}>
-            <p>Collection Shopify associée: ID {collectionId}</p>
+        {/* Section d'information sur la collection Shopify */}
+        {isLoadingCollection ? (
+          <div className={styles.loadingContainer}>
+            Chargement des informations de la collection...
+          </div>
+        ) : collectionId ? (
+          <div className={styles.collectionSection}>
+            <h2 className={styles.sectionTitle}>Collection Shopify associée</h2>
+            
+            <div className={styles.infoBox}>
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>ID:</span>
+                <span className={styles.infoValue}>{collectionId}</span>
+              </div>
+              
+              <div className={styles.infoRow}>
+                <span className={styles.infoLabel}>Titre:</span>
+                <span className={styles.infoValue}>{collectionTitle}</span>
+              </div>
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label htmlFor="collectionDescription" className={styles.formLabel}>
+                Description de la collection
+              </label>
+              <textarea
+                id="collectionDescription"
+                readOnly
+                value={collectionDescription || ''}
+                className={`${styles.formTextarea} ${styles.readonlyTextarea}`}
+                rows={5}
+              />
+              <p className={styles.infoText}>
+                Cette description est affichée sur la page de la collection Shopify.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.noCollectionBox}>
+            Aucune collection Shopify n'est associée à cet utilisateur.
           </div>
         )}
 
