@@ -12,6 +12,7 @@
     "@dynamic-labs/ethereum": "^4.7.2",
     "@dynamic-labs/sdk-react-core": "^4.7.2",
     "@dynamic-labs/wagmi-connector": "^4.7.2",
+    "@hookform/resolvers": "^4.1.2",
     "@prisma/client": "^6.4.1",
     "@shopify/admin-api-client": "^1.0.6",
     "@shopify/shopify-api": "^11.9.0",
@@ -21,9 +22,11 @@
     "prisma": "^6.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
     "react-hot-toast": "^2.5.2",
     "viem": "^2.23.5",
-    "wagmi": "^2.14.12"
+    "wagmi": "^2.14.12",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

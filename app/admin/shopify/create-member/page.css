@@ -1,0 +1,28 @@
+.create-member-header {
+  margin-bottom: 30px;
+}
+
+.create-member-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.dark .create-member-header h1 {
+  color: #f3f4f6;
+}
+
+.create-member-header .subtitle {
+  color: #6b7280;
+  font-size: 15px;
+}
+
+.dark .create-member-header .subtitle {
+  color: #9ca3af;
+}
+
+.create-member-content {
+  max-width: 800px;
+  margin: 0 auto;
+} 

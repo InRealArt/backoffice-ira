@@ -40,3 +40,22 @@ a {
     color-scheme: dark;
   }
 }
+
+.page-layout {
+  display: flex;
+  min-height: calc(100vh - 60px);
+  padding-top: 60px;
+}
+
+.content-container {
+  flex: 1;
+  padding: 24px;
+  margin-left: 220px; /* Largeur du SideMenu */
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    margin-left: 0;
+    padding: 16px;
+  }
+}
