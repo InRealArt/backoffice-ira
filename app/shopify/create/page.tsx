@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/app/components/Navbar/Navbar'
 import SideMenu from '@/app/components/SideMenu/SideMenu'
-import { Toaster } from 'react-hot-toast'
+import { Toaster, toast } from 'react-hot-toast'
 import './page.css'
 import ArtworkCreationForm from './ArtworkCreationForm'
 
@@ -46,6 +46,8 @@ export default function CreateArtworkPage() {
           setHasAccess(true)
           setIsLoading(false)
         } else {
+          // Afficher un toast d'erreur avant la redirection
+          toast.error("Vous n'avez pas les droits pour créer une œuvre d'art")
           // Rediriger si l'utilisateur n'a pas les droits
           router.push('/')
         }
