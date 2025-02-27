@@ -7,7 +7,10 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { updateShopifyUser } from '@/app/actions/prisma/prismaActions'
-import { getShopifyCollectionByTitle } from '@/app/actions/shopify/shopifyActions'
+import { 
+  getShopifyCollectionByTitle,
+  updateShopifyCollection
+} from '@/app/actions/shopify/shopifyActions'
 import { ShopifyUser } from '@prisma/client'
 import styles from './EditUserForm.module.scss'
 
@@ -18,7 +21,8 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Le nom est requis'),
   email: z.string().email('Format d\'email invalide'),
   role: z.string().nullable().optional(),
-  isShopifyGranted: z.boolean().default(false)
+  isShopifyGranted: z.boolean().default(false),
+  collectionDescription: z.string().optional()
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -33,6 +37,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
   const [collectionId, setCollectionId] = useState<string | null>(null)
   const [collectionTitle, setCollectionTitle] = useState<string | null>(null)
   const [collectionDescription, setCollectionDescription] = useState<string | null>(null)
+  const [initialDescription, setInitialDescription] = useState<string | null>(null)
   const [isLoadingCollection, setIsLoadingCollection] = useState(true)
 
   const {
@@ -48,12 +53,14 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       lastName: user.lastName || '',
       email: user.email || '',
       role: user.role || null,
-      isShopifyGranted: user.isShopifyGranted || false
+      isShopifyGranted: user.isShopifyGranted || false,
+      collectionDescription: ''
     }
   })
 
   // Surveiller la valeur de isShopifyGranted pour l'affichage conditionnel
   const isShopifyGranted = watch('isShopifyGranted')
+  const currentDescription = watch('collectionDescription')
 
   // Récupérer les informations de la collection basée sur le nom de l'utilisateur
   useEffect(() => {
@@ -73,7 +80,24 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         if (result.success && result.collection && isMounted) {
           setCollectionId(result.collection.id)
           setCollectionTitle(result.collection.title)
-          setCollectionDescription(result.collection.body_html || '')
+          
+          // Stocker la description dans le state component pour l'affichage
+          const description = result.collection.body_html || ''
+          setCollectionDescription(description)
+          setInitialDescription(description)
+          
+          // Définir manuellement la valeur des éléments DOM pour éviter d'utiliser setValue
+          setTimeout(() => {
+            const textArea = document.getElementById('collectionDescription') as HTMLTextAreaElement
+            if (textArea && isMounted) {
+              textArea.value = description
+              
+              // Déclencher un événement pour que React Hook Form reconnaisse le changement
+              const event = new Event('input', { bubbles: true })
+              textArea.dispatchEvent(event)
+            }
+          }, 100)
+          
           console.log('Collection trouvée:', result.collection)
         } else if (isMounted) {
           console.log('Aucune collection trouvée pour:', collectionTitle)
@@ -114,7 +138,6 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         email: data.email || '',
         role: data.role || null,
         isShopifyGranted: data.isShopifyGranted,
-        // Ajouter des valeurs par défaut pour les autres champs qui pourraient être requis
         walletAddress: user.walletAddress || ''
       }
 
@@ -127,7 +150,23 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         throw new Error(userResult.message)
       }
       
-      toast.success('Utilisateur mis à jour avec succès')
+      // Vérifier si nous devons mettre à jour la description de la collection
+      if (data.isShopifyGranted && collectionId && data.collectionDescription !== initialDescription) {
+        console.log('Mise à jour de la description de collection:', data.collectionDescription)
+        
+        const updateResult = await updateShopifyCollection(collectionId, {
+          description: data.collectionDescription || ''
+        })
+        
+        if (!updateResult.success) {
+          console.error('Erreur lors de la mise à jour de la collection:', updateResult.message)
+          toast.error('Erreur lors de la mise à jour de la collection')
+        } else {
+          toast.success('Utilisateur et collection mis à jour avec succès')
+        }
+      } else {
+        toast.success('Utilisateur mis à jour avec succès')
+      }
       
       // Rediriger après 1 seconde
       setTimeout(() => {
@@ -156,6 +195,13 @@ export default function EditUserForm({ user }: EditUserFormProps) {
             Modifier les informations de {user.firstName} {user.lastName}
           </p>
         </div>
+
+        {/* Champ caché pour stocker la description initiale */}
+        <input 
+          type="hidden"
+          id="initialDescription"
+          value={initialDescription || ''}
+        />
 
         <div className={styles.formGrid}>
           <div className={styles.formGroup}>
@@ -269,19 +315,25 @@ export default function EditUserForm({ user }: EditUserFormProps) {
                   </label>
                   <textarea
                     id="collectionDescription"
-                    readOnly
-                    value={collectionDescription || ''}
-                    className={`${styles.formTextarea} ${styles.readonlyTextarea}`}
+                    {...register('collectionDescription')}
+                    className={styles.formTextarea}
                     rows={5}
                   />
                   <p className={styles.infoText}>
                     Cette description est affichée sur la page de la collection Shopify.
+                    Vous pouvez utiliser du HTML pour mettre en forme le texte.
                   </p>
+                  {currentDescription !== initialDescription && (
+                    <p className={styles.changeIndicator}>
+                      La description a été modifiée. Enregistrez pour appliquer les changements.
+                    </p>
+                  )}
                 </div>
               </div>
             ) : (
               <div className={styles.noCollectionBox}>
                 Aucune collection Shopify n'est associée à cet utilisateur.
+                Une collection sera créée automatiquement lors de l'enregistrement.
               </div>
             )}
           </>
