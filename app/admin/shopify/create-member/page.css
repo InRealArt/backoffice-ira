@@ -1,3 +1,15 @@
+/* Règle globale pour assurer que le padding est inclus dans la largeur */
+* {
+  box-sizing: border-box;
+}
+
+.content-container {
+  padding: 20px;
+  transition: all 0.3s ease;
+  width: 100%;
+  overflow-x: hidden;
+}
+
 .create-member-header {
   margin-bottom: 30px;
 }
@@ -25,4 +37,71 @@
 .create-member-content {
   max-width: 800px;
   margin: 0 auto;
+  transition: all 0.3s ease;
+  padding: 0 16px;
+}
+
+/* Règles de responsive */
+@media (max-width: 1024px) {
+  .create-member-content {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    padding: 16px 0;
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .create-member-content {
+    padding: 0 12px;
+  }
+  
+  .create-member-header {
+    padding: 0 16px;
+  }
+  
+  .form-container {
+    margin: 0 4px;
+  }
+  
+  .create-member-header h1 {
+    font-size: 20px;
+  }
+  
+  .create-member-header .subtitle {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-container {
+    padding: 12px 0;
+  }
+  
+  .create-member-content {
+    padding: 0 8px;
+  }
+  
+  .create-member-header {
+    margin-bottom: 20px;
+  }
+  
+  .form-container {
+    padding: 16px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .button {
+    width: 100%;
+  }
+  
+  .button-secondary {
+    margin-bottom: 10px;
+  }
 } 

@@ -32,13 +32,22 @@ export default function CreateMemberForm() {
       const result = await createMember(data)
       
       if (result.success) {
-        toast.success(result.message)
-        reset() // Réinitialiser le formulaire après succès
+        toast.success(result.message, {
+          duration: 5000, // Durée plus longue sur mobile
+          position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
+        })
+        reset()
       } else {
-        toast.error(result.message)
+        toast.error(result.message, {
+          duration: 5000,
+          position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
+        })
       }
     } catch (error) {
-      toast.error('Une erreur est survenue. Veuillez réessayer.')
+      toast.error('Une erreur est survenue. Veuillez réessayer.', {
+        duration: 5000,
+        position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
+      })
       console.error('Erreur de formulaire:', error)
     } finally {
       setIsSubmitting(false)
