@@ -28,11 +28,18 @@ export default function SideMenu() {
         />
         
         {canAccessCollection && !isAdmin && (
+          <>
           <SideMenuItem 
             label="Ma Collection"
             isActive={activeItem === 'collection'}
             onClick={() => handleNavigation('/shopify/collection', 'collection')}
           />
+          <SideMenuItem 
+            label="Créer une œuvre"
+            isActive={activeItem === 'createArtwork'}
+            onClick={() => handleNavigation('/shopify/create', 'createArtwork')}
+          />
+        </>
         )}
         
         {isAdmin && (

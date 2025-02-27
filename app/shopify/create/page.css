@@ -1,0 +1,45 @@
+.page-layout {
+  display: flex;
+  min-height: calc(100vh - 60px);
+}
+
+.content-container {
+  flex: 1;
+  padding: 2rem;
+  margin-left: 250px;
+}
+
+.artwork-creation-header {
+  margin-bottom: 2rem;
+}
+
+.artwork-creation-header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 1rem;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    margin-left: 0;
+    padding: 1rem;
+  }
+  
+  .artwork-creation-header h1 {
+    font-size: 1.5rem;
+  }
+}

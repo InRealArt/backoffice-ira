@@ -13,7 +13,7 @@ export function useSideMenuLogic() {
   const [showShopifySubmenu, setShowShopifySubmenu] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
-  
+
   // Vérifier les accès utilisateur
   useEffect(() => {
     const checkUserAccess = async () => {
@@ -28,15 +28,15 @@ export function useSideMenuLogic() {
               walletAddress: primaryWallet.address
             }),
           })
-          
+
           if (!response.ok) {
             const errorData = await response.json()
             throw new Error(errorData.error || `Erreur ${response.status}`)
           }
-          
+
           const result = await response.json()
           setCanAccessCollection(result.hasAccess === true)
-          
+
           // Vérifier si l'utilisateur est admin
           const adminResponse = await fetch('/api/shopify/isAdmin', {
             method: 'POST',
@@ -47,19 +47,19 @@ export function useSideMenuLogic() {
               walletAddress: primaryWallet.address
             }),
           })
-          
+
           if (adminResponse.ok) {
             const adminResult = await adminResponse.json()
             setIsAdmin(adminResult.isAdmin)
           }
-          
+
         } catch (err) {
           console.error('Erreur lors de la vérification des accès:', err)
           setCanAccessCollection(false)
         }
       }
     }
-  
+
     checkUserAccess()
   }, [isLoggedIn, primaryWallet])
 
@@ -69,6 +69,8 @@ export function useSideMenuLogic() {
       setActiveItem('dashboard')
     } else if (pathname === '/shopify/collection') {
       setActiveItem('collection')
+    } else if (pathname === '/shopify/create') {
+      setActiveItem('createArtwork')
     } else if (pathname === '/notifications') {
       setActiveItem('notifications')
     } else if (pathname.startsWith('/admin/shopify')) {
@@ -87,7 +89,7 @@ export function useSideMenuLogic() {
     e.stopPropagation()
     setShowShopifySubmenu(!showShopifySubmenu)
   }
-  
+
   return {
     isLoggedIn,
     activeItem,
