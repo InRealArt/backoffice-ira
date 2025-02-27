@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/app/components/Navbar/Navbar'
 import SideMenu from '@/app/components/SideMenu/SideMenu'
-import './users.css'
 import { ShopifyUser } from '@prisma/client'
+import styles from './ShopifyUsersClient.module.scss'
 
 interface ShopifyUsersClientProps {
   users: ShopifyUser[]
@@ -39,32 +39,32 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
   return (
     <>
       <Navbar />
-      <div className="page-layout">
+      <div className={styles.pageLayout}>
         <SideMenu />
-        <div className="content-container">
-          <div className="shopify-users-container">
-            <div className="shopify-users-header">
-              <h1 className="page-title">Utilisateurs Shopify</h1>
-              <p className="subtitle">
+        <div className={styles.contentContainer}>
+          <div className={styles.shopifyUsersContainer}>
+            <div className={styles.shopifyUsersHeader}>
+              <h1 className={styles.pageTitle}>Utilisateurs Shopify</h1>
+              <p className={styles.subtitle}>
                 Liste des utilisateurs Shopify enregistrés dans le système
               </p>
             </div>
             
-            <div className="shopify-users-content">
+            <div className={styles.shopifyUsersContent}>
               {users.length === 0 ? (
-                <div className="empty-state">
+                <div className={styles.emptyState}>
                   <p>Aucun utilisateur Shopify trouvé</p>
                 </div>
               ) : (
-                <div className="table-container">
-                  <table className="users-table">
+                <div className={styles.tableContainer}>
+                  <table className={styles.usersTable}>
                     <thead>
                       <tr>
                         <th>Nom</th>
                         <th>Email</th>
                         <th>Role</th>
-                        <th className="hidden-mobile">Wallet Address</th>
-                        <th className="hidden-small">Date de création</th>
+                        <th className={styles.hiddenMobile}>Wallet Address</th>
+                        <th className={styles.hiddenSmall}>Date de création</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -72,13 +72,13 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
                         <tr 
                           key={user.id} 
                           onClick={() => handleUserClick(user.id.toString())}
-                          className="clickable-row"
+                          className={styles.clickableRow}
                         >
                           <td>{user.firstName} {user.lastName}</td>
                           <td>{user.email}</td>
                           <td>{user.role || 'Utilisateur'}</td>
-                          <td className="hidden-mobile">{user.walletAddress}</td>
-                          <td className="hidden-small">{formatDate(user.createdAt)}</td>
+                          <td className={styles.hiddenMobile}>{user.walletAddress}</td>
+                          <td className={styles.hiddenSmall}>{formatDate(user.createdAt)}</td>
                         </tr>
                       ))}
                     </tbody>
