@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Navbar from '@/app/components/Navbar/Navbar'
 import SideMenu from '@/app/components/SideMenu/SideMenu'
 import './users.css'
@@ -12,6 +13,7 @@ interface ShopifyUsersClientProps {
 
 export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
   const [isMobile, setIsMobile] = useState(false)
+  const router = useRouter()
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -29,6 +31,10 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
       window.removeEventListener('resize', checkIfMobile)
     }
   }, [])
+  
+  const handleUserClick = (userId: string) => {
+    router.push(`/shopify/users/${userId}/edit`)
+  }
   
   return (
     <>
@@ -63,7 +69,11 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
                     </thead>
                     <tbody>
                       {users.map((user) => (
-                        <tr key={user.id}>
+                        <tr 
+                          key={user.id} 
+                          onClick={() => handleUserClick(user.id.toString())}
+                          className="clickable-row"
+                        >
                           <td>{user.firstName} {user.lastName}</td>
                           <td>{user.email}</td>
                           <td>{user.role || 'Utilisateur'}</td>
