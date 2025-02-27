@@ -188,4 +188,27 @@
   .button-secondary {
     margin-top: 10px;
   }
+}
+
+.unique-error-container {
+  background-color: #fee2e2;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.dark .unique-error-container {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+}
+
+.unique-error {
+  color: #b91c1c;
+  font-size: 14px;
+  margin: 0;
+}
+
+.dark .unique-error {
+  color: #f87171;
 } 

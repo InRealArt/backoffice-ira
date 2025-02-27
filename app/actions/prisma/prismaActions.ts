@@ -11,10 +11,21 @@ type UpdateNotificationResult = {
     message: string
   }
 
-  type CreateMemberResult = {
-    success: boolean
-    message: string
-  }
+type CreateMemberResult = {
+  success: boolean
+  message: string
+}
+
+type CheckUserExistsParams = {
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+type CheckUserExistsResult = {
+  unique: boolean;
+  message: string;
+}
   
 // Action pour mettre à jour le statut d'une notification
 export async function updateNotificationStatus(
@@ -110,3 +121,49 @@ export async function updateNotificationStatus(
       }
     }
   }  
+
+  // Fonction qui vérifie si un utilisateur avec la même combinaison email+nom+prénom existe déjà
+export async function checkUserExists(
+  params: CheckUserExistsParams
+): Promise<CheckUserExistsResult> {
+  try {
+    // Vérifier si l'email existe déjà
+    const existingUserByEmail = await prisma.shopifyUser.findUnique({
+      where: { email: params.email }
+    })
+    
+    if (existingUserByEmail) {
+      return {
+        unique: false,
+        message: 'Un utilisateur avec cet email existe déjà'
+      }
+    }
+    
+    // Vérifier si la combinaison prénom+nom existe déjà
+    const existingUserByName = await prisma.shopifyUser.findFirst({
+      where: {
+        firstName: params.firstName,
+        lastName: params.lastName
+      }
+    })
+    
+    if (existingUserByName) {
+      return {
+        unique: false,
+        message: `Un utilisateur avec le nom "${params.firstName} ${params.lastName}" existe déjà`
+      }
+    }
+    
+    // Si aucun utilisateur existant n'est trouvé, la combinaison est unique
+    return {
+      unique: true,
+      message: 'La combinaison est unique'
+    }
+  } catch (error) {
+    console.error('Erreur lors de la vérification de l\'unicité:', error)
+    return {
+      unique: false,
+      message: 'Une erreur est survenue lors de la vérification de l\'unicité. Veuillez réessayer.'
+    }
+  }
+}

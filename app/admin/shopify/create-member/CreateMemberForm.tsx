@@ -4,12 +4,14 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { memberSchema, MemberFormData } from './schema'
-import { createMember } from '@/app/actions/prisma/prismaActions'
+import { createMember, checkUserExists } from '@/app/actions/prisma/prismaActions'
 import toast from 'react-hot-toast'
 import './CreateMemberForm.css'
+import { createShopifyCollection } from '@/app/actions/shopify/shopifyActions'
 
 export default function CreateMemberForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uniqueError, setUniqueError] = useState<string | null>(null)
   
   const {
     register,
@@ -28,15 +30,49 @@ export default function CreateMemberForm() {
   
   const onSubmit = async (data: MemberFormData) => {
     setIsSubmitting(true)
+    setUniqueError(null)
+    
     try {
+      // Vérifier d'abord l'unicité du trio email+nom+prénom
+      const uniqueCheck = await checkUserExists({
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName
+      })
+      
+      if (!uniqueCheck.unique) {
+        setUniqueError(uniqueCheck.message)
+        setIsSubmitting(false)
+        return
+      }
+      
+      // Si la vérification d'unicité est passée, créer le membre
       const result = await createMember(data)
       
       if (result.success) {
-        toast.success(result.message, {
-          duration: 5000, // Durée plus longue sur mobile
-          position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
-        })
+        if (data.role === 'artist') {
+          const collectionName = `${data.firstName} ${data.lastName}`
+          const collectionResult = await createShopifyCollection(collectionName)
+          
+          if (collectionResult.success) {
+            toast.success(`Membre créé et collection "${collectionName}" créée avec succès!`, {
+              duration: 5000,
+              position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
+            })
+          } else {
+            toast.success(`Membre créé avec succès, mais la création de la collection a échoué: ${collectionResult.message}`, {
+              duration: 5000,
+              position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
+            })
+          }
+        } else {
+          toast.success(result.message, {
+            duration: 5000,
+            position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
+          })
+        }
         reset()
+        setUniqueError(null)
       } else {
         toast.error(result.message, {
           duration: 5000,
@@ -57,6 +93,13 @@ export default function CreateMemberForm() {
   return (
     <div className="form-container">
       <form onSubmit={handleSubmit(onSubmit)}>
+        {/* Affichage de l'erreur d'unicité globale */}
+        {uniqueError && (
+          <div className="unique-error-container">
+            <p className="unique-error">{uniqueError}</p>
+          </div>
+        )}
+        
         <div className="form-grid">
           {/* Prénom */}
           <div className="form-group">
@@ -67,7 +110,7 @@ export default function CreateMemberForm() {
               id="firstName"
               type="text"
               {...register('firstName')}
-              className={`form-input ${errors.firstName ? 'form-input-error' : ''}`}
+              className={`form-input ${errors.firstName || uniqueError ? 'form-input-error' : ''}`}
               placeholder="John"
             />
             {errors.firstName && (
@@ -84,7 +127,7 @@ export default function CreateMemberForm() {
               id="lastName"
               type="text"
               {...register('lastName')}
-              className={`form-input ${errors.lastName ? 'form-input-error' : ''}`}
+              className={`form-input ${errors.lastName || uniqueError ? 'form-input-error' : ''}`}
               placeholder="Doe"
             />
             {errors.lastName && (
@@ -102,7 +145,7 @@ export default function CreateMemberForm() {
             id="email"
             type="email"
             {...register('email')}
-            className={`form-input ${errors.email ? 'form-input-error' : ''}`}
+            className={`form-input ${errors.email || uniqueError ? 'form-input-error' : ''}`}
             placeholder="email@exemple.com"
           />
           {errors.email && (
@@ -131,7 +174,10 @@ export default function CreateMemberForm() {
         <div className="form-actions">
           <button
             type="button"
-            onClick={() => reset()}
+            onClick={() => {
+              reset()
+              setUniqueError(null)
+            }}
             className="button button-secondary"
             disabled={isSubmitting}
           >
