@@ -29,7 +29,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       firstName: user.firstName || '',
       lastName: user.lastName || '',
       email: user.email || '',
-      role: user.role || 'Utilisateur',
+      role: user.role || null,
       walletAddress: user.walletAddress || '',
       isShopifyGranted: user.isShopifyGranted || false,
     }
@@ -131,10 +131,10 @@ export default function EditUserForm({ user }: EditUserFormProps) {
               id="role"
               {...register('role')}
             >
-              <option value="Utilisateur">Utilisateur</option>
-              <option value="Admin">Admin</option>
-              <option value="Merchant">Marchand</option>
-              <option value="Customer">Client</option>
+              <option value="">Sélectionner un rôle</option>
+              <option value="admin">Administrateur</option>
+              <option value="artist">Artiste</option>
+              <option value="galleryManager">Gestionnaire de galerie</option>
             </select>
             {errors.role && (
               <p className="error-message">{errors.role.message}</p>

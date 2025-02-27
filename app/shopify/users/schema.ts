@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+// Définir l'énumération des rôles conforme au schéma Prisma
+const ShopifyUserRolesEnum = z.enum(['admin', 'artist', 'galleryManager'])
+
 export const userEditSchema = z.object({
     id: z.string(),
     firstName: z.string()
@@ -10,8 +13,7 @@ export const userEditSchema = z.object({
         .max(50, { message: 'Le nom ne peut pas dépasser 50 caractères' }),
     email: z.string()
         .email({ message: 'Format d\'email invalide' }),
-    role: z.string()
-        .min(1, { message: 'Le rôle est requis' }),
+    role: ShopifyUserRolesEnum.nullable(),
     walletAddress: z.string().optional(),
     isShopifyGranted: z.boolean().default(false),
 })

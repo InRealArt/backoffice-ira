@@ -244,7 +244,7 @@ export async function updateShopifyUser(
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        role: data.role,
+        role: data.role || null,
         walletAddress: data.walletAddress || '',
         isShopifyGranted: data.isShopifyGranted,
       }
