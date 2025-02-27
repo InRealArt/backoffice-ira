@@ -265,9 +265,14 @@ export default function ArtworkCreationForm() {
             type="file"
             accept="image/*"
             multiple
-            ref={fileInputRef}
-            {...register('images')}
-            onChange={handleImageChange}
+            {...register('images', {
+              onChange: handleImageChange,
+              shouldUnregister: true
+            })}
+            ref={(e) => {
+              register('images').ref(e)
+              fileInputRef.current = e
+            }}
             className={`form-file-input ${errors.images ? 'form-input-error' : ''}`}
           />
           {errors.images && (
