@@ -171,15 +171,7 @@ export function ShopifyCollectionForm({ user }: { user: ShopifyUser }) {
       <form onSubmit={handleSubmit(onSubmit)} className="collection-form">
         <div className="form-grid">
           <div className="form-field">
-            <label htmlFor="title">Titre de la collection</label>
-            <input
-              id="title"
-              type="text"
-              {...register('title')}
-            />
-            {errors.title && (
-              <p className="error-message">{errors.title.message}</p>
-            )}
+            <label htmlFor="title">Titre de la collection : {user.firstName} {user.lastName}</label>
           </div>
 
           <div className="form-field">
@@ -194,6 +186,7 @@ export function ShopifyCollectionForm({ user }: { user: ShopifyUser }) {
             )}
           </div>
 
+        {/*
           <div className="form-field checkbox-field">
             <label htmlFor="isPublished" className="checkbox-label">
               <input
@@ -207,19 +200,10 @@ export function ShopifyCollectionForm({ user }: { user: ShopifyUser }) {
               <p className="error-message">{errors.isPublished.message}</p>
             )}
           </div>
+        */}
         </div>
+        
 
-        <div className="form-buttons">
-          <button 
-            type="submit" 
-            className="submit-button collection-submit-button" 
-            disabled={isSubmitting}
-          >
-            {isSubmitting 
-              ? (collectionExists ? 'Mise à jour...' : 'Création...') 
-              : (collectionExists ? 'Mettre à jour la collection' : 'Créer la collection')}
-          </button>
-        </div>
       </form>
     </div>
   )

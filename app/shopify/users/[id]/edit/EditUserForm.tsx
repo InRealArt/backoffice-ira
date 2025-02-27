@@ -170,8 +170,12 @@ export default function EditUserForm({ user }: EditUserFormProps) {
             )}
           </div>
         </div>
+      </form>
 
-        <div className="form-buttons">
+
+      {user.isShopifyGranted && <ShopifyCollectionForm user={user} />}
+
+      <div className="form-buttons">
           <button 
             type="button" 
             className="cancel-button" 
@@ -187,11 +191,8 @@ export default function EditUserForm({ user }: EditUserFormProps) {
             {isSubmitting ? 'Mise à jour...' : 'Mettre à jour'}
           </button>
         </div>
-      </form>
-
-
-      <ShopifyCollectionForm user={user} />
-
+        
     </div>
   )
+            
 } 
