@@ -171,9 +171,7 @@ export async function getShopifyCollectionByTitle(
 export async function updateShopifyCollection(
   collectionId: string,
   data: {
-    title?: string
     description?: string
-    isPublished?: boolean
   }
 ): Promise<UpdateCollectionResult> {
   try {
@@ -194,16 +192,9 @@ export async function updateShopifyCollection(
     // Préparer les données pour la mise à jour
     const updateData: any = {}
 
-    if (data.title !== undefined) {
-      updateData.title = data.title
-    }
 
     if (data.description !== undefined) {
       updateData.body_html = data.description
-    }
-
-    if (data.isPublished !== undefined) {
-      updateData.published = data.isPublished
     }
 
     // Mettre à jour la collection

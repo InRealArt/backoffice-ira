@@ -33,6 +33,7 @@ const collectionSchema = z.object({
 // Schéma combiné pour le formulaire complet
 const combinedSchema = userEditSchema.extend({
   collectionDescription: z.string().max(500).optional(),
+  collectionId: z.string().optional(),
 })
 
 type CombinedFormData = z.infer<typeof combinedSchema>
@@ -84,8 +85,9 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           setCollectionExists(true)
           setCollectionId(result.collection.id)
           
-          // Mettre à jour la description de la collection dans le formulaire
+          // Mettre à jour la description et l'ID de la collection dans le formulaire
           setValue('collectionDescription', result.collection.body_html || '')
+          setValue('collectionId', result.collection.id)
         } else {
           setCollectionExists(false)
         }
@@ -127,9 +129,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         if (collectionExists && collectionId) {
           // Mettre à jour la collection existante
           await updateShopifyCollection(collectionId, {
-            title: collectionTitle,
-            description: data.collectionDescription,
-            isPublished: true
+            description: data.collectionDescription
           })
         } else {
           // Créer une nouvelle collection
@@ -138,9 +138,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           if (collectionResult.success && collectionResult.collection && data.collectionDescription) {
             // Mettre à jour la description si une nouvelle collection a été créée
             await updateShopifyCollection(collectionResult.collection.id, {
-              title: collectionTitle,
-              description: data.collectionDescription,
-              isPublished: true
+              description: data.collectionDescription
             })
           }
         }
@@ -293,6 +291,11 @@ export default function EditUserForm({ user }: EditUserFormProps) {
               </div>
             ) : (
               <div className={styles.formField}>
+                <input
+                  type="hidden"
+                  {...register('collectionId')}
+                />
+                
                 <label htmlFor="collectionDescription">Description de la collection</label>
                 <textarea
                   id="collectionDescription"
