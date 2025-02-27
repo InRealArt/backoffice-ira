@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { NotificationStatus } from "@prisma/client"
+import { revalidatePath } from "next/cache";
 
 type UpdateNotificationResult = {
     success: boolean
@@ -32,6 +33,10 @@ export async function updateNotificationStatus(
         }
       })
       
+    
+      // Revalider le chemin des notifications pour forcer le rafraîchissement
+      revalidatePath('/notifications')
+
       return { 
         success: true,
         message: `Statut de la notification mis à jour avec succès`

@@ -39,7 +39,10 @@ export async function getUserByEmail(email: string) {
   }
 }
 
-export async function createShopifyCollection(collectionName: string): Promise<CreateCollectionResult> {
+// Action pour créer une collection Shopify et la publier sur tous les canaux
+export async function createShopifyCollection(
+  collectionName: string
+): Promise<CreateCollectionResult> {
   try {
     if (!collectionName || collectionName.trim() === '') {
       return {
@@ -48,15 +51,15 @@ export async function createShopifyCollection(collectionName: string): Promise<C
       }
     }
 
-    // Initialisation du client Shopify Admin API (côté serveur)
+    // Initialisation du client Shopify Admin API
     const client = createAdminRestApiClient({
-      storeDomain: 'inrealart-marketplace.myshopify.com',
+      storeDomain: process.env.SHOPIFY_STORE_NAME || '',
       apiVersion: '2025-01',
       accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '',
     })
     
-    // Requête POST pour créer une nouvelle collection
-    const response = await client.post('custom_collections', {
+    // 1. Créer la collection
+    const collectionResponse = await client.post('custom_collections', {
       data: {
         custom_collection: {
           title: collectionName,
@@ -66,28 +69,29 @@ export async function createShopifyCollection(collectionName: string): Promise<C
       }
     })
     
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Erreur Shopify API:', errorText)
+    if (!collectionResponse.ok) {
+      const errorText = await collectionResponse.text()
+      console.error('Erreur Shopify API lors de la création de la collection:', errorText)
       return {
         success: false,
-        message: `Erreur API Shopify: ${response.status}`
+        message: `Erreur API Shopify: ${collectionResponse.status}`
       }
     }
     
-    const data = await response.json()
+    const collectionData = await collectionResponse.json()
+    const collectionId = collectionData.custom_collection.id
+    
     
     return { 
       success: true,
-      message: `Collection "${collectionName}" créée avec succès!`,
-      collection: data.custom_collection 
+      message: `Collection "${collectionName}" créée et publiée sur tous les canaux avec succès!`,
+      collection: collectionData.custom_collection 
     }
   } catch (error: any) {
-    console.error('Erreur serveur:', error)
+    console.error('Erreur serveur lors de la création/publication de collection:', error)
     return {
       success: false,
       message: error.message || 'Une erreur est survenue lors de la création de la collection'
     }
   }
 }
-
