@@ -8,6 +8,7 @@ import { UserEditFormData, userEditSchema } from '../../schema'
 import { updateShopifyUser } from '@/app/actions/prisma/prismaActions'
 import { ShopifyUser } from '@prisma/client'
 import '../../users.css'
+import { ShopifyCollectionForm } from './ShopifyCollectionForm'
 
 interface EditUserFormProps {
   user: ShopifyUser
@@ -187,6 +188,10 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           </button>
         </div>
       </form>
+
+
+      <ShopifyCollectionForm user={user} />
+
     </div>
   )
 } 
