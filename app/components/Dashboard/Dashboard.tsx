@@ -123,12 +123,12 @@ export default function Dashboard() {
         {isAdmin ? (
           <div className="dashboard-card">
             <h3>Panneau d'Administration</h3>
-            <p>Accès aux fonctionnalités d'administration.</p>
+            <p>Voir les utilisateurs et leurs informations.</p>
             <button 
               className="dashboard-button" 
-              onClick={() => router.push('/notifications')}
+              onClick={() => router.push('/shopify/users')}
             >
-              Voir notifications
+              Voir les utilisateurs
             </button>
           </div>
         ) : (
