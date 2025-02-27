@@ -57,6 +57,12 @@ export default function ShopifySubMenu({
             >
               Créer membre
             </li>
+            <li 
+              className="submenu-item"
+              onClick={() => onNavigate('/shopify/users', 'shopifyUsers')}
+            >
+              Utilisateurs
+            </li>
           </ul>
         </div>
       )}

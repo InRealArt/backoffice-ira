@@ -3,7 +3,7 @@
 import { memberSchema } from "@/app/admin/shopify/create-member/schema";
 import { MemberFormData } from "@/app/admin/shopify/create-member/schema";
 import { prisma } from "@/lib/prisma"
-import { NotificationStatus } from "@prisma/client"
+import { NotificationStatus, ShopifyUser } from "@prisma/client"
 import { revalidatePath } from "next/cache";
 
 type UpdateNotificationResult = {
@@ -165,5 +165,21 @@ export async function checkUserExists(
       unique: false,
       message: 'Une erreur est survenue lors de la vérification de l\'unicité. Veuillez réessayer.'
     }
+  }
+}
+
+
+export async function getShopifyUsers(): Promise<ShopifyUser[]> {
+  try {
+    const users = await prisma.shopifyUser.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+    
+    return users
+  } catch (error) {
+    console.error('Erreur lors de la récupération des utilisateurs Shopify:', error)
+    return []
   }
 }
