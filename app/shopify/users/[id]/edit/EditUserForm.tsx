@@ -7,8 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { UserEditFormData, userEditSchema } from '../../schema'
 import { updateShopifyUser } from '@/app/actions/prisma/prismaActions'
 import { ShopifyUser } from '@prisma/client'
-import '../../users.css'
 import { ShopifyCollectionForm } from './ShopifyCollectionForm'
+import styles from './EditUserForm.module.scss'
 
 interface EditUserFormProps {
   user: ShopifyUser
@@ -74,23 +74,23 @@ export default function EditUserForm({ user }: EditUserFormProps) {
   }
 
   return (
-    <div className="edit-user-container">
-      <div className="edit-user-header">
-        <h1 className="page-title">Modifier l'utilisateur</h1>
-        <p className="subtitle">
+    <div className={styles.editUserContainer}>
+      <div className={styles.editUserHeader}>
+        <h1 className={styles.pageTitle}>Modifier l'utilisateur</h1>
+        <p className={styles.subtitle}>
           Modifier les informations de {user.firstName} {user.lastName}
         </p>
       </div>
 
       {formMessage && (
-        <div className={`form-message ${formMessage.type === 'success' ? 'success-message' : 'error-message-banner'}`}>
+        <div className={`${styles.formMessage} ${formMessage.type === 'success' ? styles.successMessage : styles.errorMessageBanner}`}>
           {formMessage.message}
         </div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="form-grid">
-          <div className="form-field">
+        <div className={styles.formGrid}>
+          <div className={styles.formField}>
             <label htmlFor="firstName">Prénom</label>
             <input
               id="firstName"
@@ -98,11 +98,11 @@ export default function EditUserForm({ user }: EditUserFormProps) {
               {...register('firstName')}
             />
             {errors.firstName && (
-              <p className="error-message">{errors.firstName.message}</p>
+              <p className={styles.errorMessage}>{errors.firstName.message}</p>
             )}
           </div>
 
-          <div className="form-field">
+          <div className={styles.formField}>
             <label htmlFor="lastName">Nom</label>
             <input
               id="lastName"
@@ -110,11 +110,11 @@ export default function EditUserForm({ user }: EditUserFormProps) {
               {...register('lastName')}
             />
             {errors.lastName && (
-              <p className="error-message">{errors.lastName.message}</p>
+              <p className={styles.errorMessage}>{errors.lastName.message}</p>
             )}
           </div>
 
-          <div className="form-field">
+          <div className={styles.formField}>
             <label htmlFor="email">Email</label>
             <input
               id="email"
@@ -122,11 +122,11 @@ export default function EditUserForm({ user }: EditUserFormProps) {
               {...register('email')}
             />
             {errors.email && (
-              <p className="error-message">{errors.email.message}</p>
+              <p className={styles.errorMessage}>{errors.email.message}</p>
             )}
           </div>
 
-          <div className="form-field">
+          <div className={styles.formField}>
             <label htmlFor="role">Rôle</label>
             <select
               id="role"
@@ -138,26 +138,26 @@ export default function EditUserForm({ user }: EditUserFormProps) {
               <option value="galleryManager">Gestionnaire de galerie</option>
             </select>
             {errors.role && (
-              <p className="error-message">{errors.role.message}</p>
+              <p className={styles.errorMessage}>{errors.role.message}</p>
             )}
           </div>
 
-          <div className="form-field">
+          <div className={styles.formField}>
             <label htmlFor="walletAddress">Adresse de portefeuille</label>
             <input
               id="walletAddress"
               type="text"
               {...register('walletAddress')}
               readOnly
-              className="readonly-field"
+              className={styles.readonlyField}
             />
             {errors.walletAddress && (
-              <p className="error-message">{errors.walletAddress.message}</p>
+              <p className={styles.errorMessage}>{errors.walletAddress.message}</p>
             )}
           </div>
 
-          <div className="form-field checkbox-field">
-            <label htmlFor="isShopifyGranted" className="checkbox-label">
+          <div className={`${styles.formField} ${styles.checkboxField}`}>
+            <label htmlFor="isShopifyGranted" className={styles.checkboxLabel}>
               <input
                 id="isShopifyGranted"
                 type="checkbox"
@@ -166,33 +166,30 @@ export default function EditUserForm({ user }: EditUserFormProps) {
               <span>Accès Shopify accordé</span>
             </label>
             {errors.isShopifyGranted && (
-              <p className="error-message">{errors.isShopifyGranted.message}</p>
+              <p className={styles.errorMessage}>{errors.isShopifyGranted.message}</p>
             )}
           </div>
         </div>
-      </form>
 
-
-      {user.isShopifyGranted && <ShopifyCollectionForm user={user} />}
-
-      <div className="form-buttons">
+        <div className={styles.formButtons}>
           <button 
             type="button" 
-            className="cancel-button" 
+            className={styles.cancelButton} 
             onClick={handleCancel}
           >
             Annuler
           </button>
           <button 
             type="submit" 
-            className="submit-button" 
+            className={styles.submitButton} 
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Mise à jour...' : 'Mettre à jour'}
           </button>
         </div>
-        
+      </form>
+
+      {user.isShopifyGranted && <ShopifyCollectionForm user={user} />}
     </div>
   )
-            
 } 
