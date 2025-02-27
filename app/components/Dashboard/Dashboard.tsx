@@ -78,14 +78,6 @@ export default function Dashboard() {
     checkShopifyStatus();
   }, [user, primaryWallet]);
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
   const handleSubmitShopifyRequest = async (formData: { firstName: string; lastName: string }) => {
     if (user?.email) {
         try {
@@ -128,18 +120,7 @@ export default function Dashboard() {
           <p><strong>Statut Shopify:</strong> {shopifyGranted ? 'Connecté' : 'Non connecté'}</p>
         </div>
 
-         {shopifyGranted ? (
-          <div className="dashboard-card">
-            <h3>Accès Collection</h3>
-            <p>Vous êtes un membre du Shopify d'InRealArt.</p>
-            <button 
-              className="dashboard-button" 
-              onClick={() => router.push('/shopify/collection')}
-            >
-              Ma Collection
-            </button>
-          </div>
-        ) : isAdmin ? (
+        {isAdmin ? (
           <div className="dashboard-card">
             <h3>Panneau d'Administration</h3>
             <p>Accès aux fonctionnalités d'administration.</p>
@@ -151,22 +132,32 @@ export default function Dashboard() {
             </button>
           </div>
         ) : (
-          <div className="dashboard-card">
-            <h3>Connexion Shopify</h3>
-            <p>Vous n'êtes pas encore un membre du Shopify d'InRealArt.</p>
-            <button className="dashboard-button" onClick={handleOpenModal}>
-              Devenir membre
-            </button>
-          </div>
+          <>
+            <div className="dashboard-card">
+              <h3>Ma Collection</h3>
+              <p>Explorez et gérez votre collection d'œuvres d'art.</p>
+              <button 
+                className="dashboard-button" 
+                onClick={() => router.push('/shopify/collection')}
+              >
+                Voir ma collection d'œuvres d'art
+              </button>
+            </div>
+            
+            <div className="dashboard-card">
+              <h3>Création d'œuvre</h3>
+              <p>Créez et publiez une nouvelle œuvre d'art dans Shopify.</p>
+              <button 
+                className="dashboard-button" 
+                onClick={() => router.push('/shopify/create')}
+              >
+                Créer une œuvre dans Shopify
+              </button>
+            </div>
+          </>
         )}
       </div>
 
-      <ShopifyRequestModal 
-        isOpen={isModalOpen} 
-        onClose={handleCloseModal} 
-        userEmail={user?.email} 
-        onSubmit={handleSubmitShopifyRequest} 
-      />
     </div>
   );
 }
