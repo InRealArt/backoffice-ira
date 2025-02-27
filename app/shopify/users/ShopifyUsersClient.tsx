@@ -56,6 +56,7 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
                       <tr>
                         <th>Nom</th>
                         <th>Email</th>
+                        <th>Role</th>
                         <th className="hidden-mobile">Wallet Address</th>
                         <th className="hidden-small">Date de création</th>
                       </tr>
@@ -65,6 +66,7 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
                         <tr key={user.id}>
                           <td>{user.firstName} {user.lastName}</td>
                           <td>{user.email}</td>
+                          <td>{user.role || 'Utilisateur'}</td>
                           <td className="hidden-mobile">{user.walletAddress}</td>
                           <td className="hidden-small">{formatDate(user.createdAt)}</td>
                         </tr>
