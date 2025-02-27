@@ -31,6 +31,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       email: user.email || '',
       role: user.role || 'Utilisateur',
       walletAddress: user.walletAddress || '',
+      isShopifyGranted: user.isShopifyGranted || false,
     }
   })
 
@@ -146,9 +147,25 @@ export default function EditUserForm({ user }: EditUserFormProps) {
               id="walletAddress"
               type="text"
               {...register('walletAddress')}
+              readOnly
+              className="readonly-field"
             />
             {errors.walletAddress && (
               <p className="error-message">{errors.walletAddress.message}</p>
+            )}
+          </div>
+
+          <div className="form-field checkbox-field">
+            <label htmlFor="isShopifyGranted" className="checkbox-label">
+              <input
+                id="isShopifyGranted"
+                type="checkbox"
+                {...register('isShopifyGranted')}
+              />
+              <span>Accès Shopify accordé</span>
+            </label>
+            {errors.isShopifyGranted && (
+              <p className="error-message">{errors.isShopifyGranted.message}</p>
             )}
           </div>
         </div>

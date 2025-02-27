@@ -13,6 +13,7 @@ export const userEditSchema = z.object({
     role: z.string()
         .min(1, { message: 'Le rôle est requis' }),
     walletAddress: z.string().optional(),
+    isShopifyGranted: z.boolean().default(false),
 })
 
 export type UserEditFormData = z.infer<typeof userEditSchema> 

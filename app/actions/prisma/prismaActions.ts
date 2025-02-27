@@ -210,7 +210,7 @@ export async function updateShopifyUser(
   try {
     // Vérifier si l'utilisateur existe
     const existingUser = await prisma.shopifyUser.findUnique({
-      where: { id: data.id }
+      where: { id: parseInt(data.id) }
     })
 
     if (!existingUser) {
@@ -225,7 +225,7 @@ export async function updateShopifyUser(
       const emailExists = await prisma.shopifyUser.findFirst({
         where: {
           email: data.email,
-          id: { not: data.id }
+          id: { not: parseInt(data.id) }
         }
       })
 
@@ -239,13 +239,14 @@ export async function updateShopifyUser(
 
     // Mettre à jour l'utilisateur
     await prisma.shopifyUser.update({
-      where: { id: data.id },
+      where: { id: parseInt(data.id) },
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
         role: data.role,
         walletAddress: data.walletAddress || '',
+        isShopifyGranted: data.isShopifyGranted,
       }
     })
 
