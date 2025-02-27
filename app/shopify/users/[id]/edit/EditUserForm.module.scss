@@ -40,6 +40,29 @@
   color: #b91c1c;
 }
 
+.formSection {
+  margin-bottom: 24px;
+}
+
+.collectionSection {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.sectionSubtitle {
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+}
+
 .formGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -60,7 +83,7 @@
     color: #333;
   }
   
-  input,
+  input, 
   select {
     width: 100%;
     padding: 10px 12px;
@@ -72,6 +95,22 @@
       border-color: #2563eb;
       outline: none;
       box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+  }
+  
+  textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    resize: vertical;
+    min-height: 100px;
+    
+    &:focus {
+      border-color: #4779fe;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(71, 121, 254, 0.2);
     }
   }
 }
@@ -103,6 +142,17 @@
     width: auto;
     margin-right: 8px;
   }
+}
+
+.loadingMessage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80px;
+  color: #666;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  margin-bottom: 16px;
 }
 
 .formButtons {
