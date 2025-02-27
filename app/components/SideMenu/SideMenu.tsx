@@ -1,119 +1,57 @@
-'use client';
+'use client'
 
-import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core';
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import './SideMenu.css';
-import { usePathname, useRouter } from 'next/navigation';
+import './SideMenu.css'
+import SideMenuItem from './SideMenuItem'
+import ShopifySubMenu from './ShopifySubMenu'
+import { useSideMenuLogic } from './useSideMenuLogic'
 
 export default function SideMenu() {
-  const isLoggedIn = useIsLoggedIn();
-  const { primaryWallet } = useDynamicContext();
-  const [activeItem, setActiveItem] = useState('dashboard');
-  const [canAccessCollection, setCanAccessCollection] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
+  const {
+    isLoggedIn,
+    activeItem,
+    canAccessCollection,
+    isAdmin,
+    showShopifySubmenu,
+    handleNavigation,
+    toggleShopifySubmenu
+  } = useSideMenuLogic()
   
-  useEffect(() => {
-    const checkUserAccess = async () => {
-      if (isLoggedIn && primaryWallet) {
-        try {
-          //console.log('Vérification accès pour:', primaryWallet.address);
-          
-          const response = await fetch('/api/shopify/isArtistAndGranted', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              walletAddress: primaryWallet.address
-            }),
-          });
-          
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Erreur ${response.status}`);
-          }
-          
-          const result = await response.json();
-          
-          setCanAccessCollection(result.hasAccess === true);
-          
-          // Vérifier si l'utilisateur est admin
-          const adminResponse = await fetch('/api/shopify/isAdmin', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              walletAddress: primaryWallet.address
-            }),
-          });
-          
-          if (adminResponse.ok) {
-            const adminResult = await adminResponse.json();
-            setIsAdmin(adminResult.isAdmin);
-          }
-          
-        } catch (err) {
-          console.error('Erreur lors de la vérification des accès:', err);
-          setCanAccessCollection(false);
-        }
-      }
-    };
-  
-    checkUserAccess();
-  }, [isLoggedIn, primaryWallet]);
-
-  useEffect(() => {
-    if (pathname === '/dashboard') {
-      setActiveItem('dashboard');
-    } else if (pathname === '/shopify/collection') {
-      setActiveItem('collection');
-    } else if (pathname === '/notifications') {
-      setActiveItem('notifications');
-    }
-  }, [pathname]);
-
-  
-  if (!isLoggedIn) return null;
-
-  const handleNavigation = (route: string, menuItem: string) => {
-    setActiveItem(menuItem);
-    router.push(route);
-  };
-
+  if (!isLoggedIn) return null
 
   return (
     <div className="side-menu">
       <ul className="menu-list">
-        <li 
-          className={`menu-item ${activeItem === 'dashboard' ? 'active' : ''}`}
+        <SideMenuItem 
+          label="Dashboard"
+          isActive={activeItem === 'dashboard'}
           onClick={() => handleNavigation('/dashboard', 'dashboard')}
-        >
-          Dashboard
-        </li>
+        />
         
         {canAccessCollection && !isAdmin && (
-          <li 
-            className={`menu-item ${activeItem === 'collection' ? 'active' : ''}`}
+          <SideMenuItem 
+            label="Ma Collection"
+            isActive={activeItem === 'collection'}
             onClick={() => handleNavigation('/shopify/collection', 'collection')}
-          >
-            Ma Collection
-          </li>
+          />
         )}
         
         {isAdmin && (
-          <li 
-            className={`menu-item ${activeItem === 'notifications' ? 'active' : ''}`}
-            onClick={() => handleNavigation('/notifications', 'notifications')}
-          >
-            Notifications
-          </li>
+          <>
+            <SideMenuItem 
+              label="Notifications"
+              isActive={activeItem === 'notifications'}
+              onClick={() => handleNavigation('/notifications', 'notifications')}
+            />
+            
+            <ShopifySubMenu
+              isActive={activeItem === 'adminShopify'}
+              isOpen={showShopifySubmenu}
+              toggleSubmenu={toggleShopifySubmenu}
+              onNavigate={handleNavigation}
+            />
+          </>
         )}
-        
       </ul>
     </div>
-  );
+  )
 }
