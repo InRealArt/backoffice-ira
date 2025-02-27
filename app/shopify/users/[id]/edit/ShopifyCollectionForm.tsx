@@ -11,6 +11,7 @@ import {
   createShopifyCollection 
 } from '@/app/actions/shopify/shopifyActions'
 import { ShopifyUser } from '@prisma/client'
+import styles from './ShopifyCollectionForm.module.scss'
 
 // Schéma de validation pour le formulaire de collection
 const collectionSchema = z.object({
@@ -143,8 +144,8 @@ export function ShopifyCollectionForm({ user }: { user: ShopifyUser }) {
 
   if (isLoading) {
     return (
-      <div className="collection-form-container">
-        <div className="loading-message">
+      <div className={styles.collectionFormContainer}>
+        <div className={styles.loadingMessage}>
           Chargement des informations de la collection...
         </div>
       </div>
@@ -152,10 +153,10 @@ export function ShopifyCollectionForm({ user }: { user: ShopifyUser }) {
   }
 
   return (
-    <div className="collection-form-container">
-      <div className="collection-form-header">
-        <h2 className="section-title">Collection Shopify</h2>
-        <p className="subtitle">
+    <div className={styles.collectionFormContainer}>
+      <div className={styles.collectionFormHeader}>
+        <h2 className={styles.sectionTitle}>Collection Shopify</h2>
+        <p className={styles.subtitle}>
           {collectionExists 
             ? 'Modifier les informations de la collection Shopify associée' 
             : 'Créer une collection Shopify pour cet utilisateur'}
@@ -163,18 +164,18 @@ export function ShopifyCollectionForm({ user }: { user: ShopifyUser }) {
       </div>
 
       {formMessage && (
-        <div className={`form-message ${formMessage.type === 'success' ? 'success-message' : 'error-message-banner'}`}>
+        <div className={`${styles.formMessage} ${formMessage.type === 'success' ? styles.successMessage : styles.errorMessageBanner}`}>
           {formMessage.message}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="collection-form">
-        <div className="form-grid">
-          <div className="form-field">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className={styles.formGrid}>
+          <div className={styles.formField}>
             <label htmlFor="title">Titre de la collection : {user.firstName} {user.lastName}</label>
           </div>
 
-          <div className="form-field">
+          <div className={styles.formField}>
             <label htmlFor="description">Description</label>
             <textarea
               id="description"
@@ -182,28 +183,18 @@ export function ShopifyCollectionForm({ user }: { user: ShopifyUser }) {
               {...register('description')}
             />
             {errors.description && (
-              <p className="error-message">{errors.description.message}</p>
+              <p className={styles.errorMessage}>{errors.description.message}</p>
             )}
           </div>
-
-        {/*
-          <div className="form-field checkbox-field">
-            <label htmlFor="isPublished" className="checkbox-label">
-              <input
-                id="isPublished"
-                type="checkbox"
-                {...register('isPublished')}
-              />
-              <span>Collection publiée</span>
-            </label>
-            {errors.isPublished && (
-              <p className="error-message">{errors.isPublished.message}</p>
-            )}
-          </div>
-        */}
         </div>
         
-
+        <button 
+          type="submit" 
+          className={styles.submitButton} 
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Traitement en cours...' : collectionExists ? 'Mettre à jour la collection' : 'Créer la collection'}
+        </button>
       </form>
     </div>
   )
