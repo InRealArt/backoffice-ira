@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { updateShopifyUser } from '@/app/actions/prisma/prismaActions'
+import { getShopifyCollectionByTitle } from '@/app/actions/shopify/shopifyActions'
 import { ShopifyUser } from '@prisma/client'
 import styles from './EditUserForm.module.scss'
 
@@ -28,6 +29,7 @@ interface EditUserFormProps {
 export default function EditUserForm({ user }: EditUserFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [collectionId, setCollectionId] = useState<string | null>(null)
 
   const {
     register,
@@ -43,6 +45,37 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       role: user.role || null
     }
   })
+
+  // Récupérer l'ID de la collection basée sur le nom de l'utilisateur
+  // Cette partie est déplacée en dehors du flux de soumission
+  useEffect(() => {
+    let isMounted = true
+    
+    const fetchCollectionId = async () => {
+      if (!user.firstName || !user.lastName) return
+
+      try {
+        const collectionTitle = `${user.firstName} ${user.lastName}`.trim()
+        const result = await getShopifyCollectionByTitle(collectionTitle)
+        
+        if (result.success && result.collection && isMounted) {
+          setCollectionId(result.collection.id)
+          console.log('Collection trouvée:', result.collection.id)
+        } else if (isMounted) {
+          console.log('Aucune collection trouvée pour:', collectionTitle)
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération de la collection:', error)
+      }
+    }
+
+    fetchCollectionId()
+    
+    // Nettoyage pour éviter des mises à jour sur un composant démonté
+    return () => {
+      isMounted = false
+    }
+  }, [user.firstName, user.lastName])
 
   // Fonction de soumission du formulaire
   const onSubmit = async (data: FormValues) => {
@@ -171,6 +204,12 @@ export default function EditUserForm({ user }: EditUserFormProps) {
             <p className={styles.formError}>{errors.role.message}</p>
           )}
         </div>
+
+        {collectionId && (
+          <div className={styles.infoBox}>
+            <p>Collection Shopify associée: ID {collectionId}</p>
+          </div>
+        )}
 
         <div className={styles.formActions}>
           <button 
