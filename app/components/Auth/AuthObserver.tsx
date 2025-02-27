@@ -45,6 +45,11 @@ export default function AuthObserver() {
 
     saveShopifyUserToPrisma();
     
+    // Rediriger vers la page d'accueil lorsque l'utilisateur se déconnecte
+    if (previousLoginState && !isLoggedIn) {
+      router.push('/');
+    }
+    
     // Mettre à jour l'état précédent
     setPreviousLoginState(isLoggedIn);
   }, [isLoggedIn, user, primaryWallet, previousLoginState, router]);
