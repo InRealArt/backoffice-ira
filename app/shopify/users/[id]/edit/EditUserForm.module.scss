@@ -258,4 +258,29 @@
   text-align: center;
   color: #6b7280;
   margin-bottom: 20px;
+}
+
+.checkboxContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.checkboxInput {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.checkboxLabel {
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+}
+
+.helpText {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 2px;
 } 

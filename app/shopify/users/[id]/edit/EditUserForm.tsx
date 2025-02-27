@@ -17,7 +17,8 @@ const formSchema = z.object({
   firstName: z.string().min(1, 'Le prénom est requis'),
   lastName: z.string().min(1, 'Le nom est requis'),
   email: z.string().email('Format d\'email invalide'),
-  role: z.string().nullable().optional()
+  role: z.string().nullable().optional(),
+  isShopifyGranted: z.boolean().default(false)
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -37,6 +38,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors }
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -45,9 +47,13 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       firstName: user.firstName || '',
       lastName: user.lastName || '',
       email: user.email || '',
-      role: user.role || null
+      role: user.role || null,
+      isShopifyGranted: user.isShopifyGranted || false
     }
   })
+
+  // Surveiller la valeur de isShopifyGranted pour l'affichage conditionnel
+  const isShopifyGranted = watch('isShopifyGranted')
 
   // Récupérer les informations de la collection basée sur le nom de l'utilisateur
   useEffect(() => {
@@ -107,9 +113,9 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         lastName: data.lastName || '',
         email: data.email || '',
         role: data.role || null,
+        isShopifyGranted: data.isShopifyGranted,
         // Ajouter des valeurs par défaut pour les autres champs qui pourraient être requis
-        walletAddress: user.walletAddress || '',
-        isShopifyGranted: user.isShopifyGranted || false
+        walletAddress: user.walletAddress || ''
       }
 
       console.log('Payload à envoyer:', payload)
@@ -217,47 +223,68 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           )}
         </div>
 
-        {/* Section d'information sur la collection Shopify */}
-        {isLoadingCollection ? (
-          <div className={styles.loadingContainer}>
-            Chargement des informations de la collection...
+        <div className={styles.formGroup}>
+          <div className={styles.checkboxContainer}>
+            <input
+              id="isShopifyGranted"
+              type="checkbox"
+              {...register('isShopifyGranted')}
+              className={styles.checkboxInput}
+            />
+            <label htmlFor="isShopifyGranted" className={styles.checkboxLabel}>
+              Accès Shopify accordé
+            </label>
           </div>
-        ) : collectionId ? (
-          <div className={styles.collectionSection}>
-            <h2 className={styles.sectionTitle}>Collection Shopify associée</h2>
-            
-            <div className={styles.infoBox}>
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>ID:</span>
-                <span className={styles.infoValue}>{collectionId}</span>
+          <p className={styles.helpText}>
+            Cochez cette case pour donner à cet utilisateur l'accès à Shopify.
+          </p>
+        </div>
+
+        {/* Section d'information sur la collection Shopify - conditionnelle selon isShopifyGranted */}
+        {isShopifyGranted && (
+          <>
+            {isLoadingCollection ? (
+              <div className={styles.loadingContainer}>
+                Chargement des informations de la collection...
               </div>
-              
-              <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Titre:</span>
-                <span className={styles.infoValue}>{collectionTitle}</span>
+            ) : collectionId ? (
+              <div className={styles.collectionSection}>
+                <h2 className={styles.sectionTitle}>Collection Shopify associée</h2>
+                
+                <div className={styles.infoBox}>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>ID:</span>
+                    <span className={styles.infoValue}>{collectionId}</span>
+                  </div>
+                  
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLabel}>Titre:</span>
+                    <span className={styles.infoValue}>{collectionTitle}</span>
+                  </div>
+                </div>
+                
+                <div className={styles.formGroup}>
+                  <label htmlFor="collectionDescription" className={styles.formLabel}>
+                    Description de la collection
+                  </label>
+                  <textarea
+                    id="collectionDescription"
+                    readOnly
+                    value={collectionDescription || ''}
+                    className={`${styles.formTextarea} ${styles.readonlyTextarea}`}
+                    rows={5}
+                  />
+                  <p className={styles.infoText}>
+                    Cette description est affichée sur la page de la collection Shopify.
+                  </p>
+                </div>
               </div>
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="collectionDescription" className={styles.formLabel}>
-                Description de la collection
-              </label>
-              <textarea
-                id="collectionDescription"
-                readOnly
-                value={collectionDescription || ''}
-                className={`${styles.formTextarea} ${styles.readonlyTextarea}`}
-                rows={5}
-              />
-              <p className={styles.infoText}>
-                Cette description est affichée sur la page de la collection Shopify.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className={styles.noCollectionBox}>
-            Aucune collection Shopify n'est associée à cet utilisateur.
-          </div>
+            ) : (
+              <div className={styles.noCollectionBox}>
+                Aucune collection Shopify n'est associée à cet utilisateur.
+              </div>
+            )}
+          </>
         )}
 
         <div className={styles.formActions}>
