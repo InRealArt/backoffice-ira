@@ -296,7 +296,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
             <option value="">Sélectionnez un rôle</option>
             <option value="admin">Administrateur</option>
             <option value="artist">Artiste</option>
-            <option value="user">Utilisateur standard</option>
+            <option value="galleryManager">Gestionnaire de galerie</option>
           </select>
         </div>
 

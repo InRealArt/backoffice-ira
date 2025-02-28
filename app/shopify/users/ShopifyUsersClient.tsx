@@ -39,6 +39,23 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
     router.push(`/shopify/users/${userId}/edit`)
   }
   
+  // Fonction pour déterminer la classe et le texte du badge selon le rôle
+  const getRoleBadge = (role: string | null) => {
+    if (!role) return null
+    
+    const roleLC = role.toLowerCase()
+    
+    if (roleLC === 'admin' || roleLC === 'administrateur') {
+      return <span className={`${styles.roleBadge} ${styles.adminBadge}`}>Admin</span>
+    } else if (roleLC === 'artist' || roleLC === 'artiste') {
+      return <span className={`${styles.roleBadge} ${styles.artistBadge}`}>Artiste</span>
+    } else if (roleLC === 'gallerymanager') {
+      return <span className={`${styles.roleBadge} ${styles.galleryBadge}`}>Resp. galerie</span>
+    } else {
+      return <span className={`${styles.roleBadge} ${styles.userBadge}`}>Utilisateur</span>
+    }
+  }
+  
   return (
     <>
       <Navbar />
@@ -88,7 +105,11 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
                               </div>
                             </td>
                             <td>{user.email}</td>
-                            <td>{user.role || 'Utilisateur'}</td>
+                            <td>
+                              <div className={styles.roleCell}>
+                                {getRoleBadge(user.role)}
+                              </div>
+                            </td>
                             <td className={styles.hiddenMobile}>{user.walletAddress}</td>
                             <td className={styles.hiddenSmall}>{formatDate(user.createdAt)}</td>
                           </tr>
