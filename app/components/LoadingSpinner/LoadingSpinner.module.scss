@@ -1,0 +1,79 @@
+.spinnerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.fullPage {
+  height: 100vh;
+  width: 100%;
+}
+
+.inline {
+  display: inline-flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  height: auto;
+}
+
+.message {
+  color: #666;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  animation: spin 0.8s ease-in-out infinite;
+  
+  &.primary {
+    border: 2px solid rgba(71, 121, 254, 0.3);
+    border-radius: 50%;
+    border-top-color: #4779fe;
+  }
+  
+  &.light {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+  }
+  
+  &.dark {
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: #333;
+  }
+}
+
+.small .spinner {
+  width: 16px;
+  height: 16px;
+}
+
+.medium .spinner {
+  width: 24px;
+  height: 24px;
+}
+
+.large .spinner {
+  width: 32px;
+  height: 32px;
+}
+
+.small .message {
+  font-size: 0.8rem;
+}
+
+.large .message {
+  font-size: 1.1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+} 

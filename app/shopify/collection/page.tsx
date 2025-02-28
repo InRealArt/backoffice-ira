@@ -7,6 +7,7 @@ import './page.css';
 import SideMenu from '@/app/components/SideMenu/SideMenu';
 import Navbar from '@/app/components/Navbar/Navbar';
 import Dashboard from '@/app/components/Dashboard/Dashboard';
+import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 
 export default function MyCollection() {
   const { user, primaryWallet } = useDynamicContext();
@@ -57,7 +58,17 @@ export default function MyCollection() {
   }, [user, primaryWallet, router]);
 
   if (isLoading) {
-    return <div className="collection-loading">Chargement...</div>;
+    return (
+      <>
+        <Navbar />
+        <div className="page-layout">
+          <SideMenu />
+          <div className="content-container">
+            <LoadingSpinner message="Chargement de votre collection..." />
+          </div>
+        </div>
+      </>
+    )
   }
 
   return (

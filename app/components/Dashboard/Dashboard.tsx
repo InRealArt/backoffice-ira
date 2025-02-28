@@ -8,6 +8,8 @@ import styles from './Dashboard.module.scss';
 import toast from 'react-hot-toast';
 import { submitShopifyRequest } from '@/app/actions/shopify/submitShopifyRequest';
 import { useRouter } from 'next/navigation';
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
+import Button from '../Button/Button';
 
 export default function Dashboard() {
   const { user, primaryWallet } = useDynamicContext();
@@ -111,7 +113,7 @@ export default function Dashboard() {
     router.push('/shopify/users');
   };
 
-  if (isLoading) return <div className={styles.dashboardLoading}>Chargement...</div>;
+  if (isLoading) return <LoadingSpinner fullPage message="Chargement du tableau de bord..." />;
 
   return (
     <div className={styles.dashboardContainer}>
@@ -129,30 +131,22 @@ export default function Dashboard() {
           <div className={styles.dashboardCard}>
             <h3>Panneau d'Administration</h3>
             <p>Voir les utilisateurs et leurs informations.</p>
-            <button 
-              className={`${styles.dashboardButton} ${isAdminNavigating ? styles.dashboardButtonLoading : ''}`}
+            <Button
               onClick={handleAdminNavigation}
-              disabled={isAdminNavigating}
+              isLoading={isAdminNavigating}
+              loadingText="Chargement..."
             >
-              {isAdminNavigating ? (
-                <>
-                  <span className={styles.spinner}></span>
-                  <span>Chargement...</span>
-                </>
-              ) : 'Voir les utilisateurs'}
-            </button>
+              Voir les utilisateurs
+            </Button>
           </div>
         ) : (
           <>
             <div className={styles.dashboardCard}>
               <h3>Ma Collection</h3>
               <p>Explorez et gérez votre collection d'œuvres d'art.</p>
-              <button 
-                className={styles.dashboardButton} 
-                onClick={() => router.push('/shopify/collection')}
-              >
+              <Button onClick={() => router.push('/shopify/collection')}>
                 Voir ma collection d'œuvres d'art
-              </button>
+              </Button>
             </div>
             
             <div className={styles.dashboardCard}>

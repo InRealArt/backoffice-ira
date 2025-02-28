@@ -6,6 +6,7 @@ import Navbar from '@/app/components/Navbar/Navbar'
 import SideMenu from '@/app/components/SideMenu/SideMenu'
 import { ShopifyUser } from '@prisma/client'
 import styles from './ShopifyUsersClient.module.scss'
+import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 
 interface ShopifyUsersClientProps {
   users: ShopifyUser[]
@@ -14,6 +15,7 @@ interface ShopifyUsersClientProps {
 export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
+  const [loadingUserId, setLoadingUserId] = useState<string | null>(null)
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -33,6 +35,7 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
   }, [])
   
   const handleUserClick = (userId: string) => {
+    setLoadingUserId(userId)
     router.push(`/shopify/users/${userId}/edit`)
   }
   
@@ -68,19 +71,29 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {users.map((user) => (
-                        <tr 
-                          key={user.id} 
-                          onClick={() => handleUserClick(user.id.toString())}
-                          className={styles.clickableRow}
-                        >
-                          <td>{user.firstName} {user.lastName}</td>
-                          <td>{user.email}</td>
-                          <td>{user.role || 'Utilisateur'}</td>
-                          <td className={styles.hiddenMobile}>{user.walletAddress}</td>
-                          <td className={styles.hiddenSmall}>{formatDate(user.createdAt)}</td>
-                        </tr>
-                      ))}
+                      {users.map((user) => {
+                        const isLoading = loadingUserId === user.id.toString()
+                        return (
+                          <tr 
+                            key={user.id} 
+                            onClick={() => !loadingUserId && handleUserClick(user.id.toString())}
+                            className={`${styles.clickableRow} ${isLoading ? styles.loadingRow : ''} ${loadingUserId && !isLoading ? styles.disabledRow : ''}`}
+                          >
+                            <td>
+                              <div className={styles.nameCell}>
+                                {isLoading && <LoadingSpinner size="small" message="" inline />}
+                                <span className={isLoading ? styles.loadingText : ''}>
+                                  {user.firstName} {user.lastName}
+                                </span>
+                              </div>
+                            </td>
+                            <td>{user.email}</td>
+                            <td>{user.role || 'Utilisateur'}</td>
+                            <td className={styles.hiddenMobile}>{user.walletAddress}</td>
+                            <td className={styles.hiddenSmall}>{formatDate(user.createdAt)}</td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
