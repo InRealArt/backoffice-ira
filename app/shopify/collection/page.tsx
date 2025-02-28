@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { useRouter } from 'next/navigation';
-import './page.css'; 
+import styles from './collection.module.scss';
 import SideMenu from '@/app/components/SideMenu/SideMenu';
 import Navbar from '@/app/components/Navbar/Navbar';
 import Dashboard from '@/app/components/Dashboard/Dashboard';
@@ -72,10 +72,10 @@ export default function MyCollection() {
   }
 
   return (
-    <div className="collection-container">
-      <h1 className="collection-title">Ma Collection</h1>
+    <div className={styles.collectionContainer}>
+      <h1 className={styles.collectionTitle}>Ma Collection</h1>
       
-      <div className="collection-content">
+      <div className={styles.collectionContent}>
         <p>Bienvenue dans votre collection.</p>
         <p>Le contenu de votre collection apparaîtra ici.</p>
       </div>
