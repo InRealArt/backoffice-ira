@@ -43,6 +43,9 @@ export default function EditUserForm({ user }: EditUserFormProps) {
   const [isLoadingCollection, setIsLoadingCollection] = useState(true)
   const [hasDescriptionChanged, setHasDescriptionChanged] = useState(false)
 
+  // Déterminer si l'utilisateur est un administrateur
+  const isAdmin = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'administrateur'
+  
   const {
     register,
     handleSubmit,
@@ -57,13 +60,14 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       lastName: user.lastName || '',
       email: user.email || '',
       role: user.role || null,
-      isShopifyGranted: user.isShopifyGranted || false,
+      // Pour les admins, on force toujours l'accès Shopify à true
+      isShopifyGranted: isAdmin ? true : user.isShopifyGranted || false,
       collectionDescription: ''
     }
   })
 
   // Surveiller la valeur de isShopifyGranted pour l'affichage conditionnel
-  const isShopifyGranted = watch('isShopifyGranted')
+  const isShopifyGranted = isAdmin ? true : watch('isShopifyGranted')
   const currentDescription = watch('collectionDescription')
 
   // Observer les changements dans la description et comparer avec la valeur initiale
@@ -139,7 +143,8 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         lastName: data.lastName || '',
         email: data.email || '',
         role: data.role || null,
-        isShopifyGranted: data.isShopifyGranted,
+        // Pour les admins, on force toujours l'accès Shopify à true
+        isShopifyGranted: isAdmin ? true : data.isShopifyGranted,
         walletAddress: user.walletAddress || ''
       }
 
@@ -152,8 +157,8 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         throw new Error(userResult.message)
       }
 
-      // Si l'accès Shopify est accordé, vérifier/gérer la collection
-      if (data.isShopifyGranted) {
+      // Si l'accès Shopify est accordé ET que l'utilisateur n'est PAS un administrateur, vérifier/gérer la collection
+      if (data.isShopifyGranted && !isAdmin) {
         const collectionTitle = `${data.firstName} ${data.lastName}`.trim()
         
         if (!collectionId) {
@@ -193,7 +198,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           toast.success('Utilisateur mis à jour avec succès')
         }
       } else {
-        // Accès Shopify non accordé
+        // Accès Shopify non accordé ou utilisateur admin
         toast.success('Utilisateur mis à jour avec succès')
       }
       
@@ -288,35 +293,40 @@ export default function EditUserForm({ user }: EditUserFormProps) {
             {...register('role')}
             className={styles.formSelect}
           >
-            <option value="">Sélectionner un rôle</option>
+            <option value="">Sélectionnez un rôle</option>
             <option value="admin">Administrateur</option>
             <option value="artist">Artiste</option>
-            <option value="galleryManager">Gestionnaire de galerie</option>
+            <option value="user">Utilisateur standard</option>
           </select>
-          {errors.role && (
-            <p className={styles.formError}>{errors.role.message}</p>
-          )}
         </div>
 
-        <div className={styles.formGroup}>
-          <div className={styles.checkboxContainer}>
+        {/* Afficher la checkbox uniquement si l'utilisateur n'est pas un administrateur */}
+        {!isAdmin && (
+          <div className={styles.formCheckboxGroup}>
             <input
-              id="isShopifyGranted"
               type="checkbox"
+              id="isShopifyGranted"
               {...register('isShopifyGranted')}
-              className={styles.checkboxInput}
+              className={styles.formCheckbox}
             />
-            <label htmlFor="isShopifyGranted" className={styles.checkboxLabel}>
+            <label htmlFor="isShopifyGranted" className={styles.formCheckboxLabel}>
               Accès Shopify accordé
             </label>
           </div>
-          <p className={styles.helpText}>
-            Cochez cette case pour donner à cet utilisateur l'accès à Shopify.
-          </p>
-        </div>
+        )}
 
-        {/* Section d'information sur la collection Shopify - conditionnelle selon isShopifyGranted */}
-        {isShopifyGranted && (
+        {/* Informations administrateur si l'utilisateur est admin */}
+        {isAdmin && (
+          <div className={styles.adminInfoBox}>
+            <p className={styles.adminInfoText}>
+              <strong>Note:</strong> En tant qu'administrateur, cet utilisateur a automatiquement accès à Shopify.
+              Aucune collection personnelle n'est créée pour les administrateurs.
+            </p>
+          </div>
+        )}
+
+        {/* Section d'information sur la collection Shopify - conditionnelle selon isShopifyGranted ET non-admin */}
+        {isShopifyGranted && !isAdmin && (
           <>
             {isLoadingCollection ? (
               <div className={styles.loadingContainer}>
@@ -354,7 +364,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
                   </p>
                   {hasDescriptionChanged && (
                     <p className={styles.changeIndicator}>
-                      La description de la collection correspondant à {user.firstName} {user.lastName} a été modifiée. Enregistrez pour appliquer les changements.
+                      La description a été modifiée. Enregistrez pour appliquer les changements.
                     </p>
                   )}
                 </div>

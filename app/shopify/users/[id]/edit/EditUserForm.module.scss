@@ -293,4 +293,19 @@
   color: #c2410c;
   font-size: 0.875rem;
   border-radius: 2px;
+}
+
+.adminInfoBox {
+  grid-column: 1 / -1;
+  background-color: #f0f4ff;
+  border-left: 4px solid #4779fe;
+  padding: 0.8rem 1rem;
+  border-radius: 0 4px 4px 0;
+  margin: 0.5rem 0 1rem 0;
+}
+
+.adminInfoText {
+  margin: 0;
+  color: #2d4a8a;
+  font-size: 0.9rem;
 } 
