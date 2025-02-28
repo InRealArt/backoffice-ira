@@ -7,6 +7,9 @@ import styles from './homepage.module.scss';
 import Navbar from './components/Navbar/Navbar';
 import SideMenu from './components/SideMenu/SideMenu';
 import AuthObserver from './components/Auth/AuthObserver';
+import UnauthorizedMessage from './components/Auth/UnauthorizedMessage';
+import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
+import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core';
 
 const checkIsDarkSchemePreferred = () => {
   if (typeof window !== 'undefined') {
@@ -17,6 +20,10 @@ const checkIsDarkSchemePreferred = () => {
 
 export default function Main() {
   const [isDarkMode, setIsDarkMode] = useState(checkIsDarkSchemePreferred);
+  const isLoggedIn = useIsLoggedIn();
+  const { user } = useDynamicContext();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -25,6 +32,55 @@ export default function Main() {
     darkModeMediaQuery.addEventListener('change', handleChange);
     return () => darkModeMediaQuery.removeEventListener('change', handleChange);
   }, []);
+
+  useEffect(() => {
+    const checkAuthorization = async () => {
+      if (isLoggedIn && user?.email) {
+        setIsLoading(true);
+        try {
+          const response = await fetch('/api/auth/checkAuthorizedUser', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: user.email
+            }),
+          });
+
+          const data = await response.json();
+          setIsAuthorized(data.authorized);
+        } catch (error) {
+          console.error('Erreur lors de la vérification de l\'autorisation:', error);
+          setIsAuthorized(false);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setIsAuthorized(null);
+      }
+    };
+
+    checkAuthorization();
+  }, [isLoggedIn, user]);
+
+  if (isLoading) {
+    return (
+      <>
+        <Navbar />
+        <LoadingSpinner message="Vérification de vos accès..." />
+      </>
+    );
+  }
+
+  if (isLoggedIn && isAuthorized === false) {
+    return (
+      <>
+        <Navbar />
+        <UnauthorizedMessage />
+      </>
+    );
+  }
 
   return (
     <div className={`${styles.container} ${isDarkMode ? styles.dark : ''}`}>

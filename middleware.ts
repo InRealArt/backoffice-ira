@@ -17,30 +17,39 @@ export async function middleware(request: NextRequest) {
     }
 
     // Récupérer le niveau d'accès requis pour ce chemin
-    const requiredAccess = getRequiredAccessLevel(path)
-    console.log("requiredAccess", requiredAccess)
+    const requiredAccessLevel = getRequiredAccessLevel(path)
+    console.log("requiredAccess", requiredAccessLevel)
 
     // Si aucun accès requis, autoriser l'accès
-    if (!requiredAccess) {
+    if (!requiredAccessLevel) {
         return NextResponse.next()
     }
 
-    // Récupérer le cookie d'authentification Dynamic
-    const authToken = request.cookies.get('dynamic_auth_token')?.value
-    console.log("authToken", authToken)
-    // Si accès authentifié requis mais pas de token, rediriger vers l'accueil
-    if (requiredAccess && !authToken) {
-        return NextResponse.redirect(new URL('/', request.url))
+    // Vérifier si l'utilisateur est connecté via le cookie
+    const authToken = request.cookies.get('dynamic_auth_token')
+    const isLoggedIn = !!authToken
+
+    // Si l'utilisateur n'est pas connecté, rediriger vers la page d'accueil
+    if (!isLoggedIn) {
+        const url = new URL('/', request.url)
+        return NextResponse.redirect(url)
     }
 
-    // Pour les vérifications de rôles spécifiques (admin, artist), 
-    // nous les laissons aux layouts qui ont accès au contexte Dynamic
+    // Nous ne pouvons pas vérifier l'email dans le middleware car 
+    // nous n'avons pas accès aux informations de l'utilisateur
+    // La vérification d'autorisation sera gérée par le composant AuthObserver
+    // et la page elle-même
+
     return NextResponse.next()
 }
 
 // Configurer les chemins sur lesquels le middleware s'applique
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico).*)',
+        '/dashboard/:path*',
+        '/admin/:path*',
+        '/shopify/:path*',
+        '/profile/:path*',
+        '/notifications/:path*',
     ],
 } 
