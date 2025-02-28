@@ -108,9 +108,9 @@ export default function Dashboard() {
       }
   };
 
-  const handleAdminNavigation = () => {
+  const handleAdminShowUsers = () => {
     setIsAdminNavigating(true);
-    router.push('/shopify/users');
+    router.push('/admin/shopify/users');
   };
 
   if (isLoading) return <LoadingSpinner fullPage message="Chargement du tableau de bord..." />;
@@ -132,7 +132,7 @@ export default function Dashboard() {
             <h3>Panneau d'Administration</h3>
             <p>Voir les utilisateurs et leurs informations.</p>
             <Button
-              onClick={handleAdminNavigation}
+              onClick={handleAdminShowUsers}
               isLoading={isAdminNavigating}
               loadingText="Chargement..."
             >

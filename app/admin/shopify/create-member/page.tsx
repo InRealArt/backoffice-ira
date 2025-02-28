@@ -1,6 +1,5 @@
 'use client'
 
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import Navbar from '@/app/components/Navbar/Navbar'
 import SideMenu from '@/app/components/SideMenu/SideMenu'
 import CreateMemberForm from './CreateMemberForm'
@@ -9,19 +8,14 @@ import { useEffect, useState } from 'react'
 import styles from './create-member.module.scss'
 
 export default function CreateMemberPage() {
-  const { primaryWallet } = useDynamicContext()
   const [isMobile, setIsMobile] = useState(false)
   
-  // Détecte si l'écran est de taille mobile
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768)
     }
     
-    // Vérifier au chargement
     checkIfMobile()
-    
-    // Écouter les changements de taille d'écran
     window.addEventListener('resize', checkIfMobile)
     
     return () => {
@@ -37,9 +31,7 @@ export default function CreateMemberPage() {
         <div className={styles.contentContainer}>
           <Toaster 
             position={isMobile ? "bottom-center" : "top-right"} 
-            toastOptions={{
-              duration: isMobile ? 5000 : 3000,
-            }}
+            toastOptions={{ duration: isMobile ? 5000 : 3000 }}
           />
           
           <div className={styles.createMemberHeader}>

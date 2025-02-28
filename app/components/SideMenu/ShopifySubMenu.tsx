@@ -59,7 +59,7 @@ export default function ShopifySubMenu({
             </li>
             <li 
               className="submenu-item"
-              onClick={() => onNavigate('/shopify/users', 'shopifyUsers')}
+              onClick={() => onNavigate('/admin/shopify/users', 'shopifyUsers')}
             >
               Utilisateurs
             </li>
