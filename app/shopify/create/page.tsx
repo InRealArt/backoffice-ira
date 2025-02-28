@@ -5,7 +5,7 @@ import Navbar from '@/app/components/Navbar/Navbar'
 import SideMenu from '@/app/components/SideMenu/SideMenu'
 import { Toaster } from 'react-hot-toast'
 import ArtworkCreationForm from './ArtworkCreationForm'
-import styles from './page.module.scss'
+import styles from './createArtwork.module.scss'
 
 export default function CreateArtworkPage() {
   const [isMobile, setIsMobile] = useState(false)

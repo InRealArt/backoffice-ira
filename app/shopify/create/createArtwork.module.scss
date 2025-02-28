@@ -1,6 +1,11 @@
 // Règle globale pour assurer que le padding est inclus dans la largeur
-:global(*) {
-  box-sizing: border-box;
+.root {
+  /* Classe racine qui peut être appliquée à un élément wrapper */
+  &:global {
+    & * {
+      box-sizing: border-box;
+    }
+  }
 }
 
 $navbar-height: 90px;
