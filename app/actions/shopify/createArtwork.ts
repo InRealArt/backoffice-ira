@@ -4,6 +4,9 @@ import { createAdminRestApiClient } from '@shopify/admin-api-client'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { writeFile, mkdir } from 'fs/promises'
+import { join, dirname } from 'path'
+import { existsSync } from 'fs'
 
 type CreateArtworkResult = {
     success: boolean
@@ -32,122 +35,128 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
             }
         }
 
-        // Construction du titre complet pour le produit
-        const productTitle = title
-
-        // Construction d'une description complète
-        let fullDescription = description + '\n\n'
-        fullDescription += `Artiste: ${artist}\n`
-        fullDescription += `Support: ${medium}\n`
-        fullDescription += `Dimensions: ${dimensions} cm\n`
-
-        if (year) {
-            fullDescription += `Année: ${year}\n`
+        // Validation du prix
+        const priceValue = parseFloat(price.replace(',', '.'))
+        if (isNaN(priceValue) || priceValue <= 0) {
+            return {
+                success: false,
+                message: 'Le prix doit être un nombre positif'
+            }
         }
 
-        if (edition) {
-            fullDescription += `Édition: ${edition}\n`
+        // Collecter les images
+        const images = []
+        for (let pair of formData.entries()) {
+            if (pair[0].startsWith('image-') && pair[1] instanceof File) {
+                images.push(pair[1] as File)
+            }
         }
 
-        // Initialisation du client Shopify Admin API
+        if (images.length === 0) {
+            return {
+                success: false,
+                message: 'Au moins une image est requise'
+            }
+        }
+
+        // Initialiser le client Shopify
         const client = createAdminRestApiClient({
             storeDomain: process.env.SHOPIFY_STORE_NAME || '',
             apiVersion: '2025-01',
             accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '',
         })
 
-        // Extraire l'identifiant de collection de l'artiste (à implémenter)
-        const artistCollectionId = await getArtistCollectionId(artist)
+        // Construire les métadonnées pour l'œuvre
+        const metafields = [
+            {
+                key: 'artist',
+                value: artist,
+                type: 'single_line_text_field',
+                namespace: 'artwork',
+            },
+            {
+                key: 'medium',
+                value: medium,
+                type: 'single_line_text_field',
+                namespace: 'artwork',
+            },
+            {
+                key: 'dimensions',
+                value: dimensions,
+                type: 'single_line_text_field',
+                namespace: 'artwork',
+            }
+        ]
 
-        // Créer le produit
+        if (year) {
+            metafields.push({
+                key: 'year',
+                value: year,
+                type: 'single_line_text_field',
+                namespace: 'artwork',
+            })
+        }
+
+        if (edition) {
+            metafields.push({
+                key: 'edition',
+                value: edition,
+                type: 'single_line_text_field',
+                namespace: 'artwork',
+            })
+        }
+
+        // Préparer les images pour envoi à Shopify (encodage Base64)
+        const imageUrls = []
+        for (const image of images) {
+            const buffer = Buffer.from(await image.arrayBuffer())
+            imageUrls.push({
+                attachment: buffer.toString('base64')
+            })
+        }
+
+        // Créer le produit sur Shopify
         const productResponse = await client.post('products', {
             data: {
                 product: {
-                    title: productTitle,
-                    body_html: fullDescription,
+                    title,
+                    body_html: description,
                     vendor: artist,
                     product_type: 'Artwork',
-                    tags: [...tags, 'art', 'artwork', medium.toLowerCase()],
+                    tags: tags,
                     status: 'active',
+                    images: imageUrls,
                     variants: [
                         {
-                            price: price,
+                            price: priceValue.toString(),
                             inventory_management: 'shopify',
                             inventory_quantity: 1,
+                            inventory_policy: 'deny',
                             requires_shipping: true
                         }
                     ],
-                    options: [
-                        {
-                            name: 'Size',
-                            values: [dimensions]
-                        }
-                    ],
-                    metafields: [
-                        {
-                            namespace: 'artwork',
-                            key: 'artist',
-                            value: artist,
-                            type: 'string'
-                        },
-                        {
-                            namespace: 'artwork',
-                            key: 'medium',
-                            value: medium,
-                            type: 'string'
-                        },
-                        {
-                            namespace: 'artwork',
-                            key: 'dimensions',
-                            value: dimensions,
-                            type: 'string'
-                        },
-                        {
-                            namespace: 'artwork',
-                            key: 'year',
-                            value: year,
-                            type: 'string'
-                        },
-                        {
-                            namespace: 'artwork',
-                            key: 'edition',
-                            value: edition,
-                            type: 'string'
-                        }
-                    ],
+                    metafields
                 }
             }
         })
 
         if (!productResponse.ok) {
             const errorText = await productResponse.text()
-            console.error('Erreur Shopify API lors de la création du produit:', errorText)
+            console.error('Erreur lors de la création du produit Shopify:', errorText)
             return {
                 success: false,
-                message: `Erreur API Shopify: ${productResponse.status}`
+                message: `Erreur Shopify: ${productResponse.status}`
             }
         }
 
         const productData = await productResponse.json()
         const productId = productData.product.id
 
-        // Si une collection d'artiste existe, ajouter le produit à cette collection
-        if (artistCollectionId) {
-            await addProductToCollection(client, productId, artistCollectionId)
-        }
-
         // Traitement des images
-        const imageFiles = []
-        for (const [key, value] of formData.entries()) {
-            if (key.startsWith('image-') && value instanceof File) {
-                imageFiles.push(value)
-            }
-        }
-
-        if (imageFiles.length > 0) {
+        if (images.length > 0) {
             // Téléchargement des images
-            for (const imageFile of imageFiles) {
-                await uploadProductImage(client, productId, imageFile)
+            for (const image of images) {
+                await uploadProductImage(client, productId, image)
             }
         }
 

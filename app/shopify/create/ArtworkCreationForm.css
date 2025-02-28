@@ -139,3 +139,22 @@
     width: 100%;
   }
 }
+
+.form-section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #111827;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dark .form-section-title {
+  color: #f3f4f6;
+  border-bottom-color: #374151;
+}
+
+.form-section-content {
+  margin-bottom: 1.5rem;
+}

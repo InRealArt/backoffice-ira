@@ -112,20 +112,20 @@ export default function ArtworkCreationForm() {
             )}
           </div>
           
-          {/* Prix */}
+          {/* Artiste */}
           <div className="form-group">
-            <label htmlFor="price" className="form-label">
-              Prix (€)*
+            <label htmlFor="artist" className="form-label">
+              Artiste*
             </label>
             <input
-              id="price"
+              id="artist"
               type="text"
-              {...register('price')}
-              className={`form-input ${errors.price ? 'form-input-error' : ''}`}
-              placeholder="1500"
+              {...register('artist')}
+              className={`form-input ${errors.artist ? 'form-input-error' : ''}`}
+              placeholder="Nom de l'artiste"
             />
-            {errors.price && (
-              <p className="form-error">{errors.price.message}</p>
+            {errors.artist && (
+              <p className="form-error">{errors.artist.message}</p>
             )}
           </div>
         </div>
@@ -147,112 +147,117 @@ export default function ArtworkCreationForm() {
           )}
         </div>
         
-        <div className="form-grid">
-          {/* Artiste */}
+        {/* Section Tarification */}
+        <div className="form-section-title">Tarification</div>
+        <div className="form-section-content">
           <div className="form-group">
-            <label htmlFor="artist" className="form-label">
-              Artiste*
+            <label htmlFor="price" className="form-label">
+              Prix (€)*
             </label>
             <input
-              id="artist"
+              id="price"
               type="text"
-              {...register('artist')}
-              className={`form-input ${errors.artist ? 'form-input-error' : ''}`}
-              placeholder="Nom de l'artiste"
+              {...register('price')}
+              className={`form-input ${errors.price ? 'form-input-error' : ''}`}
+              placeholder="1500"
             />
-            {errors.artist && (
-              <p className="form-error">{errors.artist.message}</p>
-            )}
-          </div>
-          
-          {/* Support/Medium */}
-          <div className="form-group">
-            <label htmlFor="medium" className="form-label">
-              Support/Medium*
-            </label>
-            <input
-              id="medium"
-              type="text"
-              {...register('medium')}
-              className={`form-input ${errors.medium ? 'form-input-error' : ''}`}
-              placeholder="Acrylique sur toile"
-            />
-            {errors.medium && (
-              <p className="form-error">{errors.medium.message}</p>
+            {errors.price && (
+              <p className="form-error">{errors.price.message}</p>
             )}
           </div>
         </div>
         
-        <div className="form-grid">
-          {/* Dimensions */}
-          <div className="form-group">
-            <label htmlFor="dimensions" className="form-label">
-              Dimensions (cm)*
-            </label>
-            <input
-              id="dimensions"
-              type="text"
-              {...register('dimensions')}
-              className={`form-input ${errors.dimensions ? 'form-input-error' : ''}`}
-              placeholder="100 x 80 x 2"
-            />
-            {errors.dimensions && (
-              <p className="form-error">{errors.dimensions.message}</p>
-            )}
+        {/* Section Caractéristiques */}
+        <div className="form-section-title">Caractéristiques</div>
+        <div className="form-section-content">
+          <div className="form-grid">
+            {/* Support/Medium */}
+            <div className="form-group">
+              <label htmlFor="medium" className="form-label">
+                Support/Medium*
+              </label>
+              <input
+                id="medium"
+                type="text"
+                {...register('medium')}
+                className={`form-input ${errors.medium ? 'form-input-error' : ''}`}
+                placeholder="Acrylique sur toile"
+              />
+              {errors.medium && (
+                <p className="form-error">{errors.medium.message}</p>
+              )}
+            </div>
+            
+            {/* Dimensions */}
+            <div className="form-group">
+              <label htmlFor="dimensions" className="form-label">
+                Dimensions (cm)*
+              </label>
+              <input
+                id="dimensions"
+                type="text"
+                {...register('dimensions')}
+                className={`form-input ${errors.dimensions ? 'form-input-error' : ''}`}
+                placeholder="100 x 80 x 2"
+              />
+              {errors.dimensions && (
+                <p className="form-error">{errors.dimensions.message}</p>
+              )}
+            </div>
           </div>
           
-          {/* Année */}
-          <div className="form-group">
-            <label htmlFor="year" className="form-label">
-              Année de création
-            </label>
-            <input
-              id="year"
-              type="text"
-              {...register('year')}
-              className={`form-input ${errors.year ? 'form-input-error' : ''}`}
-              placeholder="2023"
-            />
-            {errors.year && (
-              <p className="form-error">{errors.year.message}</p>
-            )}
+          <div className="form-grid">
+            {/* Année */}
+            <div className="form-group">
+              <label htmlFor="year" className="form-label">
+                Année de création
+              </label>
+              <input
+                id="year"
+                type="text"
+                {...register('year')}
+                className={`form-input ${errors.year ? 'form-input-error' : ''}`}
+                placeholder="2023"
+              />
+              {errors.year && (
+                <p className="form-error">{errors.year.message}</p>
+              )}
+            </div>
+            
+            {/* Édition */}
+            <div className="form-group">
+              <label htmlFor="edition" className="form-label">
+                Édition/Série
+              </label>
+              <input
+                id="edition"
+                type="text"
+                {...register('edition')}
+                className={`form-input ${errors.edition ? 'form-input-error' : ''}`}
+                placeholder="Édition limitée 2/10"
+              />
+              {errors.edition && (
+                <p className="form-error">{errors.edition.message}</p>
+              )}
+            </div>
           </div>
         </div>
         
-        <div className="form-grid">
-          {/* Édition */}
-          <div className="form-group">
-            <label htmlFor="edition" className="form-label">
-              Édition/Série
-            </label>
-            <input
-              id="edition"
-              type="text"
-              {...register('edition')}
-              className={`form-input ${errors.edition ? 'form-input-error' : ''}`}
-              placeholder="Édition limitée 2/10"
-            />
-            {errors.edition && (
-              <p className="form-error">{errors.edition.message}</p>
-            )}
-          </div>
-          
-          {/* Tags */}
-          <div className="form-group">
-            <label htmlFor="tags" className="form-label">
-              Tags (séparés par des virgules)
-            </label>
-            <input
-              id="tags"
-              type="text"
-              {...register('tags')}
-              className={`form-input ${errors.tags ? 'form-input-error' : ''}`}
-              placeholder="abstrait, contemporain, acrylique"
-            />
-            {errors.tags && (
-              <p className="form-error">{errors.tags.message}</p>
-            )}
-          </div>
+        {/* Tags */}
+        <div className="form-group">
+          <label htmlFor="tags" className="form-label">
+            Tags (séparés par des virgules)
+          </label>
+          <input
+            id="tags"
+            type="text"
+            {...register('tags')}
+            className={`form-input ${errors.tags ? 'form-input-error' : ''}`}
+            placeholder="abstrait, contemporain, acrylique"
+          />
+          {errors.tags && (
+            <p className="form-error">{errors.tags.message}</p>
+          )}
         </div>
         
         {/* Images */}
