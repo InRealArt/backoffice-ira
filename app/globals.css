@@ -1,6 +1,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --navbar-height: 90px; /* Définition d'une variable pour la hauteur de la navbar */
+  --sidemenu-width: 250px; /* Définition d'une variable pour la largeur du menu latéral */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,6 +24,8 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  padding-top: var(--navbar-height); /* Espace pour la navbar */
+  min-height: 100vh;
 }
 
 * {
@@ -41,21 +45,46 @@ a {
   }
 }
 
-.page-layout {
+/* Classes génériques pour les layouts de page */
+.page-layout,
+.dashboard-page,
+.pageLayout,
+[class*="pageLayout"],
+[class*="page-layout"] {
   display: flex;
-  min-height: calc(100vh - 60px);
-  padding-top: 60px;
+  min-height: calc(100vh - var(--navbar-height));
+  margin-top: var(--navbar-height);
 }
 
-.content-container {
+/* Classes génériques pour les conteneurs de contenu */
+.content-container,
+.contentContainer,
+[class*="contentContainer"],
+[class*="content-container"] {
   flex: 1;
   padding: 24px;
-  margin-left: 220px; /* Largeur du SideMenu */
+  margin-left: var(--sidemenu-width);
+  transition: all 0.3s ease;
+  width: 100%;
+  overflow-x: hidden;
 }
 
+/* Ajustements responsifs génériques */
 @media (max-width: 768px) {
-  .content-container {
+  .content-container,
+  .contentContainer,
+  [class*="contentContainer"],
+  [class*="content-container"] {
     margin-left: 0;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-container,
+  .contentContainer,
+  [class*="contentContainer"],
+  [class*="content-container"] {
     padding: 16px;
   }
 }

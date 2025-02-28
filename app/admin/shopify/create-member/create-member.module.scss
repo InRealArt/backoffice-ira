@@ -3,10 +3,12 @@
   box-sizing: border-box;
 }
 
+$navbar-height: 90px;
+
 .pageLayout {
   display: flex;
-  min-height: calc(100vh - 60px); // Ajustement pour la hauteur de la Navbar
-  margin-top: 60px; // Espace pour la Navbar fixe
+  min-height: calc(100vh - #{$navbar-height}); // Utilisation de la variable
+  margin-top: #{$navbar-height}; // Utilisation de la variable
 }
 
 .contentContainer {

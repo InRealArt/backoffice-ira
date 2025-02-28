@@ -7,6 +7,7 @@ import SideMenu from '../components/SideMenu/SideMenu';
 import { useIsLoggedIn } from '@dynamic-labs/sdk-react-core';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import './dashboard.css'; // Importer les styles
 
 export default function DashboardPage() {
   const isLoggedIn = useIsLoggedIn();
@@ -20,11 +21,15 @@ export default function DashboardPage() {
   }, [isLoggedIn, router]);
 
   return (
-    <div className="dashboard-page">
+    <>
       <AuthObserver />
       <Navbar />
-      <SideMenu />
-      <Dashboard />
-    </div>
+      <div className="dashboard-page">
+        <SideMenu />
+        <div className="dashboard-content">
+          <Dashboard />
+        </div>
+      </div>
+    </>
   );
 }

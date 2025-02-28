@@ -19,8 +19,30 @@
 }
 
 .navbarLogo {
-  font-weight: bold;
-  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #131313;
+  border-radius: 8px;
+  padding: 5px;
+  width: 70px;
+  height: 70px;
+}
+
+.logoImage {
+  width: 60px;
+  height: 60px;
+}
+
+.logoText {
+  font-weight: 600;
+  font-size: 1.6rem;
 }
 
 .navbarMenuContainer {
