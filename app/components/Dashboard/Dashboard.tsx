@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { supabase } from '@/lib/supabase';
 import ShopifyRequestModal from '../Shopify/ShopifyRequestModal';
-import './Dashboard.css';
+import styles from './Dashboard.module.scss';
 import toast from 'react-hot-toast';
 import { submitShopifyRequest } from '@/app/actions/shopify/submitShopifyRequest';
 import { useRouter } from 'next/navigation';
@@ -111,32 +111,32 @@ export default function Dashboard() {
     router.push('/shopify/users');
   };
 
-  if (isLoading) return <div className="dashboard-loading">Chargement...</div>;
+  if (isLoading) return <div className={styles.dashboardLoading}>Chargement...</div>;
 
   return (
-    <div className="dashboard-container">
-      <h2 className="dashboard-title">Tableau de bord</h2>
+    <div className={styles.dashboardContainer}>
+      <h2 className={styles.dashboardTitle}>Tableau de bord</h2>
       
-      <div className="dashboard-content">
-        <div className="dashboard-card">
+      <div className={styles.dashboardContent}>
+        <div className={styles.dashboardCard}>
           <h3>Informations utilisateur</h3>
           <p><strong>Email:</strong> {user?.email || 'Non défini'}</p>
-          <p><strong>Adresse wallet:</strong> <span className="small-text">{truncateAddress(primaryWallet?.address)}</span></p>
+          <p><strong>Adresse wallet:</strong> <span className={styles.smallText}>{truncateAddress(primaryWallet?.address)}</span></p>
           <p><strong>Statut Shopify:</strong> {shopifyGranted ? 'Connecté' : 'Non connecté'}</p>
         </div>
 
         {isAdmin ? (
-          <div className="dashboard-card">
+          <div className={styles.dashboardCard}>
             <h3>Panneau d'Administration</h3>
             <p>Voir les utilisateurs et leurs informations.</p>
             <button 
-              className={`dashboard-button ${isAdminNavigating ? 'dashboard-button-loading' : ''}`}
+              className={`${styles.dashboardButton} ${isAdminNavigating ? styles.dashboardButtonLoading : ''}`}
               onClick={handleAdminNavigation}
               disabled={isAdminNavigating}
             >
               {isAdminNavigating ? (
                 <>
-                  <span className="spinner"></span>
+                  <span className={styles.spinner}></span>
                   <span>Chargement...</span>
                 </>
               ) : 'Voir les utilisateurs'}
@@ -144,22 +144,22 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            <div className="dashboard-card">
+            <div className={styles.dashboardCard}>
               <h3>Ma Collection</h3>
               <p>Explorez et gérez votre collection d'œuvres d'art.</p>
               <button 
-                className="dashboard-button" 
+                className={styles.dashboardButton} 
                 onClick={() => router.push('/shopify/collection')}
               >
                 Voir ma collection d'œuvres d'art
               </button>
             </div>
             
-            <div className="dashboard-card">
+            <div className={styles.dashboardCard}>
               <h3>Création d'œuvre</h3>
               <p>Créez et publiez une nouvelle œuvre d'art dans Shopify.</p>
               <button 
-                className="dashboard-button" 
+                className={styles.dashboardButton} 
                 onClick={() => router.push('/shopify/create')}
               >
                 Créer une œuvre dans Shopify
@@ -168,7 +168,6 @@ export default function Dashboard() {
           </>
         )}
       </div>
-
     </div>
   );
 }

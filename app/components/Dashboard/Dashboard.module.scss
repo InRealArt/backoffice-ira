@@ -1,0 +1,86 @@
+.dashboardContainer {
+  padding: 2rem;
+  margin-top: 60px;
+  margin-left: 220px;
+  width: calc(100% - 220px);
+}
+
+.dashboardTitle {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.dashboardContent {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.dashboardCard {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  
+  h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+  
+  :global(.dark) & {
+    background-color: #1a1c23;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.dashboardButton {
+  background-color: #4779fe;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 1rem;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #3a67e0;
+  }
+}
+
+.dashboardLoading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2rem;
+}
+
+.smallText {
+  font-size: 0.8rem;
+}
+
+.dashboardButtonLoading {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+} 
