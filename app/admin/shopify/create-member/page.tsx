@@ -6,7 +6,7 @@ import SideMenu from '@/app/components/SideMenu/SideMenu'
 import CreateMemberForm from './CreateMemberForm'
 import { Toaster } from 'react-hot-toast'
 import { useEffect, useState } from 'react'
-import './page.css'
+import styles from './create-member.module.scss'
 
 export default function CreateMemberPage() {
   const { primaryWallet } = useDynamicContext()
@@ -32,9 +32,9 @@ export default function CreateMemberPage() {
   return (
     <>
       <Navbar />
-      <div className="page-layout">
+      <div className={styles.pageLayout}>
         <SideMenu />
-        <div className="content-container">
+        <div className={styles.contentContainer}>
           <Toaster 
             position={isMobile ? "bottom-center" : "top-right"} 
             toastOptions={{
@@ -42,14 +42,14 @@ export default function CreateMemberPage() {
             }}
           />
           
-          <div className="create-member-header">
+          <div className={styles.createMemberHeader}>
             <h1>Créer un membre Shopify</h1>
-            <p className="subtitle">
+            <p className={styles.subtitle}>
               Ajoutez un nouvel artiste ou galleriste à votre boutique Shopify
             </p>
           </div>
           
-          <div className="create-member-content">
+          <div className={styles.createMemberContent}>
             <CreateMemberForm />
           </div>
         </div>
