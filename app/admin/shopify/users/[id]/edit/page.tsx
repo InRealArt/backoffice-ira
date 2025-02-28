@@ -5,44 +5,53 @@ import LoadingSpinner from '@/app/components/LoadingSpinner'
 import Navbar from '@/app/components/Navbar/Navbar'
 import SideMenu from '@/app/components/SideMenu/SideMenu'
 
-interface EditUserPageProps {
-  params: Promise<{ id: string }> | { id: string }
-}
+// Approche simplifiée sans interfaces personnalisées
+export default async function EditUserPage({ 
+  params 
+}: { 
+  params: any  // Utilisation de any pour éviter les conflits de type
+}) {
+  // Extraction sécurisée de l'ID
+  const userId = params?.id || '';
+  
+  if (!userId) {
+    return <div>ID utilisateur non valide</div>;
+  }
+  
+  try {
+    const user = await getShopifyUserById(userId);
+    
+    if (!user) {
+      return (
+        <div className="app-container">
+          <Navbar />
+          <div className="content-container">
+            <SideMenu />
+            <main className="main-content">
+              <div className="error-container">Utilisateur non trouvé</div>
+            </main>
+          </div>
+        </div>
+      )
+    }
 
-export default async function EditUserPage({ params }: EditUserPageProps) {
-  // Attendre les paramètres s'ils sont une promesse
-  const resolvedParams = await Promise.resolve(params)
-  const id = String(resolvedParams.id)
-  
-  const user = await getShopifyUserById(id)
-  
-  if (!user) {
     return (
       <div className="app-container">
         <Navbar />
         <div className="content-container">
           <SideMenu />
-          <main className="main-content">
-            <div className="error-container">Utilisateur non trouvé</div>
+          <main className="main-content" style={{ paddingTop: '80px' }}>
+            <Suspense fallback={<LoadingSpinner />}>
+              <div className="page-container">
+                <EditUserForm user={user} />
+              </div>
+            </Suspense>
           </main>
         </div>
       </div>
     )
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'utilisateur:", error);
+    return <div>Une erreur s'est produite</div>;
   }
-
-  return (
-    <div className="app-container">
-      <Navbar />
-      <div className="content-container">
-        <SideMenu />
-        <main className="main-content" style={{ paddingTop: '80px' }}>
-          <Suspense fallback={<LoadingSpinner />}>
-            <div className="page-container">
-              <EditUserForm user={user} />
-            </div>
-          </Suspense>
-        </main>
-      </div>
-    </div>
-  )
 } 
