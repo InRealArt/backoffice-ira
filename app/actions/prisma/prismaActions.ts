@@ -274,3 +274,17 @@ export async function updateShopifyUser(
     }
   }
 }
+
+// Ajouter cette fonction pour récupérer un utilisateur par son email
+export async function getShopifyUserByEmail(email: string) {
+  try {
+    const user = await prisma.shopifyUser.findUnique({
+      where: { email }
+    })
+
+    return user
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'utilisateur Shopify par email:', error)
+    return null
+  }
+}

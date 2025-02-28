@@ -30,8 +30,6 @@ export default function AuthObserver() {
             const errorData = await response.json();
             console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', errorData);
           } else {
-            console.log('Utilisateur enregistré avec succès');
-            
             // Si l'utilisateur vient de se connecter, rediriger vers le dashboard
             if (!previousLoginState && isLoggedIn) {
               router.push('/dashboard');
