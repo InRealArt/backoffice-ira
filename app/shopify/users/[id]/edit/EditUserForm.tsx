@@ -13,6 +13,7 @@ import {
 } from '@/app/actions/shopify/shopifyActions'
 import { ShopifyUser } from '@prisma/client'
 import styles from './EditUserForm.module.scss'
+import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -39,11 +40,13 @@ export default function EditUserForm({ user }: EditUserFormProps) {
   const [collectionDescription, setCollectionDescription] = useState<string | null>(null)
   const [initialDescription, setInitialDescription] = useState<string | null>(null)
   const [isLoadingCollection, setIsLoadingCollection] = useState(true)
+  const [hasDescriptionChanged, setHasDescriptionChanged] = useState(false)
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors }
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -61,6 +64,13 @@ export default function EditUserForm({ user }: EditUserFormProps) {
   // Surveiller la valeur de isShopifyGranted pour l'affichage conditionnel
   const isShopifyGranted = watch('isShopifyGranted')
   const currentDescription = watch('collectionDescription')
+
+  // Observer les changements dans la description et comparer avec la valeur initiale
+  useEffect(() => {
+    if (initialDescription !== null && currentDescription !== undefined) {
+      setHasDescriptionChanged(currentDescription !== initialDescription)
+    }
+  }, [currentDescription, initialDescription])
 
   // Récupérer les informations de la collection basée sur le nom de l'utilisateur
   useEffect(() => {
@@ -86,17 +96,8 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           setCollectionDescription(description)
           setInitialDescription(description)
           
-          // Définir manuellement la valeur des éléments DOM pour éviter d'utiliser setValue
-          setTimeout(() => {
-            const textArea = document.getElementById('collectionDescription') as HTMLTextAreaElement
-            if (textArea && isMounted) {
-              textArea.value = description
-              
-              // Déclencher un événement pour que React Hook Form reconnaisse le changement
-              const event = new Event('input', { bubbles: true })
-              textArea.dispatchEvent(event)
-            }
-          }, 100)
+          // Utiliser setValue pour définir la valeur du formulaire
+          setValue('collectionDescription', description)
           
           console.log('Collection trouvée:', result.collection)
         } else if (isMounted) {
@@ -117,7 +118,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
     return () => {
       isMounted = false
     }
-  }, [user.firstName, user.lastName])
+  }, [user.firstName, user.lastName, setValue])
 
   // Fonction de soumission du formulaire
   const onSubmit = async (data: FormValues) => {
@@ -291,7 +292,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           <>
             {isLoadingCollection ? (
               <div className={styles.loadingContainer}>
-                Chargement des informations de la collection...
+                <LoadingSpinner message="Chargement des informations de la collection..." />
               </div>
             ) : collectionId ? (
               <div className={styles.collectionSection}>
@@ -320,12 +321,12 @@ export default function EditUserForm({ user }: EditUserFormProps) {
                     rows={5}
                   />
                   <p className={styles.infoText}>
-                    Cette description est affichée sur la page de la collection Shopify.
-                    Vous pouvez utiliser du HTML pour mettre en forme le texte.
+                    Cette description est affichée sur la page de la collection Shopify.<br/>
+                    Vous pouvez utiliser du HTML pour mettre en forme le texte en vous aidant de l'éditeur HTML gratuit <a href="https://onlinehtmleditor.dev/" target="_blank" rel="noopener noreferrer">https://onlinehtmleditor.dev/</a>.
                   </p>
-                  {currentDescription !== initialDescription && (
+                  {hasDescriptionChanged && (
                     <p className={styles.changeIndicator}>
-                      La description a été modifiée. Enregistrez pour appliquer les changements.
+                      La description de la collection correspondant à {user.firstName} {user.lastName} a été modifiée. Enregistrez pour appliquer les changements.
                     </p>
                   )}
                 </div>
