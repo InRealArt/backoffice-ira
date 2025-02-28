@@ -1,10 +1,8 @@
 // Règle globale pour assurer que le padding est inclus dans la largeur
 .root {
   /* Classe racine qui peut être appliquée à un élément wrapper */
-  &:global {
-    & * {
-      box-sizing: border-box;
-    }
+  & * {
+    box-sizing: border-box;
   }
 }
 
