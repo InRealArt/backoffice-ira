@@ -9,7 +9,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { updateShopifyUser } from '@/app/actions/prisma/prismaActions'
 import { 
   getShopifyCollectionByTitle,
-  updateShopifyCollection
+  updateShopifyCollection,
+  createShopifyCollection
 } from '@/app/actions/shopify/shopifyActions'
 import { ShopifyUser } from '@prisma/client'
 import styles from './EditUserForm.module.scss'
@@ -150,22 +151,49 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       if (!userResult.success) {
         throw new Error(userResult.message)
       }
-      
-      // Vérifier si nous devons mettre à jour la description de la collection
-      if (data.isShopifyGranted && collectionId && data.collectionDescription !== initialDescription) {
-        console.log('Mise à jour de la description de collection:', data.collectionDescription)
+
+      // Si l'accès Shopify est accordé, vérifier/gérer la collection
+      if (data.isShopifyGranted) {
+        const collectionTitle = `${data.firstName} ${data.lastName}`.trim()
         
-        const updateResult = await updateShopifyCollection(collectionId, {
-          description: data.collectionDescription || ''
-        })
-        
-        if (!updateResult.success) {
-          console.error('Erreur lors de la mise à jour de la collection:', updateResult.message)
-          toast.error('Erreur lors de la mise à jour de la collection')
+        if (!collectionId) {
+          // Aucune collection existante - créer une nouvelle collection
+          console.log(`Création d'une nouvelle collection pour: ${collectionTitle}`)
+          
+          try {
+            const createResult = await createShopifyCollection(collectionTitle)
+            
+            if (!createResult.success) {
+              console.error('Erreur lors de la création de la collection:', createResult.message)
+              toast.error(`L'utilisateur a été mis à jour mais la création de collection a échoué: ${createResult.message}`)
+            } else {
+              console.log('Collection créée avec succès:', createResult.collection)
+              toast.success('Utilisateur mis à jour et nouvelle collection créée')
+            }
+          } catch (createError: any) {
+            console.error('Erreur lors de la création de la collection:', createError)
+            toast.error(`L'utilisateur a été mis à jour mais la création de collection a échoué`)
+          }
+        } else if (hasDescriptionChanged) {
+          // Collection existante avec description modifiée - mettre à jour
+          console.log('Mise à jour de la description de collection:', data.collectionDescription)
+          
+          const updateResult = await updateShopifyCollection(collectionId, {
+            description: data.collectionDescription || ''
+          })
+          
+          if (!updateResult.success) {
+            console.error('Erreur lors de la mise à jour de la collection:', updateResult.message)
+            toast.error('Erreur lors de la mise à jour de la collection')
+          } else {
+            toast.success('Utilisateur et collection mis à jour avec succès')
+          }
         } else {
-          toast.success('Utilisateur et collection mis à jour avec succès')
+          // Collection existante sans modification - ne rien faire
+          toast.success('Utilisateur mis à jour avec succès')
         }
       } else {
+        // Accès Shopify non accordé
         toast.success('Utilisateur mis à jour avec succès')
       }
       
