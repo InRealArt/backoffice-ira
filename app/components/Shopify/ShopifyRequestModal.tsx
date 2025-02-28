@@ -1,16 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import './ShopifyRequestModal.css';
+import styles from './ShopifyRequestModal.module.scss';
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 
 interface ShopifyModalProps {
   isOpen: boolean;
   onClose: () => void;
   userEmail: string | undefined;
   onSubmit: (formData: { firstName: string; lastName: string }) => void;
+  isSubmitting?: boolean;
 }
 
-export default function ShopifyRequestModal({ isOpen, onClose, userEmail, onSubmit }: ShopifyModalProps) {
+export default function ShopifyRequestModal({ 
+  isOpen, 
+  onClose, 
+  userEmail, 
+  onSubmit,
+  isSubmitting = false
+}: ShopifyModalProps) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 
@@ -22,27 +30,27 @@ export default function ShopifyRequestModal({ isOpen, onClose, userEmail, onSubm
   };
   
   return (
-    <div className="modal-overlay">
-      <div className="modal-container">
-        <button className="modal-close" onClick={onClose}>
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContainer}>
+        <button className={styles.modalClose} onClick={onClose}>
           &times;
         </button>
         
-        <h2 className="modal-title">Devenir membre Shopify</h2>
+        <h2 className={styles.modalTitle}>Devenir membre Shopify</h2>
         
-        <form className="modal-form" onSubmit={handleSubmitForm}>
-          <div className="form-group">
+        <form className={styles.modalForm} onSubmit={handleSubmitForm}>
+          <div className={styles.formGroup}>
             <label htmlFor="email">Email</label>
             <input 
               type="email" 
               id="email" 
               value={userEmail || ''} 
               disabled 
-              className="form-control"
+              className={styles.formControl}
             />
           </div>
           
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label htmlFor="lastName">Nom</label>
             <input 
               type="text" 
@@ -50,11 +58,12 @@ export default function ShopifyRequestModal({ isOpen, onClose, userEmail, onSubm
               value={lastName} 
               onChange={(e) => setLastName(e.target.value)} 
               required
-              className="form-control"
+              disabled={isSubmitting}
+              className={styles.formControl}
             />
           </div>
           
-          <div className="form-group">
+          <div className={styles.formGroup}>
             <label htmlFor="firstName">Prénom</label>
             <input 
               type="text" 
@@ -62,12 +71,24 @@ export default function ShopifyRequestModal({ isOpen, onClose, userEmail, onSubm
               value={firstName} 
               onChange={(e) => setFirstName(e.target.value)} 
               required
-              className="form-control"
+              disabled={isSubmitting}
+              className={styles.formControl}
             />
           </div>
           
-          <button type="submit" className="submit-button">
-            Envoyer la demande
+          <button 
+            type="submit" 
+            className={styles.submitButton}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <span className={styles.loadingContainer}>
+                <LoadingSpinner size="small" message="" inline color="light" />
+                <span>Envoi en cours...</span>
+              </span>
+            ) : (
+              'Envoyer la demande'
+            )}
           </button>
         </form>
       </div>
