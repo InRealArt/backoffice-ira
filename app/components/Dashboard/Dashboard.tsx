@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [shopifyGranted, setShopifyGranted] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAdminNavigating, setIsAdminNavigating] = useState(false);
   const router = useRouter();
 
   const truncateAddress = (address: string | undefined) => {
@@ -105,6 +106,10 @@ export default function Dashboard() {
       }
   };
 
+  const handleAdminNavigation = () => {
+    setIsAdminNavigating(true);
+    router.push('/shopify/users');
+  };
 
   if (isLoading) return <div className="dashboard-loading">Chargement...</div>;
 
@@ -125,10 +130,16 @@ export default function Dashboard() {
             <h3>Panneau d'Administration</h3>
             <p>Voir les utilisateurs et leurs informations.</p>
             <button 
-              className="dashboard-button" 
-              onClick={() => router.push('/shopify/users')}
+              className={`dashboard-button ${isAdminNavigating ? 'dashboard-button-loading' : ''}`}
+              onClick={handleAdminNavigation}
+              disabled={isAdminNavigating}
             >
-              Voir les utilisateurs
+              {isAdminNavigating ? (
+                <>
+                  <span className="spinner"></span>
+                  <span>Chargement...</span>
+                </>
+              ) : 'Voir les utilisateurs'}
             </button>
           </div>
         ) : (
