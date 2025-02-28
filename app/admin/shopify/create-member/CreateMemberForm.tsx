@@ -6,8 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { memberSchema, MemberFormData } from './schema'
 import { createMember, checkUserExists } from '@/app/actions/prisma/prismaActions'
 import toast from 'react-hot-toast'
-import './CreateMemberForm.css'
+import styles from './CreateMemberForm.module.scss'
 import { createShopifyCollection } from '@/app/actions/shopify/shopifyActions'
+import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 
 export default function CreateMemberForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -91,94 +92,95 @@ export default function CreateMemberForm() {
   }
   
   return (
-    <div className="form-container">
+    <div className={styles.formContainer}>
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* Affichage de l'erreur d'unicité globale */}
         {uniqueError && (
-          <div className="unique-error-container">
-            <p className="unique-error">{uniqueError}</p>
+          <div className={styles.uniqueErrorContainer}>
+            <p className={styles.uniqueError}>{uniqueError}</p>
           </div>
         )}
         
-        <div className="form-grid">
+        <div className={styles.formGrid}>
           {/* Prénom */}
-          <div className="form-group">
-            <label htmlFor="firstName" className="form-label">
+          <div className={styles.formGroup}>
+            <label htmlFor="firstName" className={styles.formLabel}>
               Prénom
             </label>
             <input
               id="firstName"
               type="text"
               {...register('firstName')}
-              className={`form-input ${errors.firstName || uniqueError ? 'form-input-error' : ''}`}
+              className={`${styles.formInput} ${errors.firstName || uniqueError ? styles.formInputError : ''}`}
               placeholder="John"
             />
             {errors.firstName && (
-              <p className="form-error">{errors.firstName.message}</p>
+              <p className={styles.formError}>{errors.firstName.message}</p>
             )}
           </div>
           
           {/* Nom */}
-          <div className="form-group">
-            <label htmlFor="lastName" className="form-label">
+          <div className={styles.formGroup}>
+            <label htmlFor="lastName" className={styles.formLabel}>
               Nom
             </label>
             <input
               id="lastName"
               type="text"
               {...register('lastName')}
-              className={`form-input ${errors.lastName || uniqueError ? 'form-input-error' : ''}`}
+              className={`${styles.formInput} ${errors.lastName || uniqueError ? styles.formInputError : ''}`}
               placeholder="Doe"
             />
             {errors.lastName && (
-              <p className="form-error">{errors.lastName.message}</p>
+              <p className={styles.formError}>{errors.lastName.message}</p>
             )}
           </div>
         </div>
         
         {/* Email */}
-        <div className="form-group">
-          <label htmlFor="email" className="form-label">
+        <div className={styles.formGroup}>
+          <label htmlFor="email" className={styles.formLabel}>
             Email
           </label>
           <input
             id="email"
             type="email"
             {...register('email')}
-            className={`form-input ${errors.email || uniqueError ? 'form-input-error' : ''}`}
+            className={`${styles.formInput} ${errors.email || uniqueError ? styles.formInputError : ''}`}
             placeholder="email@exemple.com"
           />
           {errors.email && (
-            <p className="form-error">{errors.email.message}</p>
+            <p className={styles.formError}>{errors.email.message}</p>
           )}
         </div>
         
         {/* Type */}
-        <div className="form-group">
-          <label htmlFor="type" className="form-label">
-            Type
+        <div className={styles.formGroup}>
+          <label htmlFor="role" className={styles.formLabel}>
+            Rôle
           </label>
           <select
-            id="type"
+            id="role"
             {...register('role')}
-            className="form-select"
+            className={styles.formSelect}
           >
             <option value="artist">Artiste</option>
-            <option value="galleryManager">Galleriste</option>
+            <option value="galleryManager">Responsable de galerie</option>
+            <option value="admin">Administrateur</option>
           </select>
           {errors.role && (
-            <p className="form-error">{errors.role.message}</p>
+            <p className={styles.formError}>{errors.role.message}</p>
           )}
         </div>
         
-        <div className="form-actions">
+        <div className={styles.formActions}>
           <button
             type="button"
             onClick={() => {
               reset()
               setUniqueError(null)
             }}
-            className="button button-secondary"
+            className={styles.buttonSecondary}
             disabled={isSubmitting}
           >
             Réinitialiser
@@ -186,9 +188,16 @@ export default function CreateMemberForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="button button-primary"
+            className={styles.buttonPrimary}
           >
-            {isSubmitting ? 'Création en cours...' : 'Créer le membre'}
+            {isSubmitting ? (
+              <span className={styles.loadingContainer}>
+                <LoadingSpinner size="small" message="" inline color="light" />
+                <span className={styles.loadingText}>Création en cours...</span>
+              </span>
+            ) : (
+              'Créer le membre'
+            )}
           </button>
         </div>
       </form>
