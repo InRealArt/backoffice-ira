@@ -7,7 +7,7 @@ import SideMenu from '../components/SideMenu/SideMenu';
 import { useIsLoggedIn } from '@dynamic-labs/sdk-react-core';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import './dashboard.css'; // Importer les styles
+import styles from './dashboard.module.scss'; // Import du module SCSS
 
 export default function DashboardPage() {
   const isLoggedIn = useIsLoggedIn();
@@ -24,9 +24,9 @@ export default function DashboardPage() {
     <>
       <AuthObserver />
       <Navbar />
-      <div className="dashboard-page">
+      <div className={styles.dashboardPage}>
         <SideMenu />
-        <div className="dashboard-content">
+        <div className={styles.dashboardContent}>
           <Dashboard />
         </div>
       </div>
