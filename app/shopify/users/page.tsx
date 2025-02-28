@@ -1,5 +1,5 @@
 import { getShopifyUsers } from '@/app/actions/prisma/prismaActions'
-import './users.css'
+//import './users.css'
 import ShopifyUsersClient from './ShopifyUsersClient'
 
 
