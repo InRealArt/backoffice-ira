@@ -4,13 +4,12 @@ const protectedRoutes: Record<string, AccessLevel> = {
     "/admin": "admin",
     "/admin/shopify": "admin",
     "/admin/shopify/create-member": "admin",
-    "/admin/shopify/users": "admin",
+    "/shopify/users": "admin",
 
     // Routes artiste
     "/shopify/createArtwork": "artist",
     "/shopify/collection": "artist",
     "/shopify/artworks": "artist",
-    "/shopify/users": "admin",
 
     // Routes nécessitant uniquement une connexion
     "/dashboard": "auth",
