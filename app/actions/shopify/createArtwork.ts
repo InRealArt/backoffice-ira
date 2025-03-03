@@ -7,6 +7,7 @@ import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import { writeFile, mkdir } from 'fs/promises'
 import { join, dirname } from 'path'
 import { existsSync } from 'fs'
+import { getShopifyCollectionByTitle, getUserByEmail } from '@/app/actions/shopify/shopifyActions'
 
 type CreateArtworkResult = {
     success: boolean
@@ -26,7 +27,8 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
         const edition = formData.get('edition') as string || ''
         const tagsString = formData.get('tags') as string || ''
         const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()) : []
-
+        const userEmail = formData.get('userEmail') as string
+        console.log('userEmail === ', userEmail)
         // Validation des champs obligatoires
         if (!title || !description || !price || !artist || !medium || !dimensions) {
             return {
@@ -160,23 +162,33 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
             }
         }
 
-        // Ajouter le produit à la collection de l'artiste
+        // Ajouter le produit à la collection de l'utilisateur connecté
         try {
-            // Obtenir l'ID de collection de l'artiste
-            const collectionId = await getArtistCollectionId(artist)
+            // Récupérer les informations de l'utilisateur pour construire le titre de la collection
+            const userResponse = await getUserByEmail(userEmail)
 
-            if (collectionId) {
+            if (!userResponse.success || !userResponse.user || !userResponse.user.firstName || !userResponse.user.lastName) {
+                throw new Error('Informations utilisateur incomplètes ou utilisateur non trouvé')
+            }
+
+            // Construire le titre de la collection avec prénom + nom
+            const collectionTitle = `${userResponse.user.firstName} ${userResponse.user.lastName}`.trim()
+
+            // Obtenir la collection correspondante
+            const collectionResponse = await getShopifyCollectionByTitle(collectionTitle)
+
+            if (collectionResponse.success && collectionResponse.collection) {
                 // Conversion de l'ID numérique au format GID
                 const formattedProductId = `gid://shopify/Product/${productId}`
-                const formattedCollectionId = `gid://shopify/Collection/${collectionId}`
+                const formattedCollectionId = `gid://shopify/Collection/${collectionResponse.collection.id}`
 
                 // Ajouter le produit à la collection via l'API GraphQL
                 await addProductToCollectionGraphQL(formattedCollectionId, [formattedProductId])
-                console.log(`Produit ${productId} ajouté à la collection ${collectionId} de l'artiste ${artist}`)
+                console.log(`Produit ${productId} ajouté à la collection ${collectionResponse.collection.id} de l'utilisateur ${collectionTitle}`)
             } else {
-                console.log(`Aucune collection trouvée pour l'artiste ${artist}`)
-                // Créer une collection pour l'artiste s'il n'en a pas
-                const newCollectionId = await createArtistCollection(artist)
+                console.log(`Aucune collection trouvée pour l'utilisateur ${collectionTitle}`)
+                // Créer une collection pour l'utilisateur s'il n'en a pas
+                const newCollectionId = await createArtistCollection(collectionTitle)
                 if (newCollectionId) {
                     const formattedProductId = `gid://shopify/Product/${productId}`
                     const formattedCollectionId = `gid://shopify/Collection/${newCollectionId}`
@@ -184,7 +196,7 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
                 }
             }
         } catch (error) {
-            console.error('Erreur lors de l\'ajout du produit à la collection de l\'artiste:', error)
+            console.error('Erreur lors de l\'ajout du produit à la collection de l\'utilisateur:', error)
             // Ne pas échouer la création du produit si l'ajout à la collection échoue
         }
 
@@ -207,17 +219,17 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
     }
 }
 
-// Fonction pour récupérer l'ID de collection de l'artiste
-async function getArtistCollectionId(artistName: string): Promise<string | null> {
+// Fonction pour récupérer l'ID de collection par titre
+async function getCollectionIdByTitle(collectionTitle: string): Promise<string | null> {
     try {
-        // Recherche de la collection par nom d'artiste
+        // Recherche de la collection par titre
         const client = createAdminRestApiClient({
             storeDomain: process.env.SHOPIFY_STORE_NAME || '',
             apiVersion: '2025-01',
             accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '',
         })
 
-        const response = await client.get(`custom_collections?title=${encodeURIComponent(artistName)}`)
+        const response = await client.get(`custom_collections?title=${encodeURIComponent(collectionTitle)}`)
 
         if (!response.ok) {
             console.error('Erreur lors de la recherche de collection:', await response.text())

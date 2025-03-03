@@ -69,7 +69,7 @@ export function useSideMenuLogic() {
       setActiveItem('dashboard')
     } else if (pathname === '/shopify/collection') {
       setActiveItem('collection')
-    } else if (pathname === '/shopify/create') {
+    } else if (pathname === '/shopify/createArtwork') {
       setActiveItem('createArtwork')
     } else if (pathname === '/notifications') {
       setActiveItem('notifications')

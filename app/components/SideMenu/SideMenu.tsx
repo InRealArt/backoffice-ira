@@ -37,7 +37,7 @@ export default function SideMenu() {
           <SideMenuItem 
             label="Créer une œuvre"
             isActive={activeItem === 'createArtwork'}
-            onClick={() => handleNavigation('/shopify/create', 'createArtwork')}
+            onClick={() => handleNavigation('/shopify/createArtwork', 'createArtwork')}
           />
         </>
         )}

@@ -7,12 +7,14 @@ import { artworkSchema, ArtworkFormData } from './schema'
 import { createArtwork } from '@/app/actions/shopify/createArtwork'
 import toast from 'react-hot-toast'
 import './ArtworkCreationForm.css'
+import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 
 export default function ArtworkCreationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [previewImages, setPreviewImages] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+  const { user } = useDynamicContext()
+
   const {
     register,
     handleSubmit,
@@ -69,6 +71,9 @@ export default function ArtworkCreationForm() {
           formData.append(`image-${index}`, file)
         })
       }
+      
+      // AJOUT IMPORTANT: Ajouter manuellement l'email de l'utilisateur
+      formData.append('userEmail', user?.email || '')
       
       // Envoyer au serveur
       const result = await createArtwork(formData)
@@ -295,7 +300,6 @@ export default function ArtworkCreationForm() {
             ))}
           </div>
         )}
-        
         <div className="form-actions">
           <button
             type="button"

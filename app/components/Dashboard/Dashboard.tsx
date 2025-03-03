@@ -154,7 +154,7 @@ export default function Dashboard() {
               <p>Créez et publiez une nouvelle œuvre d'art dans Shopify.</p>
               <button 
                 className={styles.dashboardButton} 
-                onClick={() => router.push('/shopify/create')}
+                onClick={() => router.push('/shopify/createArtwork')}
               >
                 Créer une œuvre dans Shopify
               </button>
