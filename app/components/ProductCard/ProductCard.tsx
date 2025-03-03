@@ -2,8 +2,9 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { requestArtworkListing } from '@/app/actions/artwork/requestListingActions'
+import { checkArtworkListingRequest } from '@/app/actions/prisma/prismaActions'
 import { toast } from 'react-hot-toast'
 import styles from './ProductCard.module.scss'
 
@@ -33,6 +34,8 @@ export default function ProductCard({
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [isError, setIsError] = useState(false)
+  const [hasExistingRequest, setHasExistingRequest] = useState(false)
+  const [isCheckingRequest, setIsCheckingRequest] = useState(true)
 
   // Formatage du prix
   const formattedPrice = new Intl.NumberFormat('fr-FR', {
@@ -41,12 +44,43 @@ export default function ProductCard({
     minimumFractionDigits: 2
   }).format(parseFloat(price))
 
+  // Vérifier si une demande existe déjà au chargement
+  useEffect(() => {
+    async function checkExistingRequest() {
+      if (!idShopify || !userId) return
+
+      try {
+        setIsCheckingRequest(true)
+        const exists = await checkArtworkListingRequest({
+          idProductShopify: typeof idShopify === 'string' ? parseInt(idShopify) : idShopify,
+          idUser: typeof userId === 'string' ? parseInt(userId) : userId
+        })
+        
+        setHasExistingRequest(exists)
+        if (exists) {
+          setIsSuccess(true)
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification:', error)
+      } finally {
+        setIsCheckingRequest(false)
+      }
+    }
+
+    checkExistingRequest()
+  }, [idShopify, userId])
+
   const handleListArtwork = async (e: React.MouseEvent) => {
     e.preventDefault() // Empêche le déclenchement du lien parent
     
     if (!idShopify || !collectionId || !userId || !imageUrl) {
       toast.error('Informations manquantes pour lister l\'œuvre')
       setIsError(true)
+      return
+    }
+
+    if (hasExistingRequest) {
+      toast.error('Une demande de listing existe déjà pour cette œuvre')
       return
     }
 
@@ -63,6 +97,7 @@ export default function ProductCard({
 
       if (result.success) {
         setIsSuccess(true)
+        setHasExistingRequest(true)
         toast.success(result.message)
       } else {
         setIsError(true)
@@ -75,6 +110,14 @@ export default function ProductCard({
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const getButtonText = () => {
+    if (isCheckingRequest) return 'Vérification...'
+    if (isLoading) return 'Chargement...'
+    if (hasExistingRequest || isSuccess) return 'Demande de listing sur marketplace envoyée'
+    if (isError) return 'Erreur, réessayer'
+    return 'Lister l\'œuvre sur la marketplace'
   }
 
   return (
@@ -102,12 +145,9 @@ export default function ProductCard({
           <button 
             className={styles.listButton}
             onClick={handleListArtwork}
-            disabled={isLoading || isSuccess}
+            disabled={isLoading || isSuccess || hasExistingRequest || isCheckingRequest}
           >
-            {isLoading ? 'Chargement...' : 
-             isSuccess ? 'Demande envoyée' : 
-             isError ? 'Erreur, réessayer' : 
-             'Lister l\'œuvre sur la marketplace'}
+            {getButtonText()}
           </button>
         </div>
       </div>

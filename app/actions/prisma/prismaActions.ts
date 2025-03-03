@@ -27,6 +27,12 @@ type CheckUserExistsResult = {
   message: string;
 }
 
+type CheckListingRequestParams = {
+  idProductShopify: string | number | bigint
+  idUser: number
+}
+
+
 // Action pour mettre à jour le statut d'une notification
 export async function updateNotificationStatus(
   notificationId: number,
@@ -286,5 +292,23 @@ export async function getShopifyUserByEmail(email: string) {
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'utilisateur Shopify par email:', error)
     return null
+  }
+}
+
+export async function checkArtworkListingRequest(params: CheckListingRequestParams): Promise<boolean> {
+  try {
+    const productId = params.idProductShopify.toString()
+    
+    const existingRequestArtworkToList = await prisma.requestArtworkToList.findFirst({
+      where: {
+        idProductShopify: parseInt(productId),
+        idUser: params.idUser
+      }
+    })
+
+    return !!existingRequestArtworkToList
+  } catch (error) {
+    console.error('Erreur lors de la vérification de la demande:', error)
+    return false
   }
 }
