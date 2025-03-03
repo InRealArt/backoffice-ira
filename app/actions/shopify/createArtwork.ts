@@ -219,36 +219,6 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
     }
 }
 
-// Fonction pour récupérer l'ID de collection par titre
-async function getCollectionIdByTitle(collectionTitle: string): Promise<string | null> {
-    try {
-        // Recherche de la collection par titre
-        const client = createAdminRestApiClient({
-            storeDomain: process.env.SHOPIFY_STORE_NAME || '',
-            apiVersion: '2025-01',
-            accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '',
-        })
-
-        const response = await client.get(`custom_collections?title=${encodeURIComponent(collectionTitle)}`)
-
-        if (!response.ok) {
-            console.error('Erreur lors de la recherche de collection:', await response.text())
-            return null
-        }
-
-        const data = await response.json()
-
-        if (data.custom_collections.length > 0) {
-            return data.custom_collections[0].id
-        }
-
-        return null
-    } catch (error) {
-        console.error('Erreur lors de la récupération de l\'ID de collection:', error)
-        return null
-    }
-}
-
 // Fonction pour ajouter un produit à une collection via GraphQL
 async function addProductToCollectionGraphQL(collectionId: string, productIds: string[]) {
     try {

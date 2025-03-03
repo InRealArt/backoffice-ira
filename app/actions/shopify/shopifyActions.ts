@@ -365,3 +365,149 @@ export async function getShopifyCollectionProducts(
     }
   }
 }
+
+// Action pour mettre à jour un produit Shopify
+export async function updateShopifyProduct(
+  productId: string,
+  data: { title?: string; description?: string; price?: number }
+) {
+  try {
+    if (!productId) {
+      return {
+        success: false,
+        message: 'ID de produit requis'
+      }
+    }
+
+    // Initialisation du client Shopify Admin API
+    const client = createAdminRestApiClient({
+      storeDomain: process.env.SHOPIFY_STORE_NAME || '',
+      apiVersion: '2025-01',
+      accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '',
+    })
+
+    // Récupérer d'abord le produit pour obtenir les informations actuelles
+    const productResponse = await client.get(`products/${productId}`)
+
+    const productData = await productResponse.json()
+
+    if (!productData?.product) {
+      return {
+        success: false,
+        message: 'Produit non trouvé'
+      }
+    }
+
+    const currentProduct = productData.product
+
+    // Préparer les données pour la mise à jour
+    const updateData = {
+      product: {
+        id: productId,
+        title: data.title || currentProduct.title,
+        body_html: data.description || currentProduct.body_html,
+      }
+    }
+
+    // Si le prix est fourni, mettre à jour la variante principale
+    if (data.price !== undefined && currentProduct.variants && currentProduct.variants.length > 0) {
+      const variantId = currentProduct.variants[0].id
+
+      // Mettre à jour la variante séparément
+      await client.put(`variants/${variantId}`, {
+        data: {
+          variant: {
+            id: variantId,
+            price: data.price.toString()
+          }
+        }
+      })
+    }
+
+    // Mettre à jour le produit
+    const updateResponse = await client.put(`products/${productId}`, {
+      data: updateData
+    })
+
+    const updatedProduct = await updateResponse.json()
+
+    return {
+      success: true,
+      message: 'Produit mis à jour avec succès',
+      product: updatedProduct.product
+    }
+  } catch (error: any) {
+    console.error('Erreur lors de la mise à jour du produit:', error)
+    return {
+      success: false,
+      message: error.message || 'Une erreur est survenue lors de la mise à jour du produit'
+    }
+  }
+}
+
+// Action pour récupérer un produit Shopify par ID
+export async function getShopifyProductById(productId: string) {
+  try {
+    if (!productId) {
+      return {
+        success: false,
+        message: 'ID de produit requis'
+      }
+    }
+
+    // Initialisation du client Shopify Admin API
+    const client = createAdminRestApiClient({
+      storeDomain: process.env.SHOPIFY_STORE_NAME || '',
+      apiVersion: '2025-01',
+      accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '',
+    })
+
+    // Récupérer le produit
+    const response = await client.get(`products/${productId}`)
+
+    const productData = await response.json()
+
+    if (!productData?.product) {
+      return {
+        success: false,
+        message: 'Produit non trouvé'
+      }
+    }
+
+    const product = productData.product
+
+    // Extraire l'URL de l'image si elle existe
+    let imageUrl = null
+    let imageAlt = ''
+
+    if (product.image) {
+      imageUrl = product.image.src
+      imageAlt = product.image.alt || product.title
+    }
+
+    // Extraire le prix de la première variante
+    const price = product.variants && product.variants.length > 0
+      ? product.variants[0].price || '0'
+      : '0'
+
+    return {
+      success: true,
+      product: {
+        id: product.id,
+        title: product.title,
+        description: product.body_html,
+        price,
+        currency: 'EUR', // Par défaut
+        imageUrl,
+        imageAlt,
+        handle: product.handle
+      }
+    }
+  } catch (error: any) {
+    console.error('Erreur lors de la récupération du produit:', error)
+    return {
+      success: false,
+      message: error.message || 'Une erreur est survenue lors de la récupération du produit'
+    }
+  }
+}
