@@ -614,14 +614,8 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
       })
     }
 
-    if (weight) {
-      metafields.push({
-        key: 'weight',
-        value: weight,
-        type: 'single_line_text_field',
-        namespace: 'artwork',
-      })
-    }
+    // Convertir le poids en nombre pour Shopify
+    const weightValue = weight ? parseFloat(weight.replace(',', '.')) : 0
 
     // Préparer les images pour envoi à Shopify (encodage Base64)
     const imageUrls = []
@@ -632,7 +626,7 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
       })
     }
 
-    // Créer le produit sur Shopify
+    // Créer le produit sur Shopify avec information de poids
     const productResponse = await client.post('products', {
       data: {
         product: {
@@ -649,7 +643,9 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
               inventory_management: 'shopify',
               inventory_quantity: 1,
               inventory_policy: 'deny',
-              requires_shipping: true
+              requires_shipping: true,
+              weight: weightValue,
+              weight_unit: 'kg', // Spécifier l'unité de poids en kilogrammes
             }
           ],
           metafields
