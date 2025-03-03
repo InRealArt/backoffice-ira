@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
-import Navbar from '@/app/components/Navbar/Navbar'
-import SideMenu from '@/app/components/SideMenu/SideMenu'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById, updateShopifyProduct } from '@/app/actions/shopify/shopifyActions'
@@ -104,84 +102,78 @@ export default function EditArtworkPage({ params }: { params: { id: string } }) 
 
   return (
     <>
-      <Navbar />
       <Toaster position="top-center" />
-      <div className="page-layout">
-        <SideMenu />
-        <div className="content-container">
-          <div className={styles.container}>
-            <h1 className={styles.pageTitle}>Éditer l'œuvre</h1>
-            
-            {isLoading ? (
-              <LoadingSpinner message="Chargement de l'œuvre..." />
-            ) : error ? (
-              <div className={styles.error}>{error}</div>
-            ) : (
-              <form onSubmit={handleSubmit} className={styles.form}>
-                {product?.imageUrl && (
-                  <div className={styles.imagePreview}>
-                    <img src={product.imageUrl} alt={product.title} />
-                  </div>
-                )}
-                
-                <div className={styles.formGroup}>
-                  <label htmlFor="title" className={styles.label}>Titre</label>
-                  <input
-                    id="title"
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    className={styles.input}
-                  />
-                </div>
-                
-                <div className={styles.formGroup}>
-                  <label htmlFor="description" className={styles.label}>Description</label>
-                  <textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={5}
-                    className={styles.textarea}
-                  />
-                </div>
-                
-                <div className={styles.formGroup}>
-                  <label htmlFor="price" className={styles.label}>Prix (€)</label>
-                  <input
-                    id="price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    required
-                    className={styles.input}
-                  />
-                </div>
-                
-                <div className={styles.buttonGroup}>
-                  <Button 
-                    type="button" 
-                    variant="secondary"
-                    onClick={() => router.back()}
-                    disabled={isSubmitting}
-                  >
-                    Annuler
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    variant="primary"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
-                  </Button>
-                </div>
-              </form>
+      <div className={styles.container}>
+        <h1 className={styles.pageTitle}>Éditer l'œuvre</h1>
+        
+        {isLoading ? (
+          <LoadingSpinner message="Chargement de l'œuvre..." />
+        ) : error ? (
+          <div className={styles.error}>{error}</div>
+        ) : (
+          <form onSubmit={handleSubmit} className={styles.form}>
+            {product?.imageUrl && (
+              <div className={styles.imagePreview}>
+                <img src={product.imageUrl} alt={product.title} />
+              </div>
             )}
-          </div>
-        </div>
+            
+            <div className={styles.formGroup}>
+              <label htmlFor="title" className={styles.label}>Titre</label>
+              <input
+                id="title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                className={styles.input}
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label htmlFor="description" className={styles.label}>Description</label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={5}
+                className={styles.textarea}
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label htmlFor="price" className={styles.label}>Prix (€)</label>
+              <input
+                id="price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                required
+                className={styles.input}
+              />
+            </div>
+            
+            <div className={styles.buttonGroup}>
+              <Button 
+                type="button" 
+                variant="secondary"
+                onClick={() => router.back()}
+                disabled={isSubmitting}
+              >
+                Annuler
+              </Button>
+              <Button 
+                type="submit" 
+                variant="primary"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </Button>
+            </div>
+          </form>
+        )}
       </div>
     </>
   )
