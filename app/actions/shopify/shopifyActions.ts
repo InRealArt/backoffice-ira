@@ -22,6 +22,12 @@ type UpdateCollectionResult = {
   collection?: any
 }
 
+type GetCollectionProductsResult = {
+  success: boolean
+  message: string
+  products?: any[]
+}
+
 export interface User {
   id: number;
   email: string;
@@ -225,6 +231,137 @@ export async function updateShopifyCollection(
     return {
       success: false,
       message: error.message || 'Une erreur est survenue lors de la mise à jour de la collection'
+    }
+  }
+}
+
+// Action pour récupérer tous les produits d'une collection Shopify
+export async function getShopifyCollectionProducts(
+  collectionId: string
+): Promise<GetCollectionProductsResult> {
+  try {
+    if (!collectionId) {
+      return {
+        success: false,
+        message: 'L\'ID de la collection est requis'
+      }
+    }
+
+    // Initialisation du client Shopify Admin API
+    const client = createAdminRestApiClient({
+      storeDomain: process.env.SHOPIFY_STORE_NAME || '',
+      apiVersion: '2025-01',
+      accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '',
+    })
+
+    // Utiliser l'API GraphQL pour obtenir les produits avec plus de détails
+    const query = `
+      query getCollectionProducts($id: ID!) {
+        collection(id: $id) {
+          products(first: 50) {
+            edges {
+              node {
+                id
+                title
+                handle
+                description
+                priceRangeV2 {
+                  minVariantPrice {
+                    amount
+                    currencyCode
+                  }
+                }
+                featuredImage {
+                  url
+                  altText
+                }
+                images(first: 1) {
+                  edges {
+                    node {
+                      url
+                      altText
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `
+
+    const formattedCollectionId = `gid://shopify/Collection/${collectionId}`
+
+    const response = await fetch(
+      `https://${process.env.SHOPIFY_STORE_NAME}/admin/api/2025-01/graphql.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || ''
+        },
+        body: JSON.stringify({
+          query,
+          variables: { id: formattedCollectionId }
+        })
+      }
+    )
+
+    const data = await response.json()
+
+    if (data.errors) {
+      console.error('Erreur GraphQL:', data.errors)
+      return {
+        success: false,
+        message: 'Erreur lors de la récupération des produits'
+      }
+    }
+
+    if (!data.data.collection) {
+      return {
+        success: false,
+        message: 'Collection non trouvée'
+      }
+    }
+
+    // Formatage des données des produits
+    const products = data.data.collection.products.edges.map((edge: any) => {
+      const product = edge.node
+
+      // Obtenir l'URL de l'image (soit de featuredImage, soit de la première image)
+      let imageUrl = null
+      let imageAlt = ''
+
+      if (product.featuredImage) {
+        imageUrl = product.featuredImage.url
+        imageAlt = product.featuredImage.altText || product.title
+      } else if (product.images.edges.length > 0) {
+        imageUrl = product.images.edges[0].node.url
+        imageAlt = product.images.edges[0].node.altText || product.title
+      }
+
+      return {
+        id: product.id,
+        title: product.title,
+        handle: product.handle,
+        description: product.description,
+        price: product.priceRangeV2?.minVariantPrice?.amount || '0',
+        currency: product.priceRangeV2?.minVariantPrice?.currencyCode || 'EUR',
+        imageUrl,
+        imageAlt
+      }
+    })
+
+    return {
+      success: true,
+      message: 'Produits récupérés avec succès',
+      products
+    }
+  } catch (error: any) {
+    console.error('Erreur serveur lors de la récupération des produits:', error)
+    return {
+      success: false,
+      message: error.message || 'Une erreur est survenue lors de la récupération des produits'
     }
   }
 }
