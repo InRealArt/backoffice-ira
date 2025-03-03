@@ -439,6 +439,7 @@ model Notification {
   subject  NotificationSubject
   complete Boolean             @default(false)
   status   NotificationStatus?
+
   @@schema("public")
 }
 
@@ -543,6 +544,24 @@ enum OrderStatus {
   CONFIRMED
   PROCESS_OF_DELIVERY
   DELIVER
+
+  @@schema("public")
+}
+
+model RequestArtworkToList {
+  id                  Int                  @id @default(autoincrement())
+  idCollectionShopify BigInt // Modifié de Int à BigInt
+  idProductShopify    BigInt // Modifié de Int à BigInt
+  idUser              Int
+  image               String
+  status              RequestArtworkStatus @default(pending)
+
+  @@schema("public")
+}
+
+enum RequestArtworkStatus {
+  pending
+  listed
 
   @@schema("public")
 }

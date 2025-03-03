@@ -8,13 +8,15 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner';
 import ProductCard from '@/app/components/ProductCard/ProductCard';
 import { fetchCollectionData, CollectionData } from '@/app/utils/shopify/collection';
 import styles from './collection.module.scss';
+import { getShopifyUserByEmail } from '@/app/actions/prisma/prismaActions';
+import { ShopifyUser } from '@prisma/client';
 
 export default function CollectionPage() {
   const { user } = useDynamicContext();
   const [isLoading, setIsLoading] = useState(true);
   const [collectionData, setCollectionData] = useState<CollectionData | null>(null);
   const [error, setError] = useState<string | null>(null);
-
+  const [userDB, setUserDB] = useState<ShopifyUser | null>(null);
   useEffect(() => {
     // Ne rien faire si l'utilisateur n'est pas connecté
     if (!user?.email) {
@@ -29,8 +31,9 @@ export default function CollectionPage() {
     const loadData = async () => {
       // Garantir que email n'est jamais undefined
       const email = user.email as string;
+      const userDB = await getShopifyUserByEmail(user?.email as string)
       const result = await fetchCollectionData(email);
-      
+      setUserDB(userDB)
       if (isMounted) {
         if (!result.success) {
           setError(result.error);
@@ -108,7 +111,9 @@ export default function CollectionPage() {
                           price={product.price}
                           currency={product.currency}
                           imageUrl={product.imageUrl}
-                          id={product.id}
+                          idShopify={product.id}
+                          collectionId={collectionData.id}    
+                          userId={userDB?.id}
                         />
                       ))}
                     </div>
