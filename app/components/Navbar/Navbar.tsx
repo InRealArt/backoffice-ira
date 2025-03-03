@@ -37,7 +37,9 @@ export default function Navbar() {
           <div className={styles.dropdownMenu}>
             <div className={styles.widgetMenuItem}>
               <span className={styles.menuItemLabel}>Connexion</span>
-              <DynamicWidget variant="modal" />
+              <div className={styles.dynamicWidgetContainer}>
+                <DynamicWidget variant="modal" />
+              </div>
             </div>
           </div>
         )}
