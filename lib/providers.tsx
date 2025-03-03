@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http } from "viem";
 import { mainnet } from "viem/chains";
 import AuthStateManager from "@/app/components/Auth/AuthStateManager";
+import { useRouter } from "next/navigation";
 
 const config = createConfig({
   chains: [mainnet],
@@ -24,12 +25,18 @@ export default function Providers({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   return (
     <DynamicContextProvider
       theme="auto"
       settings={{
         environmentId: "f176580d-2366-46b2-8ab9-39fc7885fed5",
         walletConnectors: [EthereumWalletConnectors],
+        events: {
+          onAuthSuccess: ({ user }) => {
+            router.push('/dashboard');
+          }
+        }
       }}
     >
       <WagmiProvider config={config}>

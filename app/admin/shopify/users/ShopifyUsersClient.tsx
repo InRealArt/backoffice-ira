@@ -36,7 +36,7 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
   
   const handleUserClick = (userId: string) => {
     setLoadingUserId(userId)
-    router.push(`/shopify/users/${userId}/edit`)
+    router.push(`/admin/shopify/users/${userId}/edit`)
   }
   
   // Fonction pour déterminer la classe et le texte du badge selon le rôle
