@@ -160,6 +160,34 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
             }
         }
 
+        // Ajouter le produit à la collection de l'artiste
+        try {
+            // Obtenir l'ID de collection de l'artiste
+            const collectionId = await getArtistCollectionId(artist)
+
+            if (collectionId) {
+                // Conversion de l'ID numérique au format GID
+                const formattedProductId = `gid://shopify/Product/${productId}`
+                const formattedCollectionId = `gid://shopify/Collection/${collectionId}`
+
+                // Ajouter le produit à la collection via l'API GraphQL
+                await addProductToCollectionGraphQL(formattedCollectionId, [formattedProductId])
+                console.log(`Produit ${productId} ajouté à la collection ${collectionId} de l'artiste ${artist}`)
+            } else {
+                console.log(`Aucune collection trouvée pour l'artiste ${artist}`)
+                // Créer une collection pour l'artiste s'il n'en a pas
+                const newCollectionId = await createArtistCollection(artist)
+                if (newCollectionId) {
+                    const formattedProductId = `gid://shopify/Product/${productId}`
+                    const formattedCollectionId = `gid://shopify/Collection/${newCollectionId}`
+                    await addProductToCollectionGraphQL(formattedCollectionId, [formattedProductId])
+                }
+            }
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout du produit à la collection de l\'artiste:', error)
+            // Ne pas échouer la création du produit si l'ajout à la collection échoue
+        }
+
         // Rafraîchir la page après création
         revalidatePath('/shopify/create')
         revalidatePath('/shopify/collection')
@@ -209,27 +237,91 @@ async function getArtistCollectionId(artistName: string): Promise<string | null>
     }
 }
 
-// Fonction pour ajouter un produit à une collection
-async function addProductToCollection(
-    client: ReturnType<typeof createAdminRestApiClient>,
-    productId: string,
-    collectionId: string
-) {
+// Fonction pour ajouter un produit à une collection via GraphQL
+async function addProductToCollectionGraphQL(collectionId: string, productIds: string[]) {
     try {
-        const response = await client.post('collects', {
+        // Client Admin avec token d'authentification
+        const adminAccessToken = process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '';
+        const storeDomain = process.env.SHOPIFY_STORE_NAME || '';
+        const apiVersion = '2025-01';
+
+        const mutation = `
+            mutation collectionAddProducts($id: ID!, $productIds: [ID!]!) {
+                collectionAddProducts(id: $id, productIds: $productIds) {
+                    collection {
+                        id
+                        title
+                    }
+                    userErrors {
+                        field
+                        message
+                    }
+                }
+            }
+        `;
+
+        const variables = {
+            id: collectionId,
+            productIds: productIds
+        };
+
+        const response = await fetch(
+            `https://${storeDomain}/admin/api/${apiVersion}/graphql.json`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Shopify-Access-Token': adminAccessToken
+                },
+                body: JSON.stringify({
+                    query: mutation,
+                    variables
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (data.errors || (data.data && data.data.collectionAddProducts && data.data.collectionAddProducts.userErrors.length > 0)) {
+            console.error('Erreur GraphQL:', data.errors || data.data.collectionAddProducts.userErrors);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout du produit via GraphQL:', error);
+        return false;
+    }
+}
+
+// Fonction pour créer une collection pour un artiste
+async function createArtistCollection(artistName: string): Promise<string | null> {
+    try {
+        const client = createAdminRestApiClient({
+            storeDomain: process.env.SHOPIFY_STORE_NAME || '',
+            apiVersion: '2025-01',
+            accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '',
+        })
+
+        const response = await client.post('custom_collections', {
             data: {
-                collect: {
-                    product_id: productId,
-                    collection_id: collectionId
+                custom_collection: {
+                    title: artistName,
+                    published: true
                 }
             }
         })
 
         if (!response.ok) {
-            console.error('Erreur lors de l\'ajout du produit à la collection:', await response.text())
+            console.error('Erreur lors de la création de la collection:', await response.text())
+            return null
         }
+
+        const data = await response.json()
+        return data.custom_collection.id
     } catch (error) {
-        console.error('Erreur lors de l\'ajout du produit à la collection:', error)
+        console.error('Erreur lors de la création de la collection:', error)
+        return null
     }
 }
 
