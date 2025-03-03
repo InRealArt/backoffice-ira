@@ -11,6 +11,7 @@ export function useSideMenuLogic() {
   const [canAccessCollection, setCanAccessCollection] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [showShopifySubmenu, setShowShopifySubmenu] = useState(false)
+  const [showBlockchainSubmenu, setShowBlockchainSubmenu] = useState<boolean>(false)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -90,13 +91,21 @@ export function useSideMenuLogic() {
     setShowShopifySubmenu(!showShopifySubmenu)
   }
 
+  const toggleBlockchainSubmenu = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowBlockchainSubmenu(prev => !prev)
+  }
+
+
   return {
     isLoggedIn,
     activeItem,
     canAccessCollection,
     isAdmin,
     showShopifySubmenu,
+    showBlockchainSubmenu,
     handleNavigation,
-    toggleShopifySubmenu
+    toggleShopifySubmenu,
+    toggleBlockchainSubmenu
   }
 }

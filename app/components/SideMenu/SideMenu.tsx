@@ -3,6 +3,7 @@
 import './SideMenu.css'
 import SideMenuItem from './SideMenuItem'
 import ShopifySubMenu from './ShopifySubMenu'
+import BlockchainSubMenu from './BlockchainSubMenu'
 import { useSideMenuLogic } from './useSideMenuLogic'
 
 export default function SideMenu() {
@@ -12,8 +13,10 @@ export default function SideMenu() {
     canAccessCollection,
     isAdmin,
     showShopifySubmenu,
+    showBlockchainSubmenu,
     handleNavigation,
-    toggleShopifySubmenu
+    toggleShopifySubmenu,
+    toggleBlockchainSubmenu
   } = useSideMenuLogic()
   
   if (!isLoggedIn) return null
@@ -48,6 +51,12 @@ export default function SideMenu() {
               isActive={activeItem === 'adminShopify'}
               isOpen={showShopifySubmenu}
               toggleSubmenu={toggleShopifySubmenu}
+              onNavigate={handleNavigation}
+            />
+            <BlockchainSubMenu
+              isActive={activeItem === 'adminBlockchain'}
+              isOpen={showBlockchainSubmenu}
+              toggleSubmenu={toggleBlockchainSubmenu}
               onNavigate={handleNavigation}
             />
           </>
