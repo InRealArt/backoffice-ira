@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { memberSchema, MemberFormData } from '../../../admin/shopify/create-member/schema'
+import { memberSchema, MemberFormData } from './schema'
 import { createMember, checkUserExists } from '@/app/actions/prisma/prismaActions'
 import toast from 'react-hot-toast'
 import styles from './CreateMemberForm.module.scss'

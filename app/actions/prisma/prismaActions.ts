@@ -1,7 +1,7 @@
 'use server';
 
-import { memberSchema } from "@/app/admin/shopify/create-member/schema";
-import { MemberFormData } from "@/app/admin/shopify/create-member/schema";
+import { memberSchema } from "@/app/(admin)/shopify/create-member/schema";
+import { MemberFormData } from "@/app/(admin)/shopify/create-member/schema";
 import { prisma } from "@/lib/prisma"
 import { NotificationStatus, ShopifyUser } from "@prisma/client"
 import { revalidatePath } from "next/cache";
@@ -298,7 +298,7 @@ export async function getShopifyUserByEmail(email: string) {
 export async function checkArtworkListingRequest(params: CheckListingRequestParams): Promise<boolean> {
   try {
     const productId = params.idProductShopify.toString()
-    
+
     const existingRequestArtworkToList = await prisma.requestArtworkToList.findFirst({
       where: {
         idProductShopify: parseInt(productId),
