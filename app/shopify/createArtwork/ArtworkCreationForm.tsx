@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { artworkSchema, ArtworkFormData } from './schema'
-import { createArtwork } from '@/app/actions/shopify/createArtwork'
+import { createArtwork } from '@/app/actions/shopify/shopifyActions'
 import toast from 'react-hot-toast'
 import './ArtworkCreationForm.css'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
@@ -207,6 +207,23 @@ export default function ArtworkCreationForm() {
               />
               {errors.dimensions && (
                 <p className="form-error">{errors.dimensions.message}</p>
+              )}
+            </div>
+            
+            {/* Poids - Nouveau champ */}
+            <div className="form-group">
+              <label htmlFor="weight" className="form-label">
+                Poids (kg)
+              </label>
+              <input
+                id="weight"
+                type="text"
+                {...register('weight')}
+                className={`form-input ${errors.weight ? 'form-input-error' : ''}`}
+                placeholder="5.2"
+              />
+              {errors.weight && (
+                <p className="form-error">{errors.weight.message}</p>
               )}
             </div>
           </div>

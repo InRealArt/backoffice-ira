@@ -25,9 +25,12 @@ export const artworkSchema = z.object({
         .min(2, { message: 'Le support doit contenir au moins 2 caractères' })
         .max(100, { message: 'Le support ne peut pas dépasser 100 caractères' }),
 
-    dimensions: z.string()
-        .min(2, { message: 'Les dimensions doivent contenir au moins 2 caractères' })
-        .max(50, { message: 'Les dimensions ne peuvent pas dépasser 50 caractères' }),
+    dimensions: z.string().min(1, "Les dimensions sont requises"),
+
+    weight: z.string().optional().refine(
+        (val) => !val || !isNaN(parseFloat(val.replace(',', '.'))),
+        { message: "Le poids doit être un nombre valide" }
+    ),
 
     year: z.string()
         .regex(/^\d{4}$/, { message: 'L\'année doit être au format YYYY (ex: 2023)' })
