@@ -1,0 +1,8 @@
+.dashboardContent {
+  padding: 20px;
+  min-height: calc(100vh - var(--navbar-height));
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+} 
