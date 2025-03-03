@@ -53,7 +53,7 @@ export default function ShopifySubMenu({
           <ul className="submenu-list">
             <li 
               className="submenu-item"
-              onClick={() => onNavigate('/admin/shopify/create-member', 'createMember')}
+              onClick={() => onNavigate('/shopify/create-member', 'createMember')}
             >
               Créer membre
             </li>
