@@ -44,6 +44,10 @@ export default function CollectionsClient({ collections, factories }: Collection
     router.push(`/blockchain/collections/${collectionId}/edit`)
   }
   
+  const handleCreateCollection = () => {
+    router.push('/blockchain/collections/create')
+  }
+  
   // Fonction pour tronquer l'adresse du contrat
   function truncateAddress(address: string): string {
     if (address.length <= 16) return address
@@ -74,7 +78,15 @@ export default function CollectionsClient({ collections, factories }: Collection
   return (
     <div className={styles.collectionsContainer}>
       <div className={styles.collectionsHeader}>
-        <h1 className={styles.pageTitle}>Collections</h1>
+        <div className={styles.headerTopSection}>
+          <h1 className={styles.pageTitle}>Collections</h1>
+          <button 
+            onClick={handleCreateCollection}
+            className={styles.createButton}
+          >
+            Créer une collection de NFT
+          </button>
+        </div>
         <p className={styles.subtitle}>
           Liste des collections enregistrées dans le système
         </p>

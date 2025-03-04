@@ -421,6 +421,7 @@ model ShopifyUser {
   id               Int               @id @default(autoincrement())
   email            String?           @unique
   walletAddress    String            @unique
+  linkedWallets    Json              @default("[]") // Tableau de wallets au format JSON
   lastLogin        DateTime          @db.Timestamp(6)
   userMetadata     Json
   role             ShopifyUserRoles?

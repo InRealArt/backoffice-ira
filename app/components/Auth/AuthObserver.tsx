@@ -5,6 +5,7 @@ import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { useRouter, usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 import UnauthorizedMessage from './UnauthorizedMessage';
+import WalletEventListener from './WalletEventListener';
 
 export default function AuthObserver() {
   const isLoggedIn = useIsLoggedIn();
@@ -97,5 +98,10 @@ export default function AuthObserver() {
     setPreviousLoginState(isLoggedIn);
   }, [isLoggedIn, user, primaryWallet, previousLoginState, router, isAuthorized]);
 
-  return null;
+  return (
+    <>
+      {isLoggedIn && <WalletEventListener />}
+      {/* Le reste du composant reste inchangé */}
+    </>
+  );
 }

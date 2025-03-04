@@ -1,24 +1,34 @@
 'use client';
 
-import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
+import { DynamicContextProvider} from "@dynamic-labs/sdk-react-core";
 import { DynamicWagmiConnector } from "@dynamic-labs/wagmi-connector";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { createConfig, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { http } from "viem";
-import { mainnet } from "viem/chains";
+import { createPublicClient, http } from "viem";
+import { mainnet, polygonMumbai, sepolia, polygon } from "viem/chains";
 import AuthStateManager from "@/app/components/Auth/AuthStateManager";
 import { useRouter } from "next/navigation";
+import { getNetwork } from "./blockchain/networkConfig";
 
 const config = createConfig({
   chains: [mainnet],
   multiInjectedProviderDiscovery: false,
   transports: {
     [mainnet.id]: http(),
+    [polygonMumbai.id]: http(),
+    [sepolia.id]: http(),
+    [polygon.id]: http(),
   },
 });
 
 const queryClient = new QueryClient();
+
+export const publicClient = createPublicClient({
+  chain: getNetwork(),
+  transport: http(process.env.RPC_URL),
+});
+
 
 export default function Providers({
   children,
