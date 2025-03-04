@@ -91,8 +91,8 @@ export function useSideMenuLogic() {
     setShowShopifySubmenu(!showShopifySubmenu)
   }
 
-  const toggleBlockchainSubmenu = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const toggleBlockchainSubmenu = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
     setShowBlockchainSubmenu(prev => !prev)
   }
 

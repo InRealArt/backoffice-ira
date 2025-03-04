@@ -565,3 +565,20 @@ enum RequestArtworkStatus {
 
   @@schema("public")
 }
+
+enum Chain {
+  eth_mainnet
+  sepolia
+  polygon_mainnet
+  polygon_testnet
+
+  @@schema("public")
+}
+
+model Factory {
+  id              Int    @id @default(autoincrement())
+  contractAddress String
+  chain           Chain
+
+  @@schema("public")
+}

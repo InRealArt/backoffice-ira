@@ -1,0 +1,97 @@
+.collectionsContainer {
+  width: 100%;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.collectionsHeader {
+  margin-bottom: 24px;
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 14px;
+}
+
+.collectionsContent {
+  background-color: white;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.collectionsTable {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  
+  th {
+    font-weight: 600;
+    color: #555;
+    background-color: #f5f5f5;
+  }
+}
+
+.clickableRow {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #f7f9fc;
+  }
+}
+
+.loadingRow {
+  opacity: 0.7;
+  background-color: #f0f0f0;
+}
+
+.disabledRow {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.symbolCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.truncatedAddress {
+  font-family: monospace;
+  color: #666;
+}
+
+.loadingText {
+  color: #999;
+}
+
+.emptyState {
+  padding: 40px;
+  text-align: center;
+  color: #888;
+}
+
+.hiddenMobile {
+  @media (max-width: 767px) {
+    display: none;
+  }
+} 

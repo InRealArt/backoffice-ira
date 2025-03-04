@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation'
 import { getArtistById } from '@/lib/actions/artist-actions'
 import ArtistEditForm from './ArtistEditForm'
-
-
 export default async function EditArtistPage({ params }: { params: { id: string } }) {
-  const artistId = parseInt(params.id)
+
+  const { id } = await params
+  const artistId = parseInt(id)
   
   if (isNaN(artistId)) {
     notFound()

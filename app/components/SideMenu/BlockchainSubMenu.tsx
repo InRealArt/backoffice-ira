@@ -6,7 +6,7 @@ import SideMenuItem from './SideMenuItem'
 interface BlockchainSubMenuProps {
   isActive: boolean
   isOpen: boolean
-  toggleSubmenu: (e: React.MouseEvent) => void
+  toggleSubmenu: (e?: React.MouseEvent) => void
   onNavigate: (route: string, menuItem: string) => void
 }
 
@@ -39,15 +39,13 @@ export default function BlockchainSubMenu({
   
   return (
     <div className="blockchain-menu-container" ref={menuRef}>
-      <li 
-        className={`menu-item ${isActive ? 'active' : ''} ${isOpen ? 'submenu-open' : ''}`}
+      <SideMenuItem
+        label="Blockchain"
+        isActive={isActive}
         onClick={toggleSubmenu}
-      >
-        Blockchain
-        <span className="submenu-arrow">
-          {isOpen ? '▲' : '▼'}
-        </span>
-      </li>
+        isSubmenuHeader
+        isOpen={isOpen}
+      />
       
       {isOpen && (
         <div className="blockchain-submenu">
@@ -56,6 +54,11 @@ export default function BlockchainSubMenu({
               label="Artistes"
               isActive={isActive && location.pathname.includes('/blockchain/artists')}
               onClick={() => onNavigate('/blockchain/artists', 'adminBlockchain')}
+            />
+            <SideMenuItem 
+              label="Collections"
+              isActive={isActive && location.pathname.includes('/blockchain/collections')}
+              onClick={() => onNavigate('/blockchain/collections', 'adminBlockchain')}
             />
           </ul>
         </div>
