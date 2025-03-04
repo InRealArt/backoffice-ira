@@ -2,22 +2,25 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Collection, Artist } from '@prisma/client'
+import { Collection, Artist, Factory } from '@prisma/client'
 import styles from './CollectionsClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 
-interface CollectionWithArtist extends Collection {
+interface CollectionWithRelations extends Collection {
   artist: Artist
+  factory: Factory | null
 }
 
 interface CollectionsClientProps {
-  collections: CollectionWithArtist[]
+  collections: CollectionWithRelations[]
+  factories: Factory[]
 }
 
-export default function CollectionsClient({ collections }: CollectionsClientProps) {
+export default function CollectionsClient({ collections, factories }: CollectionsClientProps) {
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const [loadingCollectionId, setLoadingCollectionId] = useState<number | null>(null)
+  const [selectedFactoryId, setSelectedFactoryId] = useState<number | null>(null)
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -47,6 +50,27 @@ export default function CollectionsClient({ collections }: CollectionsClientProp
     return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
   }
   
+  // Filtrer les collections en fonction de la factory sélectionnée
+  const filteredCollections = selectedFactoryId
+    ? collections.filter(collection => collection.factoryId === selectedFactoryId)
+    : collections
+    
+  // Fonction pour formater le nom de la chaîne
+  function formatChainName(chain: string): string {
+    switch (chain) {
+      case 'eth_mainnet':
+        return 'Ethereum Mainnet'
+      case 'sepolia':
+        return 'Sepolia'
+      case 'polygon_mainnet':
+        return 'Polygon Mainnet'
+      case 'polygon_testnet':
+        return 'Polygon Mumbai'
+      default:
+        return chain
+    }
+  }
+  
   return (
     <div className={styles.collectionsContainer}>
       <div className={styles.collectionsHeader}>
@@ -56,8 +80,31 @@ export default function CollectionsClient({ collections }: CollectionsClientProp
         </p>
       </div>
       
+      <div className={styles.filterSection}>
+        <div className={styles.filterItem}>
+          <label htmlFor="factoryFilter" className={styles.filterLabel}>
+            Filtrer par factory:
+          </label>
+          <div className={styles.selectWrapper}>
+            <select
+              id="factoryFilter"
+              className={styles.filterSelect}
+              value={selectedFactoryId || ''}
+              onChange={(e) => setSelectedFactoryId(e.target.value ? parseInt(e.target.value) : null)}
+            >
+              <option value="">Toutes les factories</option>
+              {factories.map(factory => (
+                <option key={factory.id} value={factory.id}>
+                  {formatChainName(factory.chain)} - {truncateAddress(factory.contractAddress)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+      
       <div className={styles.collectionsContent}>
-        {collections.length === 0 ? (
+        {filteredCollections.length === 0 ? (
           <div className={styles.emptyState}>
             <p>Aucune collection trouvée</p>
           </div>
@@ -68,12 +115,13 @@ export default function CollectionsClient({ collections }: CollectionsClientProp
                 <tr>
                   <th>Symbol</th>
                   <th>Artiste</th>
+                  <th className={styles.hiddenMobile}>Factory</th>
                   <th className={styles.hiddenMobile}>Adresse du contrat</th>
                   <th className={styles.hiddenMobile}>Admin</th>
                 </tr>
               </thead>
               <tbody>
-                {collections.map((collection) => {
+                {filteredCollections.map((collection) => {
                   const isLoading = loadingCollectionId === collection.id
                   return (
                     <tr 
@@ -90,6 +138,15 @@ export default function CollectionsClient({ collections }: CollectionsClientProp
                         </div>
                       </td>
                       <td>{collection.artist.pseudo}</td>
+                      <td className={styles.hiddenMobile}>
+                        {collection.factory ? (
+                          <div className={styles.factoryBadge}>
+                            {formatChainName(collection.factory.chain)}
+                          </div>
+                        ) : (
+                          <span className={styles.noFactory}>Non défini</span>
+                        )}
+                      </td>
                       <td className={styles.hiddenMobile}>
                         <span className={styles.truncatedAddress} title={collection.contractAddress}>
                           {truncateAddress(collection.contractAddress)}

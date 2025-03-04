@@ -14,8 +14,15 @@ export default async function CollectionsPage() {
     },
     include: {
       artist: true,
+      factory: true,
     },
   })
 
-  return <CollectionsClient collections={collections} />
+  const factories = await prisma.factory.findMany({
+    orderBy: {
+      id: 'asc',
+    },
+  })
+
+  return <CollectionsClient collections={collections} factories={factories} />
 } 
