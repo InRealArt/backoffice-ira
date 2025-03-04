@@ -1,8 +1,6 @@
 // Configuration des routes protégées avec leur niveau d'accès requis
 const protectedRoutes: Record<string, AccessLevel> = {
     // Routes admin
-    "/admin": "admin",
-    "/admin/shopify": "admin",
     "/shopify/create-member": "admin",
     "/shopify/users": "admin",
     "/blockchain/artists": "admin",
