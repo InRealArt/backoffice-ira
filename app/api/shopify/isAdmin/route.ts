@@ -12,8 +12,8 @@ export async function POST(request: Request) {
             );
         }
 
-        // Requête à la table ShopifyUser avec Prisma
-        const userData = await prisma.shopifyUser.findUnique({
+        // Requête pour vérifier si le wallet principal est admin
+        const userDirectData = await prisma.shopifyUser.findUnique({
             where: {
                 walletAddress: walletAddress,
             },
@@ -22,8 +22,26 @@ export async function POST(request: Request) {
             },
         });
 
-        // Vérifier si l'utilisateur est admin
-        const isAdmin = userData?.role === 'admin';
+        // Vérifier si le wallet est un wallet lié d'un admin
+        const userWithLinkedWallet = await prisma.shopifyUser.findFirst({
+            where: {
+                linkedWallets: {
+                    array_contains: [{ address: walletAddress }],
+                },
+                role: 'admin'
+            },
+            select: {
+                role: true,
+            },
+        });
+
+        // console.log('userDirectData', userDirectData)
+        // console.log('userWithLinkedWallet', userWithLinkedWallet)
+        // L'utilisateur est admin si son wallet principal est admin OU si c'est un wallet lié à un admin
+        const isAdmin = userDirectData?.role === 'admin' || userWithLinkedWallet?.role === 'admin';
+
+        // Combinaison des résultats
+        const userData = userDirectData || userWithLinkedWallet;
 
         // Retourner les données
         return NextResponse.json({
