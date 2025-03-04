@@ -60,6 +60,11 @@ export default function BlockchainSubMenu({
               isActive={isActive && location.pathname.includes('/blockchain/collections')}
               onClick={() => onNavigate('/blockchain/collections', 'adminBlockchain')}
             />
+            <SideMenuItem 
+              label="Factory"
+              isActive={isActive && location.pathname.includes('/blockchain/factories')}
+              onClick={() => onNavigate('/blockchain/factories', 'adminBlockchain')}
+            />
           </ul>
         </div>
       )}
