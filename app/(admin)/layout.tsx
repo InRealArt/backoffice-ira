@@ -20,6 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
       
       try {
+        console.log("*********")
         const response = await fetch('/api/shopify/isAdmin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

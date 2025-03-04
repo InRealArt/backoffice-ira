@@ -48,7 +48,7 @@ export function useSideMenuLogic() {
               walletAddress: primaryWallet.address
             }),
           })
-
+          console.log("useSideMenuLogic - isAdmin - adminResponse.ok : ", adminResponse.ok)
           if (adminResponse.ok) {
             const adminResult = await adminResponse.json()
             setIsAdmin(adminResult.isAdmin)
