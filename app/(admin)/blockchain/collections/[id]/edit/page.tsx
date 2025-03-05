@@ -15,15 +15,16 @@ interface EditCollectionPageProps {
 }
 
 export default async function EditCollectionPage({ params }: EditCollectionPageProps) {
-  const id = parseInt(params.id)
+  const { id } = await params
+  const collectionId = parseInt(id)
   
-  if (isNaN(id)) {
+  if (isNaN(collectionId)) {
     notFound()
   }
   
   // Récupérer la collection avec ses relations
   const collection = await prisma.collection.findUnique({
-    where: { id },
+    where: { id: collectionId },
     include: {
       artist: true,
       factory: true,

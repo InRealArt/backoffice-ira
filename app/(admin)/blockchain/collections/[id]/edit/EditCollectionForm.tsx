@@ -8,8 +8,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-hot-toast'
 import styles from './EditCollectionForm.module.scss'
 import { Artist, Factory, Collection, CollectionStatus } from '@prisma/client'
-import { updateCollection } from '@/lib/actions/collection-actions'
+import { updateCollection, syncCollection } from '@/lib/actions/collection-actions'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
+import { RefreshCw } from 'lucide-react'
 
 // Validation simplifiée (seulement pour contractAddress)
 const formSchema = z.object({
@@ -39,10 +40,12 @@ interface EditCollectionFormProps {
 export default function EditCollectionForm({ collection, artists, factories }: EditCollectionFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
   
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors }
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -87,6 +90,40 @@ export default function EditCollectionForm({ collection, artists, factories }: E
     }
   }
   
+  const handleSync = async () => {
+    if (isSyncing || collection.status !== 'pending' || !collection.transactionHash) {
+      return
+    }
+    
+    setIsSyncing(true)
+    toast.loading('Synchronisation avec la blockchain en cours...')
+    
+    try {
+      const result = await syncCollection(collection.id)
+      
+      if (result.success && result.updated) {
+        toast.success('Collection synchronisée avec succès')
+        
+        if (result.contractAddress) {
+          setValue('contractAddress', result.contractAddress)
+          setValue('status', 'confirmed')
+        } else {
+          setValue('status', 'failed')
+        }
+        setIsSyncing(false)  
+        // Rafraîchir le formulaire avec les nouvelles valeurs
+        router.refresh()
+      } else {
+        toast.error(result.message || 'Aucune mise à jour effectuée')
+      }
+    } catch (error: any) {
+      toast.error(`Erreur: ${error.message}`)
+      console.error(error)
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+  
   const handleCancel = () => {
     router.push('/blockchain/collections')
   }
@@ -104,7 +141,7 @@ export default function EditCollectionForm({ collection, artists, factories }: E
   return (
     <div className={styles.formContainer}>
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-        {/* Nom de la collection (readonly) */}
+        {/* Nom (lecture seule) */}
         <div className={styles.formGroup}>
           <label className={styles.label}>Nom de la collection</label>
           <div className={styles.readOnlyField}>
@@ -113,7 +150,7 @@ export default function EditCollectionForm({ collection, artists, factories }: E
           <input type="hidden" {...register('name')} />
         </div>
         
-        {/* Symbole (readonly) */}
+        {/* Symbole (lecture seule) */}
         <div className={styles.formGroup}>
           <label className={styles.label}>Symbole</label>
           <div className={styles.readOnlyField}>
@@ -122,16 +159,16 @@ export default function EditCollectionForm({ collection, artists, factories }: E
           <input type="hidden" {...register('symbol')} />
         </div>
         
-        {/* Artiste (readonly) */}
+        {/* Artiste (lecture seule) */}
         <div className={styles.formGroup}>
           <label className={styles.label}>Artiste</label>
           <div className={styles.readOnlyField}>
-            {currentArtist?.pseudo || 'Non spécifié'}
+            {currentArtist ? currentArtist.pseudo : 'Inconnu'}
           </div>
           <input type="hidden" {...register('artistId')} />
         </div>
         
-        {/* Factory (readonly) */}
+        {/* Factory (lecture seule) */}
         <div className={styles.formGroup}>
           <label className={styles.label}>Factory</label>
           <div className={styles.readOnlyField}>
@@ -142,7 +179,7 @@ export default function EditCollectionForm({ collection, artists, factories }: E
           <input type="hidden" {...register('factoryId')} />
         </div>
         
-        {/* Adresse Admin (readonly) */}
+        {/* Adresse Admin (lecture seule) */}
         <div className={styles.formGroup}>
           <label className={styles.label}>Adresse Admin</label>
           <div className={styles.readOnlyField}>
@@ -193,13 +230,31 @@ export default function EditCollectionForm({ collection, artists, factories }: E
           </p>
         </div>
         
-        {/* Transaction Hash (readonly) */}
+        {/* Transaction Hash (lecture seule) avec bouton de synchronisation */}
         {collection.transactionHash && (
           <div className={styles.formGroup}>
-            <label className={styles.label}>Transaction Hash</label>
+            <div className={styles.labelWithAction}>
+              <label className={styles.label}>Transaction Hash</label>
+              {collection.status === 'pending' && (
+                <button 
+                  type="button"
+                  onClick={handleSync}
+                  disabled={isSyncing}
+                  className={styles.syncButton}
+                >
+                  <RefreshCw className={`${styles.syncIcon} ${isSyncing ? styles.spinning : ''}`} />
+                  Synchroniser
+                </button>
+              )}
+            </div>
             <div className={styles.readOnlyField}>
               {truncateAddress(collection.transactionHash)}
             </div>
+            {collection.status === 'pending' && (
+              <p className={styles.helperText}>
+                Cliquez sur "Synchroniser" pour vérifier le statut de la transaction sur la blockchain.
+              </p>
+            )}
           </div>
         )}
         
@@ -209,14 +264,14 @@ export default function EditCollectionForm({ collection, artists, factories }: E
             type="button" 
             onClick={handleCancel}
             className={`${styles.button} ${styles.buttonSecondary}`}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isSyncing}
           >
             Annuler
           </button>
           <button 
             type="submit" 
             className={`${styles.button} ${styles.buttonPrimary}`}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isSyncing}
           >
             {isSubmitting ? 'Mise à jour...' : 'Mettre à jour la collection'}
           </button>

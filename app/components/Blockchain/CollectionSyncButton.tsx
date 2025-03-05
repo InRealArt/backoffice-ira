@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import Button from '../Button/Button'
 import { RefreshCw } from 'lucide-react'
-import { syncPendingCollections } from '@/lib/actions/collection-actions'
+import { syncCollection } from '@/lib/actions/collection-actions'
 
-export default function CollectionSyncButton() {
+export default function CollectionSyncButton({ collectionId }: { collectionId: number }) {
   const [isSyncing, setIsSyncing] = useState(false)
   
   const handleSync = async () => {
@@ -16,7 +16,7 @@ export default function CollectionSyncButton() {
     toast.loading('Synchronisation avec la blockchain en cours...')
     
     try {
-      const result = await syncPendingCollections()
+      const result = await syncCollection(collectionId)
       
       if (result.success) {
         toast.success(`Synchronisation terminée: ${result.updated || 0} collection(s) mise(s) à jour`)

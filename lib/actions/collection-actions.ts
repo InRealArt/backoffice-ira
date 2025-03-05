@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { publicClient } from '@/lib/providers'
+import { serverPublicClient } from '@/lib/server-providers'
 import { factoryABI } from '@/lib/contracts/factoryABI'
 import { Address, decodeEventLog } from 'viem'
 import { CollectionStatus } from '@prisma/client'
@@ -60,106 +60,122 @@ export async function createCollection(data: {
     }
 }
 
-// Synchroniser toutes les collections en attente
-export async function syncPendingCollections(): Promise<{
+// Synchroniser une collection spécifique avec la blockchain
+export async function syncCollection(id: number): Promise<{
     success: boolean;
-    updated?: number;
-    message?: string
+    updated: boolean;
+    contractAddress?: string;
+    message?: string;
 }> {
     try {
-        // Utiliser SQL brut pour éviter les problèmes avec l'enum
-        const pendingCollections = await prisma.$queryRaw`
-            SELECT * FROM public."Collection" 
-            WHERE status = 'pending' 
-            AND "transactionHash" IS NOT NULL
-        `;
+        // Récupérer la collection
+        const collection = await prisma.collection.findUnique({
+            where: { id }
+        });
 
-        if (!pendingCollections || (pendingCollections as any[]).length === 0) {
-            return { success: true, updated: 0, message: 'Aucune collection en attente' }
+        if (!collection) {
+            return {
+                success: false,
+                updated: false,
+                message: 'Collection introuvable'
+            };
         }
 
-        let updatedCount = 0
+        if (collection.status !== 'pending' || !collection.transactionHash) {
+            return {
+                success: true,
+                updated: false,
+                message: 'La collection n\'est pas en attente de synchronisation'
+            };
+        }
 
-        // Vérifier chaque collection
-        for (const collection of pendingCollections as any[]) {
-            if (!collection.transactionHash) continue
+        // Vérifier le statut de la transaction
+        const receipt = await serverPublicClient.getTransactionReceipt({
+            hash: collection.transactionHash as `0x${string}`
+        });
 
-            try {
-                // Vérifier le statut de la transaction
-                const receipt = await publicClient.getTransactionReceipt({
-                    hash: collection.transactionHash as Address
-                })
+        if (!receipt) {
+            return {
+                success: true,
+                updated: false,
+                message: 'Transaction toujours en attente de confirmation'
+            };
+        }
 
-                if (receipt && receipt.status === 'success') {
-                    // Transaction confirmée, chercher l'adresse du contrat
-                    let contractAddress: string | undefined
+        if (receipt.status === 'success') {
+            // Transaction confirmée, chercher l'adresse du contrat
+            let contractAddress: string | undefined;
 
-                    // Parcourir les logs pour l'événement ArtistCreated
-                    for (const log of receipt.logs) {
-                        try {
-                            const event = decodeEventLog({
-                                abi: factoryABI,
-                                data: log.data,
-                                topics: log.topics,
-                                eventName: 'ArtistCreated'
-                            })
-
-                            if (event && event.args) {
-                                const args = event.args as any
-                                contractAddress = args._collectionAddress
-                                break
-                            }
-                        } catch (e) {
-                            continue
-                        }
+            // Parcourir les logs pour l'événement ArtistCreated
+            console.log('receipt', receipt.logs)
+            for (const log of receipt.logs) {
+                
+                try {
+                    const event = decodeEventLog({
+                        abi: factoryABI,
+                        data: log.data,
+                        topics: log.topics,
+                        eventName: 'ArtistCreated'
+                    });
+                    if (event.eventName === 'ArtistCreated') {
+                        const args = event.args as any;
+                        contractAddress = args._collectionAddress;
+                        break;
                     }
+                } catch (e) {
+                    continue;
+                }
+            }
 
-                    if (contractAddress) {
-                        // Mettre à jour la collection avec SQL brut
-                        await prisma.$executeRaw`
-                            UPDATE public."Collection"
-                            SET "contractAddress" = ${contractAddress}, 
-                                status = 'confirmed'
-                            WHERE id = ${collection.id}
-                        `;
-
-                        updatedCount++
-                    }
-                } else if (receipt && receipt.status === 'reverted') {
-                    // Transaction échouée - utiliser SQL brut
-                    await prisma.$executeRaw`
-                        UPDATE public."Collection"
-                        SET status = 'failed'
-                        WHERE id = ${collection.id}
+            if (contractAddress) {
+                // Mettre à jour la collection avec SQL brut
+                await prisma.$executeRaw`
+                    UPDATE public."Collection"
+                    SET "contractAddress" = ${contractAddress}, 
+                        status = 'confirmed'
+                    WHERE id = ${collection.id}
                     `;
 
-                    updatedCount++
-                }
-                // Si la transaction est encore en attente, ne rien faire
-            } catch (error) {
-                console.warn(`Erreur lors de la vérification de la collection ${collection.id}:`, error)
-                // Continuer avec les autres collections
+            return {
+                    success: true,
+                    updated: true,
+                    contractAddress,
+                    message: 'Collection synchronisée avec succès'
+                };
+            } else {
+                return {
+                    success: false,
+                    updated: false,
+                    message: 'Impossible de trouver l\'adresse du contrat dans les logs de la transaction'
+                };
             }
+        } else if (receipt.status === 'reverted') {
+            // Transaction échouée
+            await prisma.$executeRaw`
+        UPDATE public."Collection"
+        SET status = 'failed'
+        WHERE id = ${collection.id}
+      `;
+
+            return {
+                success: true,
+                updated: true,
+                message: 'La transaction a échoué, statut mis à jour'
+            };
         }
 
-        const result = {
+        return {
             success: true,
-            updated: updatedCount,
-            message: `${updatedCount} collection(s) mise(s) à jour`
-        }
-
-        // Redirection vers la page des collections
-        redirect('/blockchain/collections')
-
-        // Ce code ne sera jamais exécuté à cause du redirect, mais TypeScript
-        // exige un retour pour respecter le type de retour de la fonction
-        return result
+            updated: false,
+            message: 'Aucune mise à jour nécessaire'
+        };
     } catch (error) {
-        console.error('Erreur lors de la synchronisation des collections:', error)
+        console.error('Erreur lors de la synchronisation de la collection:', error);
         return {
             success: false,
+            updated: false,
             message: `Erreur: ${(error as Error).message}`
-        }
+        };
     }
 }
 
