@@ -6,8 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { artworkSchema, ArtworkFormData } from './schema'
 import { createArtwork } from '@/app/actions/shopify/shopifyActions'
 import toast from 'react-hot-toast'
-import './ArtworkCreationForm.css'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import styles from './ArtworkCreationForm.module.scss'
 
 export default function ArtworkCreationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -97,194 +97,194 @@ export default function ArtworkCreationForm() {
   }
   
   return (
-    <div className="form-container">
+    <div className={styles.formContainer}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="form-grid">
+        <div className={styles.formGrid}>
           {/* Titre */}
-          <div className="form-group">
-            <label htmlFor="title" className="form-label">
+          <div className={styles.formGroup}>
+            <label htmlFor="title" className={styles.formLabel}>
               Titre de l'œuvre*
             </label>
             <input
               id="title"
               type="text"
               {...register('title')}
-              className={`form-input ${errors.title ? 'form-input-error' : ''}`}
+              className={`${styles.formInput} ${errors.title ? styles.formInputError : ''}`}
               placeholder="Sans titre #12"
             />
             {errors.title && (
-              <p className="form-error">{errors.title.message}</p>
+              <p className={styles.formError}>{errors.title.message}</p>
             )}
           </div>
           
           {/* Artiste */}
-          <div className="form-group">
-            <label htmlFor="artist" className="form-label">
+          <div className={styles.formGroup}>
+            <label htmlFor="artist" className={styles.formLabel}>
               Artiste*
             </label>
             <input
               id="artist"
               type="text"
               {...register('artist')}
-              className={`form-input ${errors.artist ? 'form-input-error' : ''}`}
+              className={`${styles.formInput} ${errors.artist ? styles.formInputError : ''}`}
               placeholder="Nom de l'artiste"
             />
             {errors.artist && (
-              <p className="form-error">{errors.artist.message}</p>
+              <p className={styles.formError}>{errors.artist.message}</p>
             )}
           </div>
         </div>
         
         {/* Description */}
-        <div className="form-group">
-          <label htmlFor="description" className="form-label">
+        <div className={styles.formGroup}>
+          <label htmlFor="description" className={styles.formLabel}>
             Description*
           </label>
           <textarea
             id="description"
             {...register('description')}
-            className={`form-textarea ${errors.description ? 'form-input-error' : ''}`}
+            className={`${styles.formTextarea} ${errors.description ? styles.formInputError : ''}`}
             rows={4}
             placeholder="Description détaillée de l'œuvre..."
           />
           {errors.description && (
-            <p className="form-error">{errors.description.message}</p>
+            <p className={styles.formError}>{errors.description.message}</p>
           )}
         </div>
         
         {/* Section Tarification */}
-        <div className="form-section-title">Tarification</div>
-        <div className="form-section-content">
-          <div className="form-group">
-            <label htmlFor="price" className="form-label">
+        <div className={styles.formSectionTitle}>Tarification</div>
+        <div className={styles.formSectionContent}>
+          <div className={styles.formGroup}>
+            <label htmlFor="price" className={styles.formLabel}>
               Prix (€)*
             </label>
             <input
               id="price"
               type="text"
               {...register('price')}
-              className={`form-input ${errors.price ? 'form-input-error' : ''}`}
+              className={`${styles.formInput} ${errors.price ? styles.formInputError : ''}`}
               placeholder="1500"
             />
             {errors.price && (
-              <p className="form-error">{errors.price.message}</p>
+              <p className={styles.formError}>{errors.price.message}</p>
             )}
           </div>
         </div>
         
         {/* Section Caractéristiques */}
-        <div className="form-section-title">Caractéristiques</div>
-        <div className="form-section-content">
-          <div className="form-grid">
+        <div className={styles.formSectionTitle}>Caractéristiques</div>
+        <div className={styles.formSectionContent}>
+          <div className={styles.formGrid}>
             {/* Support/Medium */}
-            <div className="form-group">
-              <label htmlFor="medium" className="form-label">
+            <div className={styles.formGroup}>
+              <label htmlFor="medium" className={styles.formLabel}>
                 Support/Medium*
               </label>
               <input
                 id="medium"
                 type="text"
                 {...register('medium')}
-                className={`form-input ${errors.medium ? 'form-input-error' : ''}`}
+                className={`${styles.formInput} ${errors.medium ? styles.formInputError : ''}`}
                 placeholder="Acrylique sur toile"
               />
               {errors.medium && (
-                <p className="form-error">{errors.medium.message}</p>
+                <p className={styles.formError}>{errors.medium.message}</p>
               )}
             </div>
             
             {/* Dimensions */}
-            <div className="form-group">
-              <label htmlFor="dimensions" className="form-label">
+            <div className={styles.formGroup}>
+              <label htmlFor="dimensions" className={styles.formLabel}>
                 Dimensions (cm)*
               </label>
               <input
                 id="dimensions"
                 type="text"
                 {...register('dimensions')}
-                className={`form-input ${errors.dimensions ? 'form-input-error' : ''}`}
+                className={`${styles.formInput} ${errors.dimensions ? styles.formInputError : ''}`}
                 placeholder="100 x 80 x 2"
               />
               {errors.dimensions && (
-                <p className="form-error">{errors.dimensions.message}</p>
+                <p className={styles.formError}>{errors.dimensions.message}</p>
               )}
             </div>
             
             {/* Poids - Nouveau champ */}
-            <div className="form-group">
-              <label htmlFor="weight" className="form-label">
+            <div className={styles.formGroup}>
+              <label htmlFor="weight" className={styles.formLabel}>
                 Poids (kg)
               </label>
               <input
                 id="weight"
                 type="text"
                 {...register('weight')}
-                className={`form-input ${errors.weight ? 'form-input-error' : ''}`}
+                className={`${styles.formInput} ${errors.weight ? styles.formInputError : ''}`}
                 placeholder="5.2"
               />
               {errors.weight && (
-                <p className="form-error">{errors.weight.message}</p>
+                <p className={styles.formError}>{errors.weight.message}</p>
               )}
             </div>
           </div>
           
-          <div className="form-grid">
+          <div className={styles.formGrid}>
             {/* Année */}
-            <div className="form-group">
-              <label htmlFor="year" className="form-label">
+            <div className={styles.formGroup}>
+              <label htmlFor="year" className={styles.formLabel}>
                 Année de création
               </label>
               <input
                 id="year"
                 type="text"
                 {...register('year')}
-                className={`form-input ${errors.year ? 'form-input-error' : ''}`}
+                className={`${styles.formInput} ${errors.year ? styles.formInputError : ''}`}
                 placeholder="2023"
               />
               {errors.year && (
-                <p className="form-error">{errors.year.message}</p>
+                <p className={styles.formError}>{errors.year.message}</p>
               )}
             </div>
             
             {/* Édition */}
-            <div className="form-group">
-              <label htmlFor="edition" className="form-label">
+            <div className={styles.formGroup}>
+              <label htmlFor="edition" className={styles.formLabel}>
                 Édition/Série
               </label>
               <input
                 id="edition"
                 type="text"
                 {...register('edition')}
-                className={`form-input ${errors.edition ? 'form-input-error' : ''}`}
+                className={`${styles.formInput} ${errors.edition ? styles.formInputError : ''}`}
                 placeholder="Édition limitée 2/10"
               />
               {errors.edition && (
-                <p className="form-error">{errors.edition.message}</p>
+                <p className={styles.formError}>{errors.edition.message}</p>
               )}
             </div>
           </div>
         </div>
         
         {/* Tags */}
-        <div className="form-group">
-          <label htmlFor="tags" className="form-label">
+        <div className={styles.formGroup}>
+          <label htmlFor="tags" className={styles.formLabel}>
             Tags (séparés par des virgules)
           </label>
           <input
             id="tags"
             type="text"
             {...register('tags')}
-            className={`form-input ${errors.tags ? 'form-input-error' : ''}`}
+            className={`${styles.formInput} ${errors.tags ? styles.formInputError : ''}`}
             placeholder="abstrait, contemporain, acrylique"
           />
           {errors.tags && (
-            <p className="form-error">{errors.tags.message}</p>
+            <p className={styles.formError}>{errors.tags.message}</p>
           )}
         </div>
         
         {/* Images */}
-        <div className="form-group">
-          <label htmlFor="images" className="form-label">
+        <div className={styles.formGroup}>
+          <label htmlFor="images" className={styles.formLabel}>
             Images*
           </label>
           <input
@@ -300,24 +300,24 @@ export default function ArtworkCreationForm() {
               register('images').ref(e)
               fileInputRef.current = e
             }}
-            className={`form-file-input ${errors.images ? 'form-input-error' : ''}`}
+            className={`${styles.formFileInput} ${errors.images ? styles.formInputError : ''}`}
           />
           {errors.images && (
-            <p className="form-error">{errors.images.message}</p>
+            <p className={styles.formError}>{errors.images.message}</p>
           )}
         </div>
         
         {/* Prévisualisation des images */}
         {previewImages.length > 0 && (
-          <div className="image-preview-container">
+          <div className={styles.imagePreviewContainer}>
             {previewImages.map((src, index) => (
-              <div key={index} className="image-preview">
+              <div key={index} className={styles.imagePreview}>
                 <img src={src} alt={`Aperçu ${index + 1}`} />
               </div>
             ))}
           </div>
         )}
-        <div className="form-actions">
+        <div className={styles.formActions}>
           <button
             type="button"
             onClick={() => {
@@ -327,7 +327,7 @@ export default function ArtworkCreationForm() {
                 fileInputRef.current.value = ''
               }
             }}
-            className="button button-secondary"
+            className={`${styles.button} ${styles.buttonSecondary}`}
             disabled={isSubmitting}
           >
             Réinitialiser
@@ -335,7 +335,7 @@ export default function ArtworkCreationForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="button button-primary"
+            className={`${styles.button} ${styles.buttonPrimary}`}
           >
             {isSubmitting ? 'Création en cours...' : 'Créer l\'œuvre'}
           </button>

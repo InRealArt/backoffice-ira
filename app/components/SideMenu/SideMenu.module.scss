@@ -1,0 +1,134 @@
+.sideMenu {
+  position: fixed;
+  left: 0;
+  top: var(--navbar-height); /* Utilisation de la variable */
+  width: 220px;
+  height: calc(100vh - var(--navbar-height)); /* Ajustement de la hauteur */
+  background-color: #f8f8f8;
+  border-right: 1px solid #e0e0e0;
+  padding-top: 20px;
+  transition: all 0.3s ease;
+  z-index: 90;
+}
+
+:global(.dark) .sideMenu {
+  background-color: #1a1c23;
+  border-right: 1px solid #2f3035;
+}
+
+.menuList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menuItem {
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  &.active {
+    border-left: 4px solid #4779fe;
+    background-color: rgba(71, 121, 254, 0.08);
+    font-weight: 500;
+  }
+}
+
+:global(.dark) .menuItem {
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+  }
+
+  &.active {
+    background-color: rgba(71, 121, 254, 0.15);
+  }
+}
+
+/* Styles pour le conteneur du menu Shopify */
+.shopifyMenuContainer {
+  position: relative;
+}
+
+/* Style pour l'élément du menu avec sous-menu ouvert */
+.menuItem.submenuOpen {
+  background-color: rgba(71, 121, 254, 0.08);
+}
+
+:global(.dark) .menuItem.submenuOpen {
+  background-color: rgba(71, 121, 254, 0.15);
+}
+
+/* Style pour la flèche du sous-menu */
+.submenuArrow {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+/* Style du sous-menu popup */
+.shopifySubmenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  width: 180px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease;
+}
+
+:global(.dark) .shopifySubmenu {
+  background-color: #2c2e36;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Style de la liste du sous-menu */
+.submenuList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Style des éléments du sous-menu */
+.submenuItem {
+  padding: 10px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background-color: rgba(71, 121, 254, 0.08);
+    border-left: 3px solid #4779fe;
+  }
+}
+
+:global(.dark) .submenuItem:hover {
+  background-color: rgba(71, 121, 254, 0.15);
+}
+
+/* Pour les écrans plus petits, ajuster la position du sous-menu */
+@media screen and (max-width: 768px) {
+  .shopifySubmenu {
+    left: 0;
+    top: 100%;
+    width: 100%;
+  }
+} 
