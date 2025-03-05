@@ -34,8 +34,8 @@ export default function MarketplaceSubMenu({
         <div className="submenu-container">
           <SideMenuItem
             label="Demande de listing produits"
-            isActive={isActive && pathname.includes('/marketplace/product-listing-requests')}
-            onClick={() => onNavigate('/marketplace/product-listing-requests', 'adminMarketplace')}
+            isActive={isActive && pathname.includes('/marketplace/productsListing')}
+            onClick={() => onNavigate('/marketplace/productsListing', 'adminMarketplace')}
           />
         </div>
       )}
