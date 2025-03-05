@@ -15,7 +15,7 @@ export async function updateLinkedWallets(
 ) {
     try {
         // Vérifier si le wallet principal existe
-        const user = await prisma.shopifyUser.findUnique({
+        const user = await prisma.backofficeUser.findUnique({
             where: { walletAddress: primaryWalletAddress }
         })
 
@@ -39,7 +39,7 @@ export async function updateLinkedWallets(
             currentWallets.push(linkedWallet)
 
             // Mettre à jour l'utilisateur
-            await prisma.shopifyUser.update({
+            await prisma.backofficeUser.update({
                 where: { walletAddress: primaryWalletAddress },
                 data: { linkedWallets: currentWallets }
             })

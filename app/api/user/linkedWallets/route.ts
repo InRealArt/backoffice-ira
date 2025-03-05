@@ -15,7 +15,7 @@ export async function GET(request: Request) {
         }
 
         // Récupérer l'utilisateur et ses wallets liés
-        const user = await prisma.shopifyUser.findUnique({
+        const user = await prisma.backofficeUser.findUnique({
             where: { walletAddress: address },
             select: { linkedWallets: true }
         })

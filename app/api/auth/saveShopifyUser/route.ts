@@ -5,7 +5,7 @@ export async function POST(request: Request) {
   try {
     const { email, walletAddress, userMetadata } = await request.json();
 
-    const user = await prisma.shopifyUser.upsert({
+    const user = await prisma.backofficeUser.upsert({
       where: { email },
       update: {
         email,

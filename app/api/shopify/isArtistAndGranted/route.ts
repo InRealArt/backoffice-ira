@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     }
     
     // Requête à la table ShopifyUser avec Prisma
-    const userData = await prisma.shopifyUser.findUnique({
+    const userData = await prisma.backofficeUser.findUnique({
       where: {
         walletAddress: walletAddress,
       },

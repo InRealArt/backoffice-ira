@@ -49,7 +49,7 @@ export async function getUserByEmail(email: string) {
       throw new Error('Email requis');
     }
 
-    const user = await prisma.shopifyUser.findUnique({
+    const user = await prisma.backofficeUser.findUnique({
       where: { email }
     });
 

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
         }
 
         // Requête pour vérifier si le wallet principal est admin
-        const userDirectData = await prisma.shopifyUser.findUnique({
+        const userDirectData = await prisma.backofficeUser.findUnique({
             where: {
                 walletAddress: walletAddress,
             },
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
         });
 
         // Vérifier si le wallet est un wallet lié d'un admin
-        const userWithLinkedWallet = await prisma.shopifyUser.findFirst({
+        const userWithLinkedWallet = await prisma.backofficeUser.findFirst({
             where: {
                 linkedWallets: {
                     array_contains: [{ address: walletAddress }],

@@ -80,7 +80,7 @@ export async function createMember(data: MemberFormData): Promise<CreateMemberRe
     const validatedData = memberSchema.parse(data)
 
     // Vérifier si l'email existe déjà
-    const existingUser = await prisma.shopifyUser.findUnique({
+    const existingUser = await prisma.backofficeUser.findUnique({
       where: { email: validatedData.email }
     })
 
@@ -92,7 +92,7 @@ export async function createMember(data: MemberFormData): Promise<CreateMemberRe
     }
 
     // Créer l'utilisateur dans la base de données
-    await prisma.shopifyUser.create({
+    await prisma.backofficeUser.create({
       data: {
         email: validatedData.email,
         firstName: validatedData.firstName,
@@ -134,7 +134,7 @@ export async function checkUserExists(
 ): Promise<CheckUserExistsResult> {
   try {
     // Vérifier si l'email existe déjà
-    const existingUserByEmail = await prisma.shopifyUser.findUnique({
+    const existingUserByEmail = await prisma.backofficeUser.findUnique({
       where: { email: params.email }
     })
 
@@ -146,7 +146,7 @@ export async function checkUserExists(
     }
 
     // Vérifier si la combinaison prénom+nom existe déjà
-    const existingUserByName = await prisma.shopifyUser.findFirst({
+    const existingUserByName = await prisma.backofficeUser.findFirst({
       where: {
         firstName: params.firstName,
         lastName: params.lastName
@@ -177,7 +177,7 @@ export async function checkUserExists(
 
 export async function getShopifyUsers(): Promise<ShopifyUser[]> {
   try {
-    const users = await prisma.shopifyUser.findMany({
+    const users = await prisma.backofficeUser.findMany({
       orderBy: {
         createdAt: 'desc'
       }
@@ -198,7 +198,7 @@ type UpdateShopifyUserResult = {
 // Ajouter cette fonction pour récupérer un utilisateur par son ID
 export async function getShopifyUserById(id: string) {
   try {
-    const user = await prisma.shopifyUser.findUnique({
+    const user = await prisma.backofficeUser.findUnique({
       where: { id: parseInt(id) }
     })
 
@@ -215,7 +215,7 @@ export async function updateShopifyUser(
 ): Promise<UpdateShopifyUserResult> {
   try {
     // Vérifier si l'utilisateur existe
-    const existingUser = await prisma.shopifyUser.findUnique({
+    const existingUser = await prisma.backofficeUser.findUnique({
       where: { id: parseInt(data.id) }
     })
 
@@ -228,7 +228,7 @@ export async function updateShopifyUser(
 
     // Vérifier si l'email existe déjà pour un autre utilisateur
     if (data.email !== existingUser.email) {
-      const emailExists = await prisma.shopifyUser.findFirst({
+      const emailExists = await prisma.backofficeUser.findFirst({
         where: {
           email: data.email,
           id: { not: parseInt(data.id) }
@@ -244,7 +244,7 @@ export async function updateShopifyUser(
     }
 
     // Mettre à jour l'utilisateur
-    await prisma.shopifyUser.update({
+    await prisma.backofficeUser.update({
       where: { id: parseInt(data.id) },
       data: {
         firstName: data.firstName,
@@ -284,7 +284,7 @@ export async function updateShopifyUser(
 // Ajouter cette fonction pour récupérer un utilisateur par son email
 export async function getShopifyUserByEmail(email: string) {
   try {
-    const user = await prisma.shopifyUser.findUnique({
+    const user = await prisma.backofficeUser.findUnique({
       where: { email }
     })
 

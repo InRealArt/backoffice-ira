@@ -3,10 +3,10 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 
-export async function submitShopifyRequest(formData: { 
-  email: string, 
-  firstName: string, 
-  lastName: string 
+export async function submitShopifyRequest(formData: {
+  email: string,
+  firstName: string,
+  lastName: string
 }) {
   try {
     // Vérifier que l'email existe
@@ -23,7 +23,7 @@ export async function submitShopifyRequest(formData: {
     });
 
     // Mettre à jour ou créer l'utilisateur Shopify avec les champs name et surname
-    await prisma.shopifyUser.update({
+    await prisma.backofficeUser.update({
       where: { email: formData.email },
       data: {
         lastName: formData.lastName,
@@ -33,12 +33,12 @@ export async function submitShopifyRequest(formData: {
 
     // Actualiser le dashboard après modification
     revalidatePath('/dashboard');
-    
+
     return { success: true };
   } catch (error) {
     console.error('Erreur lors de la création de la notification:', error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: "Une erreur est survenue lors de l'envoi de votre demande"
     };
   }
