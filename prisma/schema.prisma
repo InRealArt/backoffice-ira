@@ -63,6 +63,7 @@ model ResourceNft {
   previousOwner   String?
   Order           Order[]
   collection      Collection          @relation(fields: [collectionId], references: [id])
+  items           Item[]
 
   @@schema("public")
 }
@@ -432,6 +433,7 @@ model BackofficeUser {
   lastName         String?
   isShopifyGranted Boolean           @default(false)
   createdAt        DateTime          @default(now()) @db.Timestamp(6)
+  items            Item[]
 
   @@index([email])
   @@index([walletAddress])
@@ -594,6 +596,28 @@ enum CollectionStatus {
   pending
   confirmed
   failed
+
+  @@schema("public")
+}
+
+model Item {
+  id            Int            @id @default(autoincrement())
+  status        ItemStatus     @default(pending)
+  idUser        Int
+  idShopify     Int
+  idResourceNft Int?
+  user          BackofficeUser @relation(fields: [idUser], references: [id])
+  resourceNft   ResourceNft?   @relation(fields: [idResourceNft], references: [id])
+
+  @@index([idUser])
+  @@index([idResourceNft])
+  @@schema("public")
+}
+
+enum ItemStatus {
+  pending
+  minted
+  listed
 
   @@schema("public")
 }
