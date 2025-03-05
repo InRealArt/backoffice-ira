@@ -17,6 +17,7 @@ import { useWalletClient } from 'wagmi'
 import { Address } from 'viem'
 import { useChainId, useConfig } from 'wagmi'
 import { switchChain } from 'wagmi/actions'
+import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
 
 // Validation pour les adresses Ethereum
 const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/
@@ -105,6 +106,47 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
   const [transactionSuccess, setTransactionSuccess] = useState(false)
   const [transactionError, setTransactionError] = useState<Error | null>(null)
   
+  const [hasDeployerRole, setHasDeployerRole] = useState<boolean>(false)
+  const [isCheckingRole, setIsCheckingRole] = useState<boolean>(false)
+  
+  // Fonction pour vérifier si l'utilisateur a le rôle DEPLOYER_ARTIST_ROLE
+  const checkDeployerRole = async (factoryAddress: string, userAddress: string) => {
+    if (!factoryAddress || !userAddress) return false
+    console.log('factoryAddress', factoryAddress)
+    console.log('userAddress', userAddress)
+    setIsCheckingRole(true)
+    try {
+      const hasRole = await publicClient.readContract({
+        address: factoryAddress as Address,
+        abi: factoryABI,
+        functionName: 'hasRole',
+        args: [InRealArtRoles.DEPLOYER_ARTIST_ROLE, userAddress as Address]
+      })
+      
+      console.log(`Rôle DEPLOYER_ARTIST_ROLE pour ${userAddress}: ${hasRole}`)
+      return !!hasRole
+    } catch (error) {
+      console.error('Erreur lors de la vérification du rôle:', error)
+      return false
+    } finally {
+      setIsCheckingRole(false)
+    }
+  }
+  
+  // Vérifie le rôle lorsque la factory ou l'adresse de l'utilisateur change
+  useEffect(() => {
+    const verifyRole = async () => {
+      if (selectedFactory && address && chain && getChainId(selectedFactory.chain) === chain.id) {
+        const result = await checkDeployerRole(selectedFactory.contractAddress, address)
+        setHasDeployerRole(result)
+      } else {
+        setHasDeployerRole(false)
+      }
+    }
+    
+    verifyRole()
+  }, [selectedFactory, address, chain])
+  
   // Mettre à jour l'adresse du wallet artiste quand l'artiste est sélectionné
   const handleArtistChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value
@@ -131,19 +173,31 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
         // Vérifier si nous devons changer de réseau
         if (factory.chain && getChainId(factory.chain) !== chainId) {
           try {
+            console.log('factory.chain', factory.chain)
             const targetChainId = getChainId(factory.chain)
             toast.success(`Changement vers le réseau ${formatChainName(factory.chain)}...`)
             
             // Utiliser switchChain au lieu de switchNetwork
             const targetChain = getChainByName(factory.chain)
-            await switchChain(config, { chainId: targetChainId })
+            // await switchChain(config, { chainId: targetChainId })
+            
+            // Vérifier le rôle après le changement de réseau, mais seulement s'il y a une adresse
+            if (address) {
+              const hasRole = await checkDeployerRole(factory.contractAddress, address)
+              setHasDeployerRole(hasRole)
+            }
           } catch (error) {
             toast.error(`Erreur lors du changement de réseau: ${(error as Error).message}`)
           }
+        } else if (address) {
+          // Si nous sommes déjà sur le bon réseau, vérifier le rôle immédiatement
+          const hasRole = await checkDeployerRole(factory.contractAddress, address)
+          setHasDeployerRole(hasRole)
         }
       }
     } else {
       setSelectedFactory(null)
+      setHasDeployerRole(false)
     }
   }
   
@@ -425,11 +479,22 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
           <button 
             type="submit" 
             className={`${styles.button} ${styles.buttonPrimary}`}
-            disabled={isSubmitting || isTransactionPending || status !== 'connected'}
+            disabled={
+              isSubmitting || 
+              isTransactionPending || 
+              status !== 'connected' || 
+              !hasDeployerRole || 
+              isCheckingRole
+            }
           >
             {isSubmitting || isTransactionPending 
               ? 'Transaction en cours...' 
-              : 'Créer la collection'}
+              : isCheckingRole 
+                ? 'Vérification des permissions...'
+                : !hasDeployerRole && selectedFactory
+                ? 'Permission insuffisante'
+                : 'Créer la collection'
+            }
           </button>
         </div>
       </form>

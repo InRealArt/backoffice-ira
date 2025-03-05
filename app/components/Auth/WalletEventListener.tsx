@@ -11,23 +11,23 @@ export default function WalletEventListener() {
 
   // Logs de débogage améliorés et détection des wallets Turnkey HD
   useEffect(() => {
-    console.log('WalletEventListener monté')
-    console.log('Primary wallet:', primaryWallet)
-    console.log('Tous les wallets (useUserWallets):', userWallets)
+    // console.log('WalletEventListener monté')
+    // console.log('Primary wallet:', primaryWallet)
+    // console.log('Tous les wallets (useUserWallets):', userWallets)
     
     // Détection et traitement des wallets liés Turnkey HD
     if (primaryWallet && userWallets && userWallets.length > 0) {
       // Affichage détaillé de chaque wallet
       userWallets.forEach(async (wallet, index) => {
         const connectorType = wallet.connector?.name || 'unknown'
-        console.log(`Wallet ${index + 1}:`, {
-          address: wallet.address,
-          chain: wallet.chain,
-          isAuthenticated: wallet.isAuthenticated,
-          id: wallet.id,
-          connectorType
-        })
-        console.log('connectorType', connectorType)
+        // console.log(`Wallet ${index + 1}:`, {
+        //   address: wallet.address,
+        //   chain: wallet.chain,
+        //   isAuthenticated: wallet.isAuthenticated,
+        //   id: wallet.id,
+        //   connectorType
+        // })
+        // console.log('connectorType', connectorType)
 
         // Si c'est un wallet Turnkey HD et pas le wallet principal, on le considère comme un wallet lié
         if (connectorType !== "Turnkey HD" && wallet.address !== primaryWallet.address) {
