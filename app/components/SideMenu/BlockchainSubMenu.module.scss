@@ -1,0 +1,76 @@
+.blockchainMenuContainer {
+  position: relative;
+  width: 100%;
+}
+
+.blockchainSubmenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  width: 180px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-5px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.submenuList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.submenuItem {
+  padding: 10px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background-color: rgba(71, 121, 254, 0.08);
+    border-left: 3px solid #4779fe;
+  }
+}
+
+:global(.dark) .blockchainSubmenu {
+  background-color: #2c2e36;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+:global(.dark) .submenuItem:hover {
+  background-color: rgba(71, 121, 254, 0.15);
+}
+
+/* Pour les écrans plus petits, ajuster la position du sous-menu */
+@media screen and (max-width: 768px) {
+  .blockchainSubmenu {
+    left: 0;
+    top: 100%;
+    width: 100%;
+  }
+}
+
+.blockchainSubmenuVertical {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding-left: 1.5rem; // Indentation pour montrer la hiérarchie
+  margin-top: 0.25rem;
+}
+
+.submenuItemVertical {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}

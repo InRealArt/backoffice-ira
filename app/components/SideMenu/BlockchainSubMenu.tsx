@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from 'react'
 import SideMenuItem from './SideMenuItem'
+import styles from './BlockchainSubMenu.module.scss'
 
 interface BlockchainSubMenuProps {
   isActive: boolean
@@ -38,7 +39,7 @@ export default function BlockchainSubMenu({
   }, [isOpen, toggleSubmenu])
   
   return (
-    <div className="blockchain-menu-container" ref={menuRef}>
+    <div className={styles.blockchainMenuContainer} ref={menuRef}>
       <SideMenuItem
         label="Blockchain"
         isActive={isActive}
@@ -48,24 +49,28 @@ export default function BlockchainSubMenu({
       />
       
       {isOpen && (
-        <div className="blockchain-submenu">
-          <ul className="submenu-list">
+        <div className={styles.blockchainSubmenuVertical}>
+          <div className={styles.submenuItemVertical}>
             <SideMenuItem 
               label="Artistes"
               isActive={isActive && location.pathname.includes('/blockchain/artists')}
               onClick={() => onNavigate('/blockchain/artists', 'adminBlockchain')}
             />
+          </div>
+          <div className={styles.submenuItemVertical}>
             <SideMenuItem 
               label="Collections"
               isActive={isActive && location.pathname.includes('/blockchain/collections')}
               onClick={() => onNavigate('/blockchain/collections', 'adminBlockchain')}
             />
+          </div>
+          <div className={styles.submenuItemVertical}>
             <SideMenuItem 
               label="Factory"
               isActive={isActive && location.pathname.includes('/blockchain/factories')}
               onClick={() => onNavigate('/blockchain/factories', 'adminBlockchain')}
             />
-          </ul>
+          </div>
         </div>
       )}
     </div>

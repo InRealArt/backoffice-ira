@@ -1,11 +1,13 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
+import SideMenuItem from './SideMenuItem'
+import styles from './ShopifySubMenu.module.scss'
 
 interface ShopifySubMenuProps {
   isActive: boolean
   isOpen: boolean
-  toggleSubmenu: (e: React.MouseEvent) => void
+  toggleSubmenu: (e?: React.MouseEvent) => void
   onNavigate: (route: string, menuItem: string) => void
 }
 
@@ -37,33 +39,29 @@ export default function ShopifySubMenu({
   }, [isOpen, toggleSubmenu])
   
   return (
-    <div className="shopify-menu-container" ref={menuRef}>
-      <li 
-        className={`menu-item ${isActive ? 'active' : ''} ${isOpen ? 'submenu-open' : ''}`}
+    <div className={styles.shopifyMenuContainer} ref={menuRef}>
+      <SideMenuItem
+        label="Shopify"
+        isActive={isActive}
         onClick={toggleSubmenu}
-      >
-        Shopify
-        <span className="submenu-arrow">
-          {isOpen ? '▲' : '▼'}
-        </span>
-      </li>
+        isSubmenuHeader
+        isOpen={isOpen}
+      />
       
       {isOpen && (
-        <div className="shopify-submenu">
-          <ul className="submenu-list">
-            <li 
-              className="submenu-item"
-              onClick={() => onNavigate('/shopify/create-member', 'createMember')}
-            >
-              Créer membre
-            </li>
-            <li 
-              className="submenu-item"
-              onClick={() => onNavigate('/shopify/users', 'shopifyUsers')}
-            >
-              Utilisateurs
-            </li>
-          </ul>
+        <div className={styles.shopifySubmenuVertical}>
+          <SideMenuItem 
+            label="Créer membre"
+            isActive={isActive && location.pathname.includes('/shopify/create-member')}
+            onClick={() => onNavigate('/shopify/create-member', 'createMember')}
+            className={styles.submenuItemVertical}
+          />
+          <SideMenuItem 
+            label="Utilisateurs"
+            isActive={isActive && location.pathname.includes('/shopify/users')}
+            onClick={() => onNavigate('/shopify/users', 'shopifyUsers')}
+            className={styles.submenuItemVertical}
+          />
         </div>
       )}
     </div>

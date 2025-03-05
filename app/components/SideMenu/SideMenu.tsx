@@ -1,9 +1,11 @@
 'use client'
 
 import './SideMenu.css'
+import styles from './SideMenu.module.scss'
 import SideMenuItem from './SideMenuItem'
 import ShopifySubMenu from './ShopifySubMenu'
 import BlockchainSubMenu from './BlockchainSubMenu'
+import MenuSeparator from './MenuSeparator'
 import { useSideMenuLogic } from './useSideMenuLogic'
 
 export default function SideMenu() {
@@ -32,27 +34,30 @@ export default function SideMenu() {
         
         {canAccessCollection && !isAdmin && (
           <>
-          <SideMenuItem 
-            label="Ma Collection"
-            isActive={activeItem === 'collection'}
-            onClick={() => handleNavigation('/shopify/collection', 'collection')}
-          />
-          <SideMenuItem 
-            label="Créer une œuvre"
-            isActive={activeItem === 'createArtwork'}
-            onClick={() => handleNavigation('/shopify/createArtwork', 'createArtwork')}
-          />
-        </>
+            <MenuSeparator />
+            <SideMenuItem 
+              label="Ma Collection"
+              isActive={activeItem === 'collection'}
+              onClick={() => handleNavigation('/shopify/collection', 'collection')}
+            />
+            <SideMenuItem 
+              label="Créer une œuvre"
+              isActive={activeItem === 'createArtwork'}
+              onClick={() => handleNavigation('/shopify/createArtwork', 'createArtwork')}
+            />
+          </>
         )}
         
         {isAdmin && (
           <>
+            <MenuSeparator />
             <ShopifySubMenu
               isActive={activeItem === 'adminShopify'}
               isOpen={showShopifySubmenu}
               toggleSubmenu={toggleShopifySubmenu}
               onNavigate={handleNavigation}
             />
+            <MenuSeparator />
             <BlockchainSubMenu
               isActive={activeItem === 'adminBlockchain'}
               isOpen={showBlockchainSubmenu}
