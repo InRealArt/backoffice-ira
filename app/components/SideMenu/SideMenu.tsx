@@ -7,6 +7,7 @@ import ShopifySubMenu from './ShopifySubMenu'
 import BlockchainSubMenu from './BlockchainSubMenu'
 import MenuSeparator from './MenuSeparator'
 import { useSideMenuLogic } from './useSideMenuLogic'
+import MarketplaceSubMenu from './MarketplaceSubMenu'
 
 export default function SideMenu() {
   const {
@@ -16,9 +17,11 @@ export default function SideMenu() {
     isAdmin,
     showShopifySubmenu,
     showBlockchainSubmenu,
+    showMarketplaceSubmenu,
     handleNavigation,
     toggleShopifySubmenu,
-    toggleBlockchainSubmenu
+    toggleBlockchainSubmenu,
+    toggleMarketplaceSubmenu
   } = useSideMenuLogic()
   
   if (!isLoggedIn) return null
@@ -62,6 +65,13 @@ export default function SideMenu() {
               isActive={activeItem === 'adminBlockchain'}
               isOpen={showBlockchainSubmenu}
               toggleSubmenu={toggleBlockchainSubmenu}
+              onNavigate={handleNavigation}
+            />
+            <MenuSeparator />
+            <MarketplaceSubMenu
+              isActive={activeItem === 'adminMarketplace'}
+              isOpen={showMarketplaceSubmenu}
+              toggleSubmenu={toggleMarketplaceSubmenu}
               onNavigate={handleNavigation}
             />
           </>

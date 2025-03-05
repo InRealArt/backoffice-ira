@@ -12,6 +12,7 @@ export function useSideMenuLogic() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [showShopifySubmenu, setShowShopifySubmenu] = useState(false)
   const [showBlockchainSubmenu, setShowBlockchainSubmenu] = useState<boolean>(false)
+  const [showMarketplaceSubmenu, setShowMarketplaceSubmenu] = useState<boolean>(false)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -95,8 +96,14 @@ export function useSideMenuLogic() {
   const toggleBlockchainSubmenu = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     setShowBlockchainSubmenu(prev => !prev)
+    if (showMarketplaceSubmenu) setShowMarketplaceSubmenu(false)
   }
 
+  const toggleMarketplaceSubmenu = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    setShowMarketplaceSubmenu(prev => !prev)
+    if (showBlockchainSubmenu) setShowBlockchainSubmenu(false)
+  }
 
   return {
     isLoggedIn,
@@ -105,8 +112,10 @@ export function useSideMenuLogic() {
     isAdmin,
     showShopifySubmenu,
     showBlockchainSubmenu,
+    showMarketplaceSubmenu,
     handleNavigation,
     toggleShopifySubmenu,
-    toggleBlockchainSubmenu
+    toggleBlockchainSubmenu,
+    toggleMarketplaceSubmenu
   }
 }
