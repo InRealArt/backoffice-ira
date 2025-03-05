@@ -604,7 +604,7 @@ model Item {
   id            Int            @id @default(autoincrement())
   status        ItemStatus     @default(pending)
   idUser        Int
-  idShopify     Int
+  idShopify     BigInt
   idResourceNft Int?
   user          BackofficeUser @relation(fields: [idUser], references: [id])
   resourceNft   ResourceNft?   @relation(fields: [idResourceNft], references: [id])
