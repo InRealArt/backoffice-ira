@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Factory } from '@prisma/client'
 import styles from './FactoriesClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
+import { formatChainName } from '@/lib/blockchain/chainUtils'
 
 interface FactoriesClientProps {
   factories: Factory[]
@@ -47,22 +48,6 @@ export default function FactoriesClient({ factories }: FactoriesClientProps) {
     return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
   }
 
-  // Fonction pour formater le nom de la chaîne
-  function formatChainName(chain: string): string {
-    switch (chain) {
-      case 'eth_mainnet':
-        return 'Ethereum Mainnet'
-      case 'sepolia':
-        return 'Sepolia'
-      case 'polygon_mainnet':
-        return 'Polygon Mainnet'
-      case 'polygon_testnet':
-        return 'Polygon Mumbai'
-      default:
-        return chain
-    }
-  }
-  
   return (
     <div className={styles.factoriesContainer}>
       <div className={styles.factoriesHeader}>

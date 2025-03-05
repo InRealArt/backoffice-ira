@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Collection, Artist, Factory } from '@prisma/client'
 import styles from './CollectionsClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
+import { formatChainName } from '@/lib/blockchain/chainUtils'
 
 interface CollectionWithRelations extends Collection {
   artist: Artist
@@ -58,23 +59,7 @@ export default function CollectionsClient({ collections, factories }: Collection
   const filteredCollections = selectedFactoryId
     ? collections.filter(collection => collection.factoryId === selectedFactoryId)
     : collections
-    
-  // Fonction pour formater le nom de la chaîne
-  function formatChainName(chain: string): string {
-    switch (chain) {
-      case 'eth_mainnet':
-        return 'Ethereum Mainnet'
-      case 'sepolia':
-        return 'Sepolia'
-      case 'polygon_mainnet':
-        return 'Polygon Mainnet'
-      case 'polygon_testnet':
-        return 'Polygon Mumbai'
-      default:
-        return chain
-    }
-  }
-  
+      
   return (
     <div className={styles.collectionsContainer}>
       <div className={styles.collectionsHeader}>
@@ -160,8 +145,8 @@ export default function CollectionsClient({ collections, factories }: Collection
                         )}
                       </td>
                       <td className={styles.hiddenMobile}>
-                        <span className={styles.truncatedAddress} title={collection.contractAddress}>
-                          {truncateAddress(collection.contractAddress)}
+                        <span className={styles.truncatedAddress} title={collection.contractAddress as string}>
+                          {truncateAddress(collection.contractAddress as string)}
                         </span>
                       </td>
                       <td className={styles.hiddenMobile}>

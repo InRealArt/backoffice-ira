@@ -161,4 +161,41 @@ export async function syncPendingCollections(): Promise<{
             message: `Erreur: ${(error as Error).message}`
         }
     }
+}
+
+// Mettre à jour l'adresse du contrat et le statut d'une collection
+export async function updateCollection(data: {
+    id: number
+    contractAddress: string
+    status: string
+}): Promise<{ success: boolean; message?: string }> {
+    try {
+        console.log('Mise à jour de la collection:', data)
+
+        // Solution 1: Utiliser l'API Prisma directement pour éviter les problèmes de type
+        await prisma.$transaction(async (tx) => {
+            // 1. D'abord, mettre à jour l'adresse du contrat (sans toucher au statut)
+            await tx.collection.update({
+                where: { id: data.id },
+                data: { contractAddress: data.contractAddress }
+            })
+
+            // 2. Ensuite, utiliser SQL brut seulement pour le statut
+            if (data.status === 'pending') {
+                await tx.$executeRaw`UPDATE public."Collection" SET status = 'pending' WHERE id = ${data.id}`;
+            } else if (data.status === 'confirmed') {
+                await tx.$executeRaw`UPDATE public."Collection" SET status = 'confirmed' WHERE id = ${data.id}`;
+            } else if (data.status === 'failed') {
+                await tx.$executeRaw`UPDATE public."Collection" SET status = 'failed' WHERE id = ${data.id}`;
+            }
+        })
+
+        return { success: true }
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour de la collection:", error)
+        return {
+            success: false,
+            message: `Erreur lors de la mise à jour: ${(error as Error).message}`
+        }
+    }
 } 

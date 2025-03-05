@@ -11,7 +11,7 @@ import { Artist, Factory } from '@prisma/client'
 import { createCollection } from '@/lib/actions/collection-actions'
 import { useAccount } from 'wagmi'
 import { factoryABI } from '@/lib/contracts/factoryABI'
-import { getChainId, getChainByName } from '@/lib/blockchain/chainUtils'
+import { getChainId, getChainByName, formatChainName } from '@/lib/blockchain/chainUtils'
 import { publicClient } from '@/lib/providers'
 import { useWalletClient } from 'wagmi'
 import { Address } from 'viem'
@@ -208,16 +208,6 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
     return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
   }
   
-  // Formater le nom de la chaîne
-  const formatChainName = (chain: string): string => {
-    switch (chain) {
-      case 'eth_mainnet': return 'Ethereum Mainnet'
-      case 'sepolia': return 'Sepolia'
-      case 'polygon_mainnet': return 'Polygon Mainnet'
-      case 'polygon_testnet': return 'Polygon Mumbai'
-      default: return chain
-    }
-  }
   
   // Sauvegarder la collection dans la base de données
   const saveCollectionToDB = async (data: {
