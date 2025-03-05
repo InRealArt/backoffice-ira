@@ -2,6 +2,12 @@
 
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { publicClient } from '@/lib/providers'
+import { factoryABI } from '@/lib/contracts/factoryABI'
+import { Address, decodeEventLog } from 'viem'
+import { CollectionStatus } from '@prisma/client'
+import { Prisma } from '@prisma/client'
+import { redirect } from 'next/navigation'
 
 const collectionSchema = z.object({
     name: z.string().min(1, 'Le nom de la collection est requis'),
@@ -20,84 +26,139 @@ const collectionSchema = z.object({
 
 type CreateCollectionInput = z.infer<typeof collectionSchema>
 
-export async function createCollection(data: CreateCollectionInput) {
+export async function createCollection(data: {
+    name: string
+    symbol: string
+    addressAdmin: string
+    artistId: number
+    factoryId: number
+    contractAddress: string | 'pending'
+    transactionHash?: string
+    status?: 'pending' | 'confirmed' | 'failed'
+}): Promise<{ success: boolean; message?: string }> {
     try {
-        // Valider les données
-        const validationResult = collectionSchema.safeParse(data)
-
-        if (!validationResult.success) {
-            return {
-                success: false,
-                message: 'Données invalides',
-                errors: validationResult.error.format()
-            }
-        }
-
-        const { name, symbol, contractAddress, artistId, addressAdmin, factoryId } = validationResult.data
-
-        // Vérifier si l'artiste existe
-        const artist = await prisma.artist.findUnique({
-            where: { id: artistId }
-        })
-
-        if (!artist) {
-            return {
-                success: false,
-                message: 'Artiste introuvable'
-            }
-        }
-
-        // Vérifier si la factory existe
-        const factory = await prisma.factory.findUnique({
-            where: { id: factoryId }
-        })
-
-        if (!factory) {
-            return {
-                success: false,
-                message: 'Factory introuvable'
-            }
-        }
-
-        // Vérifier si une collection avec ce symbole ou cette adresse existe déjà
-        const existingCollection = await prisma.collection.findFirst({
-            where: {
-                OR: [
-                    { symbol },
-                    { contractAddress }
-                ]
-            }
-        })
-
-        if (existingCollection) {
-            const field = existingCollection.symbol === symbol ? 'symbole' : 'adresse de contrat'
-            return {
-                success: false,
-                message: `Une collection avec ce ${field} existe déjà`
-            }
-        }
-
-        // Créer la nouvelle collection
         const collection = await prisma.collection.create({
             data: {
-                name,
-                symbol,
-                contractAddress,
-                artistId,
-                addressAdmin,
-                factoryId,
-            },
+                name: data.name,
+                symbol: data.symbol,
+                addressAdmin: data.addressAdmin,
+                artistId: data.artistId,
+                factoryId: data.factoryId,
+                contractAddress: data.contractAddress,
+                transactionHash: data.transactionHash,
+                status: data.status || 'pending'
+            }
         })
 
-        return {
-            success: true,
-            collection
-        }
+        return { success: true }
     } catch (error) {
-        console.error('Erreur lors de la création de la collection:', error)
+        console.error("Erreur lors de la création de la collection:", error)
         return {
             success: false,
-            message: 'Une erreur est survenue lors de la création de la collection'
+            message: `Erreur lors de la création: ${(error as Error).message}`
+        }
+    }
+}
+
+// Synchroniser toutes les collections en attente
+export async function syncPendingCollections(): Promise<{
+    success: boolean;
+    updated?: number;
+    message?: string
+}> {
+    try {
+        // Utiliser SQL brut pour éviter les problèmes avec l'enum
+        const pendingCollections = await prisma.$queryRaw`
+            SELECT * FROM public."Collection" 
+            WHERE status = 'pending' 
+            AND "transactionHash" IS NOT NULL
+        `;
+
+        if (!pendingCollections || (pendingCollections as any[]).length === 0) {
+            return { success: true, updated: 0, message: 'Aucune collection en attente' }
+        }
+
+        let updatedCount = 0
+
+        // Vérifier chaque collection
+        for (const collection of pendingCollections as any[]) {
+            if (!collection.transactionHash) continue
+
+            try {
+                // Vérifier le statut de la transaction
+                const receipt = await publicClient.getTransactionReceipt({
+                    hash: collection.transactionHash as Address
+                })
+
+                if (receipt && receipt.status === 'success') {
+                    // Transaction confirmée, chercher l'adresse du contrat
+                    let contractAddress: string | undefined
+
+                    // Parcourir les logs pour l'événement ArtistCreated
+                    for (const log of receipt.logs) {
+                        try {
+                            const event = decodeEventLog({
+                                abi: factoryABI,
+                                data: log.data,
+                                topics: log.topics,
+                                eventName: 'ArtistCreated'
+                            })
+
+                            if (event && event.args) {
+                                const args = event.args as any
+                                contractAddress = args._collectionAddress
+                                break
+                            }
+                        } catch (e) {
+                            continue
+                        }
+                    }
+
+                    if (contractAddress) {
+                        // Mettre à jour la collection avec SQL brut
+                        await prisma.$executeRaw`
+                            UPDATE public."Collection"
+                            SET "contractAddress" = ${contractAddress}, 
+                                status = 'confirmed'
+                            WHERE id = ${collection.id}
+                        `;
+
+                        updatedCount++
+                    }
+                } else if (receipt && receipt.status === 'reverted') {
+                    // Transaction échouée - utiliser SQL brut
+                    await prisma.$executeRaw`
+                        UPDATE public."Collection"
+                        SET status = 'failed'
+                        WHERE id = ${collection.id}
+                    `;
+
+                    updatedCount++
+                }
+                // Si la transaction est encore en attente, ne rien faire
+            } catch (error) {
+                console.warn(`Erreur lors de la vérification de la collection ${collection.id}:`, error)
+                // Continuer avec les autres collections
+            }
+        }
+
+        const result = {
+            success: true,
+            updated: updatedCount,
+            message: `${updatedCount} collection(s) mise(s) à jour`
+        }
+
+        // Redirection vers la page des collections
+        redirect('/blockchain/collections')
+
+        // Ce code ne sera jamais exécuté à cause du redirect, mais TypeScript
+        // exige un retour pour respecter le type de retour de la fonction
+        return result
+    } catch (error) {
+        console.error('Erreur lors de la synchronisation des collections:', error)
+        return {
+            success: false,
+            message: `Erreur: ${(error as Error).message}`
         }
     }
 } 

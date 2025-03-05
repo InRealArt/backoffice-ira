@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import CollectionsClient from './CollectionsClient'
+import CollectionSyncButton from '@/app/components/Blockchain/CollectionSyncButton'
 
 
 export const metadata = {
@@ -24,5 +25,18 @@ export default async function CollectionsPage() {
     },
   })
 
-  return <CollectionsClient collections={collections} factories={factories} />
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Collections</h1>
+        <div className="flex gap-4">
+          <CollectionSyncButton />
+          {/* Bouton de création ou autres actions existantes */}
+        </div>
+      </div>
+      
+      {/* Liste des collections */}
+      <CollectionsClient collections={collections} factories={factories} />
+    </div>
+  )
 } 

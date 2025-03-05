@@ -26,14 +26,17 @@ model Artist {
 }
 
 model Collection {
-  id              Int           @id @default(autoincrement())
-  symbol          String        @unique
+  id              Int              @id @default(autoincrement())
+  name            String
+  symbol          String           @unique
   addressAdmin    String
   artistId        Int
-  contractAddress String        @unique
-  factoryId       Int? // Nouvelle colonne, nullable pour permettre les migrations
-  artist          Artist        @relation(fields: [artistId], references: [id])
-  factory         Factory?      @relation(fields: [factoryId], references: [id])
+  contractAddress String?
+  factoryId       Int?
+  transactionHash String?
+  status          CollectionStatus @default(pending)
+  artist          Artist           @relation(fields: [artistId], references: [id])
+  factory         Factory?         @relation(fields: [factoryId], references: [id])
   nfts            ResourceNft[]
 
   @@schema("public")
@@ -583,6 +586,14 @@ model Factory {
   contractAddress String
   chain           Chain
   collections     Collection[]
+
+  @@schema("public")
+}
+
+enum CollectionStatus {
+  pending
+  confirmed
+  failed
 
   @@schema("public")
 }

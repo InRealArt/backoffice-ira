@@ -18,6 +18,7 @@ import { Address } from 'viem'
 import { useChainId, useConfig } from 'wagmi'
 import { switchChain } from 'wagmi/actions'
 import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
+import { decodeEventLog } from 'viem'
 
 // Validation pour les adresses Ethereum
 const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/
@@ -225,13 +226,21 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
     addressAdmin: string
     artistId: number
     factoryId: number
-    contractAddress: string
+    contractAddress: string | 'pending'
+    transactionHash?: string
+    status?: 'pending' | 'confirmed' | 'failed'
   }) => {
     try {
-      const result = await createCollection(data)
+      const result = await createCollection({
+        ...data,
+        status: data.status || 'pending'
+      })
       
       if (result.success) {
-        toast.success('Collection créée avec succès!')
+        toast.success(data.status === 'pending' 
+          ? 'Collection soumise avec succès! Confirmation en attente...'
+          : 'Collection créée avec succès!'
+        )
         router.push('/blockchain/collections')
       } else {
         toast.error(result.message || 'Erreur lors de la création de la collection')
@@ -276,7 +285,7 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
     try {
       setIsTransactionPending(true)
       
-      // Simuler la transaction pour vérifier qu'elle fonctionnera
+      // Simuler et exécuter la transaction comme avant
       const { request } = await publicClient.simulateContract({
         address: selectedFactory.contractAddress as Address,
         abi: factoryABI,
@@ -294,35 +303,81 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
       const hash = await walletClient?.writeContract(request)
       setTransactionHash(hash as Address)
       
-      // Attendre la confirmation de la transaction
-      const receipt = await publicClient.waitForTransactionReceipt({ 
-        hash: hash as Address 
-      })
-      
-      // Extraire l'adresse du contrat des logs de transaction
-      const collectionCreatedEvent = receipt.logs.find(log => {
-        // Signature de l'événement CollectionCreated(address indexed,address indexed,address indexed)
-        const eventSignature = '0x5cae866f34fb60f7b20f106b7c369f79aeb98ce0d0be40396d1188ae23702b40'
-        return log.topics[0] === `0x${eventSignature.slice(2)}`
-      })
-      
-      if (collectionCreatedEvent?.topics?.[1]) {
-        // L'adresse du contrat est le premier paramètre indexé
-        const collectionAddress = `0x${collectionCreatedEvent.topics[1].slice(26)}`
+      // Attendre la confirmation avec un timeout plus long et gestion d'erreur
+      try {
+        const receipt = await publicClient.waitForTransactionReceipt({ 
+          hash: hash as Address,
+          timeout: 120000 
+        })
         
-        // Enregistrer la collection dans la base de données
+        // Extraire l'adresse du contrat à partir de l'événement ArtistCreated
+        let collectionAddress: string | undefined
+        
+        // Parcourir les logs pour trouver l'événement ArtistCreated
+        for (const log of receipt.logs) {
+          try {
+            // Tenter de décoder le log comme un événement ArtistCreated
+            const event = decodeEventLog({
+              abi: factoryABI,
+              data: log.data,
+              topics: log.topics,
+              eventName: 'ArtistCreated'
+            })
+            
+            // Vérifier que event.args existe avant d'y accéder
+            if (event && event.args) {
+              // Utiliser un casting pour accéder aux propriétés
+              const args = event.args as any;
+              collectionAddress = args._collectionAddress;
+              console.log('Collection créée:', {
+                nom: args._collectionName,
+                adresse: args._collectionAddress,
+                créateur: args._creator,
+                admin: args._admin,
+                artiste: args._artist
+              });
+              break;
+            }
+          } catch (e) {
+            // Ce n'est pas l'événement ArtistCreated, continuer avec le log suivant
+            continue;
+          }
+        }
+        
+        if (collectionAddress) {
+          // Enregistrer la collection dans la base de données
+          await saveCollectionToDB({
+            name: data.name,
+            symbol: data.symbol,
+            addressAdmin: data.addressAdmin,
+            artistId: parseInt(data.artistId),
+            factoryId: parseInt(data.factoryId),
+            contractAddress: collectionAddress,
+          })
+          
+          setTransactionSuccess(true)
+        } else {
+          throw new Error('Impossible de récupérer l\'adresse du contrat déployé')
+        }
+      } catch (timeoutError) {
+        console.warn('Timeout lors de l\'attente de la confirmation:', timeoutError)
+        toast.loading('La transaction a été soumise mais n\'est pas encore confirmée. Vous pourrez la synchroniser depuis la liste des collections.')
+        
+        // Sauvegarder la transaction en attente sans redirection
         await saveCollectionToDB({
           name: data.name,
           symbol: data.symbol,
           addressAdmin: data.addressAdmin,
           artistId: parseInt(data.artistId),
           factoryId: parseInt(data.factoryId),
-          contractAddress: collectionAddress,
+          contractAddress: 'pending',
+          transactionHash: hash as string,
+          status: 'pending'
         })
         
-        setTransactionSuccess(true)
-      } else {
-        throw new Error('Impossible de récupérer l\'adresse du contrat déployé')
+        // Ne pas rediriger, juste informer l'utilisateur
+        toast.success('Collection enregistrée en attente de confirmation blockchain')
+        router.push('/blockchain/collections')
       }
     } catch (error) {
       console.error('Erreur lors de l\'appel au smart contract:', error)
