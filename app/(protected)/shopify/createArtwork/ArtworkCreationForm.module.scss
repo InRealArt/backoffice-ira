@@ -159,4 +159,37 @@
     color: #f3f4f6;
     border-bottom-color: #374151;
   }
+}
+
+.certificatePreviewContainer {
+  margin-top: 1rem;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  
+  h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+}
+
+.pdfPreview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  p {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #666;
+  }
+}
+
+.pdfDocument {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 100%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 } 

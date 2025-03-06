@@ -583,13 +583,14 @@ enum CollectionStatus {
 }
 
 model Item {
-  id            Int            @id @default(autoincrement())
-  status        ItemStatus     @default(created)
-  idUser        Int
-  idShopify     BigInt
-  idResourceNft Int?
-  user          BackofficeUser @relation(fields: [idUser], references: [id])
-  resourceNft   ResourceNft?   @relation(fields: [idResourceNft], references: [id])
+  id              Int               @id @default(autoincrement())
+  status          ItemStatus        @default(created)
+  idUser          Int
+  idShopify       BigInt
+  idResourceNft   Int?
+  user            BackofficeUser    @relation(fields: [idUser], references: [id])
+  resourceNft     ResourceNft?      @relation(fields: [idResourceNft], references: [id])
+  authCertificate AuthCertificate[]
 
   @@index([idUser])
   @@index([idResourceNft])
@@ -602,5 +603,15 @@ enum ItemStatus {
   minted
   listed
 
+  @@schema("public")
+}
+
+model AuthCertificate {
+  id     Int   @id @default(autoincrement())
+  idItem Int
+  file   Bytes
+  item   Item  @relation(fields: [idItem], references: [id])
+
+  @@index([idItem])
   @@schema("public")
 }

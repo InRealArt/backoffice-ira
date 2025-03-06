@@ -5,6 +5,8 @@ import { MemberFormData } from "@/app/(admin)/shopify/create-member/schema";
 import { prisma } from "@/lib/prisma"
 import { NotificationStatus, BackofficeUser } from "@prisma/client"
 import { revalidatePath } from "next/cache";
+import { PrismaClient } from '@prisma/client'
+const prismaClient = new PrismaClient()
 
 type UpdateNotificationResult = {
   success: boolean
@@ -424,5 +426,66 @@ export async function checkItemStatus({
     return {
       exists: false
     }
+  }
+}
+
+/**
+ * Sauvegarde un certificat d'authenticité pour un item spécifique
+ */
+export async function saveAuthCertificate(itemId: number, fileData: Uint8Array) {
+  console.log('saveAuthCertificate === ', itemId, fileData);
+  try {
+    const certificate = await prismaClient.authCertificate.create({
+      data: {
+        idItem: itemId,
+        file: fileData
+      }
+    })
+
+    return certificate
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde du certificat d\'authenticité:', error)
+    throw new Error('Échec de la sauvegarde du certificat d\'authenticité')
+  }
+}
+
+/**
+ * Récupère le certificat d'authenticité pour un item spécifique
+ */
+export async function getAuthCertificateByItemId(itemId: number) {
+  try {
+    // Récupérer le certificat
+    const certificate = await prisma.authCertificate.findFirst({
+      where: {
+        idItem: itemId
+      }
+    })
+
+    if (!certificate) {
+      return null
+    }
+
+    // Créer une URL temporaire pour le fichier PDF
+    const fileUrl = `/api/certificates/${certificate.id}`
+
+    return {
+      id: certificate.id,
+      fileUrl
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération du certificat:', error)
+    return null
+  }
+}
+
+export async function getItemByShopifyId(shopifyId: bigint) {
+  try {
+    const item = await prisma.item.findFirst({
+      where: { idShopify: shopifyId }
+    })
+    return item
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'item:', error)
+    return null
   }
 }

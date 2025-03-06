@@ -48,9 +48,7 @@ export const artworkSchema = z.object({
         .or(z.literal('')),
 
     images: z.instanceof(FileList)
-        .refine((files) => files.length > 0, {
-            message: 'Au moins une image est requise',
-        })
+        .refine(files => files.length > 0, 'Au moins une image est requise')
         .refine((files) => files.length <= 10, {
             message: 'Vous ne pouvez pas télécharger plus de 10 images',
         })
@@ -67,7 +65,21 @@ export const artworkSchema = z.object({
             {
                 message: 'Chaque image ne doit pas dépasser 5 MB',
             }
+        ),
+
+    certificate: z.any()
+        .refine(
+            value => value instanceof FileList && value.length > 0,
+            'Le certificat d\'authenticité est requis'
         )
+        .refine(
+            value => {
+                if (!(value instanceof FileList) || value.length === 0) return false
+                const file = value[0]
+                return file.type === 'application/pdf'
+            },
+            'Seuls les fichiers PDF sont acceptés'
+        ),
 })
 
 export type ArtworkFormData = z.infer<typeof artworkSchema>

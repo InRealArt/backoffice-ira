@@ -535,6 +535,10 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
     const userEmail = formData.get('userEmail') as string
     console.log('userEmail === ', userEmail)
     const weight = formData.get('weight') as string || ''
+
+    // Récupérer le certificat d'authenticité
+    const certificate = formData.get('certificate') as File
+
     // Validation des champs obligatoires
     if (!title || !description || !price || !artist || !medium || !dimensions) {
       return {
@@ -673,6 +677,18 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
       }
     }
 
+    // Upload du certificat d'authenticité sur shopify
+    //===> Impossible de le rattacher à un produit
+    // if (certificate && certificate.size > 0) {
+    //   console.log('certificate === ', certificate);
+    //   try {
+    //     await uploadCertificateFile(client, productId, certificate);
+    //   } catch (certError) {
+    //     console.error('Erreur détaillée lors du téléchargement du certificat:', certError);
+    //     // Ne pas bloquer la création du produit si l'upload du certificat échoue
+    //   }
+    // }
+
     // Ajouter le produit à la collection de l'utilisateur connecté
     try {
       // Récupérer les informations de l'utilisateur pour construire le titre de la collection
@@ -690,7 +706,10 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
 
       if (collectionResponse.success && collectionResponse.collection) {
         // Conversion de l'ID numérique au format GID
-        const formattedProductId = `gid://shopify/Product/${productId}`
+        const productIdString = String(productId)
+        const formattedProductId = productIdString.includes('gid://')
+          ? productIdString
+          : `gid://shopify/Product/${productIdString}`
         const formattedCollectionId = `gid://shopify/Collection/${collectionResponse.collection.id}`
 
         // Ajouter le produit à la collection via l'API GraphQL
@@ -843,5 +862,263 @@ async function uploadProductImage(
     }
   } catch (error) {
     console.error('Erreur lors du téléchargement de l\'image:', error)
+  }
+}
+
+// Fonction pour télécharger un certificat d'authenticité PDF et l'attacher au produit
+async function uploadCertificateFile(
+  client: ReturnType<typeof createAdminRestApiClient>,
+  productId: string,
+  certificateFile: File
+) {
+  try {
+    console.log('Démarrage de l\'upload du certificat avec l\'approche en plusieurs étapes');
+
+    // Étape 1: Créer une cible d'upload temporaire
+    const adminAccessToken = process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '';
+    const storeDomain = process.env.SHOPIFY_STORE_NAME || '';
+    const apiVersion = '2025-01';
+
+    const stagedUploadsQuery = `
+      mutation stagedUploadsCreate($input: [StagedUploadInput!]!) {
+        stagedUploadsCreate(input: $input) {
+          stagedTargets {
+            url
+            resourceUrl
+            parameters {
+              name
+              value
+            }
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    const stagedUploadVariables = {
+      input: [
+        {
+          filename: certificateFile.name || 'certificate.pdf',
+          mimeType: 'application/pdf',
+          httpMethod: 'POST',
+          resource: 'FILE',
+          fileSize: certificateFile.size.toString()
+        }
+      ]
+    };
+
+    console.log('Étape 1: Création de la cible d\'upload temporaire');
+    const stagedUploadResponse = await fetch(
+      `https://${storeDomain}/admin/api/${apiVersion}/graphql.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': adminAccessToken
+        },
+        body: JSON.stringify({
+          query: stagedUploadsQuery,
+          variables: stagedUploadVariables
+        })
+      }
+    );
+
+    if (!stagedUploadResponse.ok) {
+      throw new Error(`Erreur HTTP lors de la création de la cible d'upload: ${stagedUploadResponse.status}`);
+    }
+
+    const stagedUploadData = await stagedUploadResponse.json();
+
+    // Vérifier les erreurs dans la réponse GraphQL
+    if (stagedUploadData.errors) {
+      console.error('Erreurs GraphQL:', stagedUploadData.errors);
+      throw new Error(`Erreur GraphQL: ${stagedUploadData.errors[0].message}`);
+    }
+
+    // Vérifier les erreurs utilisateur
+    if (stagedUploadData.data?.stagedUploadsCreate?.userErrors?.length > 0) {
+      console.error('Erreurs utilisateur:', stagedUploadData.data.stagedUploadsCreate.userErrors);
+      throw new Error(`Erreur: ${stagedUploadData.data.stagedUploadsCreate.userErrors[0].message}`);
+    }
+
+    // Récupérer les données pour l'upload
+    const stagedTarget = stagedUploadData.data?.stagedUploadsCreate?.stagedTargets?.[0];
+    if (!stagedTarget) {
+      throw new Error('Aucune cible d\'upload retournée');
+    }
+
+    console.log('Cible d\'upload créée:', stagedTarget.url);
+    console.log('ResourceURL:', stagedTarget.resourceUrl);
+
+    // Étape 2: Uploader le fichier vers l'URL temporaire
+    const formData = new FormData();
+    stagedTarget.parameters.forEach((param: { name: string; value: string }) => {
+      formData.append(param.name, param.value);
+    });
+    formData.append('file', certificateFile);
+
+    console.log('Étape 2: Upload du fichier vers l\'URL temporaire');
+    const fileUploadResponse = await fetch(stagedTarget.url, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!fileUploadResponse.ok) {
+      const errorText = await fileUploadResponse.text();
+      throw new Error(`Erreur lors de l'upload du fichier: ${fileUploadResponse.status} ${errorText}`);
+    }
+
+    console.log('Fichier uploadé avec succès');
+
+    // Étape 3: Créer un asset de fichier
+    const fileCreateQuery = `
+      mutation fileCreate($files: [FileCreateInput!]!) {
+        fileCreate(files: $files) {
+          files {
+            id
+            fileStatus
+            alt
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    const fileCreateVariables = {
+      files: [
+        {
+          alt: `Certificat d'authenticité pour ${productId}`,
+          contentType: 'FILE',
+          originalSource: stagedTarget.resourceUrl,
+          filename: certificateFile.name || 'certificate.pdf'
+        }
+      ]
+    };
+
+    console.log('Étape 3: Création de l\'asset de fichier');
+    const fileCreateResponse = await fetch(
+      `https://${storeDomain}/admin/api/${apiVersion}/graphql.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': adminAccessToken
+        },
+        body: JSON.stringify({
+          query: fileCreateQuery,
+          variables: fileCreateVariables
+        })
+      }
+    );
+
+    if (!fileCreateResponse.ok) {
+      throw new Error(`Erreur HTTP lors de la création de l'asset: ${fileCreateResponse.status}`);
+    }
+
+    const fileCreateData = await fileCreateResponse.json();
+
+    // Vérifier les erreurs
+    if (fileCreateData.errors) {
+      console.error('Erreurs GraphQL:', fileCreateData.errors);
+      throw new Error(`Erreur GraphQL: ${fileCreateData.errors[0].message}`);
+    }
+
+    if (fileCreateData.data?.fileCreate?.userErrors?.length > 0) {
+      console.error('Erreurs utilisateur:', fileCreateData.data.fileCreate.userErrors);
+      throw new Error(`Erreur: ${fileCreateData.data.fileCreate.userErrors[0].message}`);
+    }
+
+    // Récupérer l'ID du fichier créé
+    const fileAsset = fileCreateData.data?.fileCreate?.files?.[0];
+    if (!fileAsset) {
+      throw new Error('Aucun asset de fichier créé');
+    }
+
+    console.log('Asset de fichier créé:', fileAsset.id);
+
+    // Nouvelle Étape 4: Attacher le fichier au produit avec productUpdate
+    const productUpdateQuery = `
+      mutation productUpdate($input: ProductInput!) {
+        productUpdate(input: $input) {
+          product {
+            id
+            title
+            files {
+              id
+            }
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+    `;
+
+    // Formater correctement l'ID du produit en s'assurant qu'il est d'abord converti en chaîne
+    const productIdString = String(productId);
+    const formattedProductId = productIdString.includes('gid://')
+      ? productIdString
+      : `gid://shopify/Product/${productIdString}`;
+
+    const productUpdateVariables = {
+      input: {
+        id: formattedProductId,
+        files: [
+          {
+            id: fileAsset.id // l'ID est déjà au format GID
+          }
+        ]
+      }
+    };
+
+    console.log('Étape 4: Attachement du fichier au produit');
+    console.log('Product ID:', formattedProductId);
+    console.log('File ID:', fileAsset.id);
+
+    const productUpdateResponse = await fetch(
+      `https://${storeDomain}/admin/api/${apiVersion}/graphql.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': adminAccessToken
+        },
+        body: JSON.stringify({
+          query: productUpdateQuery,
+          variables: productUpdateVariables
+        })
+      }
+    );
+
+    if (!productUpdateResponse.ok) {
+      throw new Error(`Erreur HTTP lors de la mise à jour du produit: ${productUpdateResponse.status}`);
+    }
+
+    const productUpdateData = await productUpdateResponse.json();
+
+    // Vérifier les erreurs
+    if (productUpdateData.errors) {
+      console.error('Erreurs GraphQL:', productUpdateData.errors);
+      throw new Error(`Erreur GraphQL: ${productUpdateData.errors[0].message}`);
+    }
+
+    if (productUpdateData.data?.productUpdate?.userErrors?.length > 0) {
+      console.error('Erreurs utilisateur:', productUpdateData.data.productUpdate.userErrors);
+      throw new Error(`Erreur: ${productUpdateData.data.productUpdate.userErrors[0].message}`);
+    }
+
+    console.log('Certificat d\'authenticité attaché au produit avec succès');
+    return true;
+
+  } catch (error) {
+    console.error('Erreur complète lors de l\'upload du certificat:', error);
+    throw error;
   }
 }

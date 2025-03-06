@@ -6,6 +6,7 @@ import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById, updateShopifyProduct } from '@/app/actions/shopify/shopifyActions'
+import { getAuthCertificateByItemId, getItemByShopifyId } from '@/app/actions/prisma/prismaActions'
 import toast, { Toaster } from 'react-hot-toast'
 import styles from './editArtwork.module.scss'
 
@@ -15,6 +16,7 @@ export default function EditArtworkPage({ params }: { params: { id: string } }) 
   const [isLoading, setIsLoading] = useState(true)
   const [product, setProduct] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [certificate, setCertificate] = useState<any>(null)
   
   // États du formulaire
   const [title, setTitle] = useState('')
@@ -47,6 +49,24 @@ export default function EditArtworkPage({ params }: { params: { id: string } }) 
             setTitle(result.product.title || '')
             setDescription(result.product.description || '')
             setPrice(result.product.price || '0')
+            
+            // Convertir result.product.id en nombre
+            const shopifyProductId = typeof result.product.id === 'string' 
+              ? BigInt(result.product.id.replace('gid://shopify/Product/', ''))
+              : BigInt(result.product.id)
+
+            // Rechercher l'Item associé 
+            const item = await getItemByShopifyId(shopifyProductId)
+            if (item?.id) {
+              try {
+                const certificateResult = await getAuthCertificateByItemId(item.id)
+                if (certificateResult && certificateResult.id) {
+                  setCertificate(certificateResult)
+                }
+              } catch (certError) {
+                console.error('Erreur lors de la récupération du certificat:', certError)
+              }
+            }
           } else {
             setError(result.message || 'Impossible de charger ce produit')
           }
@@ -67,6 +87,13 @@ export default function EditArtworkPage({ params }: { params: { id: string } }) 
       isMounted = false
     }
   }, [params.id, user?.email])
+
+  // Fonction pour ouvrir le certificat dans un nouvel onglet
+  const viewCertificate = () => {
+    if (certificate && certificate.fileUrl) {
+      window.open(certificate.fileUrl, '_blank')
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -153,6 +180,26 @@ export default function EditArtworkPage({ params }: { params: { id: string } }) 
                 required
                 className={styles.input}
               />
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Certificat d'authenticité</label>
+              <div className={styles.certificateContainer}>
+                {certificate ? (
+                  <div className={styles.certificateInfo}>
+                    <p>Un certificat d'authenticité est disponible pour cette œuvre</p>
+                    <Button 
+                      type="button" 
+                      variant="secondary"
+                      onClick={viewCertificate}
+                    >
+                      Voir le certificat
+                    </Button>
+                  </div>
+                ) : (
+                  <p className={styles.noCertificate}>Aucun certificat d'authenticité disponible</p>
+                )}
+              </div>
             </div>
             
             <div className={styles.buttonGroup}>

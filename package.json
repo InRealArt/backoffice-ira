@@ -27,6 +27,7 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
     "react-hot-toast": "^2.5.2",
+    "react-pdf": "^9.2.1",
     "sass": "^1.85.1",
     "viem": "^2.23.5",
     "wagmi": "^2.14.12",
