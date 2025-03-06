@@ -12,7 +12,7 @@ import {
   updateShopifyCollection,
   createShopifyCollection
 } from '@/app/actions/shopify/shopifyActions'
-import { ShopifyUser } from '@prisma/client'
+import { BackofficeUser } from '@prisma/client'
 import styles from './EditUserForm.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 
@@ -30,7 +30,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 interface EditUserFormProps {
-  user: ShopifyUser
+  user: BackofficeUser
 }
 
 export default function EditUserForm({ user }: EditUserFormProps) {
