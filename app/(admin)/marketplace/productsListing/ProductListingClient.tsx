@@ -10,7 +10,7 @@ interface Item {
   id: number
   status: ItemStatus
   idUser: number
-  idShopify: number
+  idShopify: bigint
   idResourceNft: number | null
   user?: {
     email: string | null
@@ -65,6 +65,8 @@ export default function ProductListingClient({ products = [] }: ProductListingCl
   // Fonction pour obtenir le badge en fonction du statut
   const getStatusBadge = (status: ItemStatus) => {
     switch(status) {
+      case 'created':
+        return <span className={`${styles.statusBadge} ${styles.createdBadge}`}>Créé</span>
       case 'pending':
         return <span className={`${styles.statusBadge} ${styles.pendingBadge}`}>En attente</span>
       case 'minted':
@@ -138,7 +140,7 @@ export default function ProductListingClient({ products = [] }: ProductListingCl
                           </span>
                         </div>
                       </td>
-                      <td>{product.idShopify}</td>
+                      <td>{String(product.idShopify)}</td>
                       <td className={styles.hiddenMobile}>
                         {product.user ? 
                           `${product.user.firstName || ''} ${product.user.lastName || ''} ${product.user.email ? `(${product.user.email})` : ''}`.trim() : 

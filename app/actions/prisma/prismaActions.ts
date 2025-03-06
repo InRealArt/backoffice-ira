@@ -3,7 +3,7 @@
 import { memberSchema } from "@/app/(admin)/shopify/create-member/schema";
 import { MemberFormData } from "@/app/(admin)/shopify/create-member/schema";
 import { prisma } from "@/lib/prisma"
-import { NotificationStatus, ShopifyUser } from "@prisma/client"
+import { NotificationStatus, BackofficeUser } from "@prisma/client"
 import { revalidatePath } from "next/cache";
 
 type UpdateNotificationResult = {
@@ -32,6 +32,26 @@ type CheckListingRequestParams = {
   idUser: number
 }
 
+interface UpdateStatusParams {
+  idProductShopify: number
+  idUser: number
+  status: string
+}
+
+interface StatusUpdateResult {
+  success: boolean
+  message?: string
+}
+
+interface CheckStatusParams {
+  idProductShopify: number
+  idUser: number
+}
+
+interface StatusCheckResult {
+  exists: boolean
+  status?: string
+}
 
 // Action pour mettre à jour le statut d'une notification
 export async function updateNotificationStatus(
@@ -175,7 +195,7 @@ export async function checkUserExists(
 }
 
 
-export async function getShopifyUsers(): Promise<ShopifyUser[]> {
+export async function getShopifyUsers(): Promise<BackofficeUser[]> {
   try {
     const users = await prisma.backofficeUser.findMany({
       orderBy: {
@@ -282,7 +302,7 @@ export async function updateShopifyUser(
 }
 
 // Ajouter cette fonction pour récupérer un utilisateur par son email
-export async function getShopifyUserByEmail(email: string) {
+export async function getBackofficeUserByEmail(email: string) {
   try {
     const user = await prisma.backofficeUser.findUnique({
       where: { email }
@@ -290,25 +310,119 @@ export async function getShopifyUserByEmail(email: string) {
 
     return user
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'utilisateur Shopify par email:', error)
+    console.error('Erreur lors de la récupération de l\'utilisateur Backoffice par email:', error)
     return null
   }
 }
 
-export async function checkArtworkListingRequest(params: CheckListingRequestParams): Promise<boolean> {
-  try {
-    const productId = params.idProductShopify.toString()
 
-    const existingRequestArtworkToList = await prisma.requestArtworkToList.findFirst({
-      where: {
-        idProductShopify: parseInt(productId),
-        idUser: params.idUser
+
+export async function createItemRecord(userId: number, shopifyId: string, status: string = 'created') {
+  try {
+    const shopifyIdString = shopifyId.toString()
+
+
+    // Créer l'enregistrement dans la table Item
+    const newItem = await prisma.item.create({
+      data: {
+        idUser: userId,
+        idShopify: parseInt(shopifyIdString),
+        status: status as any
       }
     })
 
-    return !!existingRequestArtworkToList
+    return { success: true, item: newItem }
   } catch (error) {
-    console.error('Erreur lors de la vérification de la demande:', error)
-    return false
+    console.error('Erreur lors de la création de l\'enregistrement Item:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
+    }
+  }
+}
+
+/**
+ * Met à jour le statut d'un produit Shopify
+ */
+export async function updateItemStatus({
+  idProductShopify,
+  idUser,
+  status
+}: UpdateStatusParams): Promise<StatusUpdateResult> {
+  try {
+    // Vérifier si le produit existe déjà dans notre base
+    const existingProduct = await prisma.item.findFirst({
+      where: {
+        idShopify: idProductShopify,
+        idUser: idUser
+      }
+    })
+
+    if (existingProduct) {
+      // Mettre à jour le statut du produit existant
+      await prisma.item.update({
+        where: { id: existingProduct.id },
+        data: { status: status as any }
+      })
+    } else {
+      // Créer une nouvelle entrée si le produit n'existe pas
+      await prisma.item.create({
+        data: {
+          idShopify: idProductShopify,
+          idUser: idUser,
+          status: status as any
+        }
+      })
+    }
+
+    // Revalider le chemin pour rafraîchir les données sur l'interface
+    revalidatePath('/shopify/collections')
+
+    return {
+      success: true,
+      message: 'Statut du produit mis à jour avec succès'
+    }
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du statut:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Une erreur est survenue lors de la mise à jour du statut'
+    }
+  }
+}
+
+/**
+ * Vérifie le statut d'un item en base de données
+ */
+export async function checkItemStatus({
+  idProductShopify,
+  idUser
+}: CheckStatusParams): Promise<StatusCheckResult> {
+  try {
+    const item = await prisma.item.findFirst({
+      where: {
+        idShopify: idProductShopify,
+        idUser: idUser
+      },
+      select: {
+        status: true
+      }
+    })
+
+    if (item) {
+      return {
+        exists: true,
+        status: item.status
+      }
+    }
+
+    return {
+      exists: false
+    }
+  } catch (error) {
+    console.error('Erreur lors de la vérification du statut:', error)
+    return {
+      exists: false
+    }
   }
 }

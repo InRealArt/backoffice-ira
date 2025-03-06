@@ -1,4 +1,4 @@
-import { getShopifyUserByEmail } from '@/app/actions/prisma/prismaActions'
+import { getBackofficeUserByEmail } from '@/app/actions/prisma/prismaActions'
 import {
     getShopifyCollectionByTitle,
     getShopifyCollectionProducts
@@ -33,7 +33,7 @@ export type CollectionDataResult =
 export async function fetchCollectionData(email: string): Promise<CollectionDataResult> {
     try {
         // 1. Récupérer les infos utilisateur
-        const user = await getShopifyUserByEmail(email)
+        const user = await getBackofficeUserByEmail(email)
         if (!user || !user.firstName || !user.lastName) {
             return {
                 success: false,

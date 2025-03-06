@@ -8,6 +8,7 @@ import { createArtwork } from '@/app/actions/shopify/shopifyActions'
 import toast from 'react-hot-toast'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import styles from './ArtworkCreationForm.module.scss'
+import { getBackofficeUserByEmail, createItemRecord } from '@/app/actions/prisma/prismaActions'
 
 export default function ArtworkCreationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -79,6 +80,25 @@ export default function ArtworkCreationForm() {
       const result = await createArtwork(formData)
       
       if (result.success) {
+        // Créer un enregistrement dans la table Item
+        if (result.productId && user?.email) {
+          try {
+            // Récupérer l'utilisateur par email
+            const backofficeUser = await getBackofficeUserByEmail(user.email)
+            
+            if (backofficeUser) {
+              // Créer l'enregistrement dans la table Item
+              await createItemRecord(backofficeUser.id, result.productId, 'created')
+              console.log(`Enregistrement créé dans la table Item pour l'œuvre ${result.productId}`)
+            } else {
+              console.error('Utilisateur non trouvé pour l\'email:', user.email)
+            }
+          } catch (itemError) {
+            console.error('Erreur lors de la création de l\'enregistrement dans Item:', itemError)
+            // Ne pas bloquer le processus en cas d'erreur avec l'enregistrement Item
+          }
+        }
+        
         toast.success(`L'œuvre "${data.title}" a été créée avec succès!`)
         reset()
         setPreviewImages([])

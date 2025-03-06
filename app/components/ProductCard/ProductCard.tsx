@@ -3,10 +3,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { requestArtworkListing } from '@/app/actions/artwork/requestListingActions'
-import { checkArtworkListingRequest } from '@/app/actions/prisma/prismaActions'
 import { toast } from 'react-hot-toast'
 import styles from './ProductCard.module.scss'
+import { updateItemStatus, checkItemStatus } from '@/app/actions/prisma/prismaActions'
 
 interface ProductCardProps {
   title: string
@@ -34,9 +33,8 @@ export default function ProductCard({
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [isError, setIsError] = useState(false)
-  const [hasExistingRequest, setHasExistingRequest] = useState(false)
-  const [isCheckingRequest, setIsCheckingRequest] = useState(true)
-
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true)
+  
   // Formatage du prix
   const formattedPrice = new Intl.NumberFormat('fr-FR', {
     style: 'currency',
@@ -44,43 +42,39 @@ export default function ProductCard({
     minimumFractionDigits: 2
   }).format(parseFloat(price))
 
-  // Vérifier si une demande existe déjà au chargement
+  // Vérifier au chargement si l'item a le statut "pending"
   useEffect(() => {
-    async function checkExistingRequest() {
-      if (!idShopify || !userId) return
+    async function verifyItemStatus() {
+      if (!idShopify || !userId) {
+        setIsCheckingStatus(false)
+        return
+      }
 
       try {
-        setIsCheckingRequest(true)
-        const exists = await checkArtworkListingRequest({
+        const statusResult = await checkItemStatus({
           idProductShopify: typeof idShopify === 'string' ? parseInt(idShopify) : idShopify,
           idUser: typeof userId === 'string' ? parseInt(userId) : userId
         })
         
-        setHasExistingRequest(exists)
-        if (exists) {
+        if (statusResult.exists && statusResult.status === 'pending') {
           setIsSuccess(true)
         }
       } catch (error) {
-        console.error('Erreur lors de la vérification:', error)
+        console.error('Erreur lors de la vérification du statut:', error)
       } finally {
-        setIsCheckingRequest(false)
+        setIsCheckingStatus(false)
       }
     }
 
-    checkExistingRequest()
+    verifyItemStatus()
   }, [idShopify, userId])
 
   const handleListArtwork = async (e: React.MouseEvent) => {
     e.preventDefault() // Empêche le déclenchement du lien parent
     
-    if (!idShopify || !collectionId || !userId || !imageUrl) {
-      toast.error('Informations manquantes pour lister l\'œuvre')
+    if (!idShopify || !userId) {
+      toast.error('Informations manquantes pour mettre à jour le statut')
       setIsError(true)
-      return
-    }
-
-    if (hasExistingRequest) {
-      toast.error('Une demande de listing existe déjà pour cette œuvre')
       return
     }
 
@@ -88,34 +82,33 @@ export default function ProductCard({
       setIsLoading(true)
       setIsError(false)
       
-      const result = await requestArtworkListing({
+      // Mise à jour simple du statut à 'pending'
+      const result = await updateItemStatus({
         idProductShopify: typeof idShopify === 'string' ? parseInt(idShopify) : idShopify,
-        idCollectionShopify: typeof collectionId === 'string' ? parseInt(collectionId) : collectionId,
         idUser: typeof userId === 'string' ? parseInt(userId) : userId,
-        image: imageUrl
+        status: 'pending'
       })
 
       if (result.success) {
         setIsSuccess(true)
-        setHasExistingRequest(true)
-        toast.success(result.message)
+        toast.success('Demande de listing envoyée')
       } else {
         setIsError(true)
-        toast.error(result.message)
+        toast.error(result.message || 'Échec de la mise à jour du statut')
       }
     } catch (error) {
       console.error('Erreur:', error)
       setIsError(true)
-      toast.error('Une erreur est survenue')
+      toast.error('Une erreur est survenue lors de la mise à jour du statut')
     } finally {
       setIsLoading(false)
     }
   }
 
   const getButtonText = () => {
-    if (isCheckingRequest) return 'Vérification...'
+    if (isCheckingStatus) return 'Vérification...'
     if (isLoading) return 'Chargement...'
-    if (hasExistingRequest || isSuccess) return 'Demande de listing sur marketplace envoyée'
+    if (isSuccess) return 'Demande de listing envoyée'
     if (isError) return 'Erreur, réessayer'
     return 'Lister l\'œuvre sur la marketplace'
   }
@@ -145,7 +138,7 @@ export default function ProductCard({
           <button 
             className={styles.listButton}
             onClick={handleListArtwork}
-            disabled={isLoading || isSuccess || hasExistingRequest || isCheckingRequest}
+            disabled={isLoading || isSuccess || isCheckingStatus}
           >
             {getButtonText()}
           </button>

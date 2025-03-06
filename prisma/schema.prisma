@@ -556,24 +556,6 @@ enum OrderStatus {
   @@schema("public")
 }
 
-model RequestArtworkToList {
-  id                  Int                  @id @default(autoincrement())
-  idCollectionShopify BigInt // Modifié de Int à BigInt
-  idProductShopify    BigInt // Modifié de Int à BigInt
-  idUser              Int
-  image               String
-  status              RequestArtworkStatus @default(pending)
-
-  @@schema("public")
-}
-
-enum RequestArtworkStatus {
-  pending
-  listed
-
-  @@schema("public")
-}
-
 enum Chain {
   eth_mainnet
   sepolia
@@ -602,7 +584,7 @@ enum CollectionStatus {
 
 model Item {
   id            Int            @id @default(autoincrement())
-  status        ItemStatus     @default(pending)
+  status        ItemStatus     @default(created)
   idUser        Int
   idShopify     BigInt
   idResourceNft Int?
@@ -615,6 +597,7 @@ model Item {
 }
 
 enum ItemStatus {
+  created
   pending
   minted
   listed
