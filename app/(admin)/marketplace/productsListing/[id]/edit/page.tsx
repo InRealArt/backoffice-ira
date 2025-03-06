@@ -18,6 +18,7 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
   const [error, setError] = useState<string | null>(null)
   const [certificate, setCertificate] = useState<any>(null)
   const [productOwner, setProductOwner] = useState<any>(null)
+  const [item, setItem] = useState<any>(null)
   
   useEffect(() => {
     if (!user?.email) {
@@ -47,17 +48,18 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
               : BigInt(result.product.id)
 
             // Rechercher l'Item associé 
-            const item = await getItemByShopifyId(shopifyProductId)
-            if (item?.id) {
+            const itemResult = await getItemByShopifyId(shopifyProductId)
+            if (itemResult?.id) {
+              setItem(itemResult)
               try {
                 // Récupérer le certificat d'authenticité
-                const certificateResult = await getAuthCertificateByItemId(item.id)
+                const certificateResult = await getAuthCertificateByItemId(itemResult.id)
                 if (certificateResult && certificateResult.id) {
                   setCertificate(certificateResult)
                 }
                 
                 // Récupérer l'utilisateur associé à cet item
-                const ownerResult = await getUserByItemId(item.id)
+                const ownerResult = await getUserByItemId(itemResult.id)
                 if (ownerResult) {
                   setProductOwner(ownerResult)
                 }
@@ -93,11 +95,22 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
     }
   }
 
-  // Fonction pour la création du NFT (à implémenter)
-  const handleMintNft = async () => {
-    // Implémentation du mint de NFT
-    console.log('Mint NFT pour le produit:', product.id)
-    // Appel à l'API de mint
+  // Fonction pour gérer l'action selon le statut de l'item
+  const handleItemAction = async () => {
+    if (item?.status === 'minted') {
+      // Logique pour lister sur la marketplace
+      console.log('Lister sur la marketplace le produit:', product.id)
+      // Appel à l'API de listing
+    } else {
+      // Logique pour mint NFT
+      console.log('Mint NFT pour le produit:', product.id)
+      // Appel à l'API de mint
+    }
+  }
+
+  // Détermine le texte du bouton en fonction du statut de l'item
+  const getActionButtonText = () => {
+    return item?.status === 'minted' ? 'Lister sur la marketplace' : 'Mint NFT'
   }
 
   return (
@@ -175,9 +188,9 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
                   <Button 
                     type="button" 
                     variant="primary"
-                    onClick={handleMintNft}
+                    onClick={handleItemAction}
                   >
-                    Mint NFT
+                    {getActionButtonText()}
                   </Button>
                 </div>
               </div>
