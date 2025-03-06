@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
 
     // Récupérer le niveau d'accès requis pour ce chemin
     const requiredAccessLevel = getRequiredAccessLevel(path)
-    console.log("requiredAccess", requiredAccessLevel)
+    //console.log("requiredAccess", requiredAccessLevel)
 
     // Si aucun accès requis, autoriser l'accès
     if (!requiredAccessLevel) {

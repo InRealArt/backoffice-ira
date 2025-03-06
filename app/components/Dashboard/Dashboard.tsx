@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
-import { supabase } from '@/lib/supabase';
-import ShopifyRequestModal from '../Shopify/ShopifyRequestModal';
 import styles from './Dashboard.module.scss';
-import toast from 'react-hot-toast';
-import { submitShopifyRequest } from '@/app/actions/shopify/submitShopifyRequest';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import Button from '../Button/Button';
@@ -81,32 +77,6 @@ export default function Dashboard() {
     checkShopifyStatus();
   }, [user, primaryWallet]);
 
-  const handleSubmitShopifyRequest = async (formData: { firstName: string; lastName: string }) => {
-    if (user?.email) {
-        try {
-          // Utiliser le server action à la place de l'appel API direct
-          const result = await submitShopifyRequest({
-            email: user.email,
-            firstName: formData.firstName,
-            lastName: formData.lastName
-          });
-    
-          if (!result.success) {
-            throw new Error(result.error || "Erreur inconnue");
-          }
-    
-          // Fermer la modale après soumission
-          setIsModalOpen(false);
-          
-          // Afficher un message de succès
-          toast.success('Votre demande a été envoyée avec succès. Nous la traiterons dans les plus brefs délais.');
-          
-        } catch (error) {
-          console.error('Erreur lors de l\'envoi du formulaire:', error);
-          toast.error('Une erreur est survenue lors de l\'envoi de votre demande. Veuillez réessayer.');
-        }
-      }
-  };
 
   const handleAdminShowUsers = () => {
     setIsAdminNavigating(true);
