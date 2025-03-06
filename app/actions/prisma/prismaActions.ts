@@ -489,3 +489,36 @@ export async function getItemByShopifyId(shopifyId: bigint) {
     return null
   }
 }
+
+// Fonction pour récupérer l'utilisateur associé à un item
+export async function getUserByItemId(itemId: number) {
+  try {
+    const item = await prisma.item.findUnique({
+      where: { id: itemId },
+      include: { user: true }
+    })
+
+    if (!item || !item.user) {
+      return null
+    }
+
+    return item.user
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'utilisateur par itemId:', error)
+    return null
+  }
+}
+
+// Fonction pour récupérer un item par son ID
+export async function getItemById(itemId: number) {
+  try {
+    const item = await prisma.item.findUnique({
+      where: { id: itemId }
+    })
+
+    return item
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'item par ID:', error)
+    throw error
+  }
+}

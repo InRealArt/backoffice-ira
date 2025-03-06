@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { createAdminRestApiClient } from '@shopify/admin-api-client'
 import { revalidatePath } from 'next/cache'
+import { getItemById } from '../prisma/prismaActions';
 
 type CreateCollectionResult = {
   success: boolean
@@ -452,15 +453,28 @@ export async function updateShopifyProduct(
   }
 }
 
-// Action pour récupérer un produit Shopify par ID
-export async function getShopifyProductById(productId: string) {
+// Action pour récupérer un produit Shopify en utilisant l'ID de la table Item
+export async function getShopifyProductById(itemId: string) {
   try {
-    if (!productId) {
+    if (!itemId) {
       return {
         success: false,
-        message: 'ID de produit requis'
+        message: 'ID de l\'item requis'
       }
     }
+
+    // Récupérer d'abord l'item pour obtenir l'ID Shopify
+    const item = await getItemById(parseInt(itemId))
+
+    if (!item || !item.idShopify) {
+      return {
+        success: false,
+        message: 'Item non trouvé ou sans ID Shopify associé'
+      }
+    }
+
+    // Convertir le BigInt en string pour l'API Shopify
+    const shopifyId = item.idShopify.toString()
 
     // Initialisation du client Shopify Admin API
     const client = createAdminRestApiClient({
@@ -470,7 +484,7 @@ export async function getShopifyProductById(productId: string) {
     })
 
     // Récupérer le produit
-    const response = await client.get(`products/${productId}`)
+    const response = await client.get(`products/${shopifyId}`)
 
     const productData = await response.json()
 
