@@ -647,3 +647,49 @@ export async function createNftResource(params: {
     }
   }
 }
+
+/**
+ * Récupère la ressource NFT associée à un item spécifique
+ * en utilisant le champ idNftResource de l'item
+ * @param itemId - L'ID de l'item pour lequel récupérer la ressource NFT
+ * @returns La ressource NFT associée à l'item ou null si aucune n'est trouvée
+ */
+export async function getNftResourceByItemId(itemId: number) {
+  try {
+    // Récupérer d'abord l'item pour obtenir l'idNftResource
+    const item = await prisma.item.findUnique({
+      where: {
+        id: itemId
+      },
+      select: {
+        idNftResource: true
+      }
+    })
+
+    // Si l'item n'existe pas ou n'a pas d'idNftResource, retourner null
+    if (!item || !item.idNftResource) {
+      return null
+    }
+
+    // Récupérer la ressource NFT en utilisant l'idNftResource de l'item
+    // et inclure la collection associée via le champ collectionId
+    const nftResource = await prisma.nftResource.findUnique({
+      where: {
+        id: item.idNftResource
+      },
+      include: {
+        collection: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    })
+
+    return nftResource
+  } catch (error) {
+    console.error('Erreur lors de la récupération de la ressource NFT:', error)
+    return null
+  }
+}

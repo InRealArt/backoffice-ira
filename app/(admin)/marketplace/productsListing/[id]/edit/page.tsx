@@ -6,7 +6,7 @@ import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource } from '@/app/actions/prisma/prismaActions'
+import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId } from '@/app/actions/prisma/prismaActions'
 import { Toaster } from 'react-hot-toast'
 import styles from './viewProduct.module.scss'
 import React from 'react'
@@ -27,6 +27,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
   const [item, setItem] = useState<any>(null)
   const [showUploadIpfsForm, setShowUploadIpfsForm] = useState(false)
   const [collections, setCollections] = useState<any[]>([])
+  const [nftResource, setNftResource] = useState<any>(null)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -52,6 +53,18 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
       message: "Le certificat d'authenticité est obligatoire" 
     })
   })
+
+  const fetchCollections = async () => {
+    try {
+      const collectionsData = await getAllCollections()
+      console.log('Collections Data:', collectionsData)
+      if (collectionsData && Array.isArray(collectionsData)) {
+        setCollections(collectionsData)
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des collections:', error)
+    }
+  }
 
   useEffect(() => {
     if (!user?.email) {
@@ -97,6 +110,23 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                 if (ownerResult) {
                   setProductOwner(ownerResult)
                 }
+                
+                // Récupérer le nftResource associé à cet item
+                const nftResourceResult = await getNftResourceByItemId(itemResult.id)
+                fetchCollections()
+                console.log('NftResource Result:', nftResourceResult)
+                if (nftResourceResult) {
+                  setNftResource(nftResourceResult)
+                  // Pré-remplir le formulaire avec les données existantes
+                  if (nftResourceResult.status === 'UPLOADIPFS') {
+                    setFormData(prevData => ({
+                      ...prevData,
+                      name: nftResourceResult.name || '',
+                      description: nftResourceResult.description || '',
+                      collection: nftResourceResult.collectionId?.toString() || ''
+                    }))
+                  }
+                }
               } catch (certError) {
                 console.error('Erreur lors de la récupération des données:', certError)
               }
@@ -124,21 +154,11 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
 
   // Fonction pour charger les collections
   useEffect(() => {
-    const fetchCollections = async () => {
-      try {
-        const collectionsData = await getAllCollections()
-        if (collectionsData && Array.isArray(collectionsData)) {
-          setCollections(collectionsData)
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des collections:', error)
-      }
-    }
-
     if (showUploadIpfsForm) {
+      console.log('showUploadIpfsForm')
       fetchCollections()
     }
-  }, [showUploadIpfsForm])
+  }, [id, showUploadIpfsForm])
 
   // Fonction pour ouvrir le certificat dans un nouvel onglet
   const viewCertificate = () => {
@@ -271,9 +291,16 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
   // Fonction pour gérer l'action selon le statut de l'item
   const handleItemAction = async () => {
     if (item?.status === 'pending') {
-      console.log('ShowListingForm')
-      // Afficher le formulaire pour lister sur la marketplace
-      setShowUploadIpfsForm(true)
+      if (nftResource && nftResource.status === 'UPLOADIPFS') {
+        // Si les ressources sont déjà sur IPFS, passer à l'étape suivante (mint)
+        console.log('Ressources déjà sur IPFS, prêt pour le mint')
+        // Logique pour mint NFT
+        console.log('Mint NFT pour le produit:', product.id)
+        // Appel à l'API de mint
+      } else {
+        // Afficher le formulaire pour upload sur IPFS
+        setShowUploadIpfsForm(true)
+      }
     } else {
       // Logique pour mint NFT
       console.log('Mint NFT pour le produit:', product.id)
@@ -281,9 +308,15 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
     }
   }
 
-  // Détermine le texte du bouton en fonction du statut de l'item
+  // Détermine le texte du bouton en fonction du statut de l'item et du nftResource
   const getActionButtonText = () => {
-    return item?.status === 'minted' ? 'Lister sur la marketplace' : 'Mint NFT'
+    if (item?.status === 'pending') {
+      if (nftResource?.status === 'UPLOADIPFS') {
+        return 'Mint NFT'
+      }
+      return 'Préparer pour le mint'
+    }
+    return 'Lister sur la marketplace'
   }
 
   return (
@@ -350,7 +383,98 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                   />
                 </div>
                 
-                {showUploadIpfsForm && item?.status === 'pending' ? (
+                {item?.status === 'pending' && nftResource?.status === 'UPLOADIPFS' ? (
+                  <div className={styles.nftResourceInfo}>
+                    <h3 className={styles.formTitle}>Ressources NFT uploadées sur IPFS</h3>
+                    
+                    <div className={styles.formGroup}>
+                      <label>Nom du NFT</label>
+                      <input
+                        type="text"
+                        value={nftResource.name || ''}
+                        readOnly
+                        className={styles.formInput}
+                      />
+                    </div>
+                    
+                    <div className={styles.formGroup}>
+                      <label>Description du NFT</label>
+                      <textarea
+                        value={nftResource.description || ''}
+                        readOnly
+                        className={styles.formTextarea}
+                        rows={4}
+                      />
+                    </div>
+                    
+                    <div className={styles.formGroup}>
+                      <label>Collection</label>
+                      <input
+                        type="text"
+                        value={collections.find(c => c.id === nftResource.collectionId)?.name || 'Collection inconnue'}
+                        readOnly
+                        className={styles.formInput}
+                      />
+                    </div>
+                    
+                    <div className={styles.formGroup}>
+                      <label>Image URI (IPFS)</label>
+                      <div className={styles.ipfsLinkContainer}>
+                        <input
+                          type="text"
+                          value={`ipfs://${nftResource.imageUri}`}
+                          readOnly
+                          className={styles.formInput}
+                        />
+                        <a 
+                          href={`https://gateway.pinata.cloud/ipfs/${nftResource.imageUri}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={styles.viewLink}
+                        >
+                          Voir
+                        </a>
+                      </div>
+                    </div>
+                    
+                    <div className={styles.formGroup}>
+                      <label>Certificat URI (IPFS)</label>
+                      <div className={styles.ipfsLinkContainer}>
+                        <input
+                          type="text"
+                          value={`ipfs://${nftResource.certificateUri}`}
+                          readOnly
+                          className={styles.formInput}
+                        />
+                        <a 
+                          href={`https://gateway.pinata.cloud/ipfs/${nftResource.certificateUri}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={styles.viewLink}
+                        >
+                          Voir
+                        </a>
+                      </div>
+                    </div>
+                    
+                    <div className={styles.actionButtons}>
+                      <Button 
+                        type="button" 
+                        variant="secondary"
+                        onClick={() => router.back()}
+                      >
+                        Annuler
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="primary"
+                        onClick={handleItemAction}
+                      >
+                        Mint NFT
+                      </Button>
+                    </div>
+                  </div>
+                ) : showUploadIpfsForm && item?.status === 'pending' ? (
                   <div className={styles.listingFormContainer}>
                     <h3 className={styles.formTitle}>Upload sur IPFS</h3>
                     <form onSubmit={handleUploadOnIpfs} className={styles.listingForm}>
