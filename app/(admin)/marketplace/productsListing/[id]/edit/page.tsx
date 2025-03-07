@@ -12,6 +12,7 @@ import styles from './viewProduct.module.scss'
 import React from 'react'
 import { z } from 'zod'
 import { toast } from 'react-hot-toast'
+import { uploadFilesToIpfs } from '@/app/actions/pinata/pinataActions'
 
 type ParamsType = { id: string }
 
@@ -151,7 +152,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
   }
 
   // Fonction pour soumettre le formulaire
-  const handleListingSubmit = async (e: React.FormEvent) => {
+  const handleUploadOnIpfs = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormErrors({})
     
@@ -174,16 +175,37 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
         return
       }
       
-      // Ici, implémentation de la logique pour créer la liste sur la marketplace
-      console.log('Données du formulaire:', formData)
-      console.log('Item à lister sur la marketplace:', item)
+      // Afficher un toast de chargement
+      const loadingToast = toast.loading('Upload des fichiers sur IPFS en cours...')
       
-      // Après le traitement réussi
-      toast.success('Fichiers uploadés avec succès')
+      // Appel du server action pour upload les fichiers
+      const response = await uploadFilesToIpfs(
+        formData.image as File,
+        formData.certificate as File,
+        product.title || 'nft'
+      )
+      
+      // Fermer le toast de chargement
+      toast.dismiss(loadingToast)
+      
+      if (!response.success) {
+        toast.error(response.error || 'Erreur lors de l\'upload sur IPFS')
+        return
+      }
+      
+      console.log('Image uploadée sur IPFS:', response.image)
+      console.log('Certificat uploadé sur IPFS:', response.certificate)
+      
+      // Traitement après un upload réussi
+      // Par exemple, mise à jour de l'état de l'item avec les CIDs IPFS
+      
+      toast.success('Fichiers uploadés avec succès sur IPFS')
       setShowUploadIpfsForm(false)
-      // Ajouter un toast de succès ou rediriger l'utilisateur
+      
+      // Optionnel : rediriger l'utilisateur ou mettre à jour l'interface
+      // router.push(`/marketplace/productsListing/${id}`)
     } catch (error) {
-      console.error('Erreur lors de la création de la liste:', error)
+      console.error('Erreur lors de l\'upload sur IPFS:', error)
       toast.error('Une erreur est survenue lors de l\'upload')
     }
   }
@@ -273,7 +295,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                 {showUploadIpfsForm && item?.status === 'pending' ? (
                   <div className={styles.listingFormContainer}>
                     <h3 className={styles.formTitle}>Upload sur IPFS</h3>
-                    <form onSubmit={handleListingSubmit} className={styles.listingForm}>
+                    <form onSubmit={handleUploadOnIpfs} className={styles.listingForm}>
                       <div className={styles.formGroup}>
                         <label htmlFor="image">Image du NFT</label>
                         <input
