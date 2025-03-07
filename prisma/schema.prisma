@@ -38,6 +38,7 @@ model Collection {
   artist          Artist           @relation(fields: [artistId], references: [id])
   factory         Factory?         @relation(fields: [factoryId], references: [id])
   nfts            ResourceNft[]
+  nftResource     nftResource[]
 
   @@schema("public")
 }
@@ -68,6 +69,32 @@ model ResourceNft {
   @@schema("public")
 }
 
+model nftResource {
+  id               Int                 @id @default(autoincrement())
+  tokenId          Int?
+  tokenUri         String?             @unique
+  status           ResourceNftStatuses
+  type             ResourceTypes
+  minter           String
+  collectionId     Int
+  name             String              @unique
+  imageUri         String?
+  description      String
+  certificateUri   String?             @unique
+  blockchainItemId Int?                @unique
+  mockups          String[]
+  owner            String?
+  transactionHash  String?
+  tags             String[]
+  purchasedOnce    Boolean?            @default(false)
+  previousOwner    String?
+  Order            Order[]
+  collection       Collection          @relation(fields: [collectionId], references: [id])
+  items            Item[]
+
+  @@schema("public")
+}
+
 model Web3Address {
   id        Int       @id @default(autoincrement())
   publicKey String
@@ -78,13 +105,15 @@ model Web3Address {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Order {
-  id          BigInt      @id @default(autoincrement())
-  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
-  nftId       Int
-  userId      String      @db.Uuid
-  orderStatus OrderStatus @default(WAITING_FOR_CONFIRMATION)
-  ResourceNft ResourceNft @relation(fields: [nftId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users       users       @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id            BigInt       @id @default(autoincrement())
+  created_at    DateTime?    @default(now()) @db.Timestamptz(6)
+  nftId         Int
+  userId        String       @db.Uuid
+  orderStatus   OrderStatus  @default(WAITING_FOR_CONFIRMATION)
+  ResourceNft   ResourceNft  @relation(fields: [nftId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users         users        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  nftResource   nftResource? @relation(fields: [nftResourceId], references: [id])
+  nftResourceId Int?
 
   @@schema("public")
 }
@@ -591,6 +620,8 @@ model Item {
   user            BackofficeUser    @relation(fields: [idUser], references: [id])
   resourceNft     ResourceNft?      @relation(fields: [idResourceNft], references: [id])
   authCertificate AuthCertificate[]
+  nftResource     nftResource?      @relation(fields: [nftResourceId], references: [id])
+  nftResourceId   Int?
 
   @@index([idUser])
   @@index([idResourceNft])

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Usable } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
@@ -9,8 +9,11 @@ import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
 import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId } from '@/app/actions/prisma/prismaActions'
 import { Toaster } from 'react-hot-toast'
 import styles from './viewProduct.module.scss'
+import React from 'react'
 
-export default function ViewProductPage({ params }: { params: { id: string } }) {
+type ParamsType = { id: string }
+
+export default function ViewProductPage({ params }: { params: ParamsType }) {
   const router = useRouter()
   const { user } = useDynamicContext()
   const [isLoading, setIsLoading] = useState(true)
@@ -19,7 +22,21 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
   const [certificate, setCertificate] = useState<any>(null)
   const [productOwner, setProductOwner] = useState<any>(null)
   const [item, setItem] = useState<any>(null)
+  const [showUploadIpfsForm, setShowUploadIpfsForm] = useState(false)
+  const [collections, setCollections] = useState<any[]>([])
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    collection: '',
+    image: null as File | null,
+    certificate: null as File | null,
+    intellectualProperty: false
+  })
   
+  const unwrappedParams = React.use(params as any) as ParamsType
+  const id = unwrappedParams.id
+
+
   useEffect(() => {
     if (!user?.email) {
       setError('Vous devez être connecté pour visualiser ce produit')
@@ -35,9 +52,9 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
         const productId = params.id.includes('gid://shopify/Product/') 
           ? params.id.split('/').pop() 
           : params.id
-          
-        const result = await getShopifyProductById(productId as string)
         
+        const result = await getShopifyProductById(productId as string)
+        console.log('Shopify Product:', result)
         if (isMounted) {
           if (result.success && result.product) {
             setProduct(result.product)
@@ -49,6 +66,7 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
 
             // Rechercher l'Item associé 
             const itemResult = await getItemByShopifyId(shopifyProductId)
+            console.log('Item Result:', itemResult)
             if (itemResult?.id) {
               setItem(itemResult)
               try {
@@ -86,7 +104,7 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
     return () => {
       isMounted = false
     }
-  }, [params.id, user?.email])
+  }, [id, user?.email])
 
   // Fonction pour ouvrir le certificat dans un nouvel onglet
   const viewCertificate = () => {
@@ -95,12 +113,55 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
     }
   }
 
+  // Fonction pour gérer les changements de valeurs dans le formulaire
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target as HTMLInputElement
+    
+    if (type === 'checkbox') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: (e.target as HTMLInputElement).checked
+      }))
+    } else if (type === 'file') {
+      const files = (e.target as HTMLInputElement).files
+      if (files && files.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          [name]: files[0]
+        }))
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
+  }
+
+  // Fonction pour soumettre le formulaire
+  const handleListingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      // Ici, implémentation de la logique pour créer la liste sur la marketplace
+      console.log('Données du formulaire:', formData)
+      console.log('Item à lister sur la marketplace:', item)
+      
+      // Après le traitement réussi
+      setShowUploadIpfsForm(false)
+      // Ajouter un toast de succès ou rediriger l'utilisateur
+    } catch (error) {
+      console.error('Erreur lors de la création de la liste:', error)
+      // Afficher une erreur
+    }
+  }
+
   // Fonction pour gérer l'action selon le statut de l'item
   const handleItemAction = async () => {
-    if (item?.status === 'minted') {
-      // Logique pour lister sur la marketplace
-      console.log('Lister sur la marketplace le produit:', product.id)
-      // Appel à l'API de listing
+    if (item?.status === 'pending') {
+      console.log('ShowListingForm')
+      // Afficher le formulaire pour lister sur la marketplace
+      setShowUploadIpfsForm(true)
     } else {
       // Logique pour mint NFT
       console.log('Mint NFT pour le produit:', product.id)
@@ -177,22 +238,71 @@ export default function ViewProductPage({ params }: { params: { id: string } }) 
                   />
                 </div>
                 
-                <div className={styles.actionButtons}>
-                  <Button 
-                    type="button" 
-                    variant="secondary"
-                    onClick={() => router.back()}
-                  >
-                    Annuler
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="primary"
-                    onClick={handleItemAction}
-                  >
-                    {getActionButtonText()}
-                  </Button>
-                </div>
+                {showUploadIpfsForm && item?.status === 'pending' ? (
+                  <div className={styles.listingFormContainer}>
+                    <h3 className={styles.formTitle}>Upload sur IPFS</h3>
+                    <form onSubmit={handleListingSubmit} className={styles.listingForm}>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="image">Image du NFT</label>
+                        <input
+                          id="image"
+                          name="image"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFormChange}
+                          required
+                          className={styles.formFileInput}
+                        />
+                      </div>
+                      
+                      <div className={styles.formGroup}>
+                        <label htmlFor="certificate">Certificat d'authenticité</label>
+                        <input
+                          id="certificate"
+                          name="certificate"
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={handleFormChange}
+                          required
+                          className={styles.formFileInput}
+                        />
+                      </div>
+                      
+                      <div className={styles.formActions}>
+                        <Button 
+                          type="button" 
+                          variant="secondary"
+                          onClick={() => setShowUploadIpfsForm(false)}
+                        >
+                          Annuler
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          variant="primary"
+                        >
+                          Upload sur IPFS
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                ) : (
+                  <div className={styles.actionButtons}>
+                    <Button 
+                      type="button" 
+                      variant="secondary"
+                      onClick={() => router.back()}
+                    >
+                      Annuler
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="primary"
+                      onClick={handleItemAction}
+                    >
+                      {getActionButtonText()}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
