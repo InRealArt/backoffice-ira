@@ -10,6 +10,8 @@ import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId } from 
 import { Toaster } from 'react-hot-toast'
 import styles from './viewProduct.module.scss'
 import React from 'react'
+import { z } from 'zod'
+import { toast } from 'react-hot-toast'
 
 type ParamsType = { id: string }
 
@@ -32,10 +34,20 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
     certificate: null as File | null,
     intellectualProperty: false
   })
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   
   const unwrappedParams = React.use(params as any) as ParamsType
   const id = unwrappedParams.id
 
+  // Schéma de validation Zod pour les fichiers IPFS
+  const ipfsFormSchema = z.object({
+    image: z.instanceof(File, { 
+      message: "L'image du NFT est obligatoire" 
+    }),
+    certificate: z.instanceof(File, { 
+      message: "Le certificat d'authenticité est obligatoire" 
+    })
+  })
 
   useEffect(() => {
     if (!user?.email) {
@@ -141,18 +153,38 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
   // Fonction pour soumettre le formulaire
   const handleListingSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setFormErrors({})
     
     try {
+      // Valider les fichiers avec Zod
+      const result = ipfsFormSchema.safeParse({
+        image: formData.image,
+        certificate: formData.certificate
+      })
+      
+      if (!result.success) {
+        // Transformer les erreurs Zod en objet d'erreurs
+        const errors: Record<string, string> = {}
+        result.error.issues.forEach(issue => {
+          errors[issue.path[0].toString()] = issue.message
+        })
+        setFormErrors(errors)
+        // Afficher un toast d'erreur
+        toast.error('Veuillez corriger les erreurs du formulaire')
+        return
+      }
+      
       // Ici, implémentation de la logique pour créer la liste sur la marketplace
       console.log('Données du formulaire:', formData)
       console.log('Item à lister sur la marketplace:', item)
       
       // Après le traitement réussi
+      toast.success('Fichiers uploadés avec succès')
       setShowUploadIpfsForm(false)
       // Ajouter un toast de succès ou rediriger l'utilisateur
     } catch (error) {
       console.error('Erreur lors de la création de la liste:', error)
-      // Afficher une erreur
+      toast.error('Une erreur est survenue lors de l\'upload')
     }
   }
 
@@ -253,6 +285,9 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                           required
                           className={styles.formFileInput}
                         />
+                        {formErrors.image && (
+                          <span className={styles.errorMessage}>{formErrors.image}</span>
+                        )}
                       </div>
                       
                       <div className={styles.formGroup}>
@@ -266,6 +301,9 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                           required
                           className={styles.formFileInput}
                         />
+                        {formErrors.certificate && (
+                          <span className={styles.errorMessage}>{formErrors.certificate}</span>
+                        )}
                       </div>
                       
                       <div className={styles.formActions}>
