@@ -8,7 +8,7 @@ export const metadata = {
 
 export default async function ProductListingPage() {
   try {
-    // Récupération des items avec les relations user et resourceNft
+    // Récupération des items avec les relations user et nftResource
     const products = await prisma.item.findMany({
       orderBy: {
         id: 'desc',
@@ -21,9 +21,15 @@ export default async function ProductListingPage() {
             lastName: true,
           }
         },
-        resourceNft: {
+        nftResource: {
           select: {
             name: true,
+            status: true,
+            type: true,
+            imageUri: true,
+            certificateUri: true,
+            mockups: true,
+            tags: true,
           }
         }
       }

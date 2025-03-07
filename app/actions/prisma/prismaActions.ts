@@ -3,7 +3,7 @@
 import { memberSchema } from "@/app/(admin)/shopify/create-member/schema";
 import { MemberFormData } from "@/app/(admin)/shopify/create-member/schema";
 import { prisma } from "@/lib/prisma"
-import { NotificationStatus, BackofficeUser } from "@prisma/client"
+import { NotificationStatus, BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache";
 import { PrismaClient } from '@prisma/client'
 const prismaClient = new PrismaClient()
@@ -53,6 +53,17 @@ interface CheckStatusParams {
 interface StatusCheckResult {
   exists: boolean
   status?: string
+}
+
+type CreateNftResourceParams = {
+  itemId: string
+  imageUri: string
+  certificateUri: string
+  type: ResourceTypes
+  status: ResourceNftStatuses
+  name: string
+  description: string
+  collectionId: number
 }
 
 // Action pour mettre à jour le statut d'une notification
@@ -520,5 +531,119 @@ export async function getItemById(itemId: number) {
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'item par ID:', error)
     throw error
+  }
+}
+
+
+/**
+ * Récupère toutes les collections
+ */
+export async function getAllCollections() {
+  try {
+    // Récupérer toutes les collections sans filtrer par statut
+    const collections = await prisma.collection.findMany({
+      select: {
+        id: true,
+        name: true,
+        symbol: true,
+        status: true,
+        artist: {
+          select: {
+            name: true,
+            surname: true,
+            pseudo: true
+          }
+        }
+      },
+      // Sans condition de filtrage sur le statut
+      orderBy: {
+        name: 'asc'
+      }
+    })
+
+    // Filtrer côté serveur plutôt que dans la requête
+    const confirmedCollections = collections.filter(
+      collection => collection.status === 'confirmed'
+    )
+
+    return confirmedCollections
+  } catch (error) {
+    console.error('Erreur lors de la récupération des collections:', error)
+    return [] // Retourner un tableau vide en cas d'erreur
+  }
+}
+
+/**
+ * Crée une ressource NFT
+ */
+export async function createNftResource(params: {
+  itemId: string,
+  imageUri: string,
+  certificateUri: string,
+  type: 'IMAGE' | 'VIDEO',
+  status: 'UPLOADIPFS' | 'UPLOADCERTIFICATE' | 'UPLOADMETADATA' | 'MINED' | 'LISTED' | 'SOLD',
+  name: string,
+  description: string,
+  collectionId: number
+}) {
+  try {
+    const { itemId, imageUri, certificateUri, type, status, name, description, collectionId } = params
+
+    // Vérifier si l'item existe
+    const item = await prisma.item.findUnique({
+      where: { id: parseInt(itemId) }
+    })
+
+    if (!item) {
+      return {
+        success: false,
+        error: 'Item non trouvé'
+      }
+    }
+
+    // Vérifier si la collection existe
+    const collection = await prisma.collection.findUnique({
+      where: { id: collectionId }
+    })
+
+    if (!collection) {
+      return {
+        success: false,
+        error: 'Collection non trouvée'
+      }
+    }
+
+    // Créer la ressource NFT
+    const mockups: string[] = []
+    const tags: string[] = []
+
+    const nftResource = await prisma.nftResource.create({
+      data: {
+        imageUri,
+        certificateUri,
+        type,
+        status,
+        name,
+        description,
+        mockups,
+        tags,
+        collection: { connect: { id: collectionId } },
+        items: { connect: { id: parseInt(itemId) } },
+        minter: '', // À remplir lors du minting
+        purchasedOnce: false
+      }
+    })
+
+    return {
+      success: true,
+      nftResource
+    }
+  } catch (error: any) {
+    console.error('Erreur lors de la création de la ressource NFT:', error)
+
+    return {
+      success: false,
+      error: error.message || 'Une erreur est survenue lors de la création de la ressource NFT'
+    }
   }
 }

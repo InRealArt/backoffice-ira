@@ -15,11 +15,30 @@ export async function uploadFilesToIpfs(imageFile: File, certificateFile: File, 
         const imageFormData = new FormData()
         imageFormData.append('file', imageFile)
         imageFormData.append('name', `${productTitle || 'nft'}_image`)
+        imageFormData.append("network", "public")
+        // Options pour rendre le fichier public
+        imageFormData.append('pinataOptions', JSON.stringify({
+            cidVersion: 1,
+            wrapWithDirectory: false
+        }))
+        imageFormData.append('pinataMetadata', JSON.stringify({
+            name: `${productTitle || 'nft'}_image`
+        }))
 
         // Upload du certificat sur IPFS
         const certificateFormData = new FormData()
         certificateFormData.append('file', certificateFile)
         certificateFormData.append('name', `${productTitle || 'nft'}_certificate`)
+        certificateFormData.append("network", "public")
+
+        // Options pour rendre le fichier public
+        certificateFormData.append('pinataOptions', JSON.stringify({
+            cidVersion: 1,
+            wrapWithDirectory: false
+        }))
+        certificateFormData.append('pinataMetadata', JSON.stringify({
+            name: `${productTitle || 'nft'}_certificate`
+        }))
 
         // Appel parallèle des deux uploads directement à l'API Pinata
         const [imageResponse, certificateResponse] = await Promise.all([

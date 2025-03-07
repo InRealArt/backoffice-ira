@@ -38,7 +38,7 @@ model Collection {
   artist          Artist           @relation(fields: [artistId], references: [id])
   factory         Factory?         @relation(fields: [factoryId], references: [id])
   nfts            ResourceNft[]
-  nftResource     nftResource[]
+  nftResource     NftResource[]
 
   @@schema("public")
 }
@@ -64,18 +64,17 @@ model ResourceNft {
   previousOwner   String?
   Order           Order[]
   collection      Collection          @relation(fields: [collectionId], references: [id])
-  items           Item[]
 
   @@schema("public")
 }
 
-model nftResource {
+model NftResource {
   id               Int                 @id @default(autoincrement())
   tokenId          Int?
   tokenUri         String?             @unique
   status           ResourceNftStatuses
   type             ResourceTypes
-  minter           String
+  minter           String?
   collectionId     Int
   name             String              @unique
   imageUri         String?
@@ -112,7 +111,7 @@ model Order {
   orderStatus   OrderStatus  @default(WAITING_FOR_CONFIRMATION)
   ResourceNft   ResourceNft  @relation(fields: [nftId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users         users        @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  nftResource   nftResource? @relation(fields: [nftResourceId], references: [id])
+  nftResource   NftResource? @relation(fields: [nftResourceId], references: [id])
   nftResourceId Int?
 
   @@schema("public")
@@ -616,15 +615,13 @@ model Item {
   status          ItemStatus        @default(created)
   idUser          Int
   idShopify       BigInt
-  idResourceNft   Int?
   user            BackofficeUser    @relation(fields: [idUser], references: [id])
-  resourceNft     ResourceNft?      @relation(fields: [idResourceNft], references: [id])
   authCertificate AuthCertificate[]
-  nftResource     nftResource?      @relation(fields: [nftResourceId], references: [id])
-  nftResourceId   Int?
+  nftResource     NftResource?      @relation(fields: [idNftResource], references: [id])
+  idNftResource   Int?
 
   @@index([idUser])
-  @@index([idResourceNft])
+  @@index([idNftResource])
   @@schema("public")
 }
 

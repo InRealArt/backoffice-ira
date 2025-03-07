@@ -6,7 +6,7 @@ import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId } from '@/app/actions/prisma/prismaActions'
+import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource } from '@/app/actions/prisma/prismaActions'
 import { Toaster } from 'react-hot-toast'
 import styles from './viewProduct.module.scss'
 import React from 'react'
@@ -42,6 +42,9 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
 
   // Schéma de validation Zod pour les fichiers IPFS
   const ipfsFormSchema = z.object({
+    name: z.string().min(1, "Le nom du NFT est obligatoire"),
+    description: z.string().min(1, "La description du NFT est obligatoire"),
+    collection: z.string().min(1, "La sélection d'une collection est obligatoire"),
     image: z.instanceof(File, { 
       message: "L'image du NFT est obligatoire" 
     }),
@@ -119,6 +122,24 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
     }
   }, [id, user?.email])
 
+  // Fonction pour charger les collections
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const collectionsData = await getAllCollections()
+        if (collectionsData && Array.isArray(collectionsData)) {
+          setCollections(collectionsData)
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des collections:', error)
+      }
+    }
+
+    if (showUploadIpfsForm) {
+      fetchCollections()
+    }
+  }, [showUploadIpfsForm])
+
   // Fonction pour ouvrir le certificat dans un nouvel onglet
   const viewCertificate = () => {
     if (certificate && certificate.fileUrl) {
@@ -159,6 +180,9 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
     try {
       // Valider les fichiers avec Zod
       const result = ipfsFormSchema.safeParse({
+        name: formData.name,
+        description: formData.description,
+        collection: formData.collection,
         image: formData.image,
         certificate: formData.certificate
       })
@@ -182,7 +206,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
       const response = await uploadFilesToIpfs(
         formData.image as File,
         formData.certificate as File,
-        product.title || 'nft'
+        formData.name || product.title || 'nft'
       )
       
       // Fermer le toast de chargement
@@ -196,14 +220,48 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
       console.log('Image uploadée sur IPFS:', response.image)
       console.log('Certificat uploadé sur IPFS:', response.certificate)
       
-      // Traitement après un upload réussi
-      // Par exemple, mise à jour de l'état de l'item avec les CIDs IPFS
+      // Création d'un enregistrement dans la table NftResource
+      const nftResourceToast = toast.loading('Enregistrement des ressources NFT...')
       
-      toast.success('Fichiers uploadés avec succès sur IPFS')
-      setShowUploadIpfsForm(false)
-      
-      // Optionnel : rediriger l'utilisateur ou mettre à jour l'interface
-      // router.push(`/marketplace/productsListing/${id}`)
+      try {
+        if (!item || !item.id) {
+          throw new Error('Impossible de trouver l\'item associé')
+        }
+
+        const collectionId = parseInt(formData.collection)
+        if (isNaN(collectionId)) {
+          throw new Error('ID de collection invalide')
+        }
+        
+        // Appel à l'action serveur pour créer l'enregistrement NftResource
+        const nftResourceResult = await createNftResource({
+          itemId: item.id,
+          imageUri: response.image.data.cid,
+          certificateUri: response.certificate.data.cid,
+          type: 'IMAGE',
+          status: 'UPLOADIPFS',
+          name: formData.name,
+          description: formData.description,
+          collectionId: collectionId
+        })
+        
+        toast.dismiss(nftResourceToast)
+        
+        if (!nftResourceResult.success) {
+          toast.error(nftResourceResult.error || 'Erreur lors de l\'enregistrement des ressources NFT')
+          return
+        }
+        
+        toast.success('Ressources NFT enregistrées avec succès')
+        setShowUploadIpfsForm(false)
+        
+        // Rafraîchir la page pour afficher les changements
+        router.refresh()
+      } catch (resourceError) {
+        toast.dismiss(nftResourceToast)
+        console.error('Erreur lors de l\'enregistrement des ressources NFT:', resourceError)
+        toast.error('Une erreur est survenue lors de l\'enregistrement des ressources NFT')
+      }
     } catch (error) {
       console.error('Erreur lors de l\'upload sur IPFS:', error)
       toast.error('Une erreur est survenue lors de l\'upload')
@@ -296,6 +354,62 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                   <div className={styles.listingFormContainer}>
                     <h3 className={styles.formTitle}>Upload sur IPFS</h3>
                     <form onSubmit={handleUploadOnIpfs} className={styles.listingForm}>
+                      <div className={styles.formGroup}>
+                        <label htmlFor="name">Nom du NFT</label>
+                        <input
+                          id="name"
+                          name="name"
+                          type="text"
+                          value={formData.name}
+                          onChange={handleFormChange}
+                          required
+                          className={styles.formInput}
+                          placeholder="Nom du NFT"
+                        />
+                        {formErrors.name && (
+                          <span className={styles.errorMessage}>{formErrors.name}</span>
+                        )}
+                      </div>
+                      
+                      <div className={styles.formGroup}>
+                        <label htmlFor="description">Description du NFT</label>
+                        <textarea
+                          id="description"
+                          name="description"
+                          value={formData.description}
+                          onChange={handleFormChange}
+                          required
+                          className={styles.formTextarea}
+                          placeholder="Description du NFT"
+                          rows={4}
+                        />
+                        {formErrors.description && (
+                          <span className={styles.errorMessage}>{formErrors.description}</span>
+                        )}
+                      </div>
+                      
+                      <div className={styles.formGroup}>
+                        <label htmlFor="collection">Collection</label>
+                        <select
+                          id="collection"
+                          name="collection"
+                          value={formData.collection}
+                          onChange={handleFormChange}
+                          required
+                          className={styles.formSelect}
+                        >
+                          <option value="">Sélectionnez une collection</option>
+                          {collections.map((collection) => (
+                            <option key={collection.id} value={collection.id.toString()}>
+                              {collection.name}
+                            </option>
+                          ))}
+                        </select>
+                        {formErrors.collection && (
+                          <span className={styles.errorMessage}>{formErrors.collection}</span>
+                        )}
+                      </div>
+                      
                       <div className={styles.formGroup}>
                         <label htmlFor="image">Image du NFT</label>
                         <input

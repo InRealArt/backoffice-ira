@@ -11,13 +11,13 @@ interface Item {
   status: ItemStatus
   idUser: number
   idShopify: bigint
-  idResourceNft: number | null
+  idNftResource: number | null
   user?: {
     email: string | null
     firstName: string | null
     lastName: string | null
   }
-  resourceNft?: {
+  nftResource?: {
     name: string
   } | null
 }
@@ -153,10 +153,10 @@ export default function ProductListingClient({ products = [] }: ProductListingCl
                         </div>
                       </td>
                       <td className={styles.hiddenMobile}>
-                        {product.resourceNft 
-                          ? product.resourceNft.name 
-                          : product.idResourceNft 
-                            ? `ID: ${product.idResourceNft}` 
+                        {product.nftResource 
+                          ? product.nftResource.name 
+                          : product.idNftResource 
+                            ? `ID: ${product.idNftResource}` 
                             : 'Non associé'
                         }
                       </td>
