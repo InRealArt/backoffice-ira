@@ -579,6 +579,7 @@ export async function getAllCollections() {
 export async function createNftResource(params: {
   itemId: string,
   imageUri: string,
+  tokenUri: string,
   certificateUri: string,
   type: 'IMAGE' | 'VIDEO',
   status: 'UPLOADIPFS' | 'UPLOADCERTIFICATE' | 'UPLOADMETADATA' | 'MINED' | 'LISTED' | 'SOLD',
@@ -587,7 +588,7 @@ export async function createNftResource(params: {
   collectionId: number
 }) {
   try {
-    const { itemId, imageUri, certificateUri, type, status, name, description, collectionId } = params
+    const { itemId, imageUri, certificateUri, tokenUri, type, status, name, description, collectionId } = params
 
     // Vérifier si l'item existe
     const item = await prisma.item.findUnique({
@@ -621,6 +622,7 @@ export async function createNftResource(params: {
       data: {
         imageUri,
         certificateUri,
+        tokenUri,
         type,
         status,
         name,

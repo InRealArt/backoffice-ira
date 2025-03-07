@@ -1,0 +1,12 @@
+{
+  "name": "Nom de l'œuvre d'art",
+  "description": "Description détaillée de l'œuvre d'art, son histoire, sa signification ou toute information pertinente pour les collectionneurs",
+  "image": "ipfs://CID_DE_VOTRE_IMAGE",
+  "external_url": "https://votre-site-galerie.com/oeuvre/123",
+  "attributes": [
+    {
+      "trait_type": "certificateUri",
+      "value": "ipfs://CID_DU_CERTIFICAT_AUTHENTICITE"
+    }
+  ]
+}

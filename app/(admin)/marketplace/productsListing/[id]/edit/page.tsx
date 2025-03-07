@@ -12,7 +12,9 @@ import styles from './viewProduct.module.scss'
 import React from 'react'
 import { z } from 'zod'
 import { toast } from 'react-hot-toast'
-import { uploadFilesToIpfs } from '@/app/actions/pinata/pinataActions'
+import { uploadFilesToIpfs, uploadMetadataToIpfs } from '@/app/actions/pinata/pinataActions'
+import pinata from '@/lib/pinata/pinata'
+import { generateNFTMetadata } from '@/lib/nft-templates/generateMetadata'
 
 type ParamsType = { id: string }
 
@@ -240,51 +242,79 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
       console.log('Image uploadée sur IPFS:', response.image)
       console.log('Certificat uploadé sur IPFS:', response.certificate)
       
-      // Création d'un enregistrement dans la table NftResource
-      const nftResourceToast = toast.loading('Enregistrement des ressources NFT...')
+      // Upload des métadonnées sur IPFS via la Server Action
+      const metadataToast = toast.loading('Upload des métadonnées NFT sur IPFS...');
       
       try {
-        if (!item || !item.id) {
-          throw new Error('Impossible de trouver l\'item associé')
-        }
-
-        const collectionId = parseInt(formData.collection)
-        if (isNaN(collectionId)) {
-          throw new Error('ID de collection invalide')
-        }
-        
-        // Appel à l'action serveur pour créer l'enregistrement NftResource
-        const nftResourceResult = await createNftResource({
-          itemId: item.id,
-          imageUri: response.image.data.cid,
-          certificateUri: response.certificate.data.cid,
-          type: 'IMAGE',
-          status: 'UPLOADIPFS',
+        const metadataResponse = await uploadMetadataToIpfs({
           name: formData.name,
           description: formData.description,
-          collectionId: collectionId
-        })
+          imageCID: response.image.data.cid,
+          certificateUri: `ipfs://${response.certificate.data.cid}`,
+          externalUrl: `${process.env.NEXT_PUBLIC_WEBSITE_URL}/artwork/${product.handle}`
+        });
         
-        toast.dismiss(nftResourceToast)
-        
-        if (!nftResourceResult.success) {
-          toast.error(nftResourceResult.error || 'Erreur lors de l\'enregistrement des ressources NFT')
-          return
+        if (!metadataResponse.success) {
+          toast.dismiss(metadataToast);
+          toast.error(metadataResponse.error || 'Erreur lors de l\'upload des métadonnées');
+          return;
         }
         
-        toast.success('Ressources NFT enregistrées avec succès')
-        setShowUploadIpfsForm(false)
+        const tokenUri = metadataResponse.metadata?.data.cid;
+        console.log('Métadonnées uploadées sur IPFS:', tokenUri);
+        toast.dismiss(metadataToast);
         
-        // Rafraîchir la page pour afficher les changements
-        router.refresh()
-      } catch (resourceError) {
-        toast.dismiss(nftResourceToast)
-        console.error('Erreur lors de l\'enregistrement des ressources NFT:', resourceError)
-        toast.error('Une erreur est survenue lors de l\'enregistrement des ressources NFT')
+        // Création d'un enregistrement dans la table NftResource
+        const nftResourceToast = toast.loading('Enregistrement des ressources NFT...')
+        
+        try {
+          if (!item || !item.id) {
+            throw new Error('Impossible de trouver l\'item associé')
+          }
+
+          const collectionId = parseInt(formData.collection)
+          if (isNaN(collectionId)) {
+            throw new Error('ID de collection invalide')
+          }
+          
+          // Appel à l'action serveur pour créer l'enregistrement NftResource
+          const nftResourceResult = await createNftResource({
+            itemId: item.id,
+            imageUri: response.image.data.cid,
+            certificateUri: response.certificate.data.cid,
+            tokenUri: tokenUri, // Utiliser le CID retourné par Pinata
+            type: 'IMAGE',
+            status: 'UPLOADMETADATA', // Mettre à jour le statut
+            name: formData.name,
+            description: formData.description,
+            collectionId: collectionId
+          });
+          
+          toast.dismiss(nftResourceToast);
+          
+          if (!nftResourceResult.success) {
+            toast.error(nftResourceResult.error || 'Erreur lors de l\'enregistrement des ressources NFT');
+            return;
+          }
+          
+          toast.success('Ressources NFT enregistrées avec succès');
+          setShowUploadIpfsForm(false);
+          
+          // Rafraîchir la page pour afficher les changements
+          router.refresh();
+        } catch (resourceError) {
+          toast.dismiss(nftResourceToast);
+          console.error('Erreur lors de l\'enregistrement des ressources NFT:', resourceError);
+          toast.error('Une erreur est survenue lors de l\'enregistrement des ressources NFT');
+        }
+      } catch (metadataError) {
+        toast.dismiss(metadataToast);
+        console.error('Erreur lors de l\'upload des métadonnées:', metadataError);
+        toast.error('Une erreur est survenue lors de l\'upload des métadonnées');
       }
     } catch (error) {
-      console.error('Erreur lors de l\'upload sur IPFS:', error)
-      toast.error('Une erreur est survenue lors de l\'upload')
+      console.error('Erreur lors de l\'upload sur IPFS:', error);
+      toast.error('Une erreur est survenue lors de l\'upload');
     }
   }
 
@@ -383,9 +413,12 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                   />
                 </div>
                 
-                {item?.status === 'pending' && nftResource?.status === 'UPLOADIPFS' ? (
+                {item?.status === 'pending' && nftResource?.status === 'UPLOADMETADATA' ? (
                   <div className={styles.nftResourceInfo}>
                     <h3 className={styles.formTitle}>Ressources NFT uploadées sur IPFS</h3>
+                    <p className={styles.infoNote}>
+                      Pour l'instant, le NFT de l'oeuvre n'est toujours pas mintée ...
+                    </p>
                     
                     <div className={styles.formGroup}>
                       <label>Nom du NFT</label>
@@ -448,6 +481,26 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                         />
                         <a 
                           href={`https://gateway.pinata.cloud/ipfs/${nftResource.certificateUri}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={styles.viewLink}
+                        >
+                          Voir
+                        </a>
+                      </div>
+                    </div>
+                    
+                    <div className={styles.formGroup}>
+                      <label>Métadonnées URI (IPFS)</label>
+                      <div className={styles.ipfsLinkContainer}>
+                        <input
+                          type="text"
+                          value={`ipfs://${nftResource.tokenUri}`}
+                          readOnly
+                          className={styles.formInput}
+                        />
+                        <a 
+                          href={`https://gateway.pinata.cloud/ipfs/${nftResource.tokenUri}`} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className={styles.viewLink}

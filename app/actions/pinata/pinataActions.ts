@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { generateNFTMetadata } from '@/lib/nft-templates/generateMetadata'
 
 const PINATA_JWT = process.env.PINATA_JWT
 
@@ -85,5 +86,65 @@ export async function uploadFilesToIpfs(imageFile: File, certificateFile: File, 
             success: false,
             error: error instanceof Error ? error.message : 'Une erreur inconnue est survenue'
         }
+    }
+}
+
+/**
+ * Upload des métadonnées NFT sur IPFS
+ */
+export async function uploadMetadataToIpfs(params: {
+    name: string;
+    description: string;
+    imageCID: string;
+    certificateUri: string;
+    externalUrl?: string;
+}) {
+    try {
+        const nftMetadata = generateNFTMetadata(params);
+
+        const options = {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.PINATA_JWT}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                pinataOptions: {
+                    cidVersion: 1
+                },
+                pinataMetadata: {
+                    name: `${params.name.replace(/\s+/g, '_').toLowerCase()}_metadata.json`
+                },
+                pinataContent: nftMetadata
+            })
+        };
+
+        const metadataResponse = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', options);
+
+        if (!metadataResponse.ok) {
+            const errorData = await metadataResponse.json();
+            console.error('Erreur détaillée Pinata:', errorData);
+            return {
+                success: false,
+                error: `Erreur API Pinata: ${JSON.stringify(errorData)}`
+            };
+        }
+
+        const metadataData = await metadataResponse.json();
+
+        return {
+            success: true,
+            metadata: {
+                data: {
+                    cid: metadataData.IpfsHash
+                }
+            }
+        };
+    } catch (error: any) {
+        console.error('Erreur lors de l\'upload des métadonnées:', error);
+        return {
+            success: false,
+            error: error.message || 'Une erreur est survenue lors de l\'upload des métadonnées'
+        };
     }
 } 
