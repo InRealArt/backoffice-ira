@@ -15,12 +15,18 @@ import { toast } from 'react-hot-toast'
 import { uploadFilesToIpfs, uploadMetadataToIpfs } from '@/app/actions/pinata/pinataActions'
 import pinata from '@/lib/pinata/pinata'
 import { generateNFTMetadata } from '@/lib/nft-templates/generateMetadata'
+import { useAccount } from 'wagmi'
+import { publicClient } from '@/lib/providers'
+import { Address } from 'viem'
+import { artistNftCollectionAbi } from '@/lib/contracts/ArtistNftCollectionAbi'
 
 type ParamsType = { id: string }
 
 export default function ViewProductPage({ params }: { params: ParamsType }) {
   const router = useRouter()
   const { user } = useDynamicContext()
+  const { address, status, chain } = useAccount()
+  const isConnected = status === 'connected'
   const [isLoading, setIsLoading] = useState(true)
   const [product, setProduct] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
@@ -39,6 +45,8 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
     intellectualProperty: false
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [isMinter, setIsMinter] = useState<boolean>(false)
+  const [isCheckingMinter, setIsCheckingMinter] = useState<boolean>(false)
   
   const unwrappedParams = React.use(params as any) as ParamsType
   const id = unwrappedParams.id
@@ -349,6 +357,53 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
     return 'Lister sur la marketplace'
   }
 
+  // Nouvelle fonction pour vérifier si l'utilisateur est un minter
+  const checkIsMinter = async (collectionAddress: string, userAddress: string) => {
+    if (!collectionAddress || !userAddress) return false
+    
+    setIsCheckingMinter(true)
+    try {
+      // Utiliser la fonction getMinters() pour récupérer la liste des minters
+      const minters = await publicClient.readContract({
+        address: collectionAddress as Address,
+        abi: artistNftCollectionAbi,
+        functionName: 'getMinters'
+      }) as Address[]
+      
+      // Vérifier si l'adresse de l'utilisateur est dans la liste des minters
+      const userIsMinter = minters.map(m => m.toLowerCase()).includes(userAddress.toLowerCase())
+      console.log(`L'utilisateur ${userAddress} ${userIsMinter ? 'est' : 'n\'est pas'} un minter sur la collection ${collectionAddress}`)
+      console.log('Liste des minters:', minters)
+      
+      return userIsMinter
+    } catch (error) {
+      console.error('Erreur lors de la vérification des minters:', error)
+      return false
+    } finally {
+      setIsCheckingMinter(false)
+    }
+  }
+  
+  // Vérifier si l'utilisateur est un minter lorsque le nftResource change
+  useEffect(() => {
+    const verifyMinter = async () => {
+      if (
+        nftResource?.status === 'UPLOADMETADATA' && 
+        nftResource?.collection?.contractAddress &&
+        address && 
+        isConnected
+      ) {
+        const collectionAddress = nftResource.collection.contractAddress
+        const result = await checkIsMinter(collectionAddress, address)
+        setIsMinter(result)
+      } else {
+        setIsMinter(false)
+      }
+    }
+    
+    verifyMinter()
+  }, [nftResource, address, isConnected])
+
   return (
     <>
       <Toaster position="top-center" />
@@ -522,8 +577,13 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                         type="button" 
                         variant="primary"
                         onClick={handleItemAction}
+                        disabled={isCheckingMinter || !isMinter}
                       >
-                        Mint NFT
+                        {isCheckingMinter 
+                          ? 'Vérification des permissions...' 
+                          : !isMinter 
+                          ? 'Vous n\'êtes pas autorisé à minter' 
+                          : 'Mint NFT'}
                       </Button>
                     </div>
                   </div>
