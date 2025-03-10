@@ -699,17 +699,17 @@ export async function getNftResourceByItemId(itemId: number) {
 
 export async function getPendingItemsCount() {
   try {
-      const count = await prisma.item.count({
-          where: {
-              status: ItemStatus.pending
-          }
-      })
-      return { count }
+    const count = await prisma.item.count({
+      where: {
+        status: ItemStatus.pending
+      }
+    })
+    return { count }
   } catch (error) {
-      console.error('Erreur lors du comptage des items en attente:', error)
-      return { count: 0 }
+    console.error('Erreur lors du comptage des items en attente:', error)
+    return { count: 0 }
   }
-} 
+}
 
 /**
  * Vérifie si un utilisateur est administrateur
@@ -717,15 +717,15 @@ export async function getPendingItemsCount() {
  * @param walletAddress - L'adresse du portefeuille de l'utilisateur
  * @returns Un objet contenant le statut admin et une erreur éventuelle
  */
-export async function checkIsAdmin(email?: string | null, walletAddress?: string | null): Promise<{ 
-  isAdmin: boolean, 
-  error?: string 
+export async function checkIsAdmin(email?: string | null, walletAddress?: string | null): Promise<{
+  isAdmin: boolean,
+  error?: string
 }> {
   try {
     if (!email && !walletAddress) {
-      return { 
-        isAdmin: false, 
-        error: 'Email ou adresse de portefeuille requis' 
+      return {
+        isAdmin: false,
+        error: 'Email ou adresse de portefeuille requis'
       }
     }
 
@@ -748,9 +748,58 @@ export async function checkIsAdmin(email?: string | null, walletAddress?: string
     return { isAdmin }
   } catch (error) {
     console.error('Erreur lors de la vérification du rôle admin:', error)
-    return { 
-      isAdmin: false, 
-      error: (error as Error).message 
+    return {
+      isAdmin: false,
+      error: (error as Error).message
     }
+  }
+}
+
+/**
+ * Récupère toutes les collections associées à des smart contracts actifs
+ */
+export async function getActiveCollections() {
+  try {
+    const collections = await prisma.collection.findMany({
+      where: {
+        smartContract: {
+          active: true
+        }
+      },
+      select: {
+        id: true,
+        name: true,
+        symbol: true,
+        status: true,
+        contractAddress: true,
+        smartContractId: true,
+        artist: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+            pseudo: true,
+            publicKey: true
+          }
+        },
+        smartContract: {
+          select: {
+            id: true,
+            factoryAddress: true,
+            royaltiesAddress: true,
+            marketplaceAddress: true,
+            network: true
+          }
+        }
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    });
+
+    return collections;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des collections actives:', error);
+    throw error;
   }
 }

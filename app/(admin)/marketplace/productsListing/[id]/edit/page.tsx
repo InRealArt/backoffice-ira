@@ -6,7 +6,7 @@ import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId } from '@/app/actions/prisma/prismaActions'
+import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId, getActiveCollections } from '@/app/actions/prisma/prismaActions'
 import { Toaster } from 'react-hot-toast'
 import styles from './viewProduct.module.scss'
 import React from 'react'
@@ -66,7 +66,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
 
   const fetchCollections = async () => {
     try {
-      const collectionsData = await getAllCollections()
+      const collectionsData = await getActiveCollections()
       console.log('Collections Data:', collectionsData)
       if (collectionsData && Array.isArray(collectionsData)) {
         setCollections(collectionsData)

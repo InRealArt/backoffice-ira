@@ -16,7 +16,6 @@ import { publicClient } from '@/lib/providers'
 import { useWalletClient } from 'wagmi'
 import { Address } from 'viem'
 import { useChainId, useConfig } from 'wagmi'
-import { switchChain } from 'wagmi/actions'
 import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
 import { decodeEventLog } from 'viem'
 
