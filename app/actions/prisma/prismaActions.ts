@@ -710,3 +710,47 @@ export async function getPendingItemsCount() {
       return { count: 0 }
   }
 } 
+
+/**
+ * Vérifie si un utilisateur est administrateur
+ * @param email - L'email de l'utilisateur
+ * @param walletAddress - L'adresse du portefeuille de l'utilisateur
+ * @returns Un objet contenant le statut admin et une erreur éventuelle
+ */
+export async function checkIsAdmin(email?: string | null, walletAddress?: string | null): Promise<{ 
+  isAdmin: boolean, 
+  error?: string 
+}> {
+  try {
+    if (!email && !walletAddress) {
+      return { 
+        isAdmin: false, 
+        error: 'Email ou adresse de portefeuille requis' 
+      }
+    }
+
+    // Recherche de l'utilisateur par email ou walletAddress
+    const user = await prisma.backofficeUser.findFirst({
+      where: {
+        OR: [
+          { email: email || null },
+          { walletAddress: walletAddress || '' }
+        ]
+      },
+      select: {
+        role: true
+      }
+    })
+
+    // Vérification du rôle admin
+    const isAdmin = user?.role === 'admin'
+
+    return { isAdmin }
+  } catch (error) {
+    console.error('Erreur lors de la vérification du rôle admin:', error)
+    return { 
+      isAdmin: false, 
+      error: (error as Error).message 
+    }
+  }
+}

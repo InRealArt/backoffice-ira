@@ -8,17 +8,17 @@ import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import Button from '../Button/Button';
 import { DashboardCard } from './DashboardCard/DashboardCard'
 import { getPendingItemsCount } from '@/app/actions/prisma/prismaActions'
+import { useIsAdmin } from '@/app/hooks/useIsAdmin';
 
 export default function Dashboard() {
   const { user, primaryWallet } = useDynamicContext();
-  const [isLoading, setIsLoading] = useState(true);
   const [shopifyGranted, setShopifyGranted] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdminNavigating, setIsAdminNavigating] = useState(false);
   const router = useRouter();
   const [pendingItemsCount, setPendingItemsCount] = useState(0)
   const [isLoadingCount, setIsLoadingCount] = useState(true)
+  const { isAdmin, isLoading } = useIsAdmin()
 
   const truncateAddress = (address: string | undefined) => {
     if (!address) return 'Non défini';
@@ -26,60 +26,6 @@ export default function Dashboard() {
     const end = address.substring(address.length - 4);
     return `${start}...${end}`;
   };
-
-  useEffect(() => {
-    const checkShopifyStatus = async () => {
-      if (user && primaryWallet) {
-        try {
-          // Utiliser la nouvelle route API au lieu de l'appel Supabase direct
-          const response = await fetch('/api/shopify/isArtistAndGranted', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              walletAddress: primaryWallet.address
-            }),
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Erreur API: ${response.status}`);
-          }
-          
-          const result = await response.json();
-          
-          if (result.data && result.data.length > 0) {
-            // Utiliser seulement isShopifyGranted pour la compatibilité avec le code existant
-            setShopifyGranted(result.data[0].isShopifyGranted);
-          }
-          
-          // Vérifier si l'utilisateur est admin
-          const adminResponse = await fetch('/api/shopify/isAdmin', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              walletAddress: primaryWallet.address
-            }),
-          });
-          
-          if (adminResponse.ok) {
-            const adminResult = await adminResponse.json();
-            
-            setIsAdmin(adminResult.isAdmin);
-          }
-          
-          setIsLoading(false);
-        } catch (err) {
-          console.error('Erreur lors de la vérification du statut Shopify:', err);
-          setIsLoading(false);
-        }
-      }
-    };
-  
-    checkShopifyStatus();
-  }, [user, primaryWallet]);
 
   useEffect(() => {
     const fetchPendingItems = async () => {

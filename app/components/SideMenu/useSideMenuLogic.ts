@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { useIsAdmin } from '@/app/hooks/useIsAdmin'
 
 export function useSideMenuLogic() {
   const isLoggedIn = useIsLoggedIn()
   const { primaryWallet } = useDynamicContext()
   const [activeItem, setActiveItem] = useState('dashboard')
   const [canAccessCollection, setCanAccessCollection] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
+  const { isAdmin, isLoading } = useIsAdmin()
   const [showShopifySubmenu, setShowShopifySubmenu] = useState(false)
   const [showBlockchainSubmenu, setShowBlockchainSubmenu] = useState<boolean>(false)
   const [showMarketplaceSubmenu, setShowMarketplaceSubmenu] = useState<boolean>(false)
@@ -38,22 +39,6 @@ export function useSideMenuLogic() {
 
           const result = await response.json()
           setCanAccessCollection(result.hasAccess === true)
-
-          // Vérifier si l'utilisateur est admin
-          const adminResponse = await fetch('/api/shopify/isAdmin', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              walletAddress: primaryWallet.address
-            }),
-          })
-          //console.log("useSideMenuLogic - isAdmin - adminResponse.ok : ", adminResponse.ok)
-          if (adminResponse.ok) {
-            const adminResult = await adminResponse.json()
-            setIsAdmin(adminResult.isAdmin)
-          }
 
         } catch (err) {
           console.error('Erreur lors de la vérification des accès:', err)
