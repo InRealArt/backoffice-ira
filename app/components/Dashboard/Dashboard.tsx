@@ -6,6 +6,8 @@ import styles from './Dashboard.module.scss';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import Button from '../Button/Button';
+import { DashboardCard } from './DashboardCard/DashboardCard'
+import { getPendingItemsCount } from '@/app/actions/prisma/prismaActions'
 
 export default function Dashboard() {
   const { user, primaryWallet } = useDynamicContext();
@@ -15,6 +17,8 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdminNavigating, setIsAdminNavigating] = useState(false);
   const router = useRouter();
+  const [pendingItemsCount, setPendingItemsCount] = useState(0)
+  const [isLoadingCount, setIsLoadingCount] = useState(true)
 
   const truncateAddress = (address: string | undefined) => {
     if (!address) return 'Non défini';
@@ -77,6 +81,22 @@ export default function Dashboard() {
     checkShopifyStatus();
   }, [user, primaryWallet]);
 
+  useEffect(() => {
+    const fetchPendingItems = async () => {
+      if (isAdmin) {
+        try {
+          const { count } = await getPendingItemsCount()
+          setPendingItemsCount(count)
+        } catch (error) {
+          console.error('Erreur lors de la récupération du nombre d\'items:', error)
+        } finally {
+          setIsLoadingCount(false)
+        }
+      }
+    }
+
+    fetchPendingItems()
+  }, [isAdmin])
 
   const handleAdminShowUsers = () => {
     setIsAdminNavigating(true);
@@ -90,37 +110,50 @@ export default function Dashboard() {
       <h2 className={styles.dashboardTitle}>Tableau de bord</h2>
       
       <div className={styles.dashboardContent}>
-        <div className={styles.dashboardCard}>
-          <h3>Informations utilisateur</h3>
+        <DashboardCard title="Informations utilisateur">
           <p><strong>Email:</strong> {user?.email || 'Non défini'}</p>
           <p><strong>Adresse wallet:</strong> <span className={styles.smallText}>{truncateAddress(primaryWallet?.address)}</span></p>
           <p><strong>Statut Shopify:</strong> {shopifyGranted ? 'Connecté' : 'Non connecté'}</p>
-        </div>
+        </DashboardCard>
 
         {isAdmin ? (
-          <div className={styles.dashboardCard}>
-            <h3>Panneau d'Administration</h3>
-            <p>Voir les utilisateurs et leurs informations.</p>
-            <Button
-              onClick={handleAdminShowUsers}
-              isLoading={isAdminNavigating}
-              loadingText="Chargement..."
-            >
-              Voir les utilisateurs
-            </Button>
-          </div>
+          <>
+            <DashboardCard title="Panneau d'Administration">
+              <p>Voir les utilisateurs et leurs informations.</p>
+              <Button
+                onClick={handleAdminShowUsers}
+                isLoading={isAdminNavigating}
+                loadingText="Chargement..."
+              >
+                Voir les utilisateurs
+              </Button>
+            </DashboardCard>
+
+            <DashboardCard title="Items en attente">
+              {isLoadingCount ? (
+                <p>Chargement du nombre d'items...</p>
+              ) : (
+                <>
+                  <p>Nombre d'items en attente de validation : <strong>{pendingItemsCount}</strong></p>
+                  <Button 
+                    onClick={() => router.push('/marketplace/productsListing')}
+                  >
+                    Voir les items en attente
+                  </Button>
+                </>
+              )}
+            </DashboardCard>
+          </>
         ) : (
           <>
-            <div className={styles.dashboardCard}>
-              <h3>Ma Collection</h3>
+            <DashboardCard title="Ma Collection">
               <p>Explorez et gérez votre collection d'œuvres d'art.</p>
               <Button onClick={() => router.push('/shopify/collection')}>
                 Voir ma collection d'œuvres d'art
               </Button>
-            </div>
+            </DashboardCard>
             
-            <div className={styles.dashboardCard}>
-              <h3>Création d'œuvre</h3>
+            <DashboardCard title="Création d'œuvre">
               <p>Créez et publiez une nouvelle œuvre d'art dans Shopify.</p>
               <button 
                 className={styles.dashboardButton} 
@@ -128,7 +161,7 @@ export default function Dashboard() {
               >
                 Créer une œuvre dans Shopify
               </button>
-            </div>
+            </DashboardCard>
           </>
         )}
       </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './ProductListingClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { ItemStatus } from '@prisma/client'
+import { ItemStatus, ResourceNftStatuses } from '@prisma/client'
 
 interface Item {
   id: number

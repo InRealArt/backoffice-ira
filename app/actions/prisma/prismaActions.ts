@@ -3,7 +3,7 @@
 import { memberSchema } from "@/app/(admin)/shopify/create-member/schema";
 import { MemberFormData } from "@/app/(admin)/shopify/create-member/schema";
 import { prisma } from "@/lib/prisma"
-import { NotificationStatus, BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus } from "@prisma/client"
+import { NotificationStatus, BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache";
 import { PrismaClient } from '@prisma/client'
 const prismaClient = new PrismaClient()
@@ -695,3 +695,18 @@ export async function getNftResourceByItemId(itemId: number) {
     return null
   }
 }
+
+
+export async function getPendingItemsCount() {
+  try {
+      const count = await prisma.item.count({
+          where: {
+              status: ItemStatus.pending
+          }
+      })
+      return { count }
+  } catch (error) {
+      console.error('Erreur lors du comptage des items en attente:', error)
+      return { count: 0 }
+  }
+} 
