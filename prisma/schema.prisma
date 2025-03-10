@@ -35,11 +35,11 @@ model Collection {
   factoryId       Int?
   transactionHash String?
   status          CollectionStatus @default(pending)
+  smartContractId Int?
   artist          Artist           @relation(fields: [artistId], references: [id])
-  factory         Factory?         @relation(fields: [factoryId], references: [id])
   nfts            ResourceNft[]
   nftResource     NftResource[]
-
+smartContract   SmartContract?   @relation(fields: [smartContractId], references: [id])
   @@schema("public")
 }
 
@@ -593,15 +593,6 @@ enum Chain {
   @@schema("public")
 }
 
-model Factory {
-  id              Int          @id @default(autoincrement())
-  contractAddress String
-  chain           Chain
-  collections     Collection[]
-
-  @@schema("public")
-}
-
 enum CollectionStatus {
   pending
   confirmed
@@ -641,5 +632,28 @@ model AuthCertificate {
   item   Item  @relation(fields: [idItem], references: [id])
 
   @@index([idItem])
+  @@schema("public")
+}
+
+model SmartContract {
+  id                 Int         @id @default(autoincrement())
+  factoryAddress     String
+  royaltiesAddress   String
+  marketplaceAddress String
+  active             Boolean
+  network            NetworkType
+  collections        Collection[]
+  @@schema("public")
+}
+
+enum NetworkType {
+  mainnet
+  sepolia
+  polygon
+  polygonAmoy
+  arbitrum
+  base
+  sepoliaBase
+
   @@schema("public")
 }

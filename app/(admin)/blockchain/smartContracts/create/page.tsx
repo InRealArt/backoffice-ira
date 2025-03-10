@@ -1,4 +1,4 @@
-import CreateFactoryForm from "./CreateFactoryForm"
+import CreateFactoryForm from "./CreateSmartContractsForm"
 
 
 export const metadata = {

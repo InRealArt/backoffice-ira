@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-hot-toast'
 import styles from './CreateCollectionForm.module.scss'
-import { Artist, Factory } from '@prisma/client'
+import { Artist, SmartContract } from '@prisma/client'
 import { createCollection } from '@/lib/actions/collection-actions'
 import { useAccount } from 'wagmi'
 import { factoryABI } from '@/lib/contracts/factoryABI'
@@ -43,15 +43,14 @@ type FormValues = z.infer<typeof formSchema>
 
 interface CreateCollectionFormProps {
   artists: Artist[]
-  factories: Factory[]
+  smartContracts: SmartContract[]
 }
 
-export default function CreateCollectionForm({ artists, factories }: CreateCollectionFormProps) {
+export default function CreateCollectionForm({ artists, smartContracts }: CreateCollectionFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
-  const [selectedFactory, setSelectedFactory] = useState<Factory | null>(null)
-  
+  const [selectedSmartContract, setSelectedSmartContract] = useState<SmartContract | null>(null)
   // Wagmi hooks - mise à jour selon la documentation
   const { address, status, chain } = useAccount()
   const isConnected = status === 'connected'
@@ -91,12 +90,12 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
     }
     
     if (factoryId) {
-      const factory = factories.find(f => f.id.toString() === factoryId)
-      if (factory) {
-        setSelectedFactory(factory)
+      const smartContract = smartContracts.find(f => f.id.toString() === factoryId)
+      if (smartContract) {
+        setSelectedSmartContract(smartContract)
       }
     }
-  }, [artistId, factoryId, artists, factories, setValue])
+  }, [artistId, factoryId, artists, smartContracts, setValue])
   
   // Récupérer le walletClient pour les transactions
   const { data: walletClient } = useWalletClient()
@@ -137,8 +136,8 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
   // Vérifie le rôle lorsque la factory ou l'adresse de l'utilisateur change
   useEffect(() => {
     const verifyRole = async () => {
-      if (selectedFactory && address && chain && getChainId(selectedFactory.chain) === chain.id) {
-        const result = await checkDeployerRole(selectedFactory.contractAddress, address)
+      if (selectedSmartContract && address && chain && getChainId(selectedSmartContract.network) === chain.id) {
+        const result = await checkDeployerRole(selectedSmartContract.factoryAddress, address)
         setHasDeployerRole(result)
       } else {
         setHasDeployerRole(false)
@@ -146,7 +145,7 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
     }
     
     verifyRole()
-  }, [selectedFactory, address, chain])
+  }, [selectedSmartContract, address, chain])
   
   // Mettre à jour l'adresse du wallet artiste quand l'artiste est sélectionné
   const handleArtistChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -167,24 +166,24 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
   const handleFactoryChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = e.target.value
     if (selectedId) {
-      const factory = factories.find(f => f.id.toString() === selectedId)
-      if (factory) {
-        setSelectedFactory(factory)
+      const smartContract = smartContracts.find(f => f.id.toString() === selectedId)
+      if (smartContract) {
+        setSelectedSmartContract(smartContract)
         
         // Vérifier si nous devons changer de réseau
-        if (factory.chain && getChainId(factory.chain) !== chainId) {
+        if (smartContract.network && getChainId(smartContract.network) !== chainId) {
           try {
-            console.log('factory.chain', factory.chain)
-            const targetChainId = getChainId(factory.chain)
-            toast.success(`Changement vers le réseau ${formatChainName(factory.chain)}...`)
+            console.log('smartContract.network', smartContract.network)
+            const targetChainId = getChainId(smartContract.network)
+            toast.success(`Changement vers le réseau ${formatChainName(smartContract.network)}...`)
             
             // Utiliser switchChain au lieu de switchNetwork
-            const targetChain = getChainByName(factory.chain)
+            const targetChain = getChainByName(smartContract.network)
             // await switchChain(config, { chainId: targetChainId })
             
             // Vérifier le rôle après le changement de réseau, mais seulement s'il y a une adresse
             if (address) {
-              const hasRole = await checkDeployerRole(factory.contractAddress, address)
+              const hasRole = await checkDeployerRole(smartContract.factoryAddress, address)
               setHasDeployerRole(hasRole)
             }
           } catch (error) {
@@ -192,12 +191,12 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
           }
         } else if (address) {
           // Si nous sommes déjà sur le bon réseau, vérifier le rôle immédiatement
-          const hasRole = await checkDeployerRole(factory.contractAddress, address)
+          const hasRole = await checkDeployerRole(smartContract.factoryAddress, address)
           setHasDeployerRole(hasRole)
         }
       }
     } else {
-      setSelectedFactory(null)
+      setSelectedSmartContract(null)
       setHasDeployerRole(false)
     }
   }
@@ -260,13 +259,13 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
     }
     
     // Vérifier si nous sommes sur le bon réseau
-    if (selectedFactory && chain && getChainId(selectedFactory.chain) !== chain.id) {
-      toast.error(`Veuillez passer sur le réseau ${formatChainName(selectedFactory.chain)}`)
+    if (selectedSmartContract && chain && getChainId(selectedSmartContract.network) !== chain.id) {
+      toast.error(`Veuillez passer sur le réseau ${formatChainName(selectedSmartContract.network)}`)
       setIsSubmitting(false)
       return
     }
     
-    if (!selectedFactory) {
+    if (!selectedSmartContract) {
       toast.error('Aucune factory sélectionnée')
       setIsSubmitting(false)
       return
@@ -277,7 +276,7 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
       
       // Simuler et exécuter la transaction comme avant
       const { request } = await publicClient.simulateContract({
-        address: selectedFactory.contractAddress as Address,
+        address: selectedSmartContract.factoryAddress as Address,
         abi: factoryABI,
         functionName: 'createArtist',
         args: [
@@ -476,18 +475,18 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
                 className={`${styles.formSelect} ${errors.factoryId ? styles.formInputError : ''}`}
               >
                 <option value="">Sélectionner une factory</option>
-                {factories.map(factory => (
-                  <option key={factory.id} value={factory.id}>
-                    {formatChainName(factory.chain)} - {truncateAddress(factory.contractAddress)}
+                {smartContracts.map(smartContract => (
+                  <option key={smartContract.id} value={smartContract.id}>
+                    {formatChainName(smartContract.network)} - {truncateAddress(smartContract.factoryAddress)}
                   </option>
                 ))}
               </select>
               {errors.factoryId && (
                 <p className={styles.formError}>{errors.factoryId.message}</p>
               )}
-              {selectedFactory && chain && getChainId(selectedFactory.chain) !== chain.id && (
+              {selectedSmartContract && chain && getChainId(selectedSmartContract.network) !== chain.id && (
                 <p className={styles.networkWarning}>
-                  ⚠️ Vous devez être sur le réseau {formatChainName(selectedFactory.chain)}
+                  ⚠️ Vous devez être sur le réseau {formatChainName(selectedSmartContract.network)}
                 </p>
               )}
             </div>
@@ -536,7 +535,7 @@ export default function CreateCollectionForm({ artists, factories }: CreateColle
               ? 'Transaction en cours...' 
               : isCheckingRole 
                 ? 'Vérification des permissions...'
-                : !hasDeployerRole && selectedFactory
+                : !hasDeployerRole && selectedSmartContract
                 ? 'Permission insuffisante'
                 : 'Créer la collection'
             }
