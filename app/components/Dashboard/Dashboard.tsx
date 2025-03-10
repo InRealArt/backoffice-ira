@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import Button from '../Button/Button';
 import { DashboardCard } from './DashboardCard/DashboardCard'
-import { getPendingItemsCount } from '@/app/actions/prisma/prismaActions'
+import { getPendingItemsCount, getUserMintedItemsCount, getUserListedItemsCount } from '@/app/actions/prisma/prismaActions'
 import { useIsAdmin } from '@/app/hooks/useIsAdmin';
 
 export default function Dashboard() {
@@ -17,7 +17,10 @@ export default function Dashboard() {
   const [isAdminNavigating, setIsAdminNavigating] = useState(false);
   const router = useRouter();
   const [pendingItemsCount, setPendingItemsCount] = useState(0)
+  const [mintedItemsCount, setMintedItemsCount] = useState(0)
+  const [listedItemsCount, setListedItemsCount] = useState(0)
   const [isLoadingCount, setIsLoadingCount] = useState(true)
+  const [isLoadingUserCounts, setIsLoadingUserCounts] = useState(true)
   const { isAdmin, isLoading } = useIsAdmin()
 
   const truncateAddress = (address: string | undefined) => {
@@ -44,6 +47,27 @@ export default function Dashboard() {
     fetchPendingItems()
   }, [isAdmin])
 
+  useEffect(() => {
+    const fetchUserItemsStats = async () => {
+      if (!isAdmin && user?.userId) {
+        try {
+          const userId = parseInt(user.userId);
+          const mintedResult = await getUserMintedItemsCount(userId);
+          const listedResult = await getUserListedItemsCount(userId);
+          
+          setMintedItemsCount(mintedResult.count);
+          setListedItemsCount(listedResult.count);
+        } catch (error) {
+          console.error('Erreur lors de la récupération des statistiques d\'items:', error)
+        } finally {
+          setIsLoadingUserCounts(false)
+        }
+      }
+    }
+
+    fetchUserItemsStats()
+  }, [isAdmin, user])
+
   const handleAdminShowUsers = () => {
     setIsAdminNavigating(true);
     router.push('/admin/shopify/users');
@@ -59,7 +83,6 @@ export default function Dashboard() {
         <DashboardCard title="Informations utilisateur">
           <p><strong>Email:</strong> {user?.email || 'Non défini'}</p>
           <p><strong>Adresse wallet:</strong> <span className={styles.smallText}>{truncateAddress(primaryWallet?.address)}</span></p>
-          <p><strong>Statut Shopify:</strong> {shopifyGranted ? 'Connecté' : 'Non connecté'}</p>
         </DashboardCard>
 
         {isAdmin ? (
@@ -107,6 +130,22 @@ export default function Dashboard() {
               >
                 Créer une œuvre dans Shopify
               </button>
+            </DashboardCard>
+
+            <DashboardCard title="Statut de mes œuvres">
+              {isLoadingUserCounts ? (
+                <p>Chargement des statistiques...</p>
+              ) : (
+                <>
+                  <p>Œuvres mintées : <strong>{mintedItemsCount}</strong></p>
+                  <p>Œuvres en vente : <strong>{listedItemsCount}</strong></p>
+                  <Button 
+                    onClick={() => router.push('/shopify/collection')}
+                  >
+                    Voir le détail
+                  </Button>
+                </>
+              )}
             </DashboardCard>
           </>
         )}

@@ -803,3 +803,33 @@ export async function getActiveCollections() {
     throw error;
   }
 }
+
+export async function getUserMintedItemsCount(userId: number) {
+  try {
+    const count = await prisma.item.count({
+      where: {
+        idUser: userId,
+        status: ItemStatus.minted
+      }
+    })
+    return { count }
+  } catch (error) {
+    console.error('Erreur lors du comptage des items mintés:', error)
+    return { count: 0 }
+  }
+}
+
+export async function getUserListedItemsCount(userId: number) {
+  try {
+    const count = await prisma.item.count({
+      where: {
+        idUser: userId,
+        status: ItemStatus.listed
+      }
+    })
+    return { count }
+  } catch (error) {
+    console.error('Erreur lors du comptage des items en vente:', error)
+    return { count: 0 }
+  }
+}
