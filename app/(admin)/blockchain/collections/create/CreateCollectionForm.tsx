@@ -53,7 +53,6 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
   const [selectedSmartContract, setSelectedSmartContract] = useState<SmartContract | null>(null)
   // Wagmi hooks - mise à jour selon la documentation
   const { address, status, chain } = useAccount()
-  const isConnected = status === 'connected'
   const config = useConfig()
   const chainId = useChainId()
   
@@ -136,16 +135,25 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
   // Vérifie le rôle lorsque la factory ou l'adresse de l'utilisateur change
   useEffect(() => {
     const verifyRole = async () => {
+      console.log('Vérification du rôle avec:', { 
+        selectedSmartContract, 
+        address, 
+        chainId: chain?.id, 
+        contractNetwork: selectedSmartContract?.network 
+      })
+      
       if (selectedSmartContract && address && chain && getChainId(selectedSmartContract.network) === chain.id) {
         const result = await checkDeployerRole(selectedSmartContract.factoryAddress, address)
+        console.log('Résultat vérification rôle:', result)
         setHasDeployerRole(result)
       } else {
+        console.log('Conditions non remplies pour vérifier le rôle')
         setHasDeployerRole(false)
       }
     }
     
     verifyRole()
-  }, [selectedSmartContract, address, chain])
+  }, [selectedSmartContract, address, chain?.id])
   
   // Mettre à jour l'adresse du wallet artiste quand l'artiste est sélectionné
   const handleArtistChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -377,6 +385,12 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
       setIsSubmitting(false)
     }
   }
+  
+  // Ajoutez un log pour déboguer
+  useEffect(() => {
+    console.log('Address changée:', address)
+    console.log('Chain changée:', chain)
+  }, [address, chain])
   
   return (
 <div className={styles.container}>
