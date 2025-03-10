@@ -2,26 +2,26 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Collection, Artist, Factory } from '@prisma/client'
+import { Collection, Artist, SmartContract } from '@prisma/client'
 import styles from './CollectionsClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 
 interface CollectionWithRelations extends Collection {
   artist: Artist
-  factory: Factory | null
+  smartContract: SmartContract | null
 }
 
 interface CollectionsClientProps {
   collections: CollectionWithRelations[]
-  factories: Factory[]
+  smartContracts: SmartContract[]
 }
 
-export default function CollectionsClient({ collections, factories }: CollectionsClientProps) {
+export default function CollectionsClient({ collections, smartContracts }: CollectionsClientProps) {
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const [loadingCollectionId, setLoadingCollectionId] = useState<number | null>(null)
-  const [selectedFactoryId, setSelectedFactoryId] = useState<number | null>(null)
+  const [selectedSmartContractId, setSelectedSmartContractId] = useState<number | null>(null)
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -56,8 +56,8 @@ export default function CollectionsClient({ collections, factories }: Collection
   }
   
   // Filtrer les collections en fonction de la factory sélectionnée
-  const filteredCollections = selectedFactoryId
-    ? collections.filter(collection => collection.factoryId === selectedFactoryId)
+  const filteredCollections = selectedSmartContractId
+    ? collections.filter(collection => collection.smartContractId === selectedSmartContractId)
     : collections
       
   return (
@@ -79,20 +79,20 @@ export default function CollectionsClient({ collections, factories }: Collection
       
       <div className={styles.filterSection}>
         <div className={styles.filterItem}>
-          <label htmlFor="factoryFilter" className={styles.filterLabel}>
-            Filtrer par factory:
+          <label htmlFor="smartContractFilter" className={styles.filterLabel}>
+            Filtrer par smart contract:
           </label>
           <div className={styles.selectWrapper}>
             <select
-              id="factoryFilter"
+              id="smartContractFilter"
               className={styles.filterSelect}
-              value={selectedFactoryId || ''}
-              onChange={(e) => setSelectedFactoryId(e.target.value ? parseInt(e.target.value) : null)}
+              value={selectedSmartContractId || ''}
+              onChange={(e) => setSelectedSmartContractId(e.target.value ? parseInt(e.target.value) : null)}
             >
-              <option value="">Toutes les factories</option>
-              {factories.map(factory => (
-                <option key={factory.id} value={factory.id}>
-                  {formatChainName(factory.chain)} - {truncateAddress(factory.contractAddress)}
+              <option value="">Toutes les smart contracts</option>
+              {smartContracts.map(smartContract => (
+                <option key={smartContract.id} value={smartContract.id}>
+                  {formatChainName(smartContract.network)} - (Factory address) {truncateAddress(smartContract.factoryAddress)}
                 </option>
               ))}
             </select>
@@ -136,9 +136,9 @@ export default function CollectionsClient({ collections, factories }: Collection
                       </td>
                       <td>{collection.artist.pseudo}</td>
                       <td className={styles.hiddenMobile}>
-                        {collection.factory ? (
+                        {collection.smartContract ? (
                           <div className={styles.factoryBadge}>
-                            {formatChainName(collection.factory.chain)}
+                            {formatChainName(collection.smartContract.network)}
                           </div>
                         ) : (
                           <span className={styles.noFactory}>Non défini</span>

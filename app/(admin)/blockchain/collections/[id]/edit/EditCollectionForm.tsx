@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-hot-toast'
 import styles from './EditCollectionForm.module.scss'
-import { Artist, Factory, Collection, CollectionStatus } from '@prisma/client'
+import { Artist, Collection, CollectionStatus, SmartContract } from '@prisma/client'
 import { updateCollection, syncCollection } from '@/lib/actions/collection-actions'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import { RefreshCw } from 'lucide-react'
@@ -18,7 +18,7 @@ const formSchema = z.object({
   symbol: z.string(),
   addressAdmin: z.string(),
   artistId: z.string(),
-  factoryId: z.string(),
+  smartContractId: z.string(),
   contractAddress: z.string()
     .regex(/^(pending|0x[a-fA-F0-9]{40})$/, 'Adresse de contrat invalide'),
   status: z.enum(['pending', 'confirmed', 'failed'])
@@ -28,16 +28,16 @@ type FormValues = z.infer<typeof formSchema>
 
 interface CollectionWithRelations extends Collection {
   artist: Artist
-  factory: Factory | null
+  smartContract: SmartContract | null
 }
 
 interface EditCollectionFormProps {
   collection: CollectionWithRelations
   artists: Artist[]
-  factories: Factory[]
+  smartContracts: SmartContract[]
 }
 
-export default function EditCollectionForm({ collection, artists, factories }: EditCollectionFormProps) {
+export default function EditCollectionForm({ collection, artists, smartContracts }: EditCollectionFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
@@ -54,7 +54,7 @@ export default function EditCollectionForm({ collection, artists, factories }: E
       symbol: collection.symbol,
       addressAdmin: collection.addressAdmin,
       artistId: collection.artistId.toString(),
-      factoryId: collection.factoryId?.toString() || '',
+      smartContractId: collection.smartContractId?.toString() || '',
       contractAddress: collection.contractAddress || '',
       status: collection.status as CollectionStatus
     }
@@ -136,7 +136,7 @@ export default function EditCollectionForm({ collection, artists, factories }: E
 
   // Obtenir l'artiste et la factory actuels pour l'affichage
   const currentArtist = artists.find(a => a.id === collection.artistId)
-  const currentFactory = factories.find(f => f.id === collection.factoryId)
+  const currentSmartContract = smartContracts.find(f => f.id === collection.smartContractId)
 
   return (
     <div className={styles.formContainer}>
@@ -172,11 +172,11 @@ export default function EditCollectionForm({ collection, artists, factories }: E
         <div className={styles.formGroup}>
           <label className={styles.label}>Factory</label>
           <div className={styles.readOnlyField}>
-            {currentFactory ? 
-              `${formatChainName(currentFactory.chain)} - ${truncateAddress(currentFactory.contractAddress)}` : 
+            {currentSmartContract ? 
+              `${formatChainName(currentSmartContract.network)} - (Factory address) ${truncateAddress(currentSmartContract.factoryAddress)}` : 
               'Non spécifiée'}
           </div>
-          <input type="hidden" {...register('factoryId')} />
+          <input type="hidden" {...register('smartContractId')} />
         </div>
         
         {/* Adresse Admin (lecture seule) */}

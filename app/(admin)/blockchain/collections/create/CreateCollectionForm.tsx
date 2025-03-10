@@ -36,7 +36,7 @@ const formSchema = z.object({
     .min(1, 'Le wallet de l\'artiste est requis')
     .regex(ethereumAddressRegex, 'Adresse Ethereum invalide'),
   artistId: z.string().min(1, 'Veuillez sélectionner un artiste'),
-  factoryId: z.string().min(1, 'Veuillez sélectionner une factory'),
+  smartContractId: z.string().min(1, 'Veuillez sélectionner des smarts contracts'),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -71,13 +71,13 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
       addressAdmin: '',
       artistPublicKey: '',
       artistId: '',
-      factoryId: '',
+      smartContractId: '',
     }
   })
   
   // Surveiller les changements d'artiste et de factory
   const artistId = watch('artistId')
-  const factoryId = watch('factoryId')
+  const smartContractId = watch('smartContractId')
   
   // Mettre à jour les sélections quand les valeurs changent
   useEffect(() => {
@@ -89,13 +89,13 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
       }
     }
     
-    if (factoryId) {
-      const smartContract = smartContracts.find(f => f.id.toString() === factoryId)
+    if (smartContractId) {
+      const smartContract = smartContracts.find(f => f.id.toString() === smartContractId)
       if (smartContract) {
         setSelectedSmartContract(smartContract)
       }
     }
-  }, [artistId, factoryId, artists, smartContracts, setValue])
+  }, [artistId, smartContractId, artists, smartContracts, setValue])
   
   // Récupérer le walletClient pour les transactions
   const { data: walletClient } = useWalletClient()
@@ -214,7 +214,7 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
     symbol: string
     addressAdmin: string
     artistId: number
-    factoryId: number
+    smartContractId: number
     contractAddress: string | 'pending'
     transactionHash?: string
     status?: 'pending' | 'confirmed' | 'failed'
@@ -340,7 +340,7 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
             symbol: data.symbol,
             addressAdmin: data.addressAdmin,
             artistId: parseInt(data.artistId),
-            factoryId: parseInt(data.factoryId),
+            smartContractId: parseInt(data.smartContractId),
             contractAddress: collectionAddress,
           })
           
@@ -358,7 +358,7 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
           symbol: data.symbol,
           addressAdmin: data.addressAdmin,
           artistId: parseInt(data.artistId),
-          factoryId: parseInt(data.factoryId),
+          smartContractId: parseInt(data.smartContractId),
           contractAddress: 'pending',
           transactionHash: hash as string,
           status: 'pending'
@@ -465,24 +465,24 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
             </div>
             
             <div className={styles.formGroup}>
-              <label htmlFor="factoryId" className={styles.formLabel}>
-                Factory
+              <label htmlFor="smartContractId" className={styles.formLabel}>
+                Smart contract
               </label>
               <select
-                id="factoryId"
-                {...register('factoryId')}
+                id="smartContractId"
+                {...register('smartContractId')}
                 onChange={handleFactoryChange}
-                className={`${styles.formSelect} ${errors.factoryId ? styles.formInputError : ''}`}
+                className={`${styles.formSelect} ${errors.smartContractId ? styles.formInputError : ''}`}
               >
-                <option value="">Sélectionner une factory</option>
+                <option value="">Sélectionner des smart contracts</option>
                 {smartContracts.map(smartContract => (
                   <option key={smartContract.id} value={smartContract.id}>
-                    {formatChainName(smartContract.network)} - {truncateAddress(smartContract.factoryAddress)}
+                    {formatChainName(smartContract.network)} - (Factory address) {truncateAddress(smartContract.factoryAddress)}
                   </option>
                 ))}
               </select>
-              {errors.factoryId && (
-                <p className={styles.formError}>{errors.factoryId.message}</p>
+              {errors.smartContractId && (
+                <p className={styles.formError}>{errors.smartContractId.message}</p>
               )}
               {selectedSmartContract && chain && getChainId(selectedSmartContract.network) !== chain.id && (
                 <p className={styles.networkWarning}>

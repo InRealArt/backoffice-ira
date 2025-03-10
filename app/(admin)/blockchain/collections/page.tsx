@@ -15,11 +15,11 @@ export default async function CollectionsPage() {
     },
     include: {
       artist: true,
-      factory: true,
+      smartContract: true,
     },
   })
 
-  const factories = await prisma.factory.findMany({
+  const smartContracts = await prisma.smartContract.findMany({
     orderBy: {
       id: 'asc',
     },
@@ -29,7 +29,7 @@ export default async function CollectionsPage() {
     <div>
       
       {/* Liste des collections */}
-      <CollectionsClient collections={collections} factories={factories} />
+      <CollectionsClient collections={collections} smartContracts={smartContracts} />
     </div>
   )
 } 

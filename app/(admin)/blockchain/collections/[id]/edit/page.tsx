@@ -27,7 +27,7 @@ export default async function EditCollectionPage({ params }: EditCollectionPageP
     where: { id: collectionId },
     include: {
       artist: true,
-      factory: true,
+      smartContract: true,
     },
   })
   
@@ -40,7 +40,7 @@ export default async function EditCollectionPage({ params }: EditCollectionPageP
     orderBy: { pseudo: 'asc' }
   })
   
-  const factories = await prisma.factory.findMany({
+  const smartContracts = await prisma.smartContract.findMany({
     orderBy: { id: 'asc' }
   })
 
@@ -50,7 +50,7 @@ export default async function EditCollectionPage({ params }: EditCollectionPageP
       <EditCollectionForm 
         collection={collection} 
         artists={artists} 
-        factories={factories} 
+        smartContracts={smartContracts} 
       />
     </div>
   )

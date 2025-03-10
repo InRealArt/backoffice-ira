@@ -12,14 +12,14 @@ export default async function CreateCollectionPage() {
     orderBy: { pseudo: 'asc' }
   })
   
-  const factories = await prisma.factory.findMany({
+  const smartContracts = await prisma.smartContract.findMany({
     orderBy: { id: 'asc' }
   })
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Créer une collection de NFT</h1>
-      <CreateCollectionForm artists={artists} factories={factories} />
+      <CreateCollectionForm artists={artists} smartContracts={smartContracts} />
     </div>
   )
 } 

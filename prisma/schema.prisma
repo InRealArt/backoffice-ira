@@ -32,14 +32,13 @@ model Collection {
   addressAdmin    String
   artistId        Int
   contractAddress String?
-  factoryId       Int?
   transactionHash String?
   status          CollectionStatus @default(pending)
   smartContractId Int?
   artist          Artist           @relation(fields: [artistId], references: [id])
   nfts            ResourceNft[]
   nftResource     NftResource[]
-smartContract   SmartContract?   @relation(fields: [smartContractId], references: [id])
+  smartContract   SmartContract?   @relation(fields: [smartContractId], references: [id])
   @@schema("public")
 }
 

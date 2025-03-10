@@ -18,7 +18,7 @@ const collectionSchema = z.object({
         .min(1, 'L\'adresse admin est requise')
         .regex(/^0x[a-fA-F0-9]{40}$/, 'Adresse Ethereum invalide'),
     artistId: z.number().int().positive('ID artiste invalide'),
-    factoryId: z.number().int().positive('ID factory invalide'),
+    smartContractId: z.number().int().positive('ID smart contract invalide'),
     contractAddress: z.string()
         .min(1, 'L\'adresse du contrat est requise')
         .regex(/^0x[a-fA-F0-9]{40}$/, 'Adresse Ethereum invalide'),
@@ -31,7 +31,7 @@ export async function createCollection(data: {
     symbol: string
     addressAdmin: string
     artistId: number
-    factoryId: number
+    smartContractId: number
     contractAddress: string | 'pending'
     transactionHash?: string
     status?: 'pending' | 'confirmed' | 'failed'
@@ -43,7 +43,7 @@ export async function createCollection(data: {
                 symbol: data.symbol,
                 addressAdmin: data.addressAdmin,
                 artistId: data.artistId,
-                factoryId: data.factoryId,
+                smartContractId: data.smartContractId,
                 contractAddress: data.contractAddress,
                 transactionHash: data.transactionHash,
                 status: data.status || 'pending'
