@@ -170,4 +170,14 @@
   @media (max-width: 767px) {
     display: none;
   }
+}
+
+.uploadBadge {
+  background-color: #f97316; // Orange
+  color: white;
+}
+
+.minedBadge {
+  background-color: #fbbf24; // Jaune
+  color: #1f2937; // Texte foncé pour meilleure lisibilité sur fond jaune
 } 

@@ -19,6 +19,7 @@ interface Item {
   }
   nftResource?: {
     name: string
+    status: ResourceNftStatuses
   } | null
 }
 
@@ -78,6 +79,31 @@ export default function ProductListingClient({ products = [] }: ProductListingCl
     }
   }
   
+  // Fonction pour obtenir le badge en fonction du statut de la ressource NFT
+  const getNftResourceStatusBadge = (nftResource: { status: ResourceNftStatuses } | null) => {
+    if (!nftResource) return null
+
+    const status = nftResource.status
+    
+    // Orange pour UPLOADIPFS, UPLOADCERTIFICATE, et UPLOADMETADATA
+    if (['UPLOADIPFS', 'UPLOADCERTIFICATE', 'UPLOADMETADATA'].includes(status)) {
+      return <span className={`${styles.statusBadge} ${styles.uploadBadge}`}>{status}</span>
+    }
+    
+    // Jaune pour MINED
+    if (status === 'MINED') {
+      return <span className={`${styles.statusBadge} ${styles.minedBadge}`}>{status}</span>
+    }
+    
+    // Vert pour LISTED
+    if (status === 'LISTED') {
+      return <span className={`${styles.statusBadge} ${styles.listedBadge}`}>{status}</span>
+    }
+    
+    // Défaut pour les autres statuts
+    return <span className={`${styles.statusBadge} ${styles.defaultBadge}`}>{status}</span>
+  }
+  
   return (
     <div className={styles.productsContainer}>
       <div className={styles.productsHeader}>
@@ -121,6 +147,7 @@ export default function ProductListingClient({ products = [] }: ProductListingCl
                   <th className={styles.hiddenMobile}>Utilisateur</th>
                   <th>Statut</th>
                   <th className={styles.hiddenMobile}>NFT associé</th>
+                  <th className={styles.hiddenMobile}>Statut NFT</th>
                 </tr>
               </thead>
               <tbody>
@@ -158,6 +185,12 @@ export default function ProductListingClient({ products = [] }: ProductListingCl
                           : product.idNftResource 
                             ? `ID: ${product.idNftResource}` 
                             : 'Non associé'
+                        }
+                      </td>
+                      <td className={styles.hiddenMobile}>
+                        {product.nftResource 
+                          ? getNftResourceStatusBadge(product.nftResource) 
+                          : 'N/A'
                         }
                       </td>
                     </tr>
