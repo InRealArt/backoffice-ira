@@ -92,7 +92,7 @@ export default function EditSmartContractForm({ smartContract }: EditSmartContra
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="royaltiesAddress">Adresse Royalties</label>
+          <label htmlFor="royaltiesAddress">Adresse Royalties (Proxy)</label>
           <input
             type="text"
             id="royaltiesAddress"
@@ -105,7 +105,7 @@ export default function EditSmartContractForm({ smartContract }: EditSmartContra
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="marketplaceAddress">Adresse Marketplace</label>
+          <label htmlFor="marketplaceAddress">Adresse Marketplace (Proxy)</label>
           <input
             type="text"
             id="marketplaceAddress"

@@ -52,9 +52,9 @@ export default function BlockchainSubMenu({
         <div className={styles.blockchainSubmenuVertical}>
           <div className={styles.submenuItemVertical}>
             <SideMenuItem 
-              label="Artistes"
-              isActive={isActive && location.pathname.includes('/blockchain/artists')}
-              onClick={() => onNavigate('/blockchain/artists', 'adminBlockchain')}
+              label="Smart Contracts"
+              isActive={isActive && location.pathname.includes('/blockchain/smartContracts')}
+              onClick={() => onNavigate('/blockchain/smartContracts', 'adminBlockchain')}
             />
           </div>
           <div className={styles.submenuItemVertical}>
@@ -66,9 +66,9 @@ export default function BlockchainSubMenu({
           </div>
           <div className={styles.submenuItemVertical}>
             <SideMenuItem 
-              label="Smart Contracts"
-              isActive={isActive && location.pathname.includes('/blockchain/smartContracts')}
-              onClick={() => onNavigate('/blockchain/smartContracts', 'adminBlockchain')}
+              label="Artistes"
+              isActive={isActive && location.pathname.includes('/blockchain/artists')}
+              onClick={() => onNavigate('/blockchain/artists', 'adminBlockchain')}
             />
           </div>
         </div>

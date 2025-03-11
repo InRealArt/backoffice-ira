@@ -34,7 +34,6 @@ export async function createCollection(data: {
     smartContractId: number
     contractAddress: string | 'pending'
     transactionHash?: string
-    status?: 'pending' | 'confirmed' | 'failed'
 }): Promise<{ success: boolean; message?: string }> {
     try {
         const collection = await prisma.collection.create({
@@ -45,8 +44,7 @@ export async function createCollection(data: {
                 artistId: data.artistId,
                 smartContractId: data.smartContractId,
                 contractAddress: data.contractAddress,
-                transactionHash: data.transactionHash,
-                status: data.status || 'pending'
+                transactionHash: data.transactionHash
             }
         })
 

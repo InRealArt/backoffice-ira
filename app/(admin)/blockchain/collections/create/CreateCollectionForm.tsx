@@ -222,18 +222,16 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
     addressAdmin: string
     artistId: number
     smartContractId: number
-    contractAddress: string | 'pending'
+    contractAddress: string
     transactionHash?: string
-    status?: 'pending' | 'confirmed' | 'failed'
   }) => {
     try {
       const result = await createCollection({
-        ...data,
-        status: data.status || 'pending'
+        ...data
       })
       
       if (result.success) {
-        toast.success(data.status === 'pending' 
+        toast.success(data.contractAddress
           ? 'Collection soumise avec succès! Confirmation en attente...'
           : 'Collection créée avec succès!'
         )
@@ -366,9 +364,8 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
           addressAdmin: data.addressAdmin,
           artistId: parseInt(data.artistId),
           smartContractId: parseInt(data.smartContractId),
-          contractAddress: 'pending',
-          transactionHash: hash as string,
-          status: 'pending'
+          contractAddress: '',
+          transactionHash: hash as string
         })
         
         // Ne pas rediriger, juste informer l'utilisateur

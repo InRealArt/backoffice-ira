@@ -113,6 +113,7 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                   <th>Symbol</th>
                   <th>Artiste</th>
                   <th className={styles.hiddenMobile}>Factory</th>
+                  <th className={styles.hiddenMobile}>Réseau</th>
                   <th className={styles.hiddenMobile}>Adresse du contrat</th>
                   <th className={styles.hiddenMobile}>Admin</th>
                 </tr>
@@ -137,9 +138,20 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                       <td>{collection.artist.pseudo}</td>
                       <td className={styles.hiddenMobile}>
                         {collection.smartContract ? (
+                          <div className={styles.truncatedAddress}>
+                            {formatChainName(collection.smartContract.factoryAddress)}
+                          </div>
+                          
+                        ) : (
+                          <span className={styles.noFactory}>Non défini</span>
+                        )}
+                      </td>
+                      <td className={styles.hiddenMobile}>
+                        {collection.smartContract ? (
                           <div className={styles.factoryBadge}>
                             {formatChainName(collection.smartContract.network)}
                           </div>
+                          
                         ) : (
                           <span className={styles.noFactory}>Non défini</span>
                         )}
