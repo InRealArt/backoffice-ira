@@ -349,7 +349,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
   // Fonction pour gérer l'action selon le statut de l'item
   const handleItemAction = async () => {
     if (item?.status === 'pending') {
-      if (nftResource && nftResource.status === 'UPLOADIPFS') {
+      if (nftResource && nftResource.status === 'UPLOADMETADATA') {
         // Si les ressources sont déjà sur IPFS, passer à l'étape suivante (mint)
         console.log('Ressources déjà sur IPFS, prêt pour le mint')
         // Logique pour mint NFT
@@ -459,6 +459,32 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
     checkInitialMinterStatus()
   }, [primaryWallet?.address, nftResource]) // Changement des dépendances pour utiliser primaryWallet.address
 
+
+  // Composant pour afficher un champ d'URI IPFS avec lien de visualisation
+  function IpfsUriField({ label, uri, prefix = 'ipfs://' }: { label: string, uri: string, prefix?: string } ) {
+    return (
+      <div className={styles.formGroup}>
+        <label>{label}</label>
+        <div className={styles.ipfsLinkContainer}>
+          <input
+            type="text"
+            value={`${prefix}${uri}`}
+            readOnly
+            className={styles.formInput}
+          />
+          <a 
+            href={`https://gateway.pinata.cloud/ipfs/${uri}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className={styles.viewLink}
+          >
+            Voir
+          </a>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <Toaster position="top-center" />
@@ -560,66 +586,12 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                       />
                     </div>
                     
-                    <div className={styles.formGroup}>
-                      <label>Image URI (IPFS)</label>
-                      <div className={styles.ipfsLinkContainer}>
-                        <input
-                          type="text"
-                          value={`ipfs://${nftResource.imageUri}`}
-                          readOnly
-                          className={styles.formInput}
-                        />
-                        <a 
-                          href={`https://gateway.pinata.cloud/ipfs/${nftResource.imageUri}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className={styles.viewLink}
-                        >
-                          Voir
-                        </a>
-                      </div>
-                    </div>
+                    <IpfsUriField label="Image URI (IPFS)" uri={nftResource.imageUri} />
                     
-                    <div className={styles.formGroup}>
-                      <label>Certificat URI (IPFS)</label>
-                      <div className={styles.ipfsLinkContainer}>
-                        <input
-                          type="text"
-                          value={`ipfs://${nftResource.certificateUri}`}
-                          readOnly
-                          className={styles.formInput}
-                        />
-                        <a 
-                          href={`https://gateway.pinata.cloud/ipfs/${nftResource.certificateUri}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className={styles.viewLink}
-                        >
-                          Voir
-                        </a>
-                      </div>
-                    </div>
+                    <IpfsUriField label="Certificat URI (IPFS)" uri={nftResource.certificateUri} />
                     
-                    <div className={styles.formGroup}>
-                      <label>Métadonnées URI (IPFS)</label>
-                      <div className={styles.ipfsLinkContainer}>
-                        <input
-                          type="text"
-                          value={`ipfs://${nftResource.tokenUri}`}
-                          readOnly
-                          className={styles.formInput}
-                        />
-                        <a 
-                          href={`https://gateway.pinata.cloud/ipfs/${nftResource.tokenUri}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className={styles.viewLink}
-                        >
-                          Voir
-                        </a>
-                      </div>
-                    </div>
-                    
+                    <IpfsUriField label="Métadonnées URI (IPFS)" uri={nftResource.tokenUri} />
+                                        
                     <div className={styles.actionButtons}>
                       <Button 
                         type="button" 
