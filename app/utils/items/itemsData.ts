@@ -59,7 +59,6 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
                 //console.log('ITEM', item.idShopify.toString())
                 // Récupérer les infos supplémentaires depuis Shopify
                 const shopifyProduct = await getShopifyProductById(item.id.toString())
-                console.log('SHOPIFY PRODUCT', shopifyProduct)
                 return {
                     id: item.id,
                     idShopify: item.idShopify,

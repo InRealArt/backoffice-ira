@@ -93,7 +93,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
           : params.id
         
         const result = await getShopifyProductById(productId as string)
-        console.log('Shopify Product:', result)
+        //console.log('Shopify Product:', result)
         if (isMounted) {
           if (result.success && result.product) {
             setProduct(result.product)

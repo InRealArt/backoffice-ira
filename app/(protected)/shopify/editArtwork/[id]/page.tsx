@@ -100,11 +100,15 @@ export default function EditArtworkPage({ params }: { params: { id: string } }) 
     setIsSubmitting(true)
     
     try {
-      const productId = params.id.includes('gid://shopify/Product/') 
-        ? params.id.split('/').pop() 
-        : params.id
+      if (!product || !product.id) {
+        throw new Error('ID du produit Shopify non disponible')
+      }
+      
+      const shopifyProductId = typeof product.id === 'string' 
+        ? product.id.replace('gid://shopify/Product/', '')
+        : product.id.toString()
         
-      const result = await updateShopifyProduct(productId as string, {
+      const result = await updateShopifyProduct(shopifyProductId, {
         title,
         description,
         price: parseFloat(price)
@@ -112,7 +116,6 @@ export default function EditArtworkPage({ params }: { params: { id: string } }) 
       
       if (result.success) {
         toast.success('Œuvre mise à jour avec succès')
-        // Rediriger après succès
         setTimeout(() => {
           router.push('/shopify/collection')
         }, 1500)
