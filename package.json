@@ -6,8 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
     "start": "next start",
+    "stop": "next stop",
     "lint": "next lint",
-    "clean": "rm -rf .next"
+    "cleanDev": "rm -rf .next && npm run dev"
   },
   "dependencies": {
     "@dynamic-labs/ethereum": "^4.7.2",

@@ -643,8 +643,7 @@ export async function getNftResourceByItemId(itemId: number) {
       return null
     }
 
-    // Récupérer la ressource NFT en utilisant l'idNftResource de l'item
-    // et inclure la collection associée via le champ collectionId
+    // Récupérer la ressource NFT avec toutes les informations de la collection
     const nftResource = await prisma.nftResource.findUnique({
       where: {
         id: item.idNftResource
@@ -653,7 +652,30 @@ export async function getNftResourceByItemId(itemId: number) {
         collection: {
           select: {
             id: true,
-            name: true
+            name: true,
+            symbol: true,
+            status: true,
+            contractAddress: true,
+            smartContractId: true,
+            artist: {
+              select: {
+                id: true,
+                name: true,
+                surname: true,
+                pseudo: true,
+                publicKey: true
+              }
+            },
+            smartContract: {
+              select: {
+                id: true,
+                factoryAddress: true,
+                royaltiesAddress: true,
+                marketplaceAddress: true,
+                network: true,
+                active: true
+              }
+            }
           }
         }
       }
@@ -811,17 +833,17 @@ export async function getUserListedItemsCount(userId: number) {
  */
 export async function checkNftResourceNameExists(name: string): Promise<boolean> {
   'use server'
-  
+
   try {
     const existingResource = await prisma.nftResource.findFirst({
       where: {
         name: {
           equals: name,
-          mode: 'insensitive' 
+          mode: 'insensitive'
         }
       }
     })
-    
+
     return !!existingResource
   } catch (error) {
     console.error('Erreur lors de la vérification du nom NFT:', error)

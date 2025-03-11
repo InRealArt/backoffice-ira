@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Usable } from 'react'
 import { useRouter } from 'next/navigation'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
@@ -24,7 +24,7 @@ type ParamsType = { id: string }
 
 export default function ViewProductPage({ params }: { params: ParamsType }) {
   const router = useRouter()
-  const { user } = useDynamicContext()
+  const { user, primaryWallet } = useDynamicContext()
   const { address, status, chain } = useAccount()
   const isConnected = status === 'connected'
   const [isLoading, setIsLoading] = useState(true)
@@ -67,7 +67,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
   const fetchCollections = async () => {
     try {
       const collectionsData = await getActiveCollections()
-      console.log('Collections Data:', collectionsData)
+      //console.log('Collections Data:', collectionsData)
       if (collectionsData && Array.isArray(collectionsData)) {
         setCollections(collectionsData)
       }
@@ -105,7 +105,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
 
             // Rechercher l'Item associé 
             const itemResult = await getItemByShopifyId(shopifyProductId)
-            console.log('Item Result:', itemResult)
+            //console.log('Item Result:', itemResult)
             if (itemResult?.id) {
               setItem(itemResult)
               try {
@@ -124,7 +124,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                 // Récupérer le nftResource associé à cet item
                 const nftResourceResult = await getNftResourceByItemId(itemResult.id)
                 fetchCollections()
-                console.log('NftResource Result:', nftResourceResult)
+                //console.log('NftResource Result:', nftResourceResult)
                 if (nftResourceResult) {
                   setNftResource(nftResourceResult)
                   // Pré-remplir le formulaire avec les données existantes
@@ -165,7 +165,6 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
   // Fonction pour charger les collections
   useEffect(() => {
     if (showUploadIpfsForm) {
-      console.log('showUploadIpfsForm')
       fetchCollections()
     }
   }, [id, showUploadIpfsForm])
@@ -200,6 +199,13 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
         [name]: value
       }))
     }
+  }
+
+  //---------------------------------------------------------------- verifyMinter
+  const verifyMinter = async (address: string) => { 
+      const collectionAddress = nftResource.collection.contractAddress
+      const result = await checkIsMinter(collectionAddress, address)
+      setIsMinter(result)
   }
 
   //---------------------------------------------------------------- handleUploadOnIpfs
@@ -373,7 +379,9 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
 
   // Nouvelle fonction pour vérifier si l'utilisateur est un minter
   const checkIsMinter = async (collectionAddress: string, userAddress: string) => {
-    if (!collectionAddress || !userAddress) return false
+    console.log('collectionAddress : ', collectionAddress)
+    console.log('userAddress : ', userAddress)
+    //if (!collectionAddress || !userAddress) return false
     
     setIsCheckingMinter(true)
     try {
@@ -383,7 +391,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
         abi: artistNftCollectionAbi,
         functionName: 'getMinters'
       }) as Address[]
-      
+      console.log('minters : ', minters)
       // Vérifier si l'adresse de l'utilisateur est dans la liste des minters
       const userIsMinter = minters.map(m => m.toLowerCase()).includes(userAddress.toLowerCase())
       console.log(`L'utilisateur ${userAddress} ${userIsMinter ? 'est' : 'n\'est pas'} un minter sur la collection ${collectionAddress}`)
@@ -398,25 +406,58 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
     }
   }
   
-  // Vérifier si l'utilisateur est un minter lorsque le nftResource change
-  useEffect(() => {
-    const verifyMinter = async () => {
-      if (
-        nftResource?.status === 'UPLOADMETADATA' && 
-        nftResource?.collection?.contractAddress &&
-        address && 
-        isConnected
-      ) {
-        const collectionAddress = nftResource.collection.contractAddress
-        const result = await checkIsMinter(collectionAddress, address)
-        setIsMinter(result)
-      } else {
-        setIsMinter(false)
+  // useEffect(() => {
+    
+    
+  //   verifyMinter()
+  // }, [nftResource, address, isConnected])
+
+  
+  useWalletConnectorEvent(
+    primaryWallet?.connector, 
+    'accountChange',
+    async ({ accounts }, connector) => {
+      if (connector.name === 'Rabby') {
+        console.log('Rabby wallet account changed:', accounts);
+        // Handle Rabby wallet account change
+        await verifyMinter(accounts[0]);
       }
     }
-    
-    verifyMinter()
-  }, [nftResource, address, isConnected])
+  );
+
+  // CORRECTION: Utilisation correcte de useWalletConnectorEvent pour les changements de chaîne
+  useWalletConnectorEvent(
+    primaryWallet?.connector,
+    'chainChange',
+    async ({ chain }, connector) => {
+      console.log('Changement de chaîne détecté via useWalletConnectorEvent:', chain);
+      if (address) {
+        await verifyMinter(address);
+      }
+    }
+  );
+  
+  // Ajout d'un useEffect pour la vérification initiale du minter
+ // Remplacer l'useEffect à la ligne 469 par celui-ci
+  useEffect(() => {
+    const checkInitialMinterStatus = async () => {
+      console.log('Vérification initiale du statut minter - primaryWallet:', {
+        primaryWalletAddress: primaryWallet?.address,
+        nftResource: nftResource?.collection?.contractAddress
+      })
+
+      if (
+        primaryWallet?.connector?.name === 'Rabby' && 
+        primaryWallet?.address && 
+        nftResource?.collection?.contractAddress
+      ) {
+        console.log('Adresse Rabby détectée:', primaryWallet.address)
+        await verifyMinter(primaryWallet.address)
+      }
+    }
+
+    checkInitialMinterStatus()
+  }, [primaryWallet?.address, nftResource]) // Changement des dépendances pour utiliser primaryWallet.address
 
   return (
     <>
