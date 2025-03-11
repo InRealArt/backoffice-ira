@@ -13,6 +13,8 @@ import { pdfjs } from 'react-pdf'
 import { Document, Page } from 'react-pdf'
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
 import 'react-pdf/dist/esm/Page/TextLayer.css'
+import { TagInput } from '@/app/components/Tag/TagInput'
+
 
 // Configuration du worker PDF.js (nécessaire pour react-pdf)
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
@@ -22,6 +24,7 @@ export default function ArtworkCreationForm() {
   const [previewImages, setPreviewImages] = useState<string[]>([])
   const [previewCertificate, setPreviewCertificate] = useState<string | null>(null)
   const [numPages, setNumPages] = useState<number | null>(null)
+  const [tags, setTags] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const certificateInputRef = useRef<HTMLInputElement>(null)
   const { user } = useDynamicContext()
@@ -103,10 +106,15 @@ export default function ArtworkCreationForm() {
       
       // Ajouter les champs textuels
       Object.entries(data).forEach(([key, value]) => {
-        if (key !== 'images' && key !== 'certificate' && value) {
+        if (key !== 'images' && key !== 'certificate' && key !== 'tags' && value) {
           formData.append(key, value.toString())
         }
       })
+      
+      // Ajouter les tags sous forme de chaîne séparée par des virgules
+      if (tags.length > 0) {
+        formData.append('tags', tags.join(','))
+      }
       
       // Ajouter les images
       if (data.images && data.images instanceof FileList && data.images.length > 0) {
@@ -164,6 +172,7 @@ export default function ArtworkCreationForm() {
         reset()
         setPreviewImages([])
         setPreviewCertificate(null)
+        setTags([])
         if (fileInputRef.current) {
           fileInputRef.current.value = ''
         }
@@ -178,6 +187,19 @@ export default function ArtworkCreationForm() {
       toast.error('Une erreur est survenue. Veuillez réessayer.')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+  
+  const handleResetForm = () => {
+    reset()
+    setPreviewImages([])
+    setPreviewCertificate(null)
+    setTags([])
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+    if (certificateInputRef.current) {
+      certificateInputRef.current.value = ''
     }
   }
   
@@ -350,18 +372,21 @@ export default function ArtworkCreationForm() {
           </div>
         </div>
         
-        {/* Tags */}
+        {/* Tags - Nouveau composant TagInput */}
         <div className={styles.formGroup}>
           <label htmlFor="tags" className={styles.formLabel}>
-            Tags (séparés par des virgules)
+            Tags
           </label>
-          <input
-            id="tags"
-            type="text"
-            {...register('tags')}
-            className={`${styles.formInput} ${errors.tags ? styles.formInputError : ''}`}
-            placeholder="abstrait, contemporain, acrylique"
+          <TagInput
+            value={tags}
+            onChange={setTags}
+            placeholder="Ajouter des tags..."
+            maxTags={10}
+            className={errors.tags ? styles.formInputError : ''}
           />
+          <p className={styles.formHelp}>
+            Entrez des tags et appuyez sur Entrée pour ajouter. Maximum 10 tags.
+          </p>
           {errors.tags && (
             <p className={styles.formError}>{errors.tags.message}</p>
           )}
@@ -448,17 +473,7 @@ export default function ArtworkCreationForm() {
         <div className={styles.formActions}>
           <button
             type="button"
-            onClick={() => {
-              reset()
-              setPreviewImages([])
-              setPreviewCertificate(null)
-              if (fileInputRef.current) {
-                fileInputRef.current.value = ''
-              }
-              if (certificateInputRef.current) {
-                certificateInputRef.current.value = ''
-              }
-            }}
+            onClick={handleResetForm}
             className={`${styles.button} ${styles.buttonSecondary}`}
             disabled={isSubmitting}
           >
