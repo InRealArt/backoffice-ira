@@ -803,3 +803,28 @@ export async function getUserListedItemsCount(userId: number) {
     return { count: 0 }
   }
 }
+
+/**
+ * Vérifie si un nom de NFT existe déjà dans la table NftResource
+ * @param name Le nom du NFT à vérifier
+ * @returns true si le nom existe déjà, false sinon
+ */
+export async function checkNftResourceNameExists(name: string): Promise<boolean> {
+  'use server'
+  
+  try {
+    const existingResource = await prisma.nftResource.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: 'insensitive' 
+        }
+      }
+    })
+    
+    return !!existingResource
+  } catch (error) {
+    console.error('Erreur lors de la vérification du nom NFT:', error)
+    throw new Error('Impossible de vérifier l\'unicité du nom NFT')
+  }
+}

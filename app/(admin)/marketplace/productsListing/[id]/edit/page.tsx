@@ -6,7 +6,7 @@ import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId, getActiveCollections } from '@/app/actions/prisma/prismaActions'
+import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists } from '@/app/actions/prisma/prismaActions'
 import { Toaster } from 'react-hot-toast'
 import styles from './viewProduct.module.scss'
 import React from 'react'
@@ -202,7 +202,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
     }
   }
 
-  // Fonction pour soumettre le formulaire
+  //---------------------------------------------------------------- handleUploadOnIpfs
   const handleUploadOnIpfs = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormErrors({})
@@ -226,6 +226,20 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
         setFormErrors(errors)
         // Afficher un toast d'erreur
         toast.error('Veuillez corriger les erreurs du formulaire')
+        return
+      }
+      
+      // Vérifier l'unicité du nom NFT
+      const nameCheckToast = toast.loading('Vérification du nom du NFT...')
+      const nameExists = await checkNftResourceNameExists(formData.name)
+      toast.dismiss(nameCheckToast)
+      
+      if (nameExists) {
+        setFormErrors(prev => ({
+          ...prev,
+          name: 'Ce nom de NFT existe déjà. Veuillez en choisir un autre.'
+        }))
+        toast.error('Ce nom de NFT existe déjà')
         return
       }
       
