@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import ProductCard from '@/app/components/ProductCard/ProductCard'
-import { fetchCollectionData, CollectionData } from '@/app/utils/shopify/collection'
+import { fetchItemsData, ItemData } from '@/app/utils/items/itemsData'
 import styles from './collection.module.scss'
 import { getBackofficeUserByEmail } from '@/app/actions/prisma/prismaActions'
 import { BackofficeUser } from '@prisma/client'
@@ -12,7 +12,7 @@ import { BackofficeUser } from '@prisma/client'
 export default function CollectionPage() {
   const { user } = useDynamicContext()
   const [isLoading, setIsLoading] = useState(true)
-  const [collectionData, setCollectionData] = useState<CollectionData | null>(null)
+  const [itemsData, setItemsData] = useState<ItemData[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [userDB, setUserDB] = useState<BackofficeUser | null>(null)
   
@@ -26,19 +26,28 @@ export default function CollectionPage() {
 
     let isMounted = true
 
-    // Récupérer les données de collection
+    // Récupérer les données des items
     const loadData = async () => {
       // Garantir que email n'est jamais undefined
       const email = user.email as string
-      const userDB = await getBackofficeUserByEmail(user?.email as string)
-      const result = await fetchCollectionData(email)
-      console.log('COLLECTION DATA', result)
+      const userDB = await getBackofficeUserByEmail(email)
+      
+      if (!userDB) {
+        setError('Votre profil utilisateur n\'a pas été trouvé')
+        setIsLoading(false)
+        return
+      }
+      
       setUserDB(userDB)
+      
+      const result = await fetchItemsData(email)
+      console.log('ITEMS DATA', result)
+      
       if (isMounted) {
         if (!result.success) {
-          setError(result.error)
+          setError(result.error || null)
         } else {
-          setCollectionData(result.data)
+          setItemsData(result.data || [])
         }
         setIsLoading(false)
       }
@@ -52,57 +61,44 @@ export default function CollectionPage() {
   }, [user?.email]) // Dépendance uniquement sur l'email
 
   if (isLoading) {
-    return <LoadingSpinner message="Chargement de votre collection..." />
+    return <LoadingSpinner message="Chargement de vos œuvres..." />
   }
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.pageTitle}>Ma Collection</h1>
+      <h1 className={styles.pageTitle}>Mes Œuvres</h1>
 
       {error ? (
         <div className={styles.error}>{error}</div>
-      ) : !collectionData ? (
+      ) : !itemsData || itemsData.length === 0 ? (
         <div className={styles.empty}>
-          <p>Aucune collection trouvée à votre nom</p>
+          <p>Aucune œuvre trouvée dans votre collection</p>
         </div>
       ) : (
         <>
           <div className={styles.collectionInfo}>
-            <h2 className={styles.collectionTitle}>{collectionData.title}</h2>
-            
-            {collectionData.description ? (
-              <div 
-                className={styles.description}
-                dangerouslySetInnerHTML={{ __html: collectionData.description }}
-              />
-            ) : (
-              <p className={styles.emptyDescription}>Aucune description</p>
-            )}
+            <h2 className={styles.collectionTitle}>Collection de {userDB?.firstName} {userDB?.lastName}</h2>
           </div>
 
           <div className={styles.productsSection}>
-            <h3 className={styles.sectionTitle}>Mes œuvres</h3>
+            <h3 className={styles.sectionTitle}>Mes œuvres ({itemsData.length})</h3>
             
-            {!collectionData.products || collectionData.products.length === 0 ? (
-              <div className={styles.emptyProducts}>
-                <p>Aucune œuvre dans votre collection</p>
-              </div>
-            ) : (
-              <div className={styles.productsGrid}>
-                {collectionData.products.map((product: any) => (
-                  <ProductCard
-                    key={product.id}
-                    title={product.title}
-                    price={product.price}
-                    currency={product.currency}
-                    imageUrl={product.imageUrl}
-                    idShopify={product.id}
-                    collectionId={collectionData.id}    
-                    userId={userDB?.id}
-                  />
-                ))}
-              </div>
-            )}
+            <div className={styles.productsGrid}>
+              {itemsData.map((item) => (
+                <ProductCard
+                  key={item.id}
+                  id={item.id}
+                  title={item.title || 'Sans titre'}
+                  price={item.price || '0.00'}
+                  currency="EUR"
+                  imageUrl={item.imageUrl || '/images/no-image.jpg'}
+                  idShopify={item.idShopify.toString()}
+                  userId={userDB?.id}
+                  status={item.status}
+                  tags={item.tags}
+                />
+              ))}
+            </div>
           </div>
         </>
       )}

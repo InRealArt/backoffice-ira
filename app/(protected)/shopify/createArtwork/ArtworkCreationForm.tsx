@@ -25,15 +25,18 @@ export default function ArtworkCreationForm() {
   const [previewCertificate, setPreviewCertificate] = useState<string | null>(null)
   const [numPages, setNumPages] = useState<number | null>(null)
   const [tags, setTags] = useState<string[]>([])
+  const [hasIntellectualProperty, setHasIntellectualProperty] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const certificateInputRef = useRef<HTMLInputElement>(null)
   const { user } = useDynamicContext()
+  const [formErrors, setFormErrors] = useState<any>(null)
 
   const {
     register,
     handleSubmit,
     setValue,
     reset,
+    watch,
     formState: { errors }
   } = useForm<ArtworkFormData>({
     resolver: zodResolver(artworkSchema),
@@ -43,14 +46,34 @@ export default function ArtworkCreationForm() {
       price: '',
       artist: '',
       medium: '',
-      dimensions: '',
+      width: '',
+      height: '',
       year: new Date().getFullYear().toString(),
+      creationDate: '',
+      intellectualProperty: false,
+      intellectualPropertyEndDate: '',
       edition: '',
-      tags: '',
       images: undefined,
       certificate: undefined
     }
   })
+  
+  // Observer la valeur de la propriété intellectuelle
+  const intellectualProperty = watch('intellectualProperty')
+  
+  // Mettre à jour l'état local quand le champ change
+  useEffect(() => {
+    setHasIntellectualProperty(!!intellectualProperty)
+  }, [intellectualProperty])
+  
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      console.log('Erreurs de validation détectées:', errors)
+    } else {
+      setFormErrors(null)
+    }
+  }, [errors])
   
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -72,7 +95,7 @@ export default function ArtworkCreationForm() {
     const files = e.target.files
     if (!files || files.length === 0) {
       setPreviewCertificate(null)
-      setValue('certificate', undefined, { shouldValidate: true })
+      setValue('certificate', null, { shouldValidate: true })
       return
     }
     
@@ -83,7 +106,7 @@ export default function ArtworkCreationForm() {
         certificateInputRef.current.value = ''
       }
       setPreviewCertificate(null)
-      setValue('certificate', undefined, { shouldValidate: true })
+      setValue('certificate', null, { shouldValidate: true })
       return
     }
     
@@ -99,6 +122,7 @@ export default function ArtworkCreationForm() {
   }
   
   const onSubmit = async (data: ArtworkFormData) => {
+    console.log('Début de la soumission du formulaire', data) // Log de débogage
     setIsSubmitting(true)
     
     try {
@@ -106,79 +130,83 @@ export default function ArtworkCreationForm() {
       
       // Ajouter les champs textuels
       Object.entries(data).forEach(([key, value]) => {
-        if (key !== 'images' && key !== 'certificate' && key !== 'tags' && value) {
-          formData.append(key, value.toString())
+        //console.log('Traitement du champ:', key, value) // Log de débogage
+        if (key !== 'images' && key !== 'certificate' && key !== 'tags' && value !== undefined) {
+          if (key === 'creationDate' || key === 'intellectualPropertyEndDate') {
+            if (value) {
+              formData.append(key, new Date(value as string).toISOString())
+            }
+          } else {
+            formData.append(key, String(value))
+          }
         }
       })
       
-      // Ajouter les tags sous forme de chaîne séparée par des virgules
+      // Ajouter les tags
       if (tags.length > 0) {
+        //console.log('Ajout des tags:', tags) // Log de débogage
         formData.append('tags', tags.join(','))
       }
       
       // Ajouter les images
       if (data.images && data.images instanceof FileList && data.images.length > 0) {
+        //console.log('Ajout des images:', data.images.length, 'fichiers') // Log de débogage
         Array.from(data.images).forEach((file, index) => {
           formData.append(`image-${index}`, file)
         })
       }
       
-      // Ajouter le certificat d'authenticité
+      // Ajouter le certificat
       if (data.certificate && data.certificate instanceof FileList && data.certificate.length > 0) {
+        //console.log('Ajout du certificat') // Log de débogage
         formData.append('certificate', data.certificate[0])
       }
       
-      // AJOUT IMPORTANT: Ajouter manuellement l'email de l'utilisateur
+      // Ajouter l'email
       formData.append('userEmail', user?.email || '')
       
-      // Envoyer au serveur
+      //console.log('Envoi de la requête au serveur') // Log de débogage
       const result = await createArtwork(formData)
+      console.log('Réponse du serveur:', result) // Log de débogage
       
       if (result.success) {
-        // Créer un enregistrement dans la table Item
         if (result.productId && user?.email) {
           try {
-            // Récupérer l'utilisateur par email
             const backofficeUser = await getBackofficeUserByEmail(user.email)
             
             if (backofficeUser) {
-              // Créer l'enregistrement dans la table Item
-                const newItem = await createItemRecord(backofficeUser.id, result.productId, 'created')
+              const newItem = await createItemRecord(
+                backofficeUser.id, 
+                result.productId, 
+                'created',
+                tags,
+                {
+                  height: data.height ? parseFloat(data.height) : undefined,
+                  width: data.width ? parseFloat(data.width) : undefined,
+                  intellectualProperty: !!data.intellectualProperty,
+                  intellectualPropertyEndDate: data.intellectualPropertyEndDate ? new Date(data.intellectualPropertyEndDate) : null,
+                  creationDate: data.creationDate ? new Date(data.creationDate) : null,
+                  priceBeforeTax: data.price ? parseInt(data.price, 10) : 0,
+                  artworkSupport: data.medium || null 
+                }
+              )
               
-              // Sauvegarder le certificat d'authenticité dans la table AuthCertificate
               if (data.certificate && data.certificate instanceof FileList && 
                   data.certificate.length > 0 && newItem?.item?.id) {
-                // Convertir le fichier PDF en Uint8Array pour stockage
                 const certificateFile = data.certificate[0]
                 const arrayBuffer = await certificateFile.arrayBuffer()
                 const buffer = new Uint8Array(arrayBuffer)
-                
-                // Appeler la fonction pour sauvegarder le certificat
                 await saveAuthCertificate(newItem.item.id, buffer)
-                console.log(`Certificat d'authenticité sauvegardé pour l'item ${newItem.item.id}`)
               }
-              
-              console.log(`Enregistrement créé dans la table Item pour l'œuvre ${result.productId}`)
-            } else {
-              console.error('Utilisateur non trouvé pour l\'email:', user.email)
             }
           } catch (itemError) {
-            console.error('Erreur lors de la création de l\'enregistrement dans Item:', itemError)
-            // Ne pas bloquer le processus en cas d'erreur avec l'enregistrement Item
+            console.error('Erreur lors de la création de l\'item:', itemError)
+            toast.error('Erreur lors de la création de l\'item')
           }
         }
         
         toast.success(`L'œuvre "${data.title}" a été créée avec succès!`)
-        reset()
-        setPreviewImages([])
-        setPreviewCertificate(null)
-        setTags([])
-        if (fileInputRef.current) {
-          fileInputRef.current.value = ''
-        }
-        if (certificateInputRef.current) {
-          certificateInputRef.current.value = ''
-        }
+        handleResetForm()
       } else {
         toast.error(`Erreur: ${result.message}`)
       }
@@ -189,6 +217,45 @@ export default function ArtworkCreationForm() {
       setIsSubmitting(false)
     }
   }
+  
+  // Ajouter cette fonction après les imports
+  const scrollToError = (errors: any) => {
+    const firstError = Object.keys(errors)[0]
+    const element = document.getElementById(firstError)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      element.focus()
+    }
+  }
+  
+  // Modifier le handleFormSubmit
+  const handleFormSubmit = handleSubmit(onSubmit, (errors) => {
+    console.log('Erreurs de validation:', errors)
+    
+    // Identifier et afficher les champs manquants
+    const missingFields = Object.keys(errors).map(key => {
+      const fieldNames: Record<string, string> = {
+        title: 'Titre',
+        description: 'Description',
+        price: 'Prix',
+        artist: 'Artiste',
+        medium: 'Support/Medium',
+        images: 'Images',
+        certificate: 'Certificat d\'authenticité'
+      }
+      return fieldNames[key]
+    }).filter(Boolean)
+
+    if (missingFields.length > 0) {
+      toast.error(`Champs obligatoires manquants : ${missingFields.join(', ')}`, {
+        duration: 5000,
+        position: 'top-center'
+      })
+      
+      // Faire défiler jusqu'au premier champ en erreur
+      scrollToError(errors)
+    }
+  })
   
   const handleResetForm = () => {
     reset()
@@ -205,7 +272,7 @@ export default function ArtworkCreationForm() {
   
   return (
     <div className={styles.formContainer}>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleFormSubmit} noValidate>
         <div className={styles.formGrid}>
           {/* Titre */}
           <div className={styles.formGroup}>
@@ -216,6 +283,7 @@ export default function ArtworkCreationForm() {
               id="title"
               type="text"
               {...register('title')}
+              required
               className={`${styles.formInput} ${errors.title ? styles.formInputError : ''}`}
               placeholder="Sans titre #12"
             />
@@ -300,24 +368,61 @@ export default function ArtworkCreationForm() {
               )}
             </div>
             
-            {/* Dimensions */}
+            {/* Date de création */}
             <div className={styles.formGroup}>
-              <label htmlFor="dimensions" className={styles.formLabel}>
-                Dimensions (cm)*
+              <label htmlFor="creationDate" className={styles.formLabel}>
+                Date de création
               </label>
               <input
-                id="dimensions"
-                type="text"
-                {...register('dimensions')}
-                className={`${styles.formInput} ${errors.dimensions ? styles.formInputError : ''}`}
-                placeholder="100 x 80 x 2"
+                id="creationDate"
+                type="date"
+                {...register('creationDate')}
+                className={`${styles.formInput} ${errors.creationDate ? styles.formInputError : ''}`}
               />
-              {errors.dimensions && (
-                <p className={styles.formError}>{errors.dimensions.message}</p>
+              {errors.creationDate && (
+                <p className={styles.formError}>{errors.creationDate.message}</p>
+              )}
+            </div>
+          </div>
+          
+          <div className={styles.formGrid}>
+            {/* Largeur */}
+            <div className={styles.formGroup}>
+              <label htmlFor="width" className={styles.formLabel}>
+                Largeur (cm)
+              </label>
+              <input
+                id="width"
+                type="number"
+                step="0.01"
+                {...register('width')}
+                className={`${styles.formInput} ${errors.width ? styles.formInputError : ''}`}
+                placeholder="80.5"
+              />
+              {errors.width && (
+                <p className={styles.formError}>{errors.width.message}</p>
               )}
             </div>
             
-            {/* Poids - Nouveau champ */}
+            {/* Hauteur */}
+            <div className={styles.formGroup}>
+              <label htmlFor="height" className={styles.formLabel}>
+                Hauteur (cm)
+              </label>
+              <input
+                id="height"
+                type="number"
+                step="0.01"
+                {...register('height')}
+                className={`${styles.formInput} ${errors.height ? styles.formInputError : ''}`}
+                placeholder="100.0"
+              />
+              {errors.height && (
+                <p className={styles.formError}>{errors.height.message}</p>
+              )}
+            </div>
+            
+            {/* Poids */}
             <div className={styles.formGroup}>
               <label htmlFor="weight" className={styles.formLabel}>
                 Poids (kg)
@@ -370,6 +475,45 @@ export default function ArtworkCreationForm() {
               )}
             </div>
           </div>
+          
+          {/* Propriété intellectuelle */}
+          <div className={styles.formGroup}>
+            <div className={styles.checkboxContainer}>
+              <input
+                id="intellectualProperty"
+                type="checkbox"
+                {...register('intellectualProperty')}
+                className={styles.formCheckbox}
+              />
+              <label htmlFor="intellectualProperty" className={styles.formCheckboxLabel}>
+                Droits de propriété intellectuelle réservés
+              </label>
+            </div>
+            {errors.intellectualProperty && (
+              <p className={styles.formError}>{errors.intellectualProperty.message}</p>
+            )}
+          </div>
+          
+          {/* Date de fin de propriété intellectuelle - visible uniquement si la case est cochée */}
+          {hasIntellectualProperty && (
+            <div className={styles.formGroup}>
+              <label htmlFor="intellectualPropertyEndDate" className={styles.formLabel}>
+                Date de fin des droits de propriété intellectuelle
+              </label>
+              <input
+                id="intellectualPropertyEndDate"
+                type="date"
+                {...register('intellectualPropertyEndDate')}
+                className={`${styles.formInput} ${errors.intellectualPropertyEndDate ? styles.formInputError : ''}`}
+              />
+              <p className={styles.formHelp}>
+                Date à laquelle les droits de propriété intellectuelle expirent
+              </p>
+              {errors.intellectualPropertyEndDate && (
+                <p className={styles.formError}>{errors.intellectualPropertyEndDate.message}</p>
+              )}
+            </div>
+          )}
         </div>
         
         {/* Tags - Nouveau composant TagInput */}
@@ -382,14 +526,11 @@ export default function ArtworkCreationForm() {
             onChange={setTags}
             placeholder="Ajouter des tags..."
             maxTags={10}
-            className={errors.tags ? styles.formInputError : ''}
+            className={styles.formInput}
           />
           <p className={styles.formHelp}>
             Entrez des tags et appuyez sur Entrée pour ajouter. Maximum 10 tags.
           </p>
-          {errors.tags && (
-            <p className={styles.formError}>{errors.tags.message}</p>
-          )}
         </div>
         
         {/* Images */}

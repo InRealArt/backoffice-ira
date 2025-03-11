@@ -39,6 +39,7 @@ model Collection {
   nfts            ResourceNft[]
   nftResource     NftResource[]
   smartContract   SmartContract?   @relation(fields: [smartContractId], references: [id])
+
   @@schema("public")
 }
 
@@ -601,14 +602,22 @@ enum CollectionStatus {
 }
 
 model Item {
-  id              Int               @id @default(autoincrement())
-  status          ItemStatus        @default(created)
-  idUser          Int
-  idShopify       BigInt
-  user            BackofficeUser    @relation(fields: [idUser], references: [id])
-  authCertificate AuthCertificate[]
-  nftResource     NftResource?      @relation(fields: [idNftResource], references: [id])
-  idNftResource   Int?
+  id                             Int               @id @default(autoincrement())
+  status                         ItemStatus        @default(created)
+  idUser                         Int
+  idShopify                      BigInt
+  user                           BackofficeUser    @relation(fields: [idUser], references: [id])
+  authCertificate                AuthCertificate[]
+  nftResource                    NftResource?      @relation(fields: [idNftResource], references: [id])
+  idNftResource                  Int?
+  tags                           String[]          @default([])
+  height                         Decimal?          @db.Decimal(10, 2)
+  width                          Decimal?          @db.Decimal(10, 2)
+  intellectualProperty           Boolean           @default(false)
+  intellectualPropertyEndDate    DateTime?
+  priceBeforeTax                 Int               @default(0) 
+  artworkSupport                 String?
+  creationDate                   DateTime?
 
   @@index([idUser])
   @@index([idNftResource])
@@ -635,13 +644,14 @@ model AuthCertificate {
 }
 
 model SmartContract {
-  id                 Int         @id @default(autoincrement())
+  id                 Int          @id @default(autoincrement())
   factoryAddress     String
   royaltiesAddress   String
   marketplaceAddress String
   active             Boolean
   network            NetworkType
   collections        Collection[]
+
   @@schema("public")
 }
 

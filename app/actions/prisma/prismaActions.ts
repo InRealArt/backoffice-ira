@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { NotificationStatus, BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache";
 import { PrismaClient } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
 const prismaClient = new PrismaClient()
 
 type UpdateNotificationResult = {
@@ -330,27 +331,50 @@ export async function getBackofficeUserByEmail(email: string) {
 
 
 
-export async function createItemRecord(userId: number, shopifyId: string, status: string = 'created') {
+export async function createItemRecord(
+  userId: number,
+  productId: string,
+  status: string,
+  tags: string[] = [],
+  additionalData?: {
+    height?: number,
+    width?: number,
+    intellectualProperty?: boolean,
+    intellectualPropertyEndDate?: Date | null,
+    creationDate?: Date | null,
+    priceBeforeTax?: number,
+    artworkSupport?: string | null
+  }
+) {
   try {
-    const shopifyIdString = shopifyId.toString()
+    // S'assurer que les tags sont bien un tableau de chaînes
+    const processedTags = Array.isArray(tags)
+      ? tags.filter(tag => tag && typeof tag === 'string')
+      : []
 
-
-    // Créer l'enregistrement dans la table Item
     const newItem = await prisma.item.create({
       data: {
         idUser: userId,
-        idShopify: parseInt(shopifyIdString),
-        status: status as any
+        idShopify: BigInt(productId),
+        status: status as ItemStatus,
+        tags: processedTags, // Utiliser directement le tableau traité
+        height: additionalData?.height ? new Decimal(additionalData.height) : null,
+        width: additionalData?.width ? new Decimal(additionalData.width) : null,
+        intellectualProperty: additionalData?.intellectualProperty || false,
+        intellectualPropertyEndDate: additionalData?.intellectualPropertyEndDate || null,
+        creationDate: additionalData?.creationDate || null,
+        priceBeforeTax: additionalData?.priceBeforeTax || 0,
+        artworkSupport: additionalData?.artworkSupport || null
+      },
+      include: {
+        user: true
       }
     })
 
     return { success: true, item: newItem }
   } catch (error) {
-    console.error('Erreur lors de la création de l\'enregistrement Item:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Erreur inconnue'
-    }
+    console.error('Erreur lors de la création de l\'item:', error)
+    return { success: false, error }
   }
 }
 

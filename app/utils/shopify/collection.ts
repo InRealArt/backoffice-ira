@@ -94,3 +94,4 @@ function extractShopifyId(globalId: string): string {
     const parts = globalId.split('/')
     return parts[parts.length - 1]
 } 
+

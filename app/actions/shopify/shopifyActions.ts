@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { createAdminRestApiClient } from '@shopify/admin-api-client'
 import { revalidatePath } from 'next/cache'
 import { getItemById } from '../prisma/prismaActions';
+import { HeartIcon } from 'lucide-react';
 
 type CreateCollectionResult = {
   success: boolean
@@ -541,7 +542,8 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
     const price = formData.get('price') as string
     const artist = formData.get('artist') as string
     const medium = formData.get('medium') as string
-    const dimensions = formData.get('dimensions') as string
+    const height = formData.get('height') as string || ''
+    const width = formData.get('width') as string || ''
     const year = formData.get('year') as string || ''
     const edition = formData.get('edition') as string || ''
     const tagsString = formData.get('tags') as string || ''
@@ -554,7 +556,12 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
     const certificate = formData.get('certificate') as File
 
     // Validation des champs obligatoires
-    if (!title || !description || !price || !artist || !medium || !dimensions) {
+    if (!title || !description || !price || !artist || !medium) {
+      console.log('title', title)
+      console.log('description', description)
+      console.log('price', price)
+      console.log('artist', artist)
+      console.log('medium', medium)
       return {
         success: false,
         message: 'Veuillez remplir tous les champs obligatoires'
@@ -608,7 +615,7 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
       },
       {
         key: 'dimensions',
-        value: dimensions,
+        value: height + ' x ' + width,
         type: 'single_line_text_field',
         namespace: 'artwork',
       }

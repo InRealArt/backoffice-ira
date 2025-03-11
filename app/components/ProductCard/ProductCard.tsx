@@ -1,149 +1,108 @@
 'use client'
 
+import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { toast } from 'react-hot-toast'
 import styles from './ProductCard.module.scss'
-import { updateItemStatus, checkItemStatus } from '@/app/actions/prisma/prismaActions'
 
-interface ProductCardProps {
+type ProductCardProps = {
+  id: number
   title: string
   price: string
   currency: string
-  imageUrl: string | null
-  imageAlt?: string
-  idShopify?: string
-  handle?: string
-  collectionId?: string
+  imageUrl: string
+  idShopify: string
   userId?: number
+  status?: string
+  tags?: string[]
 }
 
-export default function ProductCard({ 
-  title, 
-  price, 
-  currency, 
-  imageUrl, 
-  imageAlt = title,
+export default function ProductCard({
+  id,
+  title,
+  price,
+  currency,
+  imageUrl,
   idShopify,
-  handle,
-  collectionId,
-  userId
+  userId,
+  status = 'created',
+  tags = []
 }: ProductCardProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [isError, setIsError] = useState(false)
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true)
-  
-  // Formatage du prix
+  const [isHovered, setIsHovered] = useState(false)
+
+  // Formatter le prix
   const formattedPrice = new Intl.NumberFormat('fr-FR', {
     style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2
+    currency: currency
   }).format(parseFloat(price))
 
-  // Vérifier au chargement si l'item a le statut "pending"
-  useEffect(() => {
-    async function verifyItemStatus() {
-      if (!idShopify || !userId) {
-        setIsCheckingStatus(false)
-        return
-      }
-
-      try {
-        const statusResult = await checkItemStatus({
-          idProductShopify: typeof idShopify === 'string' ? parseInt(idShopify) : idShopify,
-          idUser: typeof userId === 'string' ? parseInt(userId) : userId
-        })
-        
-        if (statusResult.exists && statusResult.status === 'pending') {
-          setIsSuccess(true)
-        }
-      } catch (error) {
-        console.error('Erreur lors de la vérification du statut:', error)
-      } finally {
-        setIsCheckingStatus(false)
-      }
-    }
-
-    verifyItemStatus()
-  }, [idShopify, userId])
-
-  const handleListArtwork = async (e: React.MouseEvent) => {
-    e.preventDefault() // Empêche le déclenchement du lien parent
-    
-    if (!idShopify || !userId) {
-      toast.error('Informations manquantes pour mettre à jour le statut')
-      setIsError(true)
-      return
-    }
-
-    try {
-      setIsLoading(true)
-      setIsError(false)
-      
-      // Mise à jour simple du statut à 'pending'
-      const result = await updateItemStatus({
-        idProductShopify: typeof idShopify === 'string' ? parseInt(idShopify) : idShopify,
-        idUser: typeof userId === 'string' ? parseInt(userId) : userId,
-        status: 'pending'
-      })
-
-      if (result.success) {
-        setIsSuccess(true)
-        toast.success('Demande de listing envoyée')
-      } else {
-        setIsError(true)
-        toast.error(result.message || 'Échec de la mise à jour du statut')
-      }
-    } catch (error) {
-      console.error('Erreur:', error)
-      setIsError(true)
-      toast.error('Une erreur est survenue lors de la mise à jour du statut')
-    } finally {
-      setIsLoading(false)
+  // Déterminer la couleur du statut
+  const getStatusColor = () => {
+    switch(status) {
+      case 'created': return '#3498db' // bleu
+      case 'pending': return '#f39c12' // orange
+      case 'minted': return '#2ecc71'  // vert
+      case 'listed': return '#9b59b6'  // violet
+      default: return '#7f8c8d'        // gris
     }
   }
 
-  const getButtonText = () => {
-    if (isCheckingStatus) return 'Vérification...'
-    if (isLoading) return 'Chargement...'
-    if (isSuccess) return 'Demande de listing envoyée'
-    if (isError) return 'Erreur, réessayer'
-    return 'Lister l\'œuvre sur la marketplace'
+  // Traduire le statut
+  const getStatusLabel = () => {
+    switch(status) {
+      case 'created': return 'Créée'
+      case 'pending': return 'En attente'
+      case 'minted': return 'Mintée'
+      case 'listed': return 'En vente'
+      default: return status
+    }
   }
 
   return (
-    <Link href={`/shopify/editArtwork/${idShopify}`} className={styles.cardLink}>
-      <div className={styles.card}>
-        <div className={styles.imageContainer}>
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={imageAlt || title}
-              fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className={styles.image}
-            />
-          ) : (
-            <div className={styles.placeholder}>
-              <span>Aucune image</span>
-            </div>
-          )}
-        </div>
-        <div className={styles.content}>
-          <h3 className={styles.title}>{title}</h3>
-          <p className={styles.price}>{formattedPrice}</p>
-          
-          <button 
-            className={styles.listButton}
-            onClick={handleListArtwork}
-            disabled={isLoading || isSuccess || isCheckingStatus}
-          >
-            {getButtonText()}
-          </button>
-        </div>
+    <div 
+      className={styles.card}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className={styles.statusBadge} style={{ backgroundColor: getStatusColor() }}>
+        {getStatusLabel()}
       </div>
-    </Link>
+      
+      <div className={styles.imageContainer}>
+        <Image
+          src={imageUrl || '/images/no-image.jpg'}
+          alt={title}
+          width={300}
+          height={300}
+          className={styles.image}
+          priority
+        />
+        
+        {isHovered && userId && (
+          <div className={styles.overlay}>
+            <Link 
+              href={`/shopify/editArtwork/${id}`} 
+              className={styles.editButton}
+            >
+              Modifier
+            </Link>
+          </div>
+        )}
+      </div>
+      
+      <div className={styles.content}>
+        <h3 className={styles.title}>{title}</h3>
+        <p className={styles.price}>{formattedPrice}</p>
+        
+        {tags && tags.length > 0 && (
+          <div className={styles.tags}>
+            {tags.slice(0, 3).map((tag, index) => (
+              <span key={index} className={styles.tag}>{tag}</span>
+            ))}
+            {tags.length > 3 && <span className={styles.tag}>+{tags.length - 3}</span>}
+          </div>
+        )}
+      </div>
+    </div>
   )
 } 

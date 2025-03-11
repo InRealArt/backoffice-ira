@@ -5,81 +5,47 @@ const priceRegex = /^\d+(\.\d{1,2})?$/
 
 export const artworkSchema = z.object({
     title: z.string()
-        .min(3, { message: 'Le titre doit contenir au moins 3 caractères' })
-        .max(100, { message: 'Le titre ne peut pas dépasser 100 caractères' }),
-
+        .min(1, "Le titre de l'œuvre est obligatoire")
+        .max(100, "Le titre ne doit pas dépasser 100 caractères"),
     description: z.string()
-        .min(10, { message: 'La description doit contenir au moins 10 caractères' })
-        .max(5000, { message: 'La description ne peut pas dépasser 5000 caractères' }),
-
+        .min(10, "La description doit contenir au moins 10 caractères")
+        .max(2000, "La description ne doit pas dépasser 2000 caractères"),
     price: z.string()
-        .refine((val) => priceRegex.test(val), {
-            message: 'Le prix doit être un nombre positif (ex: 1500 ou 1500.99)',
-        }),
-
+        .min(1, "Le prix est obligatoire")
+        .regex(/^\d+$/, "Le prix doit être un nombre entier"),
     artist: z.string()
-        .min(2, { message: 'Le nom de l\'artiste doit contenir au moins 2 caractères' })
-        .max(100, { message: 'Le nom de l\'artiste ne peut pas dépasser 100 caractères' }),
-
+        .min(1, "Le nom de l'artiste est obligatoire")
+        .max(100, "Le nom de l'artiste ne doit pas dépasser 100 caractères"),
     medium: z.string()
-        .min(2, { message: 'Le support doit contenir au moins 2 caractères' })
-        .max(100, { message: 'Le support ne peut pas dépasser 100 caractères' }),
-
-    dimensions: z.string().min(1, "Les dimensions sont requises"),
-
-    weight: z.string().optional().refine(
-        (val) => !val || !isNaN(parseFloat(val.replace(',', '.'))),
-        { message: "Le poids doit être un nombre valide" }
-    ),
-
+        .min(1, "Le support/medium est obligatoire")
+        .max(100, "Le support/medium ne doit pas dépasser 100 caractères"),
+    width: z.string()
+        .optional()
+        .refine((val) => !val || !isNaN(parseFloat(val)), "La largeur doit être un nombre valide"),
+    height: z.string()
+        .optional()
+        .refine((val) => !val || !isNaN(parseFloat(val)), "La hauteur doit être un nombre valide"),
+    weight: z.string().optional(),
     year: z.string()
-        .regex(/^\d{4}$/, { message: 'L\'année doit être au format YYYY (ex: 2023)' })
         .optional()
-        .or(z.literal('')),
-
-    edition: z.string()
-        .max(100, { message: 'L\'édition ne peut pas dépasser 100 caractères' })
-        .optional()
-        .or(z.literal('')),
-
-    tags: z.string()
-        .max(200, { message: 'Les tags ne peuvent pas dépasser 200 caractères' })
-        .optional()
-        .or(z.literal('')),
-
-    images: z.instanceof(FileList)
-        .refine(files => files.length > 0, 'Au moins une image est requise')
-        .refine((files) => files.length <= 10, {
-            message: 'Vous ne pouvez pas télécharger plus de 10 images',
-        })
         .refine(
-            (files) => {
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i]
-                    if (file.size > 5 * 1024 * 1024) {
-                        return false
-                    }
-                }
-                return true
-            },
-            {
-                message: 'Chaque image ne doit pas dépasser 5 MB',
-            }
+            (val) => !val || (/^\d{4}$/.test(val) && parseInt(val) <= new Date().getFullYear()),
+            "L'année doit être valide et ne pas dépasser l'année en cours"
         ),
-
-    certificate: z.any()
+    creationDate: z.string().optional(),
+    intellectualProperty: z.boolean(),
+    intellectualPropertyEndDate: z.string()
+        .optional()
         .refine(
-            value => value instanceof FileList && value.length > 0,
-            'Le certificat d\'authenticité est requis'
-        )
-        .refine(
-            value => {
-                if (!(value instanceof FileList) || value.length === 0) return false
-                const file = value[0]
-                return file.type === 'application/pdf'
-            },
-            'Seuls les fichiers PDF sont acceptés'
+            (val) => !val || new Date(val) > new Date(),
+            "La date de fin des droits doit être dans le futur"
         ),
+    edition: z.string().optional(),
+    images: z.instanceof(FileList).nullable()
+        .refine((files) => files && files.length > 0, "Au moins une image est requise"),
+    certificate: z.instanceof(FileList).nullable()
+        .refine((files) => files && files.length > 0, "Le certificat d'authenticité est obligatoire"),
+    artworkSupport: z.string().optional()
 })
 
 export type ArtworkFormData = z.infer<typeof artworkSchema>

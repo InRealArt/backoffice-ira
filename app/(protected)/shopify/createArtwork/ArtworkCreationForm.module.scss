@@ -19,10 +19,20 @@
 }
 
 .formLabel {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &::after {
+    content: '*';
+    color: #ff4444;
+    margin-left: 4px;
+    display: none;
+  }
+
+  &[data-required=true]::after {
+    display: inline;
+  }
 }
 
 .formInput,
@@ -50,13 +60,27 @@
 }
 
 .formInputError {
-  border-color: #e53e3e;
+  border-color: #ff4444 !important;
+  animation: shake 0.5s;
+  background-color: rgba(255, 68, 68, 0.05);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
 }
 
 .formError {
-  color: #e53e3e;
+  color: #ff4444;
   font-size: 0.875rem;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .formActions {
@@ -192,4 +216,9 @@
   overflow: hidden;
   max-width: 100%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.requiredStar {
+  color: #ff4444;
+  margin-left: 4px;
 } 
