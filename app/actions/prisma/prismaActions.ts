@@ -9,11 +9,6 @@ import { PrismaClient } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 const prismaClient = new PrismaClient()
 
-type UpdateNotificationResult = {
-  success: boolean
-  message: string
-}
-
 type CreateMemberResult = {
   success: boolean
   message: string
@@ -65,47 +60,6 @@ type CreateNftResourceParams = {
   name: string
   description: string
   collectionId: number
-}
-
-// Action pour mettre à jour le statut d'une notification
-export async function updateNotificationStatus(
-  notificationId: number,
-  status: NotificationStatus
-): Promise<UpdateNotificationResult> {
-  try {
-    if (!notificationId) {
-      return {
-        success: false,
-        message: 'ID de notification requis'
-      }
-    }
-
-    // Mise à jour du statut de la notification
-    await prisma.notification.update({
-      where: {
-        id: notificationId
-      },
-      data: {
-        status: status,
-        complete: true
-      }
-    })
-
-
-    // Revalider le chemin des notifications pour forcer le rafraîchissement
-    revalidatePath('/notifications')
-
-    return {
-      success: true,
-      message: `Statut de la notification mis à jour avec succès`
-    }
-  } catch (error: any) {
-    console.error('Erreur serveur lors de la mise à jour de notification:', error)
-    return {
-      success: false,
-      message: error.message || 'Une erreur est survenue lors de la mise à jour du statut'
-    }
-  }
 }
 
 export async function createMember(data: MemberFormData): Promise<CreateMemberResult> {
@@ -379,45 +333,37 @@ export async function createItemRecord(
 }
 
 /**
- * Met à jour le statut d'un produit Shopify
+ * Met à jour le statut d'un item
  */
-export async function updateItemStatus({
-  idProductShopify,
-  idUser,
-  status
-}: UpdateStatusParams): Promise<StatusUpdateResult> {
+export async function updateItemStatus(
+  itemId: number,
+  newStatus: string
+): Promise<StatusUpdateResult> {
   try {
-    // Vérifier si le produit existe déjà dans notre base
-    const existingProduct = await prisma.item.findFirst({
-      where: {
-        idShopify: idProductShopify,
-        idUser: idUser
-      }
+    // Vérifier si l'item existe
+    const existingItem = await prisma.item.findUnique({
+      where: { id: itemId }
     })
 
-    if (existingProduct) {
-      // Mettre à jour le statut du produit existant
-      await prisma.item.update({
-        where: { id: existingProduct.id },
-        data: { status: status as any }
-      })
-    } else {
-      // Créer une nouvelle entrée si le produit n'existe pas
-      await prisma.item.create({
-        data: {
-          idShopify: idProductShopify,
-          idUser: idUser,
-          status: status as any
-        }
-      })
+    if (!existingItem) {
+      return {
+        success: false,
+        message: 'Item non trouvé'
+      }
     }
+
+    // Mettre à jour le statut de l'item
+    await prisma.item.update({
+      where: { id: itemId },
+      data: { status: newStatus as any }
+    })
 
     // Revalider le chemin pour rafraîchir les données sur l'interface
     revalidatePath('/shopify/collections')
 
     return {
       success: true,
-      message: 'Statut du produit mis à jour avec succès'
+      message: 'Statut de l\'item mis à jour avec succès'
     }
   } catch (error) {
     console.error('Erreur lors de la mise à jour du statut:', error)

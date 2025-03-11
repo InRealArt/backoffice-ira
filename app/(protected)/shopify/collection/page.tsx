@@ -41,7 +41,6 @@ export default function CollectionPage() {
       setUserDB(userDB)
       
       const result = await fetchItemsData(email)
-      console.log('ITEMS DATA', result)
       
       if (isMounted) {
         if (!result.success) {
