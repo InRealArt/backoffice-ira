@@ -7,6 +7,9 @@ import { NotificationStatus, BackofficeUser, ResourceTypes, ResourceNftStatuses,
 import { revalidatePath } from "next/cache";
 import { PrismaClient } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
+import { artistNftCollectionAbi } from "@/lib/contracts/ArtistNftCollectionAbi";
+import { decodeEventLog } from "viem";
+import { serverPublicClient } from "@/lib/server-providers";
 const prismaClient = new PrismaClient()
 
 type CreateMemberResult = {
@@ -60,6 +63,19 @@ type CreateNftResourceParams = {
   name: string
   description: string
   collectionId: number
+}
+
+interface UpdateNftResourceStatusResult {
+  success: boolean
+  message?: string
+  error?: string
+}
+
+interface UpdateTokenIdResult {
+  success: boolean
+  tokenId?: string
+  message?: string
+  error?: string
 }
 
 export async function createMember(data: MemberFormData): Promise<CreateMemberResult> {
@@ -511,7 +527,7 @@ export async function getItemById(itemId: number) {
 export async function getAllCollections() {
   try {
     // Récupérer toutes les collections sans filtrer par statut
-    const collections = await prisma.collection.findMany({
+    const collections = await prisma.nftCollection.findMany({
       select: {
         id: true,
         name: true,
@@ -573,7 +589,7 @@ export async function createNftResource(params: {
     }
 
     // Vérifier si la collection existe
-    const collection = await prisma.collection.findUnique({
+    const collection = await prisma.nftCollection.findUnique({
       where: { id: collectionId }
     })
 
@@ -752,7 +768,7 @@ export async function checkIsAdmin(email?: string | null, walletAddress?: string
  */
 export async function getActiveCollections() {
   try {
-    const collections = await prisma.collection.findMany({
+    const collections = await prisma.nftCollection.findMany({
       where: {
         smartContract: {
           active: true
@@ -848,5 +864,167 @@ export async function checkNftResourceNameExists(name: string): Promise<boolean>
   } catch (error) {
     console.error('Erreur lors de la vérification du nom NFT:', error)
     throw new Error('Impossible de vérifier l\'unicité du nom NFT')
+  }
+}
+
+//--------------------------------------------------------------------------
+// Mise à jour du txHash de la resource NFT
+//--------------------------------------------------------------------------
+export async function updateNftResourceTxHash(id: number, txHash: string) {
+  try {
+    await prisma.nftResource.update({
+      where: { id },
+      data: {
+        transactionHash: txHash
+      }
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du txHash:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Une erreur inconnue est survenue'
+    }
+  }
+}
+
+/**
+ * Met à jour le statut d'une ressource NFT à MINTED
+ * @param id - L'ID de la ressource NFT à mettre à jour
+ * @returns Un objet indiquant le succès ou l'échec de l'opération
+ */
+export async function updateNftResourceStatusToMinted(id: number): Promise<UpdateNftResourceStatusResult> {
+  try {
+    // Vérifier si la ressource existe
+    const existingResource = await prisma.nftResource.findUnique({
+      where: { id }
+    })
+
+    if (!existingResource) {
+      return {
+        success: false,
+        message: 'Ressource NFT non trouvée'
+      }
+    }
+
+    // Mettre à jour le statut de la ressource NFT
+    await prisma.nftResource.update({
+      where: { id },
+      data: {
+        status: ResourceNftStatuses.MINED
+      }
+    })
+
+    // Revalider les chemins potentiels où cette donnée pourrait être affichée
+    revalidatePath('/marketplace/productsListing')
+
+    return {
+      success: true,
+      message: 'Statut de la ressource NFT mis à jour avec succès'
+    }
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du statut de la ressource NFT:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Une erreur inconnue est survenue lors de la mise à jour du statut'
+    }
+  }
+}
+
+/**
+ * Extrait le tokenId des logs de transaction et met à jour la ressource NFT
+ * @param id - L'ID de la ressource NFT à mettre à jour
+ * @param transactionHash - Le hash de la transaction de minting
+ * @returns Un objet indiquant le succès ou l'échec de l'opération avec le tokenId extrait
+ */
+export async function updateNftResourceTokenId(id: number, transactionHash: string): Promise<UpdateTokenIdResult> {
+  try {
+    // Vérifier si la ressource existe
+    const existingResource = await prisma.nftResource.findUnique({
+      where: { id }
+    })
+
+    if (!existingResource) {
+      return {
+        success: false,
+        message: 'Ressource NFT non trouvée'
+      }
+    }
+
+    // Récupérer les logs de transaction pour extraire le tokenId
+    const receipt = await serverPublicClient.getTransactionReceipt({
+      hash: transactionHash as `0x${string}`
+    })
+
+    if (!receipt) {
+      return {
+        success: false,
+        message: 'Transaction toujours en attente de confirmation'
+      }
+    }
+
+    if (receipt.status !== 'success') {
+      return {
+        success: false,
+        message: 'La transaction a échoué'
+      }
+    }
+
+    // Chercher l'événement NftMinted dans les logs
+    let tokenId: bigint | undefined
+    
+    for (const log of receipt.logs) {
+      try {
+        const event = decodeEventLog({
+          abi: artistNftCollectionAbi,
+          data: log.data,
+          topics: log.topics,
+          eventName: 'NftMinted'
+        })
+        
+        if (event.eventName === 'NftMinted') {
+          const args = event.args as any
+          tokenId = args.tokenId
+          break
+        }
+      } catch (e) {
+        // Ignorer les erreurs de décodage, continuer à vérifier les autres logs
+        continue
+      }
+    }
+
+    if (!tokenId) {
+      return {
+        success: false,
+        message: 'Impossible de trouver le tokenId dans les logs de la transaction'
+      }
+    }
+
+    // Convertir le tokenId en string pour le stockage
+    const tokenIdString = tokenId.toString()
+
+    // Mettre à jour uniquement le tokenId de la ressource NFT
+    await prisma.nftResource.update({
+      where: { id },
+      data: {
+        tokenId: parseInt(tokenIdString)
+      }
+    })
+
+    // Revalider les chemins potentiels où cette donnée pourrait être affichée
+    revalidatePath('/marketplace/productsListing')
+
+    return {
+      success: true,
+      tokenId: tokenIdString,
+      message: 'TokenId de la ressource NFT mis à jour avec succès'
+    }
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du tokenId de la ressource NFT:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Une erreur inconnue est survenue lors de la mise à jour du tokenId' 
+    }
   }
 }

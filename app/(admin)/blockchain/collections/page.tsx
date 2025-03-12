@@ -9,7 +9,7 @@ export const metadata = {
 }
 
 export default async function CollectionsPage() {
-  const collections = await prisma.collection.findMany({
+  const collections = await prisma.nftCollection.findMany({
     orderBy: {
       symbol: 'asc',
     },

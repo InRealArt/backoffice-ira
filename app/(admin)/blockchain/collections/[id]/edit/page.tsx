@@ -23,7 +23,7 @@ export default async function EditCollectionPage({ params }: EditCollectionPageP
   }
   
   // Récupérer la collection avec ses relations
-  const collection = await prisma.collection.findUnique({
+  const collection = await prisma.nftCollection.findUnique({
     where: { id: collectionId },
     include: {
       artist: true,

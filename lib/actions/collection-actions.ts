@@ -36,7 +36,7 @@ export async function createCollection(data: {
     transactionHash?: string
 }): Promise<{ success: boolean; message?: string }> {
     try {
-        const collection = await prisma.collection.create({
+        const collection = await prisma.nftCollection.create({
             data: {
                 name: data.name,
                 symbol: data.symbol,
@@ -67,7 +67,7 @@ export async function syncCollection(id: number): Promise<{
 }> {
     try {
         // Récupérer la collection
-        const collection = await prisma.collection.findUnique({
+        const collection = await prisma.nftCollection.findUnique({
             where: { id }
         });
 

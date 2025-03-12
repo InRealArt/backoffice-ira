@@ -18,6 +18,7 @@ import { Address } from 'viem'
 import { useChainId, useConfig } from 'wagmi'
 import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
 import { decodeEventLog } from 'viem'
+import { useDynamicContext, useWalletConnectorEvent } from '@/lib/dynamic'
 
 // Validation pour les adresses Ethereum
 const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/
@@ -107,6 +108,8 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
   const [hasDeployerRole, setHasDeployerRole] = useState<boolean>(false)
   const [isCheckingRole, setIsCheckingRole] = useState<boolean>(false)
   
+  const { primaryWallet } = useDynamicContext()
+  
   // Fonction pour vérifier si l'utilisateur a le rôle DEPLOYER_ARTIST_ROLE
   const checkDeployerRole = async (factoryAddress: string, userAddress: string) => {
     if (!factoryAddress || !userAddress) return false
@@ -131,26 +134,40 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
     }
   }
   
-  // Vérifie le rôle lorsque la factory ou l'adresse de l'utilisateur change
-  useEffect(() => {
-    const verifyRole = async () => {
-      console.log('Vérification du rôle avec:', { 
-        selectedSmartContract, 
-        address, 
-        chainId: chain?.id, 
-        contractNetwork: selectedSmartContract?.network 
-      })
-      
-      if (selectedSmartContract && address && chain && getChainId(selectedSmartContract.network) === chain.id) {
-        const result = await checkDeployerRole(selectedSmartContract.factoryAddress, address)
-        console.log('Résultat vérification rôle:', result)
-        setHasDeployerRole(result)
-      } else {
-        console.log('Conditions non remplies pour vérifier le rôle')
-        setHasDeployerRole(false)
+  const verifyRole = async () => {
+    console.log('Vérification du rôle avec:', { 
+      selectedSmartContract, 
+      address, 
+      chainId: chain?.id, 
+      contractNetwork: selectedSmartContract?.network 
+    })
+    
+    if (selectedSmartContract && address && chain && getChainId(selectedSmartContract.network) === chain.id) {
+      const result = await checkDeployerRole(selectedSmartContract.factoryAddress, address)
+      console.log('Résultat vérification rôle:', result)
+      setHasDeployerRole(result)
+    } else {
+      console.log('Conditions non remplies pour vérifier le rôle')
+      setHasDeployerRole(false)
+    }
+  }
+  
+
+  useWalletConnectorEvent(
+    primaryWallet?.connector, 
+    'accountChange',
+    async ({ accounts }, connector) => {
+      if (connector.name === 'Rabby') {
+        console.log('Rabby wallet account changed:', accounts);
+        // Handle Rabby wallet account change
+        await verifyRole()
       }
     }
-    
+  );
+
+  
+  // Vérifie le rôle lorsque la factory ou l'adresse de l'utilisateur change
+  useEffect(() => {
     verifyRole()
   }, [selectedSmartContract, address, chain?.id])
   

@@ -6,7 +6,7 @@ import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-re
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists } from '@/app/actions/prisma/prismaActions'
+import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, updateNftResourceTxHash, updateNftResourceStatusToMinted } from '@/app/actions/prisma/prismaActions'
 import { Toaster } from 'react-hot-toast'
 import styles from './viewProduct.module.scss'
 import React from 'react'
@@ -15,10 +15,11 @@ import { toast } from 'react-hot-toast'
 import { uploadFilesToIpfs, uploadMetadataToIpfs } from '@/app/actions/pinata/pinataActions'
 import pinata from '@/lib/pinata/pinata'
 import { generateNFTMetadata } from '@/lib/nft-templates/generateMetadata'
-import { useAccount } from 'wagmi'
+import { useAccount, useWalletClient } from 'wagmi'
 import { publicClient } from '@/lib/providers'
 import { Address } from 'viem'
 import { artistNftCollectionAbi } from '@/lib/contracts/ArtistNftCollectionAbi'
+import { useNftMinting } from '../../../hooks/useNftMinting'
 
 type ParamsType = { id: string }
 
@@ -36,6 +37,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
   const [showUploadIpfsForm, setShowUploadIpfsForm] = useState(false)
   const [collections, setCollections] = useState<any[]>([])
   const [nftResource, setNftResource] = useState<any>(null)
+  const [minterWallet, setMinterWallet] = useState<Address | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -47,10 +49,13 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isMinter, setIsMinter] = useState<boolean>(false)
   const [isCheckingMinter, setIsCheckingMinter] = useState<boolean>(false)
-  
+  // Récupérer le walletClient pour les transactions
+  const { data: walletClient } = useWalletClient()
+
   const unwrappedParams = React.use(params as any) as ParamsType
   const id = unwrappedParams.id
-
+  const { mintNFT, isLoading: isMinting, error: mintingError, success: mintingSuccess } = useNftMinting()
+  
   // Schéma de validation Zod pour les fichiers IPFS
   const ipfsFormSchema = z.object({
     name: z.string().min(1, "Le nom du NFT est obligatoire"),
@@ -122,6 +127,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                 }
                 
                 // Récupérer le nftResource associé à cet item
+                console.log('itemResult : ', itemResult)
                 const nftResourceResult = await getNftResourceByItemId(itemResult.id)
                 fetchCollections()
                 //console.log('NftResource Result:', nftResourceResult)
@@ -205,6 +211,9 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
   const verifyMinter = async (address: string) => { 
       const collectionAddress = nftResource.collection.contractAddress
       const result = await checkIsMinter(collectionAddress, address)
+      if (result) {
+        setMinterWallet(address as Address)
+      }
       setIsMinter(result)
   }
 
@@ -459,6 +468,107 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
     checkInitialMinterStatus()
   }, [primaryWallet?.address, nftResource]) // Changement des dépendances pour utiliser primaryWallet.address
 
+  //---------------------------------------------------------------- handleMintNFT2
+  const handleMintNFT2 = async (): Promise<void> => {
+    if (!nftResource || !publicClient || !minterWallet) {
+      toast.error('Données manquantes pour le minting')
+      return
+    }
+
+    await mintNFT({
+      nftResource,
+      publicClient,
+      walletClient: walletClient,
+      minterWallet,
+      onSuccess: () => {
+        // Rafraîchir la page pour afficher les modifications
+        router.refresh()
+      }
+    })
+  }
+
+  //---------------------------------------------------------------- handleMintNFT
+  const handleMintNFT = async () => {
+    const contractAddress = nftResource.collection.contractAddress as Address
+    
+    // Afficher un toast de chargement
+    const mintingToast = toast.loading('Minting en cours...')
+    
+    try {
+      // Préparer les paramètres NFT pour le smart contract
+      const nftParams = {
+        name: nftResource.name,
+        description: nftResource.description,
+        certificateAuthenticity: `ipfs://${nftResource.certificateUri}`,
+        tags: [],
+        permissions: [],
+        height: 0,
+        width: 0,
+        withIntellectualProperty: false,
+        termIntellectualProperty: 0
+      }
+      
+      // URI du token (métadonnées IPFS)
+      const tokenURI = `ipfs://${nftResource.tokenUri}`
+      
+      // Simuler la transaction
+      const { request } = await publicClient.simulateContract({
+        address: contractAddress,
+        abi: artistNftCollectionAbi,
+        functionName: 'mintNFT',
+        args: [tokenURI, nftParams],
+        account: minterWallet as Address
+      })
+      
+      
+      if (!walletClient) {
+        throw new Error('Wallet client non disponible')
+      }
+      
+      // Exécuter la transaction
+      const hash = await walletClient?.writeContract(request)
+      
+      try {
+        // Appel à une action serveur pour mettre à jour le txHash
+        const updateResult = await updateNftResourceTxHash(nftResource.id, hash)
+        
+        if (updateResult.success) {
+          toast.success('NFT minté en attente de confirmation ... ')
+        } else {
+          toast.error(`Erreur lors de la mise à jour du txHash de la resource NFT : ${updateResult.error}`)
+        }
+      } catch (updateError) {
+        console.error('Erreur lors de la mise à jour du txHash:', updateError)
+        toast.error('NFT minté, mais erreur lors de la mise à jour des informations')
+      }
+      
+      toast.dismiss(mintingToast)
+      toast.loading(`Transaction soumise. Hash: ${hash.slice(0, 10)}...`)
+      
+      // Attendre la confirmation de la transaction
+      const receipt = await publicClient.waitForTransactionReceipt({ 
+        hash: hash as Address,
+        timeout: 120000 
+      })
+      
+      // Vérifier si la transaction est réussie
+      if (receipt.status === 'success') {
+        toast.success('NFT minté avec succès!')
+        
+        // Appel à une action serveur pour mettre à jour le statut de la ressource NFT
+        const updateResult = await updateNftResourceStatusToMinted(nftResource.id)
+
+        // Rafraîchir la page pour afficher les modifications
+        router.refresh()
+      } else {
+        toast.error('La transaction a échoué')
+      }
+    } catch (error) {
+      console.error('Erreur lors du minting:', error)
+      toast.dismiss(mintingToast)
+      toast.error(`Erreur lors du minting: ${(error as Error).message}`)
+    }
+  }
 
   // Composant pour afficher un champ d'URI IPFS avec lien de visualisation
   function IpfsUriField({ label, uri, prefix = 'ipfs://' }: { label: string, uri: string, prefix?: string } ) {
@@ -603,7 +713,7 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
                       <Button 
                         type="button" 
                         variant="primary"
-                        onClick={handleItemAction}
+                        onClick={handleMintNFT2}
                         disabled={isCheckingMinter || !isMinter}
                       >
                         {isCheckingMinter 

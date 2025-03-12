@@ -19,13 +19,13 @@ model Artist {
   imageUrl        String       @unique
   isGallery       Boolean?
   backgroundImage String?
-  collections     Collection[]
+  collections     NftCollection[]
   Profile         Profile[]
 
   @@schema("public")
 }
 
-model Collection {
+model NftCollection {
   id              Int              @id @default(autoincrement())
   name            String
   symbol          String           @unique
@@ -36,9 +36,25 @@ model Collection {
   status          CollectionStatus @default(pending)
   smartContractId Int?
   artist          Artist           @relation(fields: [artistId], references: [id])
-  nfts            ResourceNft[]
   nftResource     NftResource[]
   smartContract   SmartContract?   @relation(fields: [smartContractId], references: [id])
+
+  @@schema("public")
+}
+
+
+//To Remove
+model Collection {
+  id              Int              @id @default(autoincrement())
+  name            String
+  symbol          String           @unique
+  addressAdmin    String
+  artistId        Int
+  contractAddress String?
+  transactionHash String?
+  status          CollectionStatus @default(pending)
+  smartContractId Int?
+  nfts            ResourceNft[]
 
   @@schema("public")
 }
@@ -88,7 +104,7 @@ model NftResource {
   purchasedOnce    Boolean?            @default(false)
   previousOwner    String?
   Order            Order[]
-  collection       Collection          @relation(fields: [collectionId], references: [id])
+  collection       NftCollection          @relation(fields: [collectionId], references: [id])
   items            Item[]
 
   @@schema("public")
@@ -650,7 +666,7 @@ model SmartContract {
   marketplaceAddress String
   active             Boolean
   network            NetworkType
-  collections        Collection[]
+  collections        NftCollection[]
 
   @@schema("public")
 }
