@@ -1,0 +1,121 @@
+.productsContainer {
+  padding: 1.5rem;
+}
+
+.productsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.subtitle {
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.productsContent {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.productsTable {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+  }
+  
+  th {
+    font-weight: 600;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  tr {
+    border-bottom: 1px solid #e5e7eb;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.clickableRow {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #f9fafb;
+  }
+}
+
+.loadingRow {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.disabledRow {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.idCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loadingText {
+  opacity: 0.5;
+}
+
+.statusCell {
+  white-space: nowrap;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.defaultBadge {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.minedBadge {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.emptyState {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+@media (max-width: 767px) {
+  .hiddenMobile {
+    display: none;
+  }
+} 
