@@ -105,7 +105,7 @@ export default function Dashboard() {
                 <>
                   <p>Nombre d'items en attente de validation : <strong>{pendingItemsCount}</strong></p>
                   <Button 
-                    onClick={() => router.push('/marketplace/productsListing')}
+                    onClick={() => router.push('/marketplace/nftsToMint')}
                   >
                     Voir les items en attente
                   </Button>

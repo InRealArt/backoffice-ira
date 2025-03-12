@@ -161,7 +161,7 @@ export function useNftMinting(): UseNftMintingReturn {
                 // Redirection vers la liste des productListings si demandé
                 if (redirectAfterMint) {
                     setTimeout(() => {
-                        router.push('/marketplace/productsListing')
+                        router.push('/marketplace/nftsToMint')
                     }, 1500) // Délai court pour permettre à l'utilisateur de voir le message de succès
                 }
 

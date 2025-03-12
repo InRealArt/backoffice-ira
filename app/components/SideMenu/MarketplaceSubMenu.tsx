@@ -34,8 +34,8 @@ export default function MarketplaceSubMenu({
         <div className="submenu-container">
           <SideMenuItem
             label="Oeuvres à minter"
-            isActive={isActive && pathname.includes('/marketplace/productsListing')}
-            onClick={() => onNavigate('/marketplace/productsListing', 'adminMarketplace')}
+            isActive={isActive && pathname.includes('/marketplace/nftsToMint')}
+            onClick={() => onNavigate('/marketplace/nftsToMint', 'adminMarketplace')}
           />
           <SideMenuItem
             label="Configuration des royalties"

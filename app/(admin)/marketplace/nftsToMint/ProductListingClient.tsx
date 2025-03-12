@@ -60,7 +60,7 @@ export default function ProductListingClient({ products = [] }: ProductListingCl
   
   const handleItemClick = (itemId: number) => {
     setLoadingItemId(itemId)
-    router.push(`/marketplace/productsListing/${itemId}/edit`)
+    router.push(`/marketplace/nftsToMint/${itemId}/edit`)
   }
   
   // Fonction pour obtenir le badge en fonction du statut

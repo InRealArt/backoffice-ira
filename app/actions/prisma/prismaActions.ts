@@ -917,7 +917,7 @@ export async function updateNftResourceStatusToMinted(id: number): Promise<Updat
     })
 
     // Revalider les chemins potentiels où cette donnée pourrait être affichée
-    revalidatePath('/marketplace/productsListing')
+    revalidatePath('/marketplace/nftsToMint')
 
     return {
       success: true,
@@ -1033,7 +1033,7 @@ export async function updateNftResourceTokenId(
     })
 
     // Revalider les chemins potentiels où cette donnée pourrait être affichée
-    revalidatePath('/marketplace/productsListing')
+    revalidatePath('/marketplace/nftsToMint')
 
     return {
       success: true,
