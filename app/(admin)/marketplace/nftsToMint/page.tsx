@@ -6,7 +6,7 @@ export const metadata = {
   description: 'Gérez les demandes de listing de produits dans le marketplace',
 }
 
-export default async function ProductListingPage() {
+export default async function NftsToMintPage() {
   try {
     // Récupération des items avec les relations user et nftResource
     const products = await prisma.item.findMany({

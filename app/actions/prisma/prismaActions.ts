@@ -78,6 +78,31 @@ interface UpdateTokenIdResult {
   error?: string
 }
 
+// Fonction utilitaire pour convertir les objets Decimal en nombres
+function serializeData(data: any): any {
+  if (data === null || data === undefined) {
+    return data
+  }
+
+  if (data instanceof Decimal) {
+    return parseFloat(data.toString())
+  }
+
+  if (Array.isArray(data)) {
+    return data.map(item => serializeData(item))
+  }
+
+  if (typeof data === 'object') {
+    const result: Record<string, any> = {}
+    for (const key in data) {
+      result[key] = serializeData(data[key])
+    }
+    return result
+  }
+
+  return data
+}
+
 export async function createMember(data: MemberFormData): Promise<CreateMemberResult> {
   try {
     // Valider les données avec Zod
@@ -341,7 +366,7 @@ export async function createItemRecord(
       }
     })
 
-    return { success: true, item: newItem }
+    return serializeData({ success: true, item: newItem })
   } catch (error) {
     console.error('Erreur lors de la création de l\'item:', error)
     return { success: false, error }
@@ -480,7 +505,7 @@ export async function getItemByShopifyId(shopifyId: bigint) {
     const item = await prisma.item.findFirst({
       where: { idShopify: shopifyId }
     })
-    return item
+    return serializeData(item)
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'item:', error)
     return null
@@ -499,7 +524,7 @@ export async function getUserByItemId(itemId: number) {
       return null
     }
 
-    return item.user
+    return serializeData(item.user)
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'utilisateur par itemId:', error)
     return null
@@ -508,12 +533,19 @@ export async function getUserByItemId(itemId: number) {
 
 // Fonction pour récupérer un item par son ID
 export async function getItemById(itemId: number) {
+  console.log('Recherche de l\'item avec l\'ID de base de données:', itemId)
   try {
     const item = await prisma.item.findUnique({
       where: { id: itemId }
     })
 
-    return item
+    if (item) {
+      console.log('Item trouvé - ID en base de données:', item.id, 'ID Shopify:', item.idShopify.toString())
+    } else {
+      console.log('Aucun item trouvé avec cet ID')
+    }
+
+    return serializeData(item)
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'item par ID:', error)
     throw error
@@ -753,7 +785,8 @@ export async function checkIsAdmin(email?: string | null, walletAddress?: string
     // Vérification du rôle admin
     const isAdmin = user?.role === 'admin'
 
-    return { isAdmin }
+    // Utiliser serializeData pour s'assurer que tous les objets sont sérialisables
+    return serializeData({ isAdmin })
   } catch (error) {
     console.error('Erreur lors de la vérification du rôle admin:', error)
     return {

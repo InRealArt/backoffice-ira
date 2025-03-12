@@ -8,7 +8,7 @@ import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
 import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, updateNftResourceTxHash, updateNftResourceStatusToMinted } from '@/app/actions/prisma/prismaActions'
 import { Toaster } from 'react-hot-toast'
-import styles from './nftToMint.module.scss'
+import styles from './royaltySettings.module.scss'
 import React from 'react'
 import { z } from 'zod'
 import { toast } from 'react-hot-toast'
@@ -23,7 +23,7 @@ import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 
 type ParamsType = { id: string }
 
-export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
+export default function ViewRoyaltysettingPage({ params }: { params: ParamsType }) {
   const router = useRouter()
   const { user, primaryWallet } = useDynamicContext()
   const { address, status, chain } = useAccount()
@@ -664,7 +664,6 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
                   />
                 </div>
                 
-                {item?.status === 'pending' && nftResource?.status === 'UPLOADMETADATA' ? (
                   <div className={styles.nftResourceInfo}>
                     <h3 className={styles.formTitle}>Ressources NFT uploadées sur IPFS</h3>
                     <p className={styles.infoNote}>
@@ -728,134 +727,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
                           : 'Mint NFT'}
                       </Button>
                     </div>
-                  </div>
-                ) : showUploadIpfsForm && item?.status === 'pending' ? (
-                  <div className={styles.listingFormContainer}>
-                    <h3 className={styles.formTitle}>Upload sur IPFS</h3>
-                    <form onSubmit={handleUploadOnIpfs} className={styles.listingForm}>
-                      <div className={styles.formGroup}>
-                        <label htmlFor="name">Nom du NFT</label>
-                        <input
-                          id="name"
-                          name="name"
-                          type="text"
-                          value={formData.name}
-                          onChange={handleFormChange}
-                          required
-                          className={styles.formInput}
-                          placeholder="Nom du NFT"
-                        />
-                        {formErrors.name && (
-                          <span className={styles.errorMessage}>{formErrors.name}</span>
-                        )}
-                      </div>
-                      
-                      <div className={styles.formGroup}>
-                        <label htmlFor="description">Description du NFT</label>
-                        <textarea
-                          id="description"
-                          name="description"
-                          value={formData.description}
-                          onChange={handleFormChange}
-                          required
-                          className={styles.formTextarea}
-                          placeholder="Description du NFT"
-                          rows={4}
-                        />
-                        {formErrors.description && (
-                          <span className={styles.errorMessage}>{formErrors.description}</span>
-                        )}
-                      </div>
-                      
-                      <div className={styles.formGroup}>
-                        <label htmlFor="collection">Collection</label>
-                        <select
-                          id="collection"
-                          name="collection"
-                          value={formData.collection}
-                          onChange={handleFormChange}
-                          required
-                          className={styles.formSelect}
-                        >
-                          <option value="">Sélectionnez une collection</option>
-                          {collections.map((collection) => (
-                            <option key={collection.id} value={collection.id.toString()}>
-                              {collection.name}
-                            </option>
-                          ))}
-                        </select>
-                        {formErrors.collection && (
-                          <span className={styles.errorMessage}>{formErrors.collection}</span>
-                        )}
-                      </div>
-                      
-                      <div className={styles.formGroup}>
-                        <label htmlFor="image">Image du NFT</label>
-                        <input
-                          id="image"
-                          name="image"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFormChange}
-                          required
-                          className={styles.formFileInput}
-                        />
-                        {formErrors.image && (
-                          <span className={styles.errorMessage}>{formErrors.image}</span>
-                        )}
-                      </div>
-                      
-                      <div className={styles.formGroup}>
-                        <label htmlFor="certificate">Certificat d'authenticité</label>
-                        <input
-                          id="certificate"
-                          name="certificate"
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={handleFormChange}
-                          required
-                          className={styles.formFileInput}
-                        />
-                        {formErrors.certificate && (
-                          <span className={styles.errorMessage}>{formErrors.certificate}</span>
-                        )}
-                      </div>
-                      
-                      <div className={styles.formActions}>
-                        <Button 
-                          type="button" 
-                          variant="secondary"
-                          onClick={() => setShowUploadIpfsForm(false)}
-                        >
-                          Annuler
-                        </Button>
-                        <Button 
-                          type="submit" 
-                          variant="primary"
-                        >
-                          Upload sur IPFS
-                        </Button>
-                      </div>
-                    </form>
-                  </div>
-                ) : (
-                  <div className={styles.actionButtons}>
-                    <Button 
-                      type="button" 
-                      variant="secondary"
-                      onClick={() => router.back()}
-                    >
-                      Annuler
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="primary"
-                      onClick={handleItemAction}
-                    >
-                      {getActionButtonText()}
-                    </Button>
-                  </div>
-                )}
+                  </div>                
               </div>
             </div>
           </div>
