@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import ProductListingClient from './ProductListingClient'
+import ProductListingClient from './NftsToMintClient'
 
 export const metadata = {
   title: 'Demandes de listing produits | Marketplace',
@@ -10,6 +10,22 @@ export default async function ProductListingPage() {
   try {
     // Récupération des items avec les relations user et nftResource
     const products = await prisma.item.findMany({
+      where: {
+        OR: [
+          {
+            nftResource: {
+              status: {
+                not: {
+                  in: ['MINED', 'LISTED', 'SOLD']
+                }
+              }
+            }
+          },
+          {
+            nftResource: null
+          }
+        ]
+      },
       orderBy: {
         id: 'desc',
       },

@@ -86,10 +86,44 @@
 }
 
 .productTitle {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #222;
-  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleBadge {
+  margin-left: 10px;
+}
+
+.statusBadge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+/* Couleurs correspondant à la liste des nftsToMint */
+.status-uploadipfs {
+  background-color: #FF9800;
+  color: #fff;
+}
+
+.status-uploadmetadata {
+  background-color: #2196F3;
+  color: #fff;
+}
+
+.status-minted {
+  background-color: #4CAF50;
+  color: #fff;
+}
+
+/* Style par défaut pour les autres statuts */
+.statusBadge:not(.status-uploadipfs):not(.status-uploadmetadata):not(.status-minted) {
+  background-color: #757575;
+  color: #fff;
 }
 
 .infoGroup {

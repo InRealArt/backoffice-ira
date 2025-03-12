@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import styles from './ProductListingClient.module.scss'
+import styles from './NftsToMintClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { ItemStatus, ResourceNftStatuses } from '@prisma/client'
 
@@ -27,7 +27,7 @@ interface ProductListingClientProps {
   products: Item[] | undefined
 }
 
-export default function ProductListingClient({ products = [] }: ProductListingClientProps) {
+export default function NftsToMintClient({ products = [] }: ProductListingClientProps) {
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const [loadingItemId, setLoadingItemId] = useState<number | null>(null)

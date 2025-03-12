@@ -8,18 +8,18 @@ import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
 import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, updateNftResourceTxHash, updateNftResourceStatusToMinted } from '@/app/actions/prisma/prismaActions'
 import { Toaster } from 'react-hot-toast'
-import styles from './viewProduct.module.scss'
+import styles from './nftToMint.module.scss'
 import React from 'react'
 import { z } from 'zod'
 import { toast } from 'react-hot-toast'
 import { uploadFilesToIpfs, uploadMetadataToIpfs } from '@/app/actions/pinata/pinataActions'
-import pinata from '@/lib/pinata/pinata'
-import { generateNFTMetadata } from '@/lib/nft-templates/generateMetadata'
 import { useAccount, useWalletClient } from 'wagmi'
 import { publicClient } from '@/lib/providers'
 import { Address } from 'viem'
 import { artistNftCollectionAbi } from '@/lib/contracts/ArtistNftCollectionAbi'
 import { useNftMinting } from '../../../hooks/useNftMinting'
+import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
+
 
 type ParamsType = { id: string }
 
@@ -620,7 +620,12 @@ export default function ViewProductPage({ params }: { params: ParamsType }) {
               
               <div className={styles.detailsSection}>
                 <div className={styles.productInfo}>
-                  <h2 className={styles.productTitle}>{product.title}</h2>
+                  <h2 className={styles.productTitle}>
+                    {product.title}
+                    {nftResource && (
+                      <NftStatusBadge status={nftResource.status} className={styles.titleBadge} />
+                    )}
+                  </h2>
                   
                   {productOwner && (
                     <div className={styles.infoGroup}>
