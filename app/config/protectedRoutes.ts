@@ -6,6 +6,9 @@ const protectedRoutes: Record<string, AccessLevel> = {
     "/blockchain/artists": "admin",
     "/blockchain/collections": "admin",
     "/blockchain/factories": "admin",
+    "/marketplace/productsListing": "admin",
+    "/marketplace/royaltiesSettings": "admin",
+    "/marketplace/marketplaceListing": "admin",
     // Routes artiste
     "/shopify/createArtwork": "artist",
     "/shopify/collection": "artist",

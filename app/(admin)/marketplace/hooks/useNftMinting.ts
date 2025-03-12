@@ -147,8 +147,13 @@ export function useNftMinting(): UseNftMintingReturn {
                 // Mettre à jour le statut de la ressource NFT
                 await updateNftResourceStatusToMinted(Number(nftResource.id))
 
-                //Mettre à jour le tokenId dans la base de données
-                await updateNftResourceTokenId(Number(nftResource.id), hash)
+                // Mettre à jour le tokenId, le minter et l'owner dans la base de données
+                await updateNftResourceTokenId(
+                    Number(nftResource.id),
+                    hash,
+                    minterWallet,
+                    contractAddress
+                )
 
                 // Appeler le callback de succès
                 onSuccess()

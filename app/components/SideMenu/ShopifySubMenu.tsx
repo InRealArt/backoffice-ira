@@ -54,13 +54,11 @@ export default function ShopifySubMenu({
             label="Créer membre"
             isActive={isActive && location.pathname.includes('/shopify/create-member')}
             onClick={() => onNavigate('/shopify/create-member', 'createMember')}
-            className={styles.submenuItemVertical}
           />
           <SideMenuItem 
             label="Utilisateurs"
             isActive={isActive && location.pathname.includes('/shopify/users')}
             onClick={() => onNavigate('/shopify/users', 'shopifyUsers')}
-            className={styles.submenuItemVertical}
           />
         </div>
       )}
