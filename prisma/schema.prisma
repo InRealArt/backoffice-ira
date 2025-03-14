@@ -10,13 +10,13 @@ datasource db {
 }
 
 model Artist {
-  id              Int          @id @default(autoincrement())
+  id              Int             @id @default(autoincrement())
   name            String
   surname         String
-  pseudo          String       @unique
-  description     String       @unique
-  publicKey       String       @unique
-  imageUrl        String       @unique
+  pseudo          String          @unique
+  description     String          @unique
+  publicKey       String          @unique
+  imageUrl        String          @unique
   isGallery       Boolean?
   backgroundImage String?
   collections     NftCollection[]
@@ -41,7 +41,6 @@ model NftCollection {
 
   @@schema("public")
 }
-
 
 //To Remove
 model Collection {
@@ -85,27 +84,28 @@ model ResourceNft {
 }
 
 model NftResource {
-  id               Int                 @id @default(autoincrement())
-  tokenId          Int?
-  tokenUri         String?             @unique
-  status           ResourceNftStatuses
-  type             ResourceTypes
-  minter           String?
-  collectionId     Int
-  name             String              @unique
-  imageUri         String?
-  description      String
-  certificateUri   String?             @unique
-  blockchainItemId Int?                @unique
-  mockups          String[]
-  owner            String?
-  transactionHash  String?
-  tags             String[]
-  purchasedOnce    Boolean?            @default(false)
-  previousOwner    String?
-  Order            Order[]
-  collection       NftCollection          @relation(fields: [collectionId], references: [id])
-  items            Item[]
+  id                   Int                  @id @default(autoincrement())
+  tokenId              Int?
+  tokenUri             String?              @unique
+  status               ResourceNftStatuses
+  type                 ResourceTypes
+  minter               String?
+  collectionId         Int
+  name                 String               @unique
+  imageUri             String?
+  description          String
+  certificateUri       String?              @unique
+  blockchainItemId     Int?                 @unique
+  mockups              String[]
+  owner                String?
+  transactionHash      String?
+  tags                 String[]
+  purchasedOnce        Boolean?             @default(false)
+  previousOwner        String?
+  Order                Order[]
+  collection           NftCollection        @relation(fields: [collectionId], references: [id])
+  items                Item[]
+  royaltyBeneficiaries RoyaltyBeneficiary[]
 
   @@schema("public")
 }
@@ -619,22 +619,22 @@ enum CollectionStatus {
 }
 
 model Item {
-  id                             Int               @id @default(autoincrement())
-  status                         ItemStatus        @default(created)
-  idUser                         Int
-  idShopify                      BigInt
-  user                           BackofficeUser    @relation(fields: [idUser], references: [id])
-  authCertificate                AuthCertificate[]
-  nftResource                    NftResource?      @relation(fields: [idNftResource], references: [id])
-  idNftResource                  Int?
-  tags                           String[]          @default([])
-  height                         Decimal?          @db.Decimal(10, 2)
-  width                          Decimal?          @db.Decimal(10, 2)
-  intellectualProperty           Boolean           @default(false)
-  intellectualPropertyEndDate    DateTime?
-  priceBeforeTax                 Int               @default(0) 
-  artworkSupport                 String?
-  creationDate                   DateTime?
+  id                          Int               @id @default(autoincrement())
+  status                      ItemStatus        @default(created)
+  idUser                      Int
+  idShopify                   BigInt
+  user                        BackofficeUser    @relation(fields: [idUser], references: [id])
+  authCertificate             AuthCertificate[]
+  nftResource                 NftResource?      @relation(fields: [idNftResource], references: [id])
+  idNftResource               Int?
+  tags                        String[]          @default([])
+  height                      Decimal?          @db.Decimal(10, 2)
+  width                       Decimal?          @db.Decimal(10, 2)
+  intellectualProperty        Boolean           @default(false)
+  intellectualPropertyEndDate DateTime?
+  priceBeforeTax              Int               @default(0)
+  artworkSupport              String?
+  creationDate                DateTime?
 
   @@index([idUser])
   @@index([idNftResource])
@@ -661,7 +661,7 @@ model AuthCertificate {
 }
 
 model SmartContract {
-  id                 Int          @id @default(autoincrement())
+  id                 Int             @id @default(autoincrement())
   factoryAddress     String
   royaltiesAddress   String
   marketplaceAddress String
@@ -681,5 +681,16 @@ enum NetworkType {
   base
   sepoliaBase
 
+  @@schema("public")
+}
+
+model RoyaltyBeneficiary {
+  id            Int         @id @default(autoincrement())
+  wallet        String
+  percentage    Int
+  nftResourceId Int
+  nftResource   NftResource @relation(fields: [nftResourceId], references: [id])
+
+  @@index([nftResourceId])
   @@schema("public")
 }

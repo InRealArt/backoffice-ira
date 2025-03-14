@@ -1,4 +1,6 @@
 import { Address, isAddress } from 'viem'
+import { artistRoyaltiesAbi } from '../contracts/ArtistRoyalties'
+import { serverPublicClient } from '../server-providers'
 
 /**
  * Vérifie si une chaîne de caractères est une adresse Ethereum valide

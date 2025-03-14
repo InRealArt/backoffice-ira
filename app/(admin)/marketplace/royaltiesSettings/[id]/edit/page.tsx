@@ -15,7 +15,7 @@ import { toast } from 'react-hot-toast'
 import { uploadFilesToIpfs, uploadMetadataToIpfs } from '@/app/actions/pinata/pinataActions'
 import { useAccount, useWalletClient } from 'wagmi'
 import { publicClient } from '@/lib/providers'
-import { Address, isAddress } from 'viem'
+import { Address, encodeFunctionData, isAddress } from 'viem'
 import { artistNftCollectionAbi } from '@/lib/contracts/ArtistNftCollectionAbi'
 import { useNftMinting } from '../../../hooks/useNftMinting'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
@@ -413,80 +413,112 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     checkUserRoyaltyRole(primaryWallet?.address as string)
   }, [primaryWallet?.address, nftResource])
 
-  // Vérification des adresses valides
-  const validateAddresses = (addresses: string[]): boolean => {
-    const invalidAddresses = addresses.filter(addr => !isAddress(addr))
-    if (invalidAddresses.length > 0) {
-      toast.error(`Les adresses suivantes ne sont pas valides: ${invalidAddresses.join(', ')}`)
-      return false
-    }
-    return true
-  }
-  
+
   // Fonction pour configurer les royalties sur la blockchain
   const handleConfigureRoyalties = async () => {
-    // Vérifier que les adresses sont valides
-    const addresses = royalties.map(r => r.address)
-    if (!validateAddresses(addresses)) {
-      return
-    }
-    
-    // Vérifier que la somme est exactement 100%
-    if (totalPercentage !== 100) {
-      toast.error('Le pourcentage total doit être exactement 100%')
-      return
-    }
-    
-    if (royalties.some(r => !r.address || !r.percentage)) {
-      toast.error('Veuillez remplir toutes les adresses et pourcentages')
-      return
-    }
-    
     setIsConfiguring(true)
     const toastId = toast.loading('Configuration des royalties en cours...')
     
     try {
-      // Préparer les données pour l'envoi à la blockchain
+      // Vérifier que les adresses sont valides
       const addresses = royalties.map(r => r.address as Address)
-      const percentages = royalties.map(r => parseFloat(r.percentage) * 100) // Convertir en points de base (1% = 100 points)
-      
-      // Définir les royalties sur le contrat
-      const { request } = await publicClient.simulateContract({
-        address: nftResource.collection.contractAddress as Address,
-        abi: artistNftCollectionAbi,
-        functionName: 'setRoyalty',
-        args: [addresses, percentages],
-        account: primaryWallet?.address as Address
-      })
-      
-      if (!walletClient) {
-        throw new Error('Wallet client non disponible')
+      if (addresses.some(addr => !isValidEthereumAddress(addr))) {
+        toast.error('Certaines adresses ne sont pas valides', { id: toastId })
+        setIsConfiguring(false)
+        return
       }
       
-      // Exécuter la transaction
-      const hash = await walletClient.writeContract(request)
-      
-      toast.success('Transaction soumise avec succès', { id: toastId })
-      toast.loading(`Transaction en cours de traitement: ${hash.slice(0, 10)}...`)
-      
-      // Attendre la confirmation de la transaction
-      const receipt = await publicClient.waitForTransactionReceipt({ 
-        hash,
-        timeout: 120000 
+      // Vérifier que les pourcentages sont valides
+      const percentages = royalties.map(r => {
+        const value = parseFloat(r.percentage)
+        if (isNaN(value)) {
+          throw new Error('Certains pourcentages ne sont pas des nombres valides')
+        }
+        return value
       })
       
-      // Vérifier si la transaction est réussie
-      if (receipt.status === 'success') {
-        toast.success('Royalties configurées avec succès!')
+      // Vérifier que le pourcentage total est valide
+      if (isNaN(totalPercentage) || totalPercentage <= 0 || totalPercentage > 100) {
+        toast.error('Le pourcentage total doit être entre 1 et 100', { id: toastId })
+        setIsConfiguring(false)
+        return
+      }
+      
+      // Vérifier que les tableaux ont la même longueur
+      if (addresses.length !== percentages.length) {
+        toast.error('Le nombre d\'adresses et de pourcentages ne correspond pas', { id: toastId })
+        setIsConfiguring(false)
+        return
+      }
+      
+      console.log('nftResource:', nftResource)
+      console.log('nftResource address:', nftResource.collection.contractAddress)
+      console.log('nftResource tokenId:', nftResource.tokenId)
+      console.log('addresses:', addresses)
+      console.log('percentages:', percentages)
+      console.log('totalPercentage:', totalPercentage*100)
+      
+      // Convertir les pourcentages en entiers si nécessaire
+      // Certains contrats attendent des points de base (1% = 100 points)
+      const args = [
+        nftResource.collection.contractAddress, 
+        nftResource.tokenId, 
+        addresses, 
+        percentages.map(p => Math.round(p)), // Convertir en entiers
+        Math.round(totalPercentage*100) // Convertir en entier
+      ]
+      
+      try {
+        const network = getNetwork()
+        const royaltiesContractAddress = CONTRACT_ADDRESSES[network.id][ContractName.NFT_ROYALTIES]
+        console.log('royaltiesContractAddress:', royaltiesContractAddress)
+        // Simuler la transaction pour détecter les erreurs
+        const { request } = await publicClient.simulateContract({
+          address: royaltiesContractAddress as Address,
+          abi: artistRoyaltiesAbi,
+          functionName: 'setRoyalty',
+          args: args,
+          account: primaryWallet?.address as Address
+        })
         
-        // Rafraîchir la page
-        router.refresh()
-      } else {
-        toast.error('La transaction a échoué')
+        if (!walletClient) {
+          throw new Error('Wallet client non disponible')
+        }
+        
+        // Exécuter la transaction
+        const hash = await walletClient.writeContract(request)
+        
+        toast.success('Transaction soumise avec succès', { id: toastId })
+        toast.loading(`Transaction en cours de traitement: ${hash.slice(0, 10)}...`)
+        
+        // Attendre la confirmation de la transaction
+        const receipt = await publicClient.waitForTransactionReceipt({ 
+          hash,
+          timeout: 120000 
+        })
+        
+        // Vérifier si la transaction est réussie
+        if (receipt.status === 'success') {
+          toast.success('Royalties configurées avec succès!')
+          
+          // Rafraîchir la page
+          router.refresh()
+        } else {
+          toast.error('La transaction a échoué')
+        }
+      } catch (error: any) {
+        console.error('Erreur lors de la simulation ou exécution:', error)
+        
+        // Essayer de donner des conseils spécifiques basés sur l'erreur
+        if (error.message.includes('insufficient funds')) {
+          toast.error('Fonds insuffisants pour exécuter la transaction', { id: toastId, duration: 5000 })
+        } else if (error.message.includes('gas required exceeds allowance')) {
+          toast.error('La limite de gaz est trop basse pour cette transaction', { id: toastId, duration: 5000 })
+        }
       }
-    } catch (error) {
-      console.error('Erreur lors de la configuration des royalties:', error)
-      toast.error(`Erreur: ${(error as Error).message}`, { id: toastId })
+    } catch (error: any) {
+      console.error('Erreur générale:', error)
+      toast.error(`Erreur: ${error.message}`, { id: toastId })
     } finally {
       setIsConfiguring(false)
     }
