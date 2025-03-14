@@ -446,4 +446,114 @@
     padding-bottom: 0.75rem;
     border-bottom: 1px dashed #e0e7ff;
   }
+}
+
+.royaltiesConfig {
+  margin-top: 2rem;
+  border-top: 1px solid #eaeaea;
+  padding-top: 1.5rem;
+}
+
+.royaltiesTable {
+  margin: 1rem 0;
+  border: 1px solid #eaeaea;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 3fr 1fr 0.5fr;
+  background-color: #f9f9f9;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 3fr 1fr 0.5fr;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid #eaeaea;
+  align-items: center;
+}
+
+.tableHeaderCell, 
+.tableCell {
+  padding: 0.5rem 0;
+}
+
+.numberInput {
+  text-align: right;
+}
+
+.addButton, 
+.removeButton {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+  border: 1px solid #ddd;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.addButton {
+  margin-top: 0.5rem;
+  margin-left: 1rem;
+  margin-bottom: 1rem;
+  background-color: #f9f9f9;
+}
+
+.removeButton {
+  color: #e53e3e;
+  border-color: transparent;
+}
+
+.addButton:hover {
+  background-color: #f3f3f3;
+}
+
+.removeButton:hover {
+  background-color: #fee2e2;
+}
+
+.tableActions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.totalPercentage {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+  font-weight: 600;
+  
+  .label {
+    margin-right: 0.5rem;
+  }
+  
+  input {
+    width: 80px;
+    margin: 0 0.5rem;
+    text-align: right;
+    font-weight: 600;
+  }
+  
+  .error {
+    border-color: #e53e3e;
+    color: #e53e3e;
+  }
+}
+
+.errorMessage {
+  color: #e53e3e;
+  font-size: 0.875rem;
+  margin-left: 0.5rem;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: flex-end;
 } 

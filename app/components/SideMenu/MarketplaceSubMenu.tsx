@@ -43,7 +43,7 @@ export default function MarketplaceSubMenu({
             onClick={() => onNavigate('/marketplace/royaltiesSettings', 'adminMarketplace')}
           />
           <SideMenuItem
-            label="Configuration des royalties"
+            label="Lister un NFT sur la marketplace"
             isActive={isActive && pathname.includes('/marketplace/marketplaceListing')}
             onClick={() => onNavigate('/marketplace/marketplaceListing', 'adminMarketplace')}
           />

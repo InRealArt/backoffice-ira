@@ -15,11 +15,15 @@ import { toast } from 'react-hot-toast'
 import { uploadFilesToIpfs, uploadMetadataToIpfs } from '@/app/actions/pinata/pinataActions'
 import { useAccount, useWalletClient } from 'wagmi'
 import { publicClient } from '@/lib/providers'
-import { Address } from 'viem'
+import { Address, isAddress } from 'viem'
 import { artistNftCollectionAbi } from '@/lib/contracts/ArtistNftCollectionAbi'
 import { useNftMinting } from '../../../hooks/useNftMinting'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
-
+import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
+import { artistRoyaltiesAbi } from '@/lib/contracts/ArtistRoyalties'
+import { CONTRACT_ADDRESSES, ContractName } from '@/constants/contracts'
+import { getNetwork } from '@/lib/blockchain/networkConfig'
+import { isValidEthereumAddress } from '@/lib/blockchain/utils'
 
 type ParamsType = { id: string }
 
@@ -51,6 +55,8 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
   const [isCheckingMinter, setIsCheckingMinter] = useState<boolean>(false)
   // Récupérer le walletClient pour les transactions
   const { data: walletClient } = useWalletClient()
+  const [hasRoyaltyRole, setHasRoyaltyRole] = useState<boolean>(false)
+  const [isCheckingRole, setIsCheckingRole] = useState<boolean>(false)
 
   const unwrappedParams = React.use(params as any) as ParamsType
   const id = unwrappedParams.id
@@ -69,6 +75,17 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     })
   })
 
+  // État pour gérer les royalties
+  const [royalties, setRoyalties] = useState<Array<{address: string, percentage: string}>>([
+    { address: '', percentage: '' }
+  ])
+  const [totalPercentage, setTotalPercentage] = useState<number>(0)
+  const [totalPercentageBeneficiaries, setTotalPercentageBeneficiaries] = useState<number>(0)
+  const [allBeneficaryAddress, setAllBeneficaryAddress] = useState<boolean>(false)
+  const [isConfiguring, setIsConfiguring] = useState<boolean>(false)
+  const [royaltiesSettingsOk, setRoyaltiesSettingsOk] = useState<boolean>(false)
+
+
   const fetchCollections = async () => {
     try {
       const collectionsData = await getActiveCollections()
@@ -80,6 +97,53 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
       console.error('Erreur lors du chargement des collections:', error)
     }
   }
+
+  useWalletConnectorEvent(
+    primaryWallet?.connector, 
+    'accountChange',
+    async ({ accounts }, connector) => {
+      if (connector.name === 'Rabby') {
+        console.log('Rabby wallet account changed:', accounts);
+        // Handle Rabby wallet account change
+        await checkUserRoyaltyRole(accounts[0]);
+      }
+    }
+  );
+
+  // CORRECTION: Utilisation correcte de useWalletConnectorEvent pour les changements de chaîne
+  useWalletConnectorEvent(
+    primaryWallet?.connector,
+    'chainChange',
+    async ({ chain }, connector) => {
+      console.log('Changement de chaîne détecté via useWalletConnectorEvent:', chain);
+      if (address) {
+        await checkUserRoyaltyRole(address);
+      }
+    }
+  );
+  
+  // Ajout d'un useEffect pour la vérification initiale du minter
+ // Remplacer l'useEffect à la ligne 469 par celui-ci
+  useEffect(() => {
+    const checkInitialMinterStatus = async () => {
+      console.log('Vérification initiale du statut minter - primaryWallet:', {
+        primaryWalletAddress: primaryWallet?.address,
+        nftResource: nftResource?.collection?.contractAddress
+      })
+
+      if (
+        primaryWallet?.connector?.name === 'Rabby' && 
+        primaryWallet?.address && 
+        nftResource?.collection?.contractAddress
+      ) {
+        console.log('Adresse Rabby détectée:', primaryWallet.address)
+        await checkUserRoyaltyRole(primaryWallet.address as string)
+      }
+    }
+
+    checkInitialMinterStatus()
+  }, [primaryWallet?.address, nftResource]) // Changement des dépendances pour utiliser primaryWallet.address
+
 
   useEffect(() => {
     if (!user?.email) {
@@ -207,245 +271,16 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     }
   }
 
-  //---------------------------------------------------------------- verifyMinter
-  const verifyMinter = async (address: string) => { 
-      const collectionAddress = nftResource.collection.contractAddress
-      const result = await checkIsMinter(collectionAddress, address)
-      if (result) {
-        setMinterWallet(address as Address)
-      }
-      setIsMinter(result)
+  const checkUserRoyaltyRole = async (address: string) => {
+    const network = getNetwork()
+    //console.log('Royalties SC : ', CONTRACT_ADDRESSES[network.id][ContractName.NFT_ROYALTIES])
+    const hasRole = await checkRoyaltyRole(
+      address,
+      CONTRACT_ADDRESSES[network.id][ContractName.NFT_ROYALTIES]
+    )
+    setHasRoyaltyRole(hasRole)
   }
 
-  //---------------------------------------------------------------- handleUploadOnIpfs
-  const handleUploadOnIpfs = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormErrors({})
-    
-    try {
-      // Valider les fichiers avec Zod
-      const result = ipfsFormSchema.safeParse({
-        name: formData.name,
-        description: formData.description,
-        collection: formData.collection,
-        image: formData.image,
-        certificate: formData.certificate
-      })
-      
-      if (!result.success) {
-        // Transformer les erreurs Zod en objet d'erreurs
-        const errors: Record<string, string> = {}
-        result.error.issues.forEach(issue => {
-          errors[issue.path[0].toString()] = issue.message
-        })
-        setFormErrors(errors)
-        // Afficher un toast d'erreur
-        toast.error('Veuillez corriger les erreurs du formulaire')
-        return
-      }
-      
-      // Vérifier l'unicité du nom NFT
-      const nameCheckToast = toast.loading('Vérification du nom du NFT...')
-      const nameExists = await checkNftResourceNameExists(formData.name)
-      toast.dismiss(nameCheckToast)
-      
-      if (nameExists) {
-        setFormErrors(prev => ({
-          ...prev,
-          name: 'Ce nom de NFT existe déjà. Veuillez en choisir un autre.'
-        }))
-        toast.error('Ce nom de NFT existe déjà')
-        return
-      }
-      
-      // Afficher un toast de chargement
-      const loadingToast = toast.loading('Upload des fichiers sur IPFS en cours...')
-      
-      // Appel du server action pour upload les fichiers
-      const response = await uploadFilesToIpfs(
-        formData.image as File,
-        formData.certificate as File,
-        formData.name || product.title || 'nft'
-      )
-      
-      // Fermer le toast de chargement
-      toast.dismiss(loadingToast)
-      
-      if (!response.success) {
-        toast.error(response.error || 'Erreur lors de l\'upload sur IPFS')
-        return
-      }
-      
-      console.log('Image uploadée sur IPFS:', response.image)
-      console.log('Certificat uploadé sur IPFS:', response.certificate)
-      
-      // Upload des métadonnées sur IPFS via la Server Action
-      const metadataToast = toast.loading('Upload des métadonnées NFT sur IPFS...');
-      
-      try {
-        const metadataResponse = await uploadMetadataToIpfs({
-          name: formData.name,
-          description: formData.description,
-          imageCID: response.image.data.cid,
-          certificateUri: `ipfs://${response.certificate.data.cid}`,
-          externalUrl: `${process.env.NEXT_PUBLIC_WEBSITE_URL}/artwork/${product.handle}`
-        });
-        
-        if (!metadataResponse.success) {
-          toast.dismiss(metadataToast);
-          toast.error(metadataResponse.error || 'Erreur lors de l\'upload des métadonnées');
-          return;
-        }
-        
-        const tokenUri = metadataResponse.metadata?.data.cid;
-        console.log('Métadonnées uploadées sur IPFS:', tokenUri);
-        toast.dismiss(metadataToast);
-        
-        // Création d'un enregistrement dans la table NftResource
-        const nftResourceToast = toast.loading('Enregistrement des ressources NFT...')
-        
-        try {
-          if (!item || !item.id) {
-            throw new Error('Impossible de trouver l\'item associé')
-          }
-
-          const collectionId = parseInt(formData.collection)
-          if (isNaN(collectionId)) {
-            throw new Error('ID de collection invalide')
-          }
-          
-          // Appel à l'action serveur pour créer l'enregistrement NftResource
-          const nftResourceResult = await createNftResource({
-            itemId: item.id,
-            imageUri: response.image.data.cid,
-            certificateUri: response.certificate.data.cid,
-            tokenUri: tokenUri, // Utiliser le CID retourné par Pinata
-            type: 'IMAGE',
-            status: 'UPLOADMETADATA', // Mettre à jour le statut
-            name: formData.name,
-            description: formData.description,
-            collectionId: collectionId
-          });
-          
-          toast.dismiss(nftResourceToast);
-          
-          if (!nftResourceResult.success) {
-            toast.error(nftResourceResult.error || 'Erreur lors de l\'enregistrement des ressources NFT');
-            return;
-          }
-          
-          toast.success('Ressources NFT enregistrées avec succès');
-          setShowUploadIpfsForm(false);
-          
-          // Rafraîchir la page pour afficher les changements
-          router.refresh();
-        } catch (resourceError) {
-          toast.dismiss(nftResourceToast);
-          console.error('Erreur lors de l\'enregistrement des ressources NFT:', resourceError);
-          toast.error('Une erreur est survenue lors de l\'enregistrement des ressources NFT');
-        }
-      } catch (metadataError) {
-        toast.dismiss(metadataToast);
-        console.error('Erreur lors de l\'upload des métadonnées:', metadataError);
-        toast.error('Une erreur est survenue lors de l\'upload des métadonnées');
-      }
-    } catch (error) {
-      console.error('Erreur lors de l\'upload sur IPFS:', error);
-      toast.error('Une erreur est survenue lors de l\'upload');
-    }
-  }
-
-  // Fonction pour gérer l'action selon le statut de l'item
-  const handleItemAction = async () => {
-    if (item?.status === 'pending') {
-      if (nftResource && nftResource.status === 'UPLOADMETADATA') {
-        // Si les ressources sont déjà sur IPFS, passer à l'étape suivante (mint)
-        console.log('Ressources déjà sur IPFS, prêt pour le mint')
-        // Logique pour mint NFT
-        console.log('Mint NFT pour le produit:', product.id)
-        // Appel à l'API de mint
-      } else {
-        // Afficher le formulaire pour upload sur IPFS
-        setShowUploadIpfsForm(true)
-      }
-    } else {
-      // Logique pour mint NFT
-      console.log('Mint NFT pour le produit:', product.id)
-      // Appel à l'API de mint
-    }
-  }
-
-  // Détermine le texte du bouton en fonction du statut de l'item et du nftResource
-  const getActionButtonText = () => {
-    if (item?.status === 'pending') {
-      if (nftResource?.status === 'UPLOADIPFS') {
-        return 'Mint NFT'
-      }
-      return 'Préparer pour le mint'
-    }
-    return 'Lister sur la marketplace'
-  }
-
-  // Nouvelle fonction pour vérifier si l'utilisateur est un minter
-  const checkIsMinter = async (collectionAddress: string, userAddress: string) => {
-    console.log('collectionAddress : ', collectionAddress)
-    console.log('userAddress : ', userAddress)
-    //if (!collectionAddress || !userAddress) return false
-    
-    setIsCheckingMinter(true)
-    try {
-      // Utiliser la fonction getMinters() pour récupérer la liste des minters
-      const minters = await publicClient.readContract({
-        address: collectionAddress as Address,
-        abi: artistNftCollectionAbi,
-        functionName: 'getMinters'
-      }) as Address[]
-      console.log('minters : ', minters)
-      // Vérifier si l'adresse de l'utilisateur est dans la liste des minters
-      const userIsMinter = minters.map(m => m.toLowerCase()).includes(userAddress.toLowerCase())
-      console.log(`L'utilisateur ${userAddress} ${userIsMinter ? 'est' : 'n\'est pas'} un minter sur la collection ${collectionAddress}`)
-      console.log('Liste des minters:', minters)
-      
-      return userIsMinter
-    } catch (error) {
-      console.error('Erreur lors de la vérification des minters:', error)
-      return false
-    } finally {
-      setIsCheckingMinter(false)
-    }
-  }
-  
-  // useEffect(() => {
-    
-    
-  //   verifyMinter()
-  // }, [nftResource, address, isConnected])
-
-  
-  useWalletConnectorEvent(
-    primaryWallet?.connector, 
-    'accountChange',
-    async ({ accounts }, connector) => {
-      if (connector.name === 'Rabby') {
-        console.log('Rabby wallet account changed:', accounts);
-        // Handle Rabby wallet account change
-        await verifyMinter(accounts[0]);
-      }
-    }
-  );
-
-  // CORRECTION: Utilisation correcte de useWalletConnectorEvent pour les changements de chaîne
-  useWalletConnectorEvent(
-    primaryWallet?.connector,
-    'chainChange',
-    async ({ chain }, connector) => {
-      console.log('Changement de chaîne détecté via useWalletConnectorEvent:', chain);
-      if (address) {
-        await verifyMinter(address);
-      }
-    }
-  );
-  
   // Ajout d'un useEffect pour la vérification initiale du minter
  // Remplacer l'useEffect à la ligne 469 par celui-ci
   useEffect(() => {
@@ -461,114 +296,12 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
         nftResource?.collection?.contractAddress
       ) {
         console.log('Adresse Rabby détectée:', primaryWallet.address)
-        await verifyMinter(primaryWallet.address)
+        await checkUserRoyaltyRole(primaryWallet.address)
       }
     }
 
     checkInitialMinterStatus()
   }, [primaryWallet?.address, nftResource]) // Changement des dépendances pour utiliser primaryWallet.address
-
-  //---------------------------------------------------------------- handleMintNFT2
-  const handleMintNFT2 = async (): Promise<void> => {
-    if (!nftResource || !publicClient || !minterWallet) {
-      toast.error('Données manquantes pour le minting')
-      return
-    }
-
-    await mintNFT({
-      nftResource,
-      publicClient,
-      walletClient: walletClient,
-      minterWallet,
-      onSuccess: () => {
-        // Rafraîchir la page pour afficher les modifications
-        router.refresh()
-      }
-    })
-  }
-
-  //---------------------------------------------------------------- handleMintNFT
-  const handleMintNFT = async () => {
-    const contractAddress = nftResource.collection.contractAddress as Address
-    
-    // Afficher un toast de chargement
-    const mintingToast = toast.loading('Minting en cours...')
-    
-    try {
-      // Préparer les paramètres NFT pour le smart contract
-      const nftParams = {
-        name: nftResource.name,
-        description: nftResource.description,
-        certificateAuthenticity: `ipfs://${nftResource.certificateUri}`,
-        tags: [],
-        permissions: [],
-        height: 0,
-        width: 0,
-        withIntellectualProperty: false,
-        termIntellectualProperty: 0
-      }
-      
-      // URI du token (métadonnées IPFS)
-      const tokenURI = `ipfs://${nftResource.tokenUri}`
-      
-      // Simuler la transaction
-      const { request } = await publicClient.simulateContract({
-        address: contractAddress,
-        abi: artistNftCollectionAbi,
-        functionName: 'mintNFT',
-        args: [tokenURI, nftParams],
-        account: minterWallet as Address
-      })
-      
-      
-      if (!walletClient) {
-        throw new Error('Wallet client non disponible')
-      }
-      
-      // Exécuter la transaction
-      const hash = await walletClient?.writeContract(request)
-      
-      try {
-        // Appel à une action serveur pour mettre à jour le txHash
-        const updateResult = await updateNftResourceTxHash(nftResource.id, hash)
-        
-        if (updateResult.success) {
-          toast.success('NFT minté en attente de confirmation ... ')
-        } else {
-          toast.error(`Erreur lors de la mise à jour du txHash de la resource NFT : ${updateResult.error}`)
-        }
-      } catch (updateError) {
-        console.error('Erreur lors de la mise à jour du txHash:', updateError)
-        toast.error('NFT minté, mais erreur lors de la mise à jour des informations')
-      }
-      
-      toast.dismiss(mintingToast)
-      toast.loading(`Transaction soumise. Hash: ${hash.slice(0, 10)}...`)
-      
-      // Attendre la confirmation de la transaction
-      const receipt = await publicClient.waitForTransactionReceipt({ 
-        hash: hash as Address,
-        timeout: 120000 
-      })
-      
-      // Vérifier si la transaction est réussie
-      if (receipt.status === 'success') {
-        toast.success('NFT minté avec succès!')
-        
-        // Appel à une action serveur pour mettre à jour le statut de la ressource NFT
-        const updateResult = await updateNftResourceStatusToMinted(nftResource.id)
-
-        // Rafraîchir la page pour afficher les modifications
-        router.refresh()
-      } else {
-        toast.error('La transaction a échoué')
-      }
-    } catch (error) {
-      console.error('Erreur lors du minting:', error)
-      toast.dismiss(mintingToast)
-      toast.error(`Erreur lors du minting: ${(error as Error).message}`)
-    }
-  }
 
   // Composant pour afficher un champ d'URI IPFS avec lien de visualisation
   function IpfsUriField({ label, uri, prefix = 'ipfs://' }: { label: string, uri: string, prefix?: string } ) {
@@ -595,11 +328,175 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     )
   }
 
+  // Calcul automatique du pourcentage total à chaque modification des royalties
+  useEffect(() => {
+    const total = royalties.reduce((sum, royalty) => {
+      const percentage = parseFloat(royalty.percentage) || 0
+      return sum + percentage
+    }, 0)
+    setTotalPercentageBeneficiaries(total)
+
+    
+    // Vérifier que toutes les adresses renseignées sont valides
+    const allAddressesValid = royalties.every(royalty => 
+      royalty.address === '' || isValidEthereumAddress(royalty.address)
+    )
+    const isRoyaltySettingOk = 
+      (total === 100) 
+      && allAddressesValid
+      && (totalPercentage > 0 && total <= 100)
+
+    setAllBeneficaryAddress(allAddressesValid)
+    console.log('allAddressesValid : ', allAddressesValid)
+    console.log('isRoyaltySettingOk : ', isRoyaltySettingOk)
+
+    setRoyaltiesSettingsOk(isRoyaltySettingOk)
+    console.log(royalties)
+  }, [royalties, totalPercentage])
+  
+  // Fonction pour ajouter une nouvelle ligne de royalty
+  const addRoyaltyRow = () => {
+    setRoyalties([...royalties, { address: '', percentage: '' }])
+  }
+  
+  // Fonction pour supprimer une ligne de royalty
+  const removeRoyaltyRow = (index: number) => {
+    const updatedRoyalties = [...royalties]
+    updatedRoyalties.splice(index, 1)
+    setRoyalties(updatedRoyalties)
+  }
+  
+  // Fonction pour mettre à jour les valeurs de royalty
+  const handleRoyaltyChange = (index: number, field: 'address' | 'percentage', value: string) => {
+    const updatedRoyalties = [...royalties]
+    updatedRoyalties[index][field] = value
+    setRoyalties(updatedRoyalties)
+  }
+  
+  // Vérification du rôle de l'utilisateur
+  const checkRoyaltyRole = async (userAddress: string, contractAddress: string) => {
+    if (!userAddress || !contractAddress) return false
+    
+    setIsCheckingRole(true)
+    try {
+      
+      // Vérifier si l'utilisateur a le rôle DEFAULT_ADMIN_ROLE
+      const hasAdminRole = await publicClient.readContract({
+        address: contractAddress as Address,
+        abi: artistRoyaltiesAbi,
+        functionName: 'hasRole',
+        args: [InRealArtRoles.DEFAULT_ADMIN_ROLE, userAddress as Address]
+      }) as boolean
+      
+      // Vérifier si l'utilisateur a le rôle ADMIN_ROYALTIES_ROLE
+      const hasRoyaltiesRole = await publicClient.readContract({
+        address: contractAddress as Address,
+        abi: artistRoyaltiesAbi,
+        functionName: 'hasRole',
+        args: [InRealArtRoles.ADMIN_ROYALTIES_ROLE, userAddress as Address]
+      }) as boolean
+      
+      const hasRole = hasAdminRole || hasRoyaltiesRole
+      console.log(`L'utilisateur ${userAddress} ${hasRole ? 'a' : 'n\'a pas'} les droits pour configurer les royalties`)
+      
+      return hasRole
+    } catch (error) {
+      console.error('Erreur lors de la vérification des rôles:', error)
+      return false
+    } finally {
+      setIsCheckingRole(false)
+    }
+  }
+  
+  // Effet pour vérifier le rôle de l'utilisateur
+  useEffect(() => {
+    checkUserRoyaltyRole(primaryWallet?.address as string)
+  }, [primaryWallet?.address, nftResource])
+
+  // Vérification des adresses valides
+  const validateAddresses = (addresses: string[]): boolean => {
+    const invalidAddresses = addresses.filter(addr => !isAddress(addr))
+    if (invalidAddresses.length > 0) {
+      toast.error(`Les adresses suivantes ne sont pas valides: ${invalidAddresses.join(', ')}`)
+      return false
+    }
+    return true
+  }
+  
+  // Fonction pour configurer les royalties sur la blockchain
+  const handleConfigureRoyalties = async () => {
+    // Vérifier que les adresses sont valides
+    const addresses = royalties.map(r => r.address)
+    if (!validateAddresses(addresses)) {
+      return
+    }
+    
+    // Vérifier que la somme est exactement 100%
+    if (totalPercentage !== 100) {
+      toast.error('Le pourcentage total doit être exactement 100%')
+      return
+    }
+    
+    if (royalties.some(r => !r.address || !r.percentage)) {
+      toast.error('Veuillez remplir toutes les adresses et pourcentages')
+      return
+    }
+    
+    setIsConfiguring(true)
+    const toastId = toast.loading('Configuration des royalties en cours...')
+    
+    try {
+      // Préparer les données pour l'envoi à la blockchain
+      const addresses = royalties.map(r => r.address as Address)
+      const percentages = royalties.map(r => parseFloat(r.percentage) * 100) // Convertir en points de base (1% = 100 points)
+      
+      // Définir les royalties sur le contrat
+      const { request } = await publicClient.simulateContract({
+        address: nftResource.collection.contractAddress as Address,
+        abi: artistNftCollectionAbi,
+        functionName: 'setRoyalty',
+        args: [addresses, percentages],
+        account: primaryWallet?.address as Address
+      })
+      
+      if (!walletClient) {
+        throw new Error('Wallet client non disponible')
+      }
+      
+      // Exécuter la transaction
+      const hash = await walletClient.writeContract(request)
+      
+      toast.success('Transaction soumise avec succès', { id: toastId })
+      toast.loading(`Transaction en cours de traitement: ${hash.slice(0, 10)}...`)
+      
+      // Attendre la confirmation de la transaction
+      const receipt = await publicClient.waitForTransactionReceipt({ 
+        hash,
+        timeout: 120000 
+      })
+      
+      // Vérifier si la transaction est réussie
+      if (receipt.status === 'success') {
+        toast.success('Royalties configurées avec succès!')
+        
+        // Rafraîchir la page
+        router.refresh()
+      } else {
+        toast.error('La transaction a échoué')
+      }
+    } catch (error) {
+      console.error('Erreur lors de la configuration des royalties:', error)
+      toast.error(`Erreur: ${(error as Error).message}`, { id: toastId })
+    } finally {
+      setIsConfiguring(false)
+    }
+  }
+
   return (
     <>
       <Toaster position="top-center" />
       <div className={styles.container}>
-        <h1 className={styles.pageTitle}>Détails du produit</h1>
+        <h1 className={styles.pageTitle}>Détails du NFT</h1>
         
         {isLoading ? (
           <LoadingSpinner message="Chargement du produit..." />
@@ -664,48 +561,138 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
                   />
                 </div>
                 
-                  <div className={styles.nftResourceInfo}>
-                    <h3 className={styles.formTitle}>Ressources NFT uploadées sur IPFS</h3>
+                <div className={styles.nftResourceInfo}>
+                  <h3 className={styles.formTitle}>Ressources NFT uploadées sur IPFS</h3>
+                  <p className={styles.infoNote}>
+                    Pour l'instant, le NFT de l'oeuvre n'est toujours pas mintée ...
+                  </p>
+                  
+                  <div className={styles.formGroup}>
+                    <label>Nom du NFT</label>
+                    <input
+                      type="text"
+                      value={nftResource.name || ''}
+                      readOnly
+                      className={styles.formInput}
+                    />
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label>Description du NFT</label>
+                    <textarea
+                      value={nftResource.description || ''}
+                      readOnly
+                      className={styles.formTextarea}
+                      rows={4}
+                    />
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label>Collection</label>
+                    <input
+                      type="text"
+                      value={collections.find(c => c.id === nftResource.collectionId)?.name || 'Collection inconnue'}
+                      readOnly
+                      className={styles.formInput}
+                    />
+                  </div>
+                  
+                  <IpfsUriField label="Image URI (IPFS)" uri={nftResource.imageUri} />
+                  
+                  <IpfsUriField label="Certificat URI (IPFS)" uri={nftResource.certificateUri} />
+                  
+                  <IpfsUriField label="Métadonnées URI (IPFS)" uri={nftResource.tokenUri} />
+                  
+                  {/* Formulaire de configuration des royalties */}
+                  <div className={styles.royaltiesConfig}>
+                    <h3 className={styles.sectionTitle}>Configuration des royalties</h3>
                     <p className={styles.infoNote}>
-                      Pour l'instant, le NFT de l'oeuvre n'est toujours pas mintée ...
+                      Définissez les bénéficiaires des royalties et leur pourcentage respectif
                     </p>
                     
-                    <div className={styles.formGroup}>
-                      <label>Nom du NFT</label>
+                    <div className={styles.royaltiesTable}>
+                      <div className={styles.tableHeader}>
+                        <div className={styles.tableHeaderCell}>Adresse</div>
+                        <div className={styles.tableHeaderCell}>Pourcentage (%)</div>
+                        <div className={styles.tableHeaderCell}></div>
+                      </div>
+                      
+                      {royalties.map((royalty, index) => (
+                        <div key={index} className={styles.tableRow}>
+                          <div className={styles.tableCell}>
+                            <input
+                              type="text"
+                              placeholder="0x..."
+                              value={royalty.address}
+                              onChange={(e) => handleRoyaltyChange(index, 'address', e.target.value)}
+                              className={styles.formInput}
+                            />
+                          </div>
+                          <div className={styles.tableCell}>
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              placeholder="0.0"
+                              value={royalty.percentage}
+                              onChange={(e) => handleRoyaltyChange(index, 'percentage', e.target.value)}
+                              className={`${styles.formInput} ${styles.numberInput}`}
+                            />
+                          </div>
+                          <div className={styles.tableCell}>
+                            <button 
+                              type="button" 
+                              onClick={() => removeRoyaltyRow(index)}
+                              className={styles.removeButton}
+                            >
+                              Supprimer
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      <div className={styles.tableActions}>
+                        <button 
+                          type="button" 
+                          onClick={addRoyaltyRow}
+                          className={styles.addButton}
+                        >
+                          + Ajouter un bénéficiaire
+                        </button>
+                        {totalPercentageBeneficiaries !== 100 && (
+                          <div className={styles.errorMessage}>
+                            Le total des pourcentages doit être exactement 100% (actuellement: {totalPercentageBeneficiaries.toFixed(1)}%)
+                          </div>
+                        )}<br></br>
+                        {!allBeneficaryAddress && (
+                          <div className={styles.errorMessage}>
+                            Une des adresses est invalide
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className={styles.totalPercentage}>
+                      <span className={styles.label}>Pourcentage total aux bénéficiaires :</span>
                       <input
-                        type="text"
-                        value={nftResource.name || ''}
-                        readOnly
-                        className={styles.formInput}
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        placeholder="0.0"
+                        value={totalPercentage}
+                        onChange={(e) => setTotalPercentage(parseFloat(e.target.value) || 0)}
+                        className={`${styles.formInput} ${styles.numberInput} ${totalPercentage === 0 || totalPercentage > 100 ? styles.error : ''}`}
                       />
+                      <span>%</span>
+                      {totalPercentage === 0 || totalPercentage > 100 && (
+                        <span className={styles.errorMessage}>
+                          Le pourcentage total ne peut pas dépasser 100%
+                        </span>
+                      )}
                     </div>
                     
-                    <div className={styles.formGroup}>
-                      <label>Description du NFT</label>
-                      <textarea
-                        value={nftResource.description || ''}
-                        readOnly
-                        className={styles.formTextarea}
-                        rows={4}
-                      />
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                      <label>Collection</label>
-                      <input
-                        type="text"
-                        value={collections.find(c => c.id === nftResource.collectionId)?.name || 'Collection inconnue'}
-                        readOnly
-                        className={styles.formInput}
-                      />
-                    </div>
-                    
-                    <IpfsUriField label="Image URI (IPFS)" uri={nftResource.imageUri} />
-                    
-                    <IpfsUriField label="Certificat URI (IPFS)" uri={nftResource.certificateUri} />
-                    
-                    <IpfsUriField label="Métadonnées URI (IPFS)" uri={nftResource.tokenUri} />
-                                        
                     <div className={styles.actionButtons}>
                       <Button 
                         type="button" 
@@ -717,17 +704,30 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
                       <Button 
                         type="button" 
                         variant="primary"
-                        onClick={handleMintNFT2}
-                        disabled={isCheckingMinter || !isMinter}
+                        onClick={handleConfigureRoyalties}
+                        disabled={
+                          isConfiguring || 
+                          totalPercentageBeneficiaries !== 100 || 
+                          royalties.length === 0 || 
+                          !hasRoyaltyRole ||
+                          !royaltiesSettingsOk ||
+                          isCheckingRole
+                        }
                       >
-                        {isCheckingMinter 
-                          ? 'Vérification des permissions...' 
-                          : !isMinter 
-                          ? 'Vous n\'êtes pas autorisé à minter' 
-                          : 'Mint NFT'}
+                        {isConfiguring 
+                          ? 'Configuration en cours...' 
+                          : isCheckingRole 
+                            ? 'Vérification des droits...'
+                            : !hasRoyaltyRole 
+                              ? 'Vous n\'avez pas les droits pour configurer les royalties'
+                              : !royaltiesSettingsOk
+                                ? `Mauvaise configuration des royalties`
+                                : 'Configurer les royalties pour le NFT'}
                       </Button>
                     </div>
-                  </div>                
+                  </div>
+                  
+                </div>                
               </div>
             </div>
           </div>
