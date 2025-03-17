@@ -225,4 +225,37 @@
   padding: 16px;
   margin-bottom: 20px;
   color: #b91c1c;
+}
+
+.contractStatusLegend {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.statusBadgeActive, .statusBadgeInactive {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.statusBadgeActive {
+  background-color: #34c759;
+}
+
+.statusBadgeInactive {
+  background-color: #ff453a;
+}
+
+.contractOption {
+  display: flex;
+  align-items: center;
 } 

@@ -485,8 +485,10 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
               >
                 <option value="">Sélectionner des smart contracts</option>
                 {smartContracts.map(smartContract => (
-                  <option key={smartContract.id} value={smartContract.id}>
-                    {formatChainName(smartContract.network)} - (Factory address) {truncateAddress(smartContract.factoryAddress)}
+                  <option key={smartContract.id} value={smartContract.id} className={styles.contractOption}>
+                    {formatChainName(smartContract.network)} - 
+                    {smartContract.active ? '🟢 ' : '🔴 '}
+                    (Factory address) {truncateAddress(smartContract.factoryAddress)}
                   </option>
                 ))}
               </select>
@@ -498,6 +500,14 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
                   ⚠️ Vous devez être sur le réseau {formatChainName(selectedSmartContract.network)}
                 </p>
               )}
+              <div className={styles.contractStatusLegend}>
+                <span className={styles.statusItem}>
+                  <span className={styles.statusBadgeActive}></span> Actif
+                </span>
+                <span className={styles.statusItem}>
+                  <span className={styles.statusBadgeInactive}></span> Inactif
+                </span>
+              </div>
             </div>
             
             <div className={styles.formGroup}>

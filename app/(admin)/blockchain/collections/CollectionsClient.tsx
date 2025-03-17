@@ -168,7 +168,7 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                   <th>Artiste</th>
                   <th className={styles.hiddenMobile}>Factory</th>
                   <th className={styles.hiddenMobile}>Réseau</th>
-                  <th className={styles.hiddenMobile}>Adresse de la factoryt</th>
+                  <th className={styles.hiddenMobile}>Adresse de la factory</th>
                   <th className={styles.hiddenMobile}>Admin</th>
                   <th>Actions</th>
                 </tr>
