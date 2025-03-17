@@ -12,7 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { primaryWallet } = useDynamicContext()
   const router = useRouter()
   const { isAdmin, isLoading } = useIsAdmin()
-  
+  console.log('isAdmin', isAdmin) 
   if (isAdmin === null) {
     return <LoadingSpinner message="Vérification des droits administrateur..." />
   }
@@ -27,5 +27,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
     </>
-  ) : null
+  ) : <>
+    <Navbar />
+    <div className="page-layout">
+      <div className="content-container">
+        You're not authorized to access this page or you  are not connected.<br/>
+        Please connect as admin to see this page
+      </div>
+    </div>
+</>
 } 

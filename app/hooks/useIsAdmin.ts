@@ -37,7 +37,7 @@ export function useIsAdmin(): UseIsAdminResult {
             try {
                 // Appel du Server Action au lieu de faire un fetch
                 const result = await checkIsAdmin(
-                    user.email || null,
+                    user?.email || null,
                     primaryWallet?.address || null
                 )
 
