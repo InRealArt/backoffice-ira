@@ -401,7 +401,7 @@ export const artistNftCollectionAbi =
     ],
     "outputs": [
       {
-        "name": "newItemId_",
+        "name": "_newItemId",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -1101,7 +1101,7 @@ export const artistNftCollectionAbi =
       {
         "name": "bits",
         "type": "uint8",
-        "internalType": "uint8"
+        "internalType": "uint8" 
       },
       {
         "name": "value",
