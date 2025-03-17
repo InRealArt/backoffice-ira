@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { decodeJwtToken } from '@/app/api/auth/utils'
+import { BackofficeUserRoles } from '@prisma/client'
 
 export async function DELETE(
     request: NextRequest,
@@ -25,6 +26,12 @@ export async function DELETE(
             )
         }   
         console.log('User authentifié:', user)
+        if (user.role !== BackofficeUserRoles.admin) {
+            return NextResponse.json(
+                { message: 'Accès refusé. Vous n\'êtes pas autorisé à effectuer cette action.' },
+                { status: 403 }
+            )
+        }
     }
 
     try {
