@@ -65,8 +65,7 @@ export default function EditCollectionForm({ collection, artists, smartContracts
     
     try {
       // Transmettre contractAddress et status
-      const result = await updateCollection({
-        id: collection.id,
+      const result = await updateCollection(collection.id, {
         contractAddress: data.contractAddress,
         status: data.status
       })
@@ -96,14 +95,14 @@ export default function EditCollectionForm({ collection, artists, smartContracts
     }
     
     setIsSyncing(true)
-    toast.loading('Synchronisation avec la blockchain en cours...')
+    const toastIsSyncing = toast.loading('Synchronisation avec la blockchain en cours...')
     
     try {
       const result = await syncCollection(collection.id)
       
       if (result.success && result.updated) {
         toast.success('Collection synchronisée avec succès')
-        
+        toast.dismiss(toastIsSyncing)
         if (result.contractAddress) {
           setValue('contractAddress', result.contractAddress)
           setValue('status', 'confirmed')
@@ -115,9 +114,11 @@ export default function EditCollectionForm({ collection, artists, smartContracts
         router.refresh()
       } else {
         toast.error(result.message || 'Aucune mise à jour effectuée')
+        toast.dismiss(toastIsSyncing)
       }
     } catch (error: any) {
       toast.error(`Erreur: ${error.message}`)
+      toast.dismiss(toastIsSyncing)
       console.error(error)
     } finally {
       setIsSyncing(false)

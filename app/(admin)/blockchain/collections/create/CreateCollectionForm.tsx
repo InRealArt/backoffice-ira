@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-hot-toast'
 import styles from './CreateCollectionForm.module.scss'
 import { Artist, SmartContract } from '@prisma/client'
-import { createCollection } from '@/lib/actions/collection-actions'
+import { createCollection, syncCollection, updateCollection } from '@/lib/actions/collection-actions'
 import { useAccount } from 'wagmi'
 import { factoryABI } from '@/lib/contracts/factoryABI'
 import { getChainId, getChainByName, formatChainName } from '@/lib/blockchain/chainUtils'
@@ -239,9 +239,16 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
     addressAdmin: string
     artistId: number
     smartContractId: number
-    contractAddress: string
+    contractAddress?: string
     transactionHash?: string
-  }) => {
+  }, redirect: boolean = false) => {
+    console.log('name', data.name)
+    console.log('symbol', data.symbol)
+    console.log('addressAdmin', data.addressAdmin)
+    console.log('artistId', data.artistId)
+    console.log('smartContractId', data.smartContractId)
+    console.log('contractAddress', data.contractAddress)
+    console.log('transactionHash', data.transactionHash)
     try {
       const result = await createCollection({
         ...data
@@ -252,11 +259,14 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
           ? 'Collection soumise avec succès! Confirmation en attente...'
           : 'Collection créée avec succès!'
         )
-        router.push('/blockchain/collections')
+        if (redirect) {
+          router.push('/blockchain/collections')
+        }
       } else {
         toast.error(result.message || 'Erreur lors de la création de la collection')
         setIsSubmitting(false)
       }
+      return result.collection
     } catch (error) {
       console.error('Erreur:', error)
       toast.error('Une erreur est survenue lors de l\'enregistrement de la collection')
@@ -296,6 +306,23 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
     try {
       setIsTransactionPending(true)
       
+      /******************************************************/
+      /********* STEP 1 : Créer la collection en DB *********/
+      /******************************************************/
+      //Créer la collection en DB vierge avec juste les infos nécessaires
+      const {success, message, errorCode, collection} = await createCollection({
+        name: data.name,
+        symbol: data.symbol,
+        addressAdmin: data.addressAdmin,
+        artistId: parseInt(data.artistId),
+        smartContractId: parseInt(data.smartContractId)
+      })
+      if (!success) {
+        toast.error(message || 'Erreur lors de la création de la collection avec code erreur: ' + errorCode)
+        setIsSubmitting(false)
+        return
+      }
+      
       // Simuler et exécuter la transaction comme avant
       const { request } = await publicClient.simulateContract({
         address: selectedSmartContract.factoryAddress as Address,
@@ -313,77 +340,32 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
       // Exécuter la transaction
       const hash = await walletClient?.writeContract(request)
       setTransactionHash(hash as Address)
+
+      /******************************************************/
+      /********* STEP 2 : Update la collection en DB avec son txHash *********/
+      /******************************************************/
+      await updateCollection(collection?.id as number, {
+        transactionHash: hash as string
+        })
+      console.log('updatedNftCollection', collection)
       
       // Attendre la confirmation avec un timeout plus long et gestion d'erreur
       try {
         const receipt = await publicClient.waitForTransactionReceipt({ 
-          hash: hash as Address,
-          timeout: 120000 
+          hash: hash as Address
         })
-        
-        // Extraire l'adresse du contrat à partir de l'événement ArtistCreated
-        let collectionAddress: string | undefined
-        
-        // Parcourir les logs pour trouver l'événement ArtistCreated
-        for (const log of receipt.logs) {
-          try {
-            // Tenter de décoder le log comme un événement ArtistCreated
-            const event = decodeEventLog({
-              abi: factoryABI,
-              data: log.data,
-              topics: log.topics,
-              eventName: 'ArtistCreated'
-            })
-            
-            // Vérifier que event.args existe avant d'y accéder
-            if (event && event.args) {
-              // Utiliser un casting pour accéder aux propriétés
-              const args = event.args as any;
-              collectionAddress = args._collectionAddress;
-              console.log('Collection créée:', {
-                nom: args._collectionName,
-                adresse: args._collectionAddress,
-                créateur: args._creator,
-                admin: args._admin,
-                artiste: args._artist
-              });
-              break;
-            }
-          } catch (e) {
-            // Ce n'est pas l'événement ArtistCreated, continuer avec le log suivant
-            continue;
-          }
-        }
-        
-        if (collectionAddress) {
-          // Enregistrer la collection dans la base de données
-          await saveCollectionToDB({
-            name: data.name,
-            symbol: data.symbol,
-            addressAdmin: data.addressAdmin,
-            artistId: parseInt(data.artistId),
-            smartContractId: parseInt(data.smartContractId),
-            contractAddress: collectionAddress,
-          })
-          
+        //Synchroniser la collection avec la blockchain pour mettre à jour son adresse
+        const {success, updated, contractAddress, message} = await syncCollection(collection?.id as number)
+
+        if (contractAddress) {
           setTransactionSuccess(true)
+          router.push('/blockchain/collections')
         } else {
           throw new Error('Impossible de récupérer l\'adresse du contrat déployé')
         }
       } catch (timeoutError) {
         console.warn('Timeout lors de l\'attente de la confirmation:', timeoutError)
         toast.loading('La transaction a été soumise mais n\'est pas encore confirmée. Vous pourrez la synchroniser depuis la liste des collections.')
-        
-        // Sauvegarder la transaction en attente sans redirection
-        await saveCollectionToDB({
-          name: data.name,
-          symbol: data.symbol,
-          addressAdmin: data.addressAdmin,
-          artistId: parseInt(data.artistId),
-          smartContractId: parseInt(data.smartContractId),
-          contractAddress: '',
-          transactionHash: hash as string
-        })
         
         // Ne pas rediriger, juste informer l'utilisateur
         toast.success('Collection enregistrée en attente de confirmation blockchain')

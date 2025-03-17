@@ -6,6 +6,8 @@ import { Collection, Artist, SmartContract } from '@prisma/client'
 import styles from './CollectionsClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
+import Modal from '@/app/components/Common/Modal'
+import { getAuthToken } from '@dynamic-labs/sdk-react-core' 
 
 interface CollectionWithRelations extends Collection {
   artist: Artist
@@ -21,7 +23,10 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const [loadingCollectionId, setLoadingCollectionId] = useState<number | null>(null)
+  const [deletingCollectionId, setDeletingCollectionId] = useState<number | null>(null)
   const [selectedSmartContractId, setSelectedSmartContractId] = useState<number | null>(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [collectionToDelete, setCollectionToDelete] = useState<number | null>(null)
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -45,12 +50,59 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
     router.push(`/blockchain/collections/${collectionId}/edit`)
   }
   
+  const handleDeleteClick = (e: React.MouseEvent, collectionId: number) => {
+    e.stopPropagation() // Empêche le déclenchement du clic de ligne
+    setCollectionToDelete(collectionId)
+    setIsDeleteModalOpen(true)
+  }
+  
+  const handleDeleteConfirm = async () => {
+    if (!collectionToDelete) return
+    
+    setIsDeleteModalOpen(false)
+    setDeletingCollectionId(collectionToDelete)
+    
+    console.log('Suppression de la collection:', collectionToDelete)
+    // Récupérer le token côté client
+    const token = getAuthToken()
+
+    try {
+      const response = await fetch(`/api/blockchain/collections/delete/${collectionToDelete}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        // Rafraîchir la page pour voir les changements
+        router.refresh()
+      } else {
+        const error = await response.json()
+        alert(`Erreur lors de la suppression: ${error.message || 'Une erreur est survenue'}`)
+      }
+    } catch (error) {
+      alert('Erreur lors de la suppression de la collection')
+      console.error(error)
+    } finally {
+      setDeletingCollectionId(null)
+      setCollectionToDelete(null)
+    }
+  }
+  
+  const handleDeleteCancel = () => {
+    setIsDeleteModalOpen(false)
+    setCollectionToDelete(null)
+  }
+  
   const handleCreateCollection = () => {
     router.push('/blockchain/collections/create')
   }
   
   // Fonction pour tronquer l'adresse du contrat
   function truncateAddress(address: string): string {
+    if (!address) return 'Non défini'
     if (address.length <= 16) return address
     return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
   }
@@ -116,16 +168,18 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                   <th className={styles.hiddenMobile}>Réseau</th>
                   <th className={styles.hiddenMobile}>Adresse du contrat</th>
                   <th className={styles.hiddenMobile}>Admin</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredCollections.map((collection) => {
                   const isLoading = loadingCollectionId === collection.id
+                  const isDeleting = deletingCollectionId === collection.id
                   return (
                     <tr 
                       key={collection.id} 
-                      onClick={() => !loadingCollectionId && handleCollectionClick(collection.id)}
-                      className={`${styles.clickableRow} ${isLoading ? styles.loadingRow : ''} ${loadingCollectionId && !isLoading ? styles.disabledRow : ''}`}
+                      onClick={() => !loadingCollectionId && !deletingCollectionId && handleCollectionClick(collection.id)}
+                      className={`${styles.clickableRow} ${isLoading || isDeleting ? styles.loadingRow : ''} ${(loadingCollectionId || deletingCollectionId) && !isLoading && !isDeleting ? styles.disabledRow : ''}`}
                     >
                       <td>
                         <div className={styles.symbolCell}>
@@ -166,6 +220,19 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                           {truncateAddress(collection.addressAdmin)}
                         </span>
                       </td>
+                      <td className={styles.actionsCell}>
+                        <button
+                          className={styles.deleteButton}
+                          onClick={(e) => handleDeleteClick(e, collection.id)}
+                          disabled={isLoading || isDeleting || !!loadingCollectionId || !!deletingCollectionId}
+                        >
+                          {isDeleting && deletingCollectionId === collection.id ? (
+                            <LoadingSpinner size="small" message="" inline />
+                          ) : (
+                            <span>Supprimer</span>
+                          )}
+                        </button>
+                      </td>
                     </tr>
                   )
                 })}
@@ -174,6 +241,32 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
           </div>
         )}
       </div>
+      
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={handleDeleteCancel}
+        title="Confirmer la suppression"
+      >
+        <div className={styles.deleteModalContent}>
+          <p>Êtes-vous sûr de vouloir supprimer cette collection (id: {collectionToDelete})?</p>
+          <p className={styles.deleteModalWarning}>Cette action est irréversible.</p>
+          
+          <div className={styles.deleteModalActions}>
+            <button 
+              className={styles.cancelButton}
+              onClick={handleDeleteCancel}
+            >
+              Annuler
+            </button>
+            <button 
+              className={styles.confirmDeleteButton}
+              onClick={handleDeleteConfirm}
+            >
+              Confirmer la suppression
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 } 

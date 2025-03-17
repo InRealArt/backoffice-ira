@@ -28,7 +28,7 @@ model Artist {
 model NftCollection {
   id              Int              @id @default(autoincrement())
   name            String
-  symbol          String           @unique
+  symbol          String
   addressAdmin    String
   artistId        Int
   contractAddress String?
@@ -39,6 +39,7 @@ model NftCollection {
   nftResource     NftResource[]
   smartContract   SmartContract?   @relation(fields: [smartContractId], references: [id])
 
+  @@unique([symbol, smartContractId]) //Contrainte d'unicité composée
   @@schema("public")
 }
 
@@ -472,7 +473,7 @@ model BackofficeUser {
   linkedWallets    Json              @default("[]") // Tableau de wallets au format JSON
   lastLogin        DateTime          @db.Timestamp(6)
   userMetadata     Json
-  role             ShopifyUserRoles?
+  role             BackofficeUserRoles?
   firstName        String?
   lastName         String?
   isShopifyGranted Boolean           @default(false)
@@ -508,7 +509,7 @@ enum NotificationStatus {
   @@schema("public")
 }
 
-enum ShopifyUserRoles {
+enum BackofficeUserRoles {
   admin
   artist
   galleryManager

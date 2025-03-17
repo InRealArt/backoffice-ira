@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { serverPublicClient } from '@/lib/server-providers'
 import { factoryABI } from '@/lib/contracts/factoryABI'
 import { Address, decodeEventLog } from 'viem'
-import { CollectionStatus } from '@prisma/client'
+import { CollectionStatus, NftCollection } from '@prisma/client'
 import { Prisma } from '@prisma/client'
 import { redirect } from 'next/navigation'
 
@@ -26,38 +26,96 @@ const collectionSchema = z.object({
 
 type CreateCollectionInput = z.infer<typeof collectionSchema>
 
-export async function createCollection(data: {
-    name: string
-    symbol: string
-    addressAdmin: string
-    artistId: number
-    smartContractId: number
-    contractAddress: string | 'pending'
-    transactionHash?: string
-}): Promise<{ success: boolean; message?: string }> {
+export async function createCollection(data: Partial<NftCollection>) : Promise<{
+    success: boolean,
+    message: string,
+    errorCode: string | null,
+    collection: NftCollection | null
+}> {
     try {
-        const collection = await prisma.nftCollection.create({
-            data: {
-                name: data.name,
-                symbol: data.symbol,
-                addressAdmin: data.addressAdmin,
-                artistId: data.artistId,
-                smartContractId: data.smartContractId,
-                contractAddress: data.contractAddress,
-                transactionHash: data.transactionHash
-            }
-        })
-
-        return { success: true }
-    } catch (error) {
-        console.error("Erreur lors de la création de la collection:", error)
-        return {
-            success: false,
-            message: `Erreur lors de la création: ${(error as Error).message}`
+      const collection = await prisma.nftCollection.create({
+        data: {
+          name: data.name!,
+          symbol: data.symbol!,
+          addressAdmin: data.addressAdmin!,
+          artistId: data.artistId!,
+          smartContractId: data.smartContractId!,
+          contractAddress: data.contractAddress,
+          status: data.status || CollectionStatus.pending,
+          transactionHash: data.transactionHash
         }
+      })
+      
+      return { 
+        success: true, 
+        message: 'Collection créée avec succès', 
+        errorCode: null,
+        collection 
+      }
+    } catch (error) {
+      // Vérifier si l'erreur est une erreur Prisma
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        // P2002 est le code pour les violations de contraintes d'unicité
+        if (error.code === 'P2002') {
+          // Récupérer les champs concernés par la contrainte
+          const target = error.meta?.target as string[] || []
+          
+          if (target.includes('symbol') && target.includes('smartContractId')) {
+            return {
+              success: false,
+              message: `Une collection avec ce symbole existe déjà pour ce smart contract`,
+              errorCode: 'DUPLICATE_SYMBOL_CONTRACT',
+              collection: null
+            }
+          } else if (target.includes('symbol')) {
+            return {
+              success: false,
+              message: `Le symbole "${data.symbol}" est déjà utilisé`,
+              errorCode: 'DUPLICATE_SYMBOL',
+              collection: null
+            }
+          } else {
+            return {
+              success: false,
+              message: `Violation de contrainte d'unicité sur: ${target.join(', ')}`,
+              errorCode: 'UNIQUE_CONSTRAINT_VIOLATION',
+              collection: null
+            }
+          }
+        }
+        
+        // Autres codes d'erreur Prisma
+        if (error.code === 'P2003') {
+          return {
+            success: false,
+            message: 'Violation de contrainte de clé étrangère',
+            errorCode: 'FOREIGN_KEY_VIOLATION',
+            collection: null
+          }
+        }
+        
+        if (error.code === 'P2025') {
+          return {
+            success: false,
+            message: 'Enregistrement à modifier non trouvé',
+            errorCode: 'RECORD_NOT_FOUND',
+            collection: null
+          }
+        }
+      }
+      
+      // Pour les autres types d'erreurs
+      console.error("Erreur lors de la création de la collection:", error)
+      return {
+        success: false,
+        message: `Erreur lors de la création: ${(error as Error).message}`,
+        errorCode: 'UNKNOWN_ERROR',
+        collection: null
+      }
     }
-}
+  }
 
+  
 // Synchroniser une collection spécifique avec la blockchain
 export async function syncCollection(id: number): Promise<{
     success: boolean;
@@ -178,20 +236,27 @@ export async function syncCollection(id: number): Promise<{
 }
 
 // Mettre à jour l'adresse du contrat et le statut d'une collection
-export async function updateCollection(data: {
-    id: number
-    contractAddress: string
-    status: string
-}): Promise<{ success: boolean; message?: string }> {
+export async function updateCollection(idcollection: number, data: Partial<NftCollection>): Promise<{ success: boolean; message?: string }> {
     try {
         console.log('Mise à jour de la collection:', data)
 
+        const existingCollection = await prisma.nftCollection.findUnique({
+            where: { id: idcollection }
+        })
+     
+        if (!existingCollection) {
+            return {
+                success: false,
+                message: `Collection avec ID ${idcollection} introuvable`
+            }
+        }
+        
         // Solution 1: Utiliser l'API Prisma directement pour éviter les problèmes de type
         await prisma.$transaction(async (tx) => {
             // 1. D'abord, mettre à jour l'adresse du contrat (sans toucher au statut)
-            await tx.collection.update({
-                where: { id: data.id },
-                data: { contractAddress: data.contractAddress }
+            await tx.nftCollection.update({
+                where: { id: idcollection },
+                data: data
             })
 
             // 2. Ensuite, utiliser SQL brut seulement pour le statut

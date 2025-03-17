@@ -198,4 +198,83 @@
     outline: none;
     box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3);
   }
+}
+
+.actionsCell {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.deleteButton {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  
+  &:hover {
+    background-color: #b91c1c;
+  }
+  
+  &:disabled {
+    background-color: #f87171;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+// Styles pour la modal de confirmation de suppression
+
+.deleteModalContent {
+  padding: 20px 0;
+}
+
+.deleteModalWarning {
+  color: #dc2626;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.deleteModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.cancelButton {
+  background-color: #f3f4f6;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #e5e7eb;
+  }
+}
+
+.confirmDeleteButton {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #b91c1c;
+  }
 } 
