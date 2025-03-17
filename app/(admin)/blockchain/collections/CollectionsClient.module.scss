@@ -75,9 +75,18 @@
   gap: 8px;
 }
 
+.factoryWithStatus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  width: 100%;
+}
+
 .truncatedAddress {
-  font-family: monospace;
-  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .loadingText {
@@ -277,4 +286,45 @@
   &:hover {
     background-color: #b91c1c;
   }
+}
+
+.statusBadgeActive, .statusBadgeInactive {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.statusBadgeActive {
+  background-color: rgba(52, 199, 89, 0.12);
+  color: #34c759;
+  border: 1px solid rgba(52, 199, 89, 0.25);
+}
+
+.statusBadgeInactive {
+  background-color: rgba(255, 69, 58, 0.12);
+  color: #ff453a;
+  border: 1px solid rgba(255, 69, 58, 0.25);
+}
+
+.statusBadgeActive::before,
+.statusBadgeInactive::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.statusBadgeActive::before {
+  background-color: #34c759;
+}
+
+.statusBadgeInactive::before {
+  background-color: #ff453a;
 } 

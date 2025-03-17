@@ -144,7 +144,9 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
               <option value="">Toutes les smart contracts</option>
               {smartContracts.map(smartContract => (
                 <option key={smartContract.id} value={smartContract.id}>
-                  {formatChainName(smartContract.network)} - (Factory address) {truncateAddress(smartContract.factoryAddress)}
+                  {formatChainName(smartContract.network)}
+                  (Factory address) {truncateAddress(smartContract.factoryAddress)}
+                  &nbsp;{smartContract.active ? '🟢 ' : '🔴 '}
                 </option>
               ))}
             </select>
@@ -166,7 +168,7 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                   <th>Artiste</th>
                   <th className={styles.hiddenMobile}>Factory</th>
                   <th className={styles.hiddenMobile}>Réseau</th>
-                  <th className={styles.hiddenMobile}>Adresse du contrat</th>
+                  <th className={styles.hiddenMobile}>Adresse de la factoryt</th>
                   <th className={styles.hiddenMobile}>Admin</th>
                   <th>Actions</th>
                 </tr>
@@ -192,10 +194,16 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                       <td>{collection.artist.pseudo}</td>
                       <td className={styles.hiddenMobile}>
                         {collection.smartContract ? (
-                          <div className={styles.truncatedAddress}>
-                            {formatChainName(collection.smartContract.factoryAddress)}
+                          <div className={styles.factoryWithStatus}>
+                            <div className={styles.truncatedAddress}>
+                              {formatChainName(collection.smartContract.factoryAddress)}
+                            </div>
+                            <span className={collection.smartContract.active 
+                              ? styles.statusBadgeActive 
+                              : styles.statusBadgeInactive}>
+                              {collection.smartContract.active ? 'Actif' : 'Inactif'}
+                            </span>
                           </div>
-                          
                         ) : (
                           <span className={styles.noFactory}>Non défini</span>
                         )}
