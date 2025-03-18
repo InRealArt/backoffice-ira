@@ -6,7 +6,7 @@ import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-re
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, updateNftResourceTxHash, updateNftResourceStatusToMinted } from '@/app/actions/prisma/prismaActions'
+import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, updateNftResourceTxHash, updateNftResourceStatusToMinted, isCertificateUriUnique } from '@/app/actions/prisma/prismaActions'
 import { Toaster } from 'react-hot-toast'
 import styles from './nftToMint.module.scss'
 import React from 'react'
@@ -276,6 +276,10 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
         return
       }
       
+      if (await isCertificateUriUnique(response.certificate.data.cid)) {
+        toast.error('Le certificat d\'authenticité existe déjà sur IPFS')
+        return
+      }
       console.log('Image uploadée sur IPFS:', response.image)
       console.log('Certificat uploadé sur IPFS:', response.certificate)
       
@@ -337,8 +341,8 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
           toast.success('Ressources NFT enregistrées avec succès');
           setShowUploadIpfsForm(false);
           
-          // Rafraîchir la page pour afficher les changements
-          router.refresh();
+          // Rediriger vers la liste des NFTs à minter
+          router.push('/marketplace/nftsToMint');
         } catch (resourceError) {
           toast.dismiss(nftResourceToast);
           console.error('Erreur lors de l\'enregistrement des ressources NFT:', resourceError);

@@ -1081,3 +1081,16 @@ export async function updateNftResourceTokenId(
     }
   }
 }
+
+export async function isCertificateUriUnique(uri: string) {
+  try {
+    const existingResource = await prisma.nftResource.findFirst({
+      where: { certificateUri: uri }
+    })
+
+    return !!existingResource
+  } catch (error) {
+    console.error('Erreur lors de la vérification de l\'unicité du certificat:', error)
+    throw new Error('Impossible de vérifier l\'unicité du certificat')
+  }
+}
