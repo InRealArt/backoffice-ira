@@ -376,59 +376,7 @@
     }
   }
 
-  .ipfsLinkContainer {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-
-    input[readOnly] {
-      flex: 1;
-      font-family: 'Courier New', monospace;
-      font-size: 0.8rem;
-      letter-spacing: -0.5px;
-      background-color: #f0f4ff;
-      border: 1px solid #d1dafe;
-      padding-right: 70px;
-      padding-left: 8px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      height: 38px;
-    }
-
-    .viewLink {
-      position: absolute;
-      right: 10px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background-color: #4f46e5;
-      color: white;
-      border-radius: 4px;
-      padding: 0.25rem 0.65rem;
-      font-size: 0.8rem;
-      font-weight: 500;
-      transition: all 0.2s;
-      text-decoration: none;
-      
-      &:hover {
-        background-color: #4338ca;
-        transform: translateY(-1px);
-      }
-      
-      &:active {
-        transform: translateY(0);
-      }
-      
-      &::before {
-        content: '👁️';
-        margin-right: 4px;
-        font-size: 0.8rem;
-      }
-    }
-  }
-
+  
   .actionButtons {
     display: flex;
     justify-content: flex-end;

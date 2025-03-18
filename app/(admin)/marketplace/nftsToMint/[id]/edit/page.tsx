@@ -6,8 +6,7 @@ import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-re
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, updateNftResourceTxHash, updateNftResourceStatusToMinted, isCertificateUriUnique } from '@/app/actions/prisma/prismaActions'
-import { Toaster } from 'react-hot-toast'
+import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, isCertificateUriUnique } from '@/app/actions/prisma/prismaActions'
 import styles from './nftToMint.module.scss'
 import React from 'react'
 import { z } from 'zod'
@@ -19,6 +18,7 @@ import { Address } from 'viem'
 import { artistNftCollectionAbi } from '@/lib/contracts/ArtistNftCollectionAbi'
 import { useNftMinting } from '../../../hooks/useNftMinting'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
+import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
 
 
 type ParamsType = { id: string }
@@ -490,31 +490,6 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
         router.refresh()
       }
     })
-  }
-
-  // Composant pour afficher un champ d'URI IPFS avec lien de visualisation
-  function IpfsUriField({ label, uri, prefix = 'ipfs://' }: { label: string, uri: string, prefix?: string } ) {
-    return (
-      <div className={styles.formGroup}>
-        <label>{label}</label>
-        <div className={styles.ipfsLinkContainer}>
-          <input
-            type="text"
-            value={`${prefix}${uri}`}
-            readOnly
-            className={styles.formInput}
-          />
-          <a 
-            href={`https://gateway.pinata.cloud/ipfs/${uri}`} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className={styles.viewLink}
-          >
-            Voir
-          </a>
-        </div>
-      </div>
-    )
   }
 
   return (

@@ -6,17 +6,14 @@ import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-re
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getAllCollections, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, updateNftResourceTxHash, updateNftResourceStatusToMinted } from '@/app/actions/prisma/prismaActions'
-import { Toaster } from 'react-hot-toast'
+import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getNftResourceByItemId, getActiveCollections } from '@/app/actions/prisma/prismaActions'
 import styles from './royaltySettings.module.scss'
 import React from 'react'
 import { z } from 'zod'
 import { toast } from 'react-hot-toast'
-import { uploadFilesToIpfs, uploadMetadataToIpfs } from '@/app/actions/pinata/pinataActions'
 import { useAccount, useWalletClient } from 'wagmi'
 import { publicClient } from '@/lib/providers'
-import { Address, encodeFunctionData, isAddress, WalletClient } from 'viem'
-import { artistNftCollectionAbi } from '@/lib/contracts/ArtistNftCollectionAbi'
+import { Address, WalletClient } from 'viem'
 import { useNftMinting } from '../../../hooks/useNftMinting'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import { InRealArtRoles, InRealArtSmartContractConstants } from '@/lib/blockchain/smartContractConstants'
@@ -25,6 +22,7 @@ import { CONTRACT_ADDRESSES, ContractName } from '@/constants/contracts'
 import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { isValidEthereumAddress } from '@/lib/blockchain/utils'
 import { useRoyaltySettings } from '@/app/(admin)/marketplace/hooks/useRoyaltySettings'
+import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
 
 type ParamsType = { id: string }
 
@@ -51,8 +49,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     intellectualProperty: false
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
-  const [isMinter, setIsMinter] = useState<boolean>(false)
-  const [isCheckingMinter, setIsCheckingMinter] = useState<boolean>(false)
   const { data: walletClient } = useWalletClient()
   const [hasRoyaltyRole, setHasRoyaltyRole] = useState<boolean>(false)
   const [isCheckingRole, setIsCheckingRole] = useState<boolean>(false)
@@ -60,20 +56,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
 
   const unwrappedParams = React.use(params as any) as ParamsType
   const id = unwrappedParams.id
-  const { mintNFT, isLoading: isMinting, error: mintingError, success: mintingSuccess } = useNftMinting()
   
-  const ipfsFormSchema = z.object({
-    name: z.string().min(1, "Le nom du NFT est obligatoire"),
-    description: z.string().min(1, "La description du NFT est obligatoire"),
-    collection: z.string().min(1, "La sélection d'une collection est obligatoire"),
-    image: z.instanceof(File, { 
-      message: "L'image du NFT est obligatoire" 
-    }),
-    certificate: z.instanceof(File, { 
-      message: "Le certificat d'authenticité est obligatoire" 
-    })
-  })
-
   const [royalties, setRoyalties] = useState<Array<{address: string, percentage: string}>>([
     { address: '', percentage: '' }
   ])
@@ -281,30 +264,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     checkInitialMinterStatus()
   }, [primaryWallet?.address, nftResource])
 
-  function IpfsUriField({ label, uri, prefix = 'ipfs://' }: { label: string, uri: string, prefix?: string } ) {
-    return (
-      <div className={styles.formGroup}>
-        <label>{label}</label>
-        <div className={styles.ipfsLinkContainer}>
-          <input
-            type="text"
-            value={`${prefix}${uri}`}
-            readOnly
-            className={styles.formInput}
-          />
-          <a 
-            href={`https://gateway.pinata.cloud/ipfs/${uri}`} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className={styles.viewLink}
-          >
-            Voir
-          </a>
-        </div>
-      </div>
-    )
-  }
-
   useEffect(() => {
     const total = royalties.reduce((sum, royalty) => {
       const percentage = parseFloat(royalty.percentage) || 0
@@ -382,7 +341,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
   }, [primaryWallet?.address, nftResource])
 
   const handleConfigureRoyalties = async () => {
-    
     
     try {
       const addresses = royalties.map(r => r.address as Address)

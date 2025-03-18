@@ -8,8 +8,10 @@ import { Address, PublicClient, WalletClient } from 'viem'
 import { CONTRACT_ADDRESSES, ContractName } from '@/constants/contracts'
 import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { artistRoyaltiesAbi } from '@/lib/contracts/ArtistRoyaltiesAbi'
-import { InRealArtSmartContractConstants } from '@/lib/blockchain/smartContractConstants'
-import { updateNftResourceTxHash } from '@/app/actions/prisma/prismaActions'
+import { InRealArtSmartContractConstants, InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
+import { updateNftResourceStatusToRoyaltySet, updateNftResourceTxHash } from '@/app/actions/prisma/prismaActions'
+import { publicClient } from '@/lib/providers'
+
 interface RoyaltyParams {
     nftResource: {
         id: string | number
@@ -31,7 +33,9 @@ interface RoyaltyParams {
 
 interface UseRoyaltySettingsReturn {
     configureRoyalties: (params: RoyaltyParams) => Promise<boolean>
+    checkRoyaltyRole: (userAddress: string, contractAddress: string) => Promise<boolean>
     isLoading: boolean
+    isCheckingRole: boolean
     error: string | null
     success: boolean
     txHash: string | null
@@ -42,10 +46,48 @@ interface UseRoyaltySettingsReturn {
  */
 export function useRoyaltySettings(): UseRoyaltySettingsReturn {
     const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [isCheckingRole, setIsCheckingRole] = useState<boolean>(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<boolean>(false)
     const [txHash, setTxHash] = useState<string | null>(null)
     const router = useRouter()
+
+    /**
+     * Vérifie si l'utilisateur a les droits pour configurer les royalties
+     * @param userAddress - Adresse Ethereum de l'utilisateur
+     * @param contractAddress - Adresse du contrat de royalties
+     * @returns Promise<boolean> - Vrai si l'utilisateur a les droits nécessaires
+     */
+    const checkRoyaltyRole = async (userAddress: string, contractAddress: string): Promise<boolean> => {
+        if (!userAddress || !contractAddress) return false
+
+        setIsCheckingRole(true)
+        try {
+            const hasAdminRole = await publicClient.readContract({
+                address: contractAddress as Address,
+                abi: artistRoyaltiesAbi,
+                functionName: 'hasRole',
+                args: [InRealArtRoles.DEFAULT_ADMIN_ROLE, userAddress as Address]
+            }) as boolean
+
+            const hasRoyaltiesRole = await publicClient.readContract({
+                address: contractAddress as Address,
+                abi: artistRoyaltiesAbi,
+                functionName: 'hasRole',
+                args: [InRealArtRoles.ADMIN_ROYALTIES_ROLE, userAddress as Address]
+            }) as boolean
+
+            const hasRole = hasAdminRole || hasRoyaltiesRole
+            console.log(`L'utilisateur ${userAddress} ${hasRole ? 'a' : 'n\'a pas'} les droits pour configurer les royalties`)
+
+            return hasRole
+        } catch (error) {
+            console.error('Erreur lors de la vérification des rôles:', error)
+            return false
+        } finally {
+            setIsCheckingRole(false)
+        }
+    }
 
     /**
      * Configure les royalties pour un NFT spécifique
@@ -71,13 +113,13 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
         // Afficher un toast de chargement
         const configToast = toast.loading('Configuration des royalties en cours...')
 
-        const args = [  
-            nftResource.collection.contractAddress, 
-            nftResource.tokenId, 
-            recipients, 
-            percentages.map(p => Math.round(p) *InRealArtSmartContractConstants.PERCENTAGE_PRECISION),
+        const args = [
+            nftResource.collection.contractAddress,
+            nftResource.tokenId,
+            recipients,
+            percentages.map(p => Math.round(p) * InRealArtSmartContractConstants.PERCENTAGE_PRECISION),
             Math.round(totalPercentage * InRealArtSmartContractConstants.PERCENTAGE_PRECISION)
-          ]
+        ]
         console.log('args:', args)
         try {
             const network = getNetwork()
@@ -99,20 +141,8 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
             const hash = await walletClient.writeContract(request)
             setTxHash(hash)
 
-            try {
-                // Mettre à jour le txHash dans la base de données
-                const updateResult = await updateNftResourceTxHash(Number(nftResource.id), hash)
+            await updateNftResourceTransactionHash(hash, nftResource)
 
-                if (updateResult.success) {
-                    toast.success('NFT minté en attente de confirmation...')
-                } else {
-                    toast.error(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
-                }
-            } catch (updateError) {
-                console.error('Erreur lors de la mise à jour du txHash:', updateError)
-                toast.error('NFT minté, mais erreur lors de la mise à jour des informations')
-            }
-            
             toast.dismiss(configToast)
             const waitingBlockchainConfirmationToast = toast.loading(
                 `Transaction soumise en attente de confirmation dans la blockchain. Hash: ${hash.slice(0, 10)}...`
@@ -128,7 +158,8 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
                 toast.dismiss(waitingBlockchainConfirmationToast)
                 setSuccess(true)
                 toast.success('Royalties configurées avec succès!')
-
+                //Update Status to ROYALTYSET
+                await updateNftResourceStatus(nftResource)
                 // Appeler le callback de succès
                 onSuccess()
 
@@ -164,9 +195,45 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
         }
     }
 
-    return {
+    const updateNftResourceTransactionHash = async (hash: string, nftResource: { id: string | number }) => {
+            try {
+                // Mettre à jour le txHash dans la base de données
+                const updateResult = await updateNftResourceTxHash(Number(nftResource.id), hash)
+
+                if (updateResult.success) {
+                    toast.success('NFT minté en attente de confirmation...')
+                } else {
+                    toast.error(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
+                }
+            } catch (updateError) {
+                console.error('Erreur lors de la mise à jour du txHash:', updateError)
+                toast.error('NFT minté, mais erreur lors de la mise à jour des informations')
+            }
+
+    }
+
+    const updateNftResourceStatus = async (nftResource: { id: string | number }) => {
+        try {
+            // Mettre à jour le txHash dans la base de données
+            const updateResult = await updateNftResourceStatusToRoyaltySet(Number(nftResource.id))
+
+            if (updateResult.success) {
+                toast.success('NFT minté en attente de confirmation...')
+            } else {
+                toast.error(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
+            }
+        } catch (updateError) {
+            console.error('Erreur lors de la mise à jour du txHash:', updateError)
+            toast.error('NFT minté, mais erreur lors de la mise à jour des informations')
+        }
+
+    }
+
+return {
         configureRoyalties,
+        checkRoyaltyRole,
         isLoading,
+        isCheckingRole,
         error,
         success,
         txHash
