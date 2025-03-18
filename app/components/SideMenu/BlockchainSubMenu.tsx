@@ -71,6 +71,13 @@ export default function BlockchainSubMenu({
               onClick={() => onNavigate('/blockchain/artists', 'adminBlockchain')}
             />
           </div>
+          <div className={styles.submenuItemVertical}>
+            <SideMenuItem 
+              label="Royalties"
+              isActive={isActive && location.pathname.includes('/blockchain/royaltyBeneficiaries')}
+              onClick={() => onNavigate('/blockchain/royaltyBeneficiaries', 'adminBlockchain')}
+            />
+          </div>
         </div>
       )}
     </div>
