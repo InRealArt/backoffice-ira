@@ -9,7 +9,7 @@ import { CONTRACT_ADDRESSES, ContractName } from '@/constants/contracts'
 import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { artistRoyaltiesAbi } from '@/lib/contracts/ArtistRoyaltiesAbi'
 import { InRealArtSmartContractConstants, InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
-import { updateNftResourceStatusToRoyaltySet, updateNftResourceTxHash } from '@/app/actions/prisma/prismaActions'
+import { createRoyaltyBeneficiary, updateNftResourceStatusToRoyaltySet, updateNftResourceTxHash } from '@/app/actions/prisma/prismaActions'
 import { publicClient } from '@/lib/providers'
 
 interface RoyaltyParams {
@@ -160,6 +160,8 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
                 toast.success('Royalties configurées avec succès!')
                 //Update Status to ROYALTYSET
                 await updateNftResourceStatus(nftResource)
+                // Créer les beneficiaires
+                await createRoyaltyArray(nftResource, recipients, percentages, totalPercentage)
                 // Appeler le callback de succès
                 onSuccess()
 
@@ -226,7 +228,20 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
             console.error('Erreur lors de la mise à jour du txHash:', updateError)
             toast.error('NFT minté, mais erreur lors de la mise à jour des informations')
         }
+    }
 
+    const createRoyaltyArray = async (nftResource: { id: string | number }, recipients: Address[], percentages: number[], totalPercentage: number) => {
+        let i = 0
+        for (const recipient of recipients) {
+            try {
+                const createdRoyalty = await createRoyaltyBeneficiary(Number(nftResource.id), recipient, percentages[i], totalPercentage)
+            } catch (updateError) {
+                console.error('Erreur lors de la création du beneficiaire:', updateError)
+                toast.error('NFT minté, mais erreur lors de la création du beneficiaire')
+                break
+            }
+            i++
+        }
     }
 
 return {

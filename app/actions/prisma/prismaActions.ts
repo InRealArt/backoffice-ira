@@ -78,6 +78,13 @@ interface UpdateTokenIdResult {
   error?: string
 }
 
+interface CreateRoyaltyBeneficiaryResult {
+  success: boolean
+  message?: string
+  error?: string
+  beneficiary?: any
+}
+
 // Fonction utilitaire pour convertir les objets Decimal en nombres
 function serializeData(data: any): any {
   if (data === null || data === undefined) {
@@ -1135,5 +1142,74 @@ export async function isCertificateUriUnique(uri: string) {
   } catch (error) {
     console.error('Erreur lors de la vérification de l\'unicité du certificat:', error)
     throw new Error('Impossible de vérifier l\'unicité du certificat')
+  }
+}
+
+/**
+ * Crée un bénéficiaire de royalties pour une ressource NFT
+ * @param nftResourceId - L'ID de la ressource NFT associée
+ * @param wallet - L'adresse du portefeuille du bénéficiaire
+ * @param percentage - Le pourcentage de royalties (0-100)
+ * @returns Un objet indiquant le succès ou l'échec de l'opération
+ */
+export async function createRoyaltyBeneficiary(
+  nftResourceId: number,
+  wallet: string,
+  percentage: number,
+  totalPercentage: number
+): Promise<CreateRoyaltyBeneficiaryResult> {
+  try {
+    // Vérifier si la ressource NFT existe
+    const existingResource = await prisma.nftResource.findUnique({
+      where: { id: nftResourceId }
+    })
+
+    if (!existingResource) {
+      return {
+        success: false,
+        message: 'Ressource NFT non trouvée'
+      }
+    }
+
+    // Vérifier que le pourcentage est valide
+    if (percentage < 0 || percentage > 100) {
+      return {
+        success: false,
+        message: 'Le pourcentage doit être compris entre 0 et 100'
+      }
+    }
+
+    // Vérifier si l'adresse wallet est valide (format basique)
+    if (!wallet.startsWith('0x') || wallet.length !== 42) {
+      return {
+        success: false,
+        message: 'Format d\'adresse de portefeuille invalide'
+      }
+    }
+
+    // Créer le bénéficiaire de royalties
+    const beneficiary = await prisma.royaltyBeneficiary.create({
+      data: {
+        wallet,
+        percentage,
+        totalPercentage,
+        nftResourceId
+      }
+    })
+
+    // Revalider les chemins potentiels où cette donnée pourrait être affichée
+    revalidatePath('/marketplace/royaltiesSettings')
+
+    return {
+      success: true,
+      message: 'Bénéficiaire de royalties créé avec succès',
+      beneficiary: serializeData(beneficiary)
+    }
+  } catch (error) {
+    console.error('Erreur lors de la création du bénéficiaire de royalties:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Une erreur inconnue est survenue lors de la création du bénéficiaire'
+    }
   }
 }

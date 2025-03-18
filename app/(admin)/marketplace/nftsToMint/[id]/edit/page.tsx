@@ -734,7 +734,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
                       </div>
                     </form>
                   </div>
-                ) : nftResource?.status === 'MINED' ? (
+                ) : nftResource?.status === 'MINED' || nftResource?.status === 'ROYALTYSET' ? (
                   <div className={styles.actionButtons}>
                     <Button 
                       type="button" 

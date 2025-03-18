@@ -689,6 +689,7 @@ model RoyaltyBeneficiary {
   id            Int         @id @default(autoincrement())
   wallet        String
   percentage    Int
+  totalPercentage Int
   nftResourceId Int
   nftResource   NftResource @relation(fields: [nftResourceId], references: [id])
 
