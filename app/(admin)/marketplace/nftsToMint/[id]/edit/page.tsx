@@ -132,6 +132,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
                 fetchCollections()
                 //console.log('NftResource Result:', nftResourceResult)
                 if (nftResourceResult) {
+                  console.log('nftResourceResult : ', nftResourceResult)
                   setNftResource(nftResourceResult)
                   // Pré-remplir le formulaire avec les données existantes
                   if (nftResourceResult.status === 'UPLOADIPFS') {
@@ -473,7 +474,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   }, [primaryWallet?.address, nftResource]) // Changement des dépendances pour utiliser primaryWallet.address
 
   //---------------------------------------------------------------- handleMintNFT2
-  const handleMintNFT2 = async (): Promise<void> => {
+  const handleMintNFT = async (): Promise<void> => {
     if (!nftResource || !publicClient || !minterWallet) {
       toast.error('Données manquantes pour le minting')
       return
@@ -518,9 +519,8 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
 
   return (
     <>
-      <Toaster position="top-center" />
       <div className={styles.container}>
-        <h1 className={styles.pageTitle}>Détails du produit</h1>
+        <h1 className={styles.pageTitle}>Détails de l'oeuvre</h1>
         
         {isLoading ? (
           <LoadingSpinner message="Chargement du produit..." />
@@ -639,8 +639,8 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
                       <Button 
                         type="button" 
                         variant="primary"
-                        onClick={handleMintNFT2}
-                        disabled={isCheckingMinter || !isMinter}
+                        onClick={handleMintNFT}
+                        disabled={isCheckingMinter || !isMinter || isMinting}
                       >
                         {isCheckingMinter 
                           ? 'Vérification des permissions...' 
@@ -758,6 +758,16 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
                         </Button>
                       </div>
                     </form>
+                  </div>
+                ) : nftResource?.status === 'MINED' ? (
+                  <div className={styles.actionButtons}>
+                    <Button 
+                      type="button" 
+                      variant="secondary"
+                      onClick={() => router.back()}
+                    >
+                      Annuler
+                    </Button>
                   </div>
                 ) : (
                   <div className={styles.actionButtons}>

@@ -9,7 +9,7 @@ import { formatChainName } from '@/lib/blockchain/chainUtils'
 // Importez ou créez un fichier CSS pour les styles
 import styles from './RoyaltiesSettingsClient.module.scss'
 
-// Modification du type pour inclure les informations sur la collection et le smart contract
+// Modification du type pour inclure le smartContractId
 type MinedItemWithRelations = Item & {
   user: {
     email: string | null
@@ -26,7 +26,13 @@ type MinedItemWithRelations = Item & {
     collection: {
       id: number
       name: string
-      smartContractId: number | null
+      smartContractId: number | null  // Ajout de smartContractId
+      smartContract?: {
+        id: number
+        active: boolean
+        factoryAddress: string
+        network: string
+      } | null
     }
   } | null
 }
@@ -84,12 +90,33 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
     return <span className={`${styles.statusBadge} ${styles.defaultBadge}`}>{status}</span>
   }
   
-  // Filtrer les items en fonction du smart contract sélectionné
+  // Dans le code de debugging
+  useEffect(() => {
+    if (selectedSmartContractId) {
+      console.log('Smart Contract ID sélectionné:', selectedSmartContractId);
+      items.forEach(item => {
+        // Vérifier à la fois smartContractId et smartContract.id
+        const collectionSmartContractId = item.nftResource?.collection?.smartContractId;
+        const smartContractId = item.nftResource?.collection?.smartContract?.id;
+        console.log(`Item ${item.id}, Collection smartContractId: ${collectionSmartContractId}, SmartContract.id: ${smartContractId}`);
+      });
+    }
+  }, [selectedSmartContractId, items]);
+  
+  // Amélioration du filtrage
   const filteredItems = selectedSmartContractId
-    ? items.filter(item => 
-        item.nftResource?.collection?.smartContractId === selectedSmartContractId
-      )
-    : items
+    ? items.filter(item => {
+        // Utiliser smartContractId de la collection en priorité
+        const smartContractId = item.nftResource?.collection?.smartContractId;
+        if (smartContractId === selectedSmartContractId) return true;
+        
+        // Si ce n'est pas trouvé, essayer via l'objet smartContract
+        const smartContract = item.nftResource?.collection?.smartContract;
+        if (smartContract && Number(smartContract.id) === selectedSmartContractId) return true;
+        
+        return false;
+      })
+    : items;
   
   return (
     <div className={styles.productsContainer}>
@@ -146,9 +173,7 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
               <tbody>
                 {filteredItems.map((item) => {
                   const isLoading = loadingItemId === item.id
-                  const smartContract = item.nftResource?.collection?.smartContractId 
-                    ? smartContracts.find(sc => sc.id === item.nftResource?.collection.smartContractId)
-                    : null;
+                  const smartContract = item.nftResource?.collection?.smartContract || null;
                   return (
                     <tr 
                       key={item.id} 

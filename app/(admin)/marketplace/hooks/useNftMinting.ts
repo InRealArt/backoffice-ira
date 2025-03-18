@@ -173,12 +173,18 @@ export function useNftMinting(): UseNftMintingReturn {
             }
 
         } catch (error: any) {
-            console.error('Erreur lors du minting:', error)
-            const errorMessage = error.message || 'Une erreur est survenue'
-            setError(errorMessage)
-            toast.dismiss(mintingToast)
-            toast.error(`Erreur lors du minting: ${errorMessage}`)
-            return { success: false, error: errorMessage }
+            console.error('Erreur lors du minting:', error.message)
+            if (error.message.includes('User rejected the request')) {
+                toast.dismiss(mintingToast)
+                toast.error('La transaction a été refusée par l\'utilisateur')
+                return { success: false, error: 'La transaction a été refusée par l\'utilisateur' }
+            } else {
+                const errorMessage = error.message || 'Une erreur est survenue'
+                setError(errorMessage)
+                toast.dismiss(mintingToast)
+                toast.error(`Erreur lors du minting: ${errorMessage}`)
+                return { success: false, error: errorMessage }
+            }
         } finally {
             setIsLoading(false)
         }

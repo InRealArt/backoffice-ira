@@ -132,7 +132,6 @@ export default function EditArtworkPage({ params }: { params: { id: string } }) 
 
   return (
     <>
-      <Toaster position="top-center" />
       <div className={styles.container}>
         <h1 className={styles.pageTitle}>Éditer l'œuvre</h1>
         

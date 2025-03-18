@@ -41,10 +41,15 @@ export default async function RoyaltiesSettingsPage() {
             tokenId: true,
             collection: {
               select: {
+                id: true,
+                name: true,
+                smartContractId: true,
                 smartContract: {
                   select: {
+                    id: true,
                     active: true,
-                    factoryAddress: true
+                    factoryAddress: true,
+                    network: true
                   }
                 }
               }

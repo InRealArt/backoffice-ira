@@ -526,7 +526,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
 
   return (
     <>
-      <Toaster position="top-center" />
       <div className={styles.container}>
         <h1 className={styles.pageTitle}>Détails du NFT</h1>
         
