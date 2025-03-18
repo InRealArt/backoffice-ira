@@ -159,6 +159,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
                 
                 console.log('itemResult : ', itemResult)
                 const nftResourceResult = await getNftResourceByItemId(itemResult.id)
+                console.log('nftResourceResult : ', nftResourceResult)
                 fetchCollections()
                 if (nftResourceResult) {
                   setNftResource(nftResourceResult)
@@ -205,30 +206,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
   const viewCertificate = () => {
     if (certificate && certificate.fileUrl) {
       window.open(certificate.fileUrl, '_blank')
-    }
-  }
-
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement
-    
-    if (type === 'checkbox') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: (e.target as HTMLInputElement).checked
-      }))
-    } else if (type === 'file') {
-      const files = (e.target as HTMLInputElement).files
-      if (files && files.length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          [name]: files[0]
-        }))
-      }
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }))
     }
   }
 
@@ -281,11 +258,11 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
       && (totalPercentage > 0 && total <= 100)
 
     setAllBeneficaryAddress(allAddressesValid)
-    console.log('allAddressesValid : ', allAddressesValid)
-    console.log('isRoyaltySettingOk : ', isRoyaltySettingOk)
+    // console.log('allAddressesValid : ', allAddressesValid)
+    // console.log('isRoyaltySettingOk : ', isRoyaltySettingOk)
 
     setRoyaltiesSettingsOk(isRoyaltySettingOk)
-    console.log(royalties)
+    // console.log(royalties)
   }, [royalties, totalPercentage])
   
   const addRoyaltyRow = () => {
@@ -388,6 +365,9 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
             id: nftResource.id,
             collection: {
               contractAddress: nftResource.collection.contractAddress as Address
+            },
+            smartContract: {
+              royaltiesAddress: nftResource.collection.smartContract.royaltiesAddress as Address
             },
             tokenId: nftResource.tokenId
           },

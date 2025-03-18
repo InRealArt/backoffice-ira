@@ -12,7 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { primaryWallet } = useDynamicContext()
   const router = useRouter()
   const { isAdmin, isLoading } = useIsAdmin()
-  console.log('isAdmin', isAdmin) 
+  
   if (isAdmin === null) {
     return <LoadingSpinner message="Vérification des droits administrateur..." />
   }

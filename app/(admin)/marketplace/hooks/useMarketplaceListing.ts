@@ -60,21 +60,14 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
 
         setIsCheckingRole(true)
         try {
-            const hasAdminRole = await publicClient.readContract({
+            const hasMarketplaceSellerRole = await publicClient.readContract({
                 address: contractAddress as Address,
                 abi: marketplaceAbi,
                 functionName: 'hasRole',
-                args: [InRealArtRoles.DEFAULT_ADMIN_ROLE, userAddress as Address]
+                args: [InRealArtRoles.SELLER_ROLE, userAddress as Address]
             }) as boolean
 
-            const hasMarketplaceRole = await publicClient.readContract({
-                address: contractAddress as Address,
-                abi: marketplaceAbi,
-                functionName: 'hasRole',
-                args: [InRealArtRoles.ADMIN_MARKETPLACE_ROLE, userAddress as Address]
-            }) as boolean
-
-            const hasRole = hasAdminRole || hasMarketplaceRole
+            const hasRole = hasMarketplaceSellerRole
             console.log(`L'utilisateur ${userAddress} ${hasRole ? 'a' : 'n\'a pas'} les droits pour lister sur la marketplace`)
 
             return hasRole
@@ -108,7 +101,7 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
 
         // Afficher un toast de chargement
         const listingToast = toast.loading('Listing du NFT sur la marketplace en cours...')
-
+        console.log('price', price)
         // Conversion du prix en WEI (1 ETH = 10^18 WEI)
         const priceInWei = BigInt(Math.floor(parseFloat(price) * 10 ** 18))
 
@@ -118,23 +111,21 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
 
         try {
             const network = getNetwork()
-            const marketplaceContractAddress = CONTRACT_ADDRESSES[network.id][ContractName.MARKETPLACE] as Address
+            const marketplaceContractAddress = CONTRACT_ADDRESSES[network.id][ContractName.NFT_MARKETPLACE] as Address
 
             // Création des arguments pour le listing
             const args = [
                 nftResource.collection.contractAddress, // adresse du contrat NFT
                 nftResource.tokenId, // ID du token
-                priceInWei, // prix en WEI
-                expirationTimestamp // timestamp d'expiration
+                priceInWei // prix en WEI
             ]
-
             console.log('Args pour le listing marketplace:', args)
 
             // Simulation de la transaction
             const { request } = await publicClient.simulateContract({
                 address: marketplaceContractAddress,
                 abi: marketplaceAbi,
-                functionName: 'listNft',
+                functionName: 'listItem',
                 args: args,
                 account: marketplaceManager
             })

@@ -11,7 +11,7 @@ import React from 'react'
 import { toast } from 'react-hot-toast'
 import { useAccount, useWalletClient } from 'wagmi'
 import { publicClient } from '@/lib/providers'
-import { Address } from 'viem'
+import { parseEther, Address } from 'viem'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import { CONTRACT_ADDRESSES, ContractName } from '@/constants/contracts'
 import { getNetwork } from '@/lib/blockchain/networkConfig'
@@ -47,6 +47,12 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   const unwrappedParams = React.use(params as any) as ParamsType
   const id = unwrappedParams.id
 
+  // États pour les champs du formulaire
+  const [nftAddress, setNftAddress] = useState('');
+  const [tokenId, setTokenId] = useState(0);
+  const [price, setPrice] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Gestion du changement de compte wallet
   useWalletConnectorEvent(
     primaryWallet?.connector, 
@@ -76,7 +82,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
     const network = getNetwork()
     const hasRole = await checkMarketplaceRole(
       address,
-      CONTRACT_ADDRESSES[network.id][ContractName.MARKETPLACE]
+      CONTRACT_ADDRESSES[network.id][ContractName.NFT_MARKETPLACE]
     )
     if (hasRole) {
       setMarketplaceManager(address as Address)
@@ -176,42 +182,50 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
     return Object.keys(errors).length === 0
   }
 
-  const handleListNft = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
     
-    if (!validateForm()) {
-      return
-    }
-
-    if (!walletClient || !marketplaceManager || !nftResource) {
-      toast.error('Configuration incomplète pour le listing')
-      return
-    }
-    
-    // Utiliser le hook pour lister le NFT
-    const success = await listNftOnMarketplace({
-      nftResource: {
-        id: nftResource.id,
-        collection: {
-          contractAddress: nftResource.collection.contractAddress as Address
+    try {
+      // Conversion du prix de ETH à wei
+      const priceInWei = parseEther(formData.price);
+      
+      // Appel à votre fonction de listing qui interagit avec le contrat
+      await listNftOnMarketplace({
+        nftResource: {
+          id: nftResource.id,
+          collection: {
+            contractAddress: nftResource.collection.contractAddress as Address
+          },
+          tokenId: nftResource.tokenId
         },
-        tokenId: nftResource.tokenId
-      },
-      price: formData.price,
-      duration: parseInt(formData.listingDuration),
-      publicClient,
-      walletClient,
-      marketplaceManager,
-      onSuccess: async () => {
-        // Mettre à jour le statut du NFT en base de données
-        try {
-          await updateNftResourceStatusToListed(nftResource.id)
-        } catch (error) {
-          console.error('Erreur lors de la mise à jour du statut:', error)
+        price: priceInWei.toString(),
+        duration: parseInt(formData.listingDuration),
+        publicClient: publicClient as any,
+        walletClient: walletClient as any,
+        marketplaceManager: marketplaceManager as `0x${string}`,
+        onSuccess: async () => {
+          // Mettre à jour le statut du NFT en base de données
+          try {
+            await updateNftResourceStatusToListed(nftResource.id)
+          } catch (error) {
+            console.error('Erreur lors de la mise à jour du statut:', error)
+          }
         }
-      }
-    })
-  }
+      })
+      
+      // Notification de succès
+      toast.success('NFT mis en vente avec succès');
+      
+      // Réinitialisation du formulaire ou redirection
+      // ...
+    } catch (error) {
+      console.error('Erreur lors de la mise en vente:', error);
+      toast.error('Échec de la mise en vente du NFT');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -294,47 +308,59 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       <div className={styles.formContainer}>
         <h3 className={styles.formTitle}>Configuration du listing</h3>
         
-        <form onSubmit={handleListNft} className={styles.form}>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGroup}>
+            <label htmlFor="nftAddress" className={styles.label}>
+              Adresse de la collection NFT
+            </label>
+            <input
+              id="nftAddress"
+              name="nftAddress"
+              type="text"
+              value={nftResource?.collection.contractAddress}
+              disabled
+              placeholder="0x..."
+              className={styles.input}
+              required
+            />
+            <p className={styles.fieldHelp}>Adresse du contrat ERC-721 de la collection</p>
+          </div>
+          
+          <div className={styles.formGroup}>
+            <label htmlFor="tokenId" className={styles.label}>
+              ID du token
+            </label>
+            <input
+              id="tokenId"
+              name="tokenId"
+              type="number"
+              value={nftResource?.tokenId}
+              disabled
+              className={styles.input}
+              required
+            />
+            <p className={styles.fieldHelp}>Identifiant unique du NFT dans la collection</p>
+          </div>
+          
           <div className={styles.formGroup}>
             <label htmlFor="price" className={styles.label}>
               Prix (ETH)
             </label>
             <input
-              type="text"
               id="price"
               name="price"
+              type="number"
               value={formData.price}
-              onChange={handleFormChange}
+              onChange={(e) => setFormData({
+                ...formData,
+                price: e.target.value
+              })}
+              min="0"
+              step="0.001"
               className={styles.input}
-              placeholder="0.00"
-              disabled={isListing || !hasMarketplaceRole}
+              required
             />
-            {formErrors.price && (
-              <p className={styles.errorText}>{formErrors.price}</p>
-            )}
-          </div>
-          
-          <div className={styles.formGroup}>
-            <label htmlFor="listingDuration" className={styles.label}>
-              Durée d'affichage
-            </label>
-            <select
-              id="listingDuration"
-              name="listingDuration"
-              value={formData.listingDuration}
-              onChange={handleFormChange}
-              className={styles.select}
-              disabled={isListing || !hasMarketplaceRole}
-            >
-              <option value="1">1 jour</option>
-              <option value="3">3 jours</option>
-              <option value="7">7 jours</option>
-              <option value="14">14 jours</option>
-              <option value="30">30 jours</option>
-            </select>
-            {formErrors.listingDuration && (
-              <p className={styles.errorText}>{formErrors.listingDuration}</p>
-            )}
+            <p className={styles.fieldHelp}>Prix de vente en ETH (sera converti en wei)</p>
           </div>
           
           <div className={styles.formActions}>
@@ -351,4 +377,6 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       </div>
     </div>
   )
-} 
+}
+
+

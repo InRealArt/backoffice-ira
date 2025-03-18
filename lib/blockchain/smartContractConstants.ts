@@ -4,6 +4,7 @@ export const InRealArtRoles = {
     DEFAULT_ADMIN_ROLE: '0x0000000000000000000000000000000000000000000000000000000000000000',
     DEPLOYER_ARTIST_ROLE: keccak256(toBytes("DEPLOYER_ARTIST_ROLE")),
     ADMIN_ROYALTIES_ROLE: keccak256(toBytes("ADMIN_ROYALTIES_ROLE")),
+    SELLER_ROLE: keccak256(toBytes("SELLER_ROLE")),
 } as const
 
 export const InRealArtSmartContractConstants = {

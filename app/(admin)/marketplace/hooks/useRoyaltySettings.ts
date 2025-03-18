@@ -18,6 +18,9 @@ interface RoyaltyParams {
         collection: {
             contractAddress: Address
         }
+        smartContract: {
+            royaltiesAddress: Address
+        }
         tokenId: number
     }
     recipients: Address[]
@@ -121,12 +124,11 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
             Math.round(totalPercentage * InRealArtSmartContractConstants.PERCENTAGE_PRECISION)
         ]
         console.log('args:', args)
+        console.log('nftResource.smartContract.royaltiesAddress:', nftResource.smartContract.royaltiesAddress)
         try {
-            const network = getNetwork()
-            const royaltiesContractAddress = CONTRACT_ADDRESSES[network.id][ContractName.NFT_ROYALTIES] as Address
             // Simuler la transaction
             const { request } = await publicClient.simulateContract({
-                address: royaltiesContractAddress,
+                address: nftResource.smartContract.royaltiesAddress,
                 abi: artistRoyaltiesAbi,
                 functionName: 'setRoyalty',
                 args: args,
