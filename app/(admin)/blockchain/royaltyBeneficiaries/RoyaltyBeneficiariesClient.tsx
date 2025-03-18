@@ -40,6 +40,11 @@ export default function RoyaltyBeneficiariesClient({
   royaltyBeneficiaries = [], 
   smartContracts = [] 
 }: RoyaltyBeneficiariesClientProps) {
+  // Debug: afficher exactement ce qui est reçu
+  console.log('Type de royaltyBeneficiaries:', typeof royaltyBeneficiaries, Array.isArray(royaltyBeneficiaries))
+  console.log('Longueur:', royaltyBeneficiaries?.length)
+  console.log('Premier élément:', royaltyBeneficiaries?.[0])
+
   const [isMobile, setIsMobile] = useState(false)
   const [selectedSmartContractId, setSelectedSmartContractId] = useState<number | null>(null)
   
@@ -76,17 +81,20 @@ export default function RoyaltyBeneficiariesClient({
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
   }
   
-  // Filtrage des bénéficiaires selon le smart contract sélectionné
+  // Filtrage des bénéficiaries comme dans CollectionsClient
   const filteredBeneficiaries = selectedSmartContractId
-    ? royaltyBeneficiaries.filter(
-        beneficiary => 
-          beneficiary.nftResource?.collection?.smartContract?.id === selectedSmartContractId
-      )
-    : royaltyBeneficiaries
+    ? (Array.isArray(royaltyBeneficiaries) 
+       ? royaltyBeneficiaries.filter(beneficiary => 
+           beneficiary?.nftResource?.collection?.smartContract?.id === selectedSmartContractId
+         )
+       : [])
+    : (Array.isArray(royaltyBeneficiaries) ? royaltyBeneficiaries : [])
+  
+  console.log('Bénéficiaires filtrés:', filteredBeneficiaries?.length, filteredBeneficiaries?.[0])
   
   // Obtenir le smart contract associé à un bénéficiaire
   const getSmartContract = (beneficiary: RoyaltyBeneficiaryWithRelations) => {
-    return beneficiary.nftResource?.collection?.smartContract
+    return beneficiary?.nftResource?.collection?.smartContract
   }
   
   return (
@@ -119,7 +127,7 @@ export default function RoyaltyBeneficiariesClient({
       </div>
       
       <div className={styles.tableContainer}>
-        {filteredBeneficiaries.length === 0 ? (
+        {!Array.isArray(filteredBeneficiaries) || filteredBeneficiaries.length === 0 ? (
           <div className={styles.emptyState}>
             <p>Aucun bénéficiaire de royalties trouvé.</p>
           </div>
@@ -142,40 +150,40 @@ export default function RoyaltyBeneficiariesClient({
               {filteredBeneficiaries.map((beneficiary) => {
                 const smartContract = getSmartContract(beneficiary)
                 return (
-                  <tr key={beneficiary.id} className={styles.tableRow}>
-                    <td>{beneficiary.id}</td>
+                  <tr key={beneficiary?.id} className={styles.tableRow}>
+                    <td>{beneficiary?.id}</td>
                     <td>
                       <div className={styles.addressContainer}>
-                        <span className={styles.address} title={beneficiary.wallet}>
-                          {truncateAddress(beneficiary.wallet)}
+                        <span className={styles.address} title={beneficiary?.wallet}>
+                          {truncateAddress(beneficiary?.wallet)}
                         </span>
                         <button
                           className={styles.copyButton}
-                          onClick={(e) => copyToClipboard(beneficiary.wallet, e)}
+                          onClick={(e) => copyToClipboard(beneficiary?.wallet, e)}
                           title="Copier l'adresse"
                         >
                           📋
                         </button>
                       </div>
                     </td>
-                    <td>{beneficiary.percentage}%</td>
-                    <td>{beneficiary.totalPercentage}%</td>
+                    <td>{beneficiary?.percentage}%</td>
+                    <td>{beneficiary?.totalPercentage}%</td>
                     <td className={styles.hiddenMobile}>
-                      {beneficiary.nftResource?.name || 'Non défini'}
+                      {beneficiary?.nftResource?.name || 'Non défini'}
                     </td>
                     <td className={styles.hiddenMobile}>
-                      {beneficiary.nftResource?.tokenId || 'Non défini'}
+                      {beneficiary?.nftResource?.tokenId || 'Non défini'}
                     </td>
                     <td className={styles.hiddenMobile}>
-                      {beneficiary.nftResource?.collection?.contractAddress ? (
+                      {beneficiary?.nftResource?.collection?.contractAddress ? (
                         <div className={styles.addressContainer}>
-                          <span className={styles.address} title={beneficiary.nftResource?.collection.contractAddress}>
-                            {truncateAddress(beneficiary.nftResource?.collection.contractAddress || '')}
+                          <span className={styles.address} title={beneficiary?.nftResource?.collection.contractAddress}>
+                            {truncateAddress(beneficiary?.nftResource?.collection.contractAddress || '')}
                           </span>
                           <button
                             className={styles.copyButton}
-                            onClick={(e) => beneficiary.nftResource?.collection?.contractAddress && 
-                              copyToClipboard(beneficiary.nftResource.collection.contractAddress, e)}
+                            onClick={(e) => beneficiary?.nftResource?.collection?.contractAddress && 
+                              copyToClipboard(beneficiary?.nftResource.collection.contractAddress, e)}
                             title="Copier l'adresse"
                           >
                             📋

@@ -1,0 +1,201 @@
+.productsContainer {
+  padding: 1.5rem;
+}
+
+.productsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.subtitle {
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.productsContent {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.productsTable {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+  }
+  
+  th {
+    font-weight: 600;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  tr {
+    border-bottom: 1px solid #e5e7eb;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.clickableRow {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #f9fafb;
+  }
+}
+
+.loadingRow {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.disabledRow {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.idCell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loadingText {
+  opacity: 0.5;
+}
+
+.statusCell {
+  white-space: nowrap;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.defaultBadge {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.royaltysetBadge {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.emptyState {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+@media (max-width: 767px) {
+  .hiddenMobile {
+    display: none;
+  }
+}
+
+// Styles pour la section de filtrage
+.filterSection {
+  margin: 16px 0;
+  padding: 16px;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.filterItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  @media (max-width: 576px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+.filterLabel {
+  font-weight: 500;
+  color: #4b5563;
+  min-width: 120px;
+}
+
+.selectWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+}
+
+.filterSelect {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+  color: #1f2937;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px;
+  
+  &:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.2);
+  }
+}
+
+// Style pour les adresses tronquées
+.truncatedAddress {
+  font-family: monospace;
+  color: #666;
+}
+
+// Style pour les cellules de smart contract
+.smartContractCell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+// Styles pour les badges des smart contracts
+.activeBadge {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.inactiveBadge {
+  background-color: #fee2e2;
+  color: #b91c1c;
+} 
