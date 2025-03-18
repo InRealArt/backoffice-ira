@@ -154,7 +154,6 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
             >
               <option value="all">Tous les statuts</option>
               <option value="pending">En attente</option>
-              <option value="minted">Minté</option>
               <option value="listed">Listé</option>
             </select>
           </div>
