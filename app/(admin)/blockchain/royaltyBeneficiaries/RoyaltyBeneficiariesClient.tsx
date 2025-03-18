@@ -12,11 +12,13 @@ type NftCollection = {
   name: string
   symbol: string
   smartContract: SmartContract | null
+  contractAddress?: string
 }
 
 type NftResource = {
   id: number
   name: string
+  tokenId?: number
   collection: NftCollection
 }
 
@@ -126,10 +128,12 @@ export default function RoyaltyBeneficiariesClient({
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Adresse</th>
+                <th>Bénéficiaire</th>
                 <th>Part (%)</th>
                 <th>% total du prix du NFT</th>
                 <th className={styles.hiddenMobile}>NFT Resource</th>
+                <th className={styles.hiddenMobile}>Token ID</th>
+                <th className={styles.hiddenMobile}>Collection</th>
                 <th className={styles.hiddenMobile}>Smart Contract</th>
                 <th className={styles.hiddenMobile}>Réseau</th>
               </tr>
@@ -158,6 +162,28 @@ export default function RoyaltyBeneficiariesClient({
                     <td>{beneficiary.totalPercentage}%</td>
                     <td className={styles.hiddenMobile}>
                       {beneficiary.nftResource?.name || 'Non défini'}
+                    </td>
+                    <td className={styles.hiddenMobile}>
+                      {beneficiary.nftResource?.tokenId || 'Non défini'}
+                    </td>
+                    <td className={styles.hiddenMobile}>
+                      {beneficiary.nftResource?.collection?.contractAddress ? (
+                        <div className={styles.addressContainer}>
+                          <span className={styles.address} title={beneficiary.nftResource?.collection.contractAddress}>
+                            {truncateAddress(beneficiary.nftResource?.collection.contractAddress || '')}
+                          </span>
+                          <button
+                            className={styles.copyButton}
+                            onClick={(e) => beneficiary.nftResource?.collection?.contractAddress && 
+                              copyToClipboard(beneficiary.nftResource.collection.contractAddress, e)}
+                            title="Copier l'adresse"
+                          >
+                            📋
+                          </button>
+                        </div>
+                      ) : (
+                        <span className={styles.noData}>Non déployée</span>
+                      )}
                     </td>
                     <td className={styles.hiddenMobile}>
                       {smartContract ? (
