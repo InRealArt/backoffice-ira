@@ -138,12 +138,14 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
             Gérez les uploads des oeuvres sur IPFS et mint des NFT
           </p>
         </div>
-        
-        <div className={styles.filterContainer}>
-          <div className={styles.filterGroup}>
-            <label htmlFor="status-filter" className={styles.filterLabel}>
-              Filtrer par statut:
-            </label>
+      </div>
+      
+      <div className={styles.filterSection}>
+        <div className={styles.filterItem}>
+          <label htmlFor="status-filter" className={styles.filterLabel}>
+            Filtrer par statut:
+          </label>
+          <div className={styles.selectWrapper}>
             <select 
               id="status-filter" 
               className={styles.filterSelect}
@@ -156,11 +158,13 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
               <option value="listed">Listé</option>
             </select>
           </div>
-          
-          <div className={styles.filterGroup}>
-            <label htmlFor="smartcontract-filter" className={styles.filterLabel}>
-              Smart Contract:
-            </label>
+        </div>
+        
+        <div className={styles.filterItem}>
+          <label htmlFor="smartcontract-filter" className={styles.filterLabel}>
+            Smart Contract:
+          </label>
+          <div className={styles.selectWrapper}>
             <select
               id="smartcontract-filter"
               className={styles.filterSelect}
