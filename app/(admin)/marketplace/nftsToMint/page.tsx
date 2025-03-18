@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import ProductListingClient from './NftsToMintClient'
+import NftsToMintClient from './NftsToMintClient'
 
 export const metadata = {
   title: 'Demandes de listing produits | Marketplace',
@@ -9,23 +9,23 @@ export const metadata = {
 export default async function NftsToMintPage() {
   try {
     // Récupération des items avec les relations user et nftResource
-    const products = await prisma.item.findMany({
-      where: {
-        OR: [
-          {
-            nftResource: {
-              status: {
-                not: {
-                  in: ['MINED', 'LISTED', 'SOLD']
-                }
-              }
-            }
-          },
-          {
-            nftResource: null
-          }
-        ]
-      },
+    const productsRaw = await prisma.item.findMany({
+      // where: {
+      //   OR: [
+      //     {
+      //       nftResource: {
+      //         status: {
+      //           not: {
+      //             in: ['MINED', 'LISTED', 'SOLD']
+      //           }
+      //         }
+      //       }
+      //     },
+      //     {
+      //       nftResource: null
+      //     }
+      //   ]
+      // },
       orderBy: {
         id: 'desc',
       },
@@ -46,15 +46,33 @@ export default async function NftsToMintPage() {
             certificateUri: true,
             mockups: true,
             tags: true,
+            collection: {
+              select: {
+                smartContract: {
+                  select: {
+                    active: true,
+                    factoryAddress: true
+                  }
+                }
+              }
+            }
           }
         }
       }
     }) || []
 
-    return <ProductListingClient products={products} />
+    // Sérialisation des objets Decimal en chaînes de caractères
+    const products = productsRaw.map(product => ({
+      ...product,
+      height: product.height ? product.height.toString() : null,
+      width: product.width ? product.width.toString() : null,
+      // Sérialiser d'autres champs Decimal si nécessaire
+    }))
+
+    return <NftsToMintClient products={products} />
   } catch (error) {
     console.error('Erreur lors de la récupération des produits:', error)
     // En cas d'erreur, renvoyer un tableau vide
-    return <ProductListingClient products={[]} />
+    return <NftsToMintClient products={[]} />
   }
 }

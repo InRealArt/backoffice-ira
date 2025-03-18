@@ -11,9 +11,6 @@ export default async function RoyaltiesSettingsPage() {
   try {
     // Récupération des smart contracts disponibles
     const smartContracts = await prisma.smartContract.findMany({
-      where: {
-        active: true
-      },
       orderBy: {
         id: 'desc'
       }
@@ -44,9 +41,12 @@ export default async function RoyaltiesSettingsPage() {
             tokenId: true,
             collection: {
               select: {
-                id: true,
-                name: true,
-                smartContractId: true
+                smartContract: {
+                  select: {
+                    active: true,
+                    factoryAddress: true
+                  }
+                }
               }
             }
           }

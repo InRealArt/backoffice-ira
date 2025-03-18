@@ -125,12 +125,20 @@
 }
 
 .statusBadge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: capitalize;
+  padding: 0.2em 0.5em;
+  border-radius: 0.25em;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.activeBadge {
+  background-color: #4caf50; /* Vert pour actif */
+  color: white;
+}
+
+.inactiveBadge {
+  background-color: #f44336; /* Rouge pour inactif */
+  color: white;
 }
 
 .pendingBadge {
@@ -180,4 +188,41 @@
 .minedBadge {
   background-color: #fbbf24; // Jaune
   color: #1f2937; // Texte foncé pour meilleure lisibilité sur fond jaune
+}
+
+.optionBadge {
+  display: flex;
+  align-items: center;
+}
+
+.greenBadge {
+  width: 10px;
+  height: 10px;
+  background-color: green;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.redBadge {
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  border-radius: 50%;
+  margin-right: 5px;
 } 
+
+.greenBadge {
+  width: 10px;
+  height: 10px;
+  background-color: green;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.redBadge {
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  border-radius: 50%;
+  margin-right: 5px;
+}

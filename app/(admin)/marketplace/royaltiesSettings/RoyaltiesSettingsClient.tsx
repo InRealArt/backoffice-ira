@@ -117,9 +117,7 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
               <option value="">Tous les smart contracts</option>
               {smartContracts.map(smartContract => (
                 <option key={smartContract.id} value={smartContract.id}>
-                  {formatChainName(smartContract.network)} - {truncateAddress(smartContract.factoryAddress)}
-                  {' '}
-                  {smartContract.active ? '(Actif)' : '(Inactif)'}
+                  {smartContract.active ? '🟢 ' : '🔴 '} {formatChainName(smartContract.network)} - {truncateAddress(smartContract.factoryAddress)}
                 </option>
               ))}
             </select>
@@ -141,7 +139,6 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
                   <th className={styles.hiddenMobile}>Token ID</th>
                   <th>Œuvre</th>
                   <th className={styles.hiddenMobile}>Artiste</th>
-                  <th className={styles.hiddenMobile}>Réseau</th>
                   <th className={styles.hiddenMobile}>Factory</th>
                   <th>Statut</th>
                 </tr>
@@ -180,31 +177,19 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
                       </td>
                       <td className={styles.hiddenMobile}>
                         {smartContract ? (
-                          <div className={styles.factoryBadge}>
-                            {formatChainName(smartContract.network)}
-                          </div>
-                        ) : (
-                          <div className={`${styles.factoryBadge} ${styles.inactiveBadge}`}>
-                            Inactif
-                          </div>
-                        )}
-                      </td>
-                      <td className={styles.hiddenMobile}>
-                        {smartContract ? (
-                          <div className={styles.factoryAddressCell}>
-                            <span className={styles.truncatedAddress} title={smartContract.factoryAddress}>
+                          <div className={styles.smartContractCell}>
+                            <span className={styles.truncatedAddress}>
                               {truncateAddress(smartContract.factoryAddress)}
                             </span>
-                            <span className={`${styles.contractStatusBadge} ${smartContract.active ? styles.activeBadge : styles.inactiveBadge}`}>
+                            &nbsp;&nbsp;
+                            <span className={`${styles.statusBadge} ${smartContract.active 
+                              ? styles.activeBadge 
+                              : styles.inactiveBadge}`}>
                               {smartContract.active ? 'Actif' : 'Inactif'}
                             </span>
                           </div>
                         ) : (
-                          <div className={styles.factoryAddressCell}>
-                            <span className={`${styles.contractStatusBadge} ${styles.inactiveBadge}`}>
-                              Inactif
-                            </span>
-                          </div>
+                          'N/A'
                         )}
                       </td>
                       <td>
@@ -212,6 +197,7 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
                           {getNftResourceStatusBadge(item.nftResource?.status || 'MINED')}
                         </div>
                       </td>
+
                     </tr>
                   )
                 })}

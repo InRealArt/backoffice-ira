@@ -20,6 +20,12 @@ interface Item {
   nftResource?: {
     name: string
     status: ResourceNftStatuses
+    collection?: {
+      smartContract?: {
+        active: boolean
+        factoryAddress?: string
+      } | null
+    }
   } | null
 }
 
@@ -32,6 +38,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
   const router = useRouter()
   const [loadingItemId, setLoadingItemId] = useState<number | null>(null)
   const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all')
+  const [smartContractFilter, setSmartContractFilter] = useState('all')
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -53,10 +60,21 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
   // Vérifier que products n'est pas undefined avant de filtrer
   const safeProducts = Array.isArray(products) ? products : []
   
-  // Filtrer les produits par statut
-  const filteredProducts = statusFilter === 'all' 
-    ? safeProducts 
-    : safeProducts.filter(product => product.status === statusFilter)
+  // Filtrer les produits par statut et smart contract
+  const filteredProducts = safeProducts.filter(product => {
+    // Filtre par statut
+    const matchesStatus = statusFilter === 'all' || product.status === statusFilter
+    
+    // Filtre par smart contract
+    let matchesSmartContract = true
+    if (smartContractFilter !== 'all') {
+      // Vérifier si l'adresse de la factory correspond à celle sélectionnée
+      const factoryAddress = product.nftResource?.collection?.smartContract?.factoryAddress
+      matchesSmartContract = factoryAddress === smartContractFilter
+    }
+    
+    return matchesStatus && matchesSmartContract
+  })
   
   const handleItemClick = (itemId: number) => {
     setLoadingItemId(itemId)
@@ -104,31 +122,66 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
     return <span className={`${styles.statusBadge} ${styles.defaultBadge}`}>{status}</span>
   }
   
+  // Fonction pour tronquer l'adresse du contrat
+  function truncateAddress(address: string | undefined): string {
+    if (!address) return 'Non défini'
+    if (address.length <= 16) return address
+    return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
+  }
+  
   return (
     <div className={styles.productsContainer}>
       <div className={styles.productsHeader}>
         <div>
-          <h1 className={styles.pageTitle}>Demandes de listing produits</h1>
+          <h1 className={styles.pageTitle}>Liste des oeuvres (à minter)</h1>
           <p className={styles.subtitle}>
-            Gérez les produits soumis pour le marketplace
+            Gérez les uploads des oeuvres sur IPFS et mint des NFT
           </p>
         </div>
         
         <div className={styles.filterContainer}>
-          <label htmlFor="status-filter" className={styles.filterLabel}>
-            Filtrer par statut:
-          </label>
-          <select 
-            id="status-filter" 
-            className={styles.filterSelect}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as ItemStatus | 'all')}
-          >
-            <option value="all">Tous les statuts</option>
-            <option value="pending">En attente</option>
-            <option value="minted">Minté</option>
-            <option value="listed">Listé</option>
-          </select>
+          <div className={styles.filterGroup}>
+            <label htmlFor="status-filter" className={styles.filterLabel}>
+              Filtrer par statut:
+            </label>
+            <select 
+              id="status-filter" 
+              className={styles.filterSelect}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as ItemStatus | 'all')}
+            >
+              <option value="all">Tous les statuts</option>
+              <option value="pending">En attente</option>
+              <option value="minted">Minté</option>
+              <option value="listed">Listé</option>
+            </select>
+          </div>
+          
+          <div className={styles.filterGroup}>
+            <label htmlFor="smartcontract-filter" className={styles.filterLabel}>
+              Smart Contract:
+            </label>
+            <select
+              id="smartcontract-filter"
+              className={styles.filterSelect}
+              value={smartContractFilter}
+              onChange={(e) => setSmartContractFilter(e.target.value)}
+            >
+              <option value="all">Tous</option>
+              {safeProducts.map((product) => {
+                const factoryAddress = product.nftResource?.collection?.smartContract?.factoryAddress
+                const isActive = product.nftResource?.collection?.smartContract?.active
+                if (factoryAddress) {
+                  return (
+                    <option key={factoryAddress} value={factoryAddress}>
+                      {isActive ? '🟢 ' : '🔴 '} {truncateAddress(factoryAddress)}
+                    </option>
+                  )
+                }
+                return null
+              })}
+            </select>
+          </div>
         </div>
       </div>
       
@@ -148,11 +201,14 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                   <th>Statut</th>
                   <th className={styles.hiddenMobile}>NFT associé</th>
                   <th className={styles.hiddenMobile}>Statut NFT</th>
+                  <th>Smart Contract (Factory address)</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredProducts.map((product) => {
                   const isLoading = loadingItemId === product.id
+                  console.log('ID product :', product.id)
+                  console.log('Factory Address:', product.nftResource)
                   return (
                     <tr 
                       key={product.id} 
@@ -192,6 +248,25 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                           ? getNftResourceStatusBadge(product.nftResource) 
                           : 'N/A'
                         }
+                      </td>
+                      <td className={styles.hiddenMobile}>
+                        <div className={styles.smartContractCell}>
+                          {product.nftResource?.collection?.smartContract ? (
+                            <>
+                              <span className={styles.truncatedAddress}>
+                                {truncateAddress(product.nftResource.collection.smartContract.factoryAddress)}
+                              </span>
+                              &nbsp;&nbsp;
+                              <span className={`${styles.statusBadge} ${product.nftResource.collection.smartContract.active 
+                                ? styles.activeBadge 
+                                : styles.inactiveBadge}`}>
+                                {product.nftResource.collection.smartContract.active ? 'Actif' : 'Inactif'}
+                              </span>
+                            </>
+                          ) : (
+                            'N/A'
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
