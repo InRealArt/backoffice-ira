@@ -15,15 +15,16 @@ import { toast } from 'react-hot-toast'
 import { uploadFilesToIpfs, uploadMetadataToIpfs } from '@/app/actions/pinata/pinataActions'
 import { useAccount, useWalletClient } from 'wagmi'
 import { publicClient } from '@/lib/providers'
-import { Address, encodeFunctionData, isAddress } from 'viem'
+import { Address, encodeFunctionData, isAddress, WalletClient } from 'viem'
 import { artistNftCollectionAbi } from '@/lib/contracts/ArtistNftCollectionAbi'
 import { useNftMinting } from '../../../hooks/useNftMinting'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
-import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
+import { InRealArtRoles, InRealArtSmartContractConstants } from '@/lib/blockchain/smartContractConstants'
 import { artistRoyaltiesAbi } from '@/lib/contracts/ArtistRoyaltiesAbi'
 import { CONTRACT_ADDRESSES, ContractName } from '@/constants/contracts'
 import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { isValidEthereumAddress } from '@/lib/blockchain/utils'
+import { useRoyaltySettings } from '@/app/(admin)/marketplace/hooks/useRoyaltySettings'
 
 type ParamsType = { id: string }
 
@@ -41,7 +42,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
   const [showUploadIpfsForm, setShowUploadIpfsForm] = useState(false)
   const [collections, setCollections] = useState<any[]>([])
   const [nftResource, setNftResource] = useState<any>(null)
-  const [minterWallet, setMinterWallet] = useState<Address | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -53,16 +53,15 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isMinter, setIsMinter] = useState<boolean>(false)
   const [isCheckingMinter, setIsCheckingMinter] = useState<boolean>(false)
-  // Récupérer le walletClient pour les transactions
   const { data: walletClient } = useWalletClient()
   const [hasRoyaltyRole, setHasRoyaltyRole] = useState<boolean>(false)
   const [isCheckingRole, setIsCheckingRole] = useState<boolean>(false)
+  const { configureRoyalties, isLoading: isConfiguring, error: configureError, success: configureSuccess } = useRoyaltySettings()
 
   const unwrappedParams = React.use(params as any) as ParamsType
   const id = unwrappedParams.id
   const { mintNFT, isLoading: isMinting, error: mintingError, success: mintingSuccess } = useNftMinting()
   
-  // Schéma de validation Zod pour les fichiers IPFS
   const ipfsFormSchema = z.object({
     name: z.string().min(1, "Le nom du NFT est obligatoire"),
     description: z.string().min(1, "La description du NFT est obligatoire"),
@@ -75,21 +74,18 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     })
   })
 
-  // État pour gérer les royalties
   const [royalties, setRoyalties] = useState<Array<{address: string, percentage: string}>>([
     { address: '', percentage: '' }
   ])
   const [totalPercentage, setTotalPercentage] = useState<number>(0)
   const [totalPercentageBeneficiaries, setTotalPercentageBeneficiaries] = useState<number>(0)
   const [allBeneficaryAddress, setAllBeneficaryAddress] = useState<boolean>(false)
-  const [isConfiguring, setIsConfiguring] = useState<boolean>(false)
   const [royaltiesSettingsOk, setRoyaltiesSettingsOk] = useState<boolean>(false)
-
+  const [royaltiesManager, setRoyaltiesManager] = useState<Address | null>(null)
 
   const fetchCollections = async () => {
     try {
       const collectionsData = await getActiveCollections()
-      //console.log('Collections Data:', collectionsData)
       if (collectionsData && Array.isArray(collectionsData)) {
         setCollections(collectionsData)
       }
@@ -104,13 +100,11 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     async ({ accounts }, connector) => {
       if (connector.name === 'Rabby') {
         console.log('Rabby wallet account changed:', accounts);
-        // Handle Rabby wallet account change
         await checkUserRoyaltyRole(accounts[0]);
       }
     }
   );
 
-  // CORRECTION: Utilisation correcte de useWalletConnectorEvent pour les changements de chaîne
   useWalletConnectorEvent(
     primaryWallet?.connector,
     'chainChange',
@@ -122,8 +116,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     }
   );
   
-  // Ajout d'un useEffect pour la vérification initiale du minter
- // Remplacer l'useEffect à la ligne 469 par celui-ci
   useEffect(() => {
     const checkInitialMinterStatus = async () => {
       console.log('Vérification initiale du statut minter - primaryWallet:', {
@@ -142,8 +134,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     }
 
     checkInitialMinterStatus()
-  }, [primaryWallet?.address, nftResource]) // Changement des dépendances pour utiliser primaryWallet.address
-
+  }, [primaryWallet?.address, nftResource])
 
   useEffect(() => {
     if (!user?.email) {
@@ -156,48 +147,38 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     
     const fetchProduct = async () => {
       try {
-        // Extraire l'ID numérique si l'ID est au format GID
         const productId = params.id.includes('gid://shopify/Product/') 
           ? params.id.split('/').pop() 
           : params.id
         
         const result = await getShopifyProductById(productId as string)
-        //console.log('Shopify Product:', result)
         if (isMounted) {
           if (result.success && result.product) {
             setProduct(result.product)
             
-            // Convertir result.product.id en nombre
             const shopifyProductId = typeof result.product.id === 'string' 
               ? BigInt(result.product.id.replace('gid://shopify/Product/', ''))
               : BigInt(result.product.id)
 
-            // Rechercher l'Item associé 
             const itemResult = await getItemByShopifyId(shopifyProductId)
-            //console.log('Item Result:', itemResult)
             if (itemResult?.id) {
               setItem(itemResult)
               try {
-                // Récupérer le certificat d'authenticité
                 const certificateResult = await getAuthCertificateByItemId(itemResult.id)
                 if (certificateResult && certificateResult.id) {
                   setCertificate(certificateResult)
                 }
                 
-                // Récupérer l'utilisateur associé à cet item
                 const ownerResult = await getUserByItemId(itemResult.id)
                 if (ownerResult) {
                   setProductOwner(ownerResult)
                 }
                 
-                // Récupérer le nftResource associé à cet item
                 console.log('itemResult : ', itemResult)
                 const nftResourceResult = await getNftResourceByItemId(itemResult.id)
                 fetchCollections()
-                //console.log('NftResource Result:', nftResourceResult)
                 if (nftResourceResult) {
                   setNftResource(nftResourceResult)
-                  // Pré-remplir le formulaire avec les données existantes
                   if (nftResourceResult.status === 'UPLOADIPFS') {
                     setFormData(prevData => ({
                       ...prevData,
@@ -232,21 +213,18 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     }
   }, [id, user?.email])
 
-  // Fonction pour charger les collections
   useEffect(() => {
     if (showUploadIpfsForm) {
       fetchCollections()
     }
   }, [id, showUploadIpfsForm])
 
-  // Fonction pour ouvrir le certificat dans un nouvel onglet
   const viewCertificate = () => {
     if (certificate && certificate.fileUrl) {
       window.open(certificate.fileUrl, '_blank')
     }
   }
 
-  // Fonction pour gérer les changements de valeurs dans le formulaire
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement
     
@@ -273,16 +251,16 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
 
   const checkUserRoyaltyRole = async (address: string) => {
     const network = getNetwork()
-    //console.log('Royalties SC : ', CONTRACT_ADDRESSES[network.id][ContractName.NFT_ROYALTIES])
     const hasRole = await checkRoyaltyRole(
       address,
       CONTRACT_ADDRESSES[network.id][ContractName.NFT_ROYALTIES]
     )
+    if (hasRole) {
+      setRoyaltiesManager(address as Address)
+    }
     setHasRoyaltyRole(hasRole)
   }
 
-  // Ajout d'un useEffect pour la vérification initiale du minter
- // Remplacer l'useEffect à la ligne 469 par celui-ci
   useEffect(() => {
     const checkInitialMinterStatus = async () => {
       console.log('Vérification initiale du statut minter - primaryWallet:', {
@@ -301,9 +279,8 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     }
 
     checkInitialMinterStatus()
-  }, [primaryWallet?.address, nftResource]) // Changement des dépendances pour utiliser primaryWallet.address
+  }, [primaryWallet?.address, nftResource])
 
-  // Composant pour afficher un champ d'URI IPFS avec lien de visualisation
   function IpfsUriField({ label, uri, prefix = 'ipfs://' }: { label: string, uri: string, prefix?: string } ) {
     return (
       <div className={styles.formGroup}>
@@ -328,7 +305,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     )
   }
 
-  // Calcul automatique du pourcentage total à chaque modification des royalties
   useEffect(() => {
     const total = royalties.reduce((sum, royalty) => {
       const percentage = parseFloat(royalty.percentage) || 0
@@ -337,7 +313,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     setTotalPercentageBeneficiaries(total)
 
     
-    // Vérifier que toutes les adresses renseignées sont valides
     const allAddressesValid = royalties.every(royalty => 
       royalty.address === '' || isValidEthereumAddress(royalty.address)
     )
@@ -354,33 +329,28 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     console.log(royalties)
   }, [royalties, totalPercentage])
   
-  // Fonction pour ajouter une nouvelle ligne de royalty
   const addRoyaltyRow = () => {
     setRoyalties([...royalties, { address: '', percentage: '' }])
   }
   
-  // Fonction pour supprimer une ligne de royalty
   const removeRoyaltyRow = (index: number) => {
     const updatedRoyalties = [...royalties]
     updatedRoyalties.splice(index, 1)
     setRoyalties(updatedRoyalties)
   }
   
-  // Fonction pour mettre à jour les valeurs de royalty
   const handleRoyaltyChange = (index: number, field: 'address' | 'percentage', value: string) => {
     const updatedRoyalties = [...royalties]
     updatedRoyalties[index][field] = value
     setRoyalties(updatedRoyalties)
   }
   
-  // Vérification du rôle de l'utilisateur
   const checkRoyaltyRole = async (userAddress: string, contractAddress: string) => {
     if (!userAddress || !contractAddress) return false
     
     setIsCheckingRole(true)
     try {
       
-      // Vérifier si l'utilisateur a le rôle DEFAULT_ADMIN_ROLE
       const hasAdminRole = await publicClient.readContract({
         address: contractAddress as Address,
         abi: artistRoyaltiesAbi,
@@ -388,7 +358,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
         args: [InRealArtRoles.DEFAULT_ADMIN_ROLE, userAddress as Address]
       }) as boolean
       
-      // Vérifier si l'utilisateur a le rôle ADMIN_ROYALTIES_ROLE
       const hasRoyaltiesRole = await publicClient.readContract({
         address: contractAddress as Address,
         abi: artistRoyaltiesAbi,
@@ -408,27 +377,20 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     }
   }
   
-  // Effet pour vérifier le rôle de l'utilisateur
   useEffect(() => {
     checkUserRoyaltyRole(primaryWallet?.address as string)
   }, [primaryWallet?.address, nftResource])
 
-
-  // Fonction pour configurer les royalties sur la blockchain
   const handleConfigureRoyalties = async () => {
-    setIsConfiguring(true)
-    const toastId = toast.loading('Configuration des royalties en cours...')
+    
     
     try {
-      // Vérifier que les adresses sont valides
       const addresses = royalties.map(r => r.address as Address)
       if (addresses.some(addr => !isValidEthereumAddress(addr))) {
-        toast.error('Certaines adresses ne sont pas valides', { id: toastId })
-        setIsConfiguring(false)
+        toast.error('Certaines adresses ne sont pas valides')
         return
       }
       
-      // Vérifier que les pourcentages sont valides
       const percentages = royalties.map(r => {
         const value = parseFloat(r.percentage)
         if (isNaN(value)) {
@@ -437,17 +399,13 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
         return value
       })
       
-      // Vérifier que le pourcentage total est valide
       if (isNaN(totalPercentage) || totalPercentage <= 0 || totalPercentage > 100) {
-        toast.error('Le pourcentage total doit être entre 1 et 100', { id: toastId })
-        setIsConfiguring(false)
+        toast.error('Le pourcentage total doit être entre 1 et 100')
         return
       }
       
-      // Vérifier que les tableaux ont la même longueur
       if (addresses.length !== percentages.length) {
-        toast.error('Le nombre d\'adresses et de pourcentages ne correspond pas', { id: toastId })
-        setIsConfiguring(false)
+        toast.error('Le nombre d\'adresses et de pourcentages ne correspond pas')
         return
       }
       
@@ -458,69 +416,47 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
       console.log('percentages:', percentages)
       console.log('totalPercentage:', totalPercentage*100)
       
-      // Convertir les pourcentages en entiers si nécessaire
-      // Certains contrats attendent des points de base (1% = 100 points)
       const args = [
         nftResource.collection.contractAddress, 
         nftResource.tokenId, 
         addresses, 
-        percentages.map(p => Math.round(p)), // Convertir en entiers
-        Math.round(totalPercentage*100) // Convertir en entier
+        percentages.map(p => Math.round(p)),
+        Math.round(totalPercentage*InRealArtSmartContractConstants.PERCENTAGE_PRECISION)
       ]
       
       try {
-        const network = getNetwork()
-        const royaltiesContractAddress = CONTRACT_ADDRESSES[network.id][ContractName.NFT_ROYALTIES]
-        console.log('royaltiesContractAddress:', royaltiesContractAddress)
-        // Simuler la transaction pour détecter les erreurs
-        const { request } = await publicClient.simulateContract({
-          address: royaltiesContractAddress as Address,
-          abi: artistRoyaltiesAbi,
-          functionName: 'setRoyalty',
-          args: args,
-          account: primaryWallet?.address as Address
+        const result = await configureRoyalties({
+          nftResource: {
+            id: nftResource.id,
+            collection: {
+              contractAddress: nftResource.collection.contractAddress as Address
+            },
+            tokenId: nftResource.tokenId
+          },
+          recipients: addresses,
+          percentages: percentages.map(p => Math.round(p)),
+          totalPercentage: Math.round(totalPercentage),
+          publicClient,
+          walletClient: walletClient as WalletClient,
+          royaltiesManager: royaltiesManager as Address,
+          onSuccess: () => {
+            console.log('Royalties configurées avec succès')
+            router.refresh()
+          }
         })
         
-        if (!walletClient) {
-          throw new Error('Wallet client non disponible')
-        }
-        
-        // Exécuter la transaction
-        const hash = await walletClient.writeContract(request)
-        
-        toast.success('Transaction soumise avec succès', { id: toastId })
-        toast.loading(`Transaction en cours de traitement: ${hash.slice(0, 10)}...`)
-        
-        // Attendre la confirmation de la transaction
-        const receipt = await publicClient.waitForTransactionReceipt({ 
-          hash,
-          timeout: 120000 
-        })
-        
-        // Vérifier si la transaction est réussie
-        if (receipt.status === 'success') {
-          toast.success('Royalties configurées avec succès!')
-          
-          // Rafraîchir la page
-          router.refresh()
-        } else {
-          toast.error('La transaction a échoué')
+        if (result) {
+          // Actions supplémentaires après succès
         }
       } catch (error: any) {
-        console.error('Erreur lors de la simulation ou exécution:', error)
-        
-        // Essayer de donner des conseils spécifiques basés sur l'erreur
-        if (error.message.includes('insufficient funds')) {
-          toast.error('Fonds insuffisants pour exécuter la transaction', { id: toastId, duration: 5000 })
-        } else if (error.message.includes('gas required exceeds allowance')) {
-          toast.error('La limite de gaz est trop basse pour cette transaction', { id: toastId, duration: 5000 })
-        }
+        console.error('Erreur lors de la simulation ou exécution:', error.message)
+        toast.error(`Erreur: ${error.message}`)
       }
     } catch (error: any) {
       console.error('Erreur générale:', error)
-      toast.error(`Erreur: ${error.message}`, { id: toastId })
+      toast.error(`Erreur: ${error.message}`)
     } finally {
-      setIsConfiguring(false)
+      
     }
   }
 
@@ -634,7 +570,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
                   
                   <IpfsUriField label="Métadonnées URI (IPFS)" uri={nftResource.tokenUri} />
                   
-                  {/* Formulaire de configuration des royalties */}
                   <div className={styles.royaltiesConfig}>
                     <h3 className={styles.sectionTitle}>Configuration des royalties</h3>
                     <p className={styles.infoNote}>
