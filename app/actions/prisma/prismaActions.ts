@@ -712,6 +712,7 @@ export async function getNftResourceByItemId(itemId: number) {
             status: true,
             contractAddress: true,
             smartContractId: true,
+            addressAdmin: true,
             artist: {
               select: {
                 id: true,

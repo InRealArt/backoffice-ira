@@ -38,6 +38,38 @@ interface UseMarketplaceListingReturn {
     error: string | null
     success: boolean
     txHash: string | null
+    approveMarketplaceForNft: (params: {
+        collectionAddress: Address;
+        tokenId: string | number;
+        marketplaceAddress: Address;
+        walletClient: any;
+        onSuccess?: () => void;
+    }) => Promise<{ success: boolean; hash: string }>
+    transferNftToMarketplace: (params: {
+        collectionAddress: Address;
+        tokenId: string | number;
+        marketplaceAddress: Address;
+        walletClient: any;
+        onSuccess?: () => void;
+    }) => Promise<{ success: boolean; hash: string }>
+    isApproving: boolean
+    isTransferring: boolean
+    approvalError: string | null
+    transferError: string | null
+    approvalSuccess: boolean
+    transferSuccess: boolean
+    canPerformAction: {
+        transfer: (params: {
+            isUserCollectionAdmin: boolean,
+            isWalletRabby: boolean,
+            isNftOwnedByAdmin: boolean
+        }) => boolean
+        list: (params: {
+            hasMarketplaceRole: boolean,
+            isNftOwnedByAdmin: boolean,
+            isMarketplaceOwner: boolean
+        }) => boolean
+    }
 }
 
 /**
@@ -49,6 +81,12 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<boolean>(false)
     const [txHash, setTxHash] = useState<string | null>(null)
+    const [isApproving, setIsApproving] = useState(false)
+    const [isTransferring, setIsTransferring] = useState(false)
+    const [approvalError, setApprovalError] = useState<string | null>(null)
+    const [transferError, setTransferError] = useState<string | null>(null)
+    const [approvalSuccess, setApprovalSuccess] = useState(false)
+    const [transferSuccess, setTransferSuccess] = useState(false)
     const router = useRouter()
 
     /**
@@ -104,8 +142,6 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
         // Afficher un toast de chargement
         const listingToast = toast.loading('Listing du NFT sur la marketplace en cours...')
         console.log('price', price)
-        // Conversion du prix en WEI (1 ETH = 10^18 WEI)
-        const priceInWei = BigInt(Math.floor(parseFloat(price) * 10 ** 18))
 
         // Calcul de la date d'expiration (timestamp actuel + durée en jours convertie en secondes)
         const currentTimestamp = Math.floor(Date.now() / 1000) // timestamp en secondes
@@ -119,7 +155,7 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
             const args = [
                 nftResource.collection.contractAddress, // adresse du contrat NFT
                 nftResource.tokenId, // ID du token
-                priceInWei // prix en WEI
+                price // prix en WEI
             ]
             console.log('Args pour le listing marketplace:', args)
 
@@ -191,6 +227,140 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
         }
     }
 
+    // Fonction pour approuver la marketplace à dépenser le NFT
+    const approveMarketplaceForNft = async ({
+        collectionAddress,
+        tokenId,
+        marketplaceAddress,
+        walletClient,
+        onSuccess
+    }: {
+        collectionAddress: Address;
+        tokenId: string | number;
+        marketplaceAddress: Address;
+        walletClient: any;
+        onSuccess?: () => void;
+    }) => {
+        setIsApproving(true);
+        setApprovalError(null);
+        setApprovalSuccess(false);
+
+        try {
+            const hash = await walletClient.writeContract({
+                address: collectionAddress,
+                abi: [
+                    {
+                        inputs: [
+                            { name: 'to', type: 'address' },
+                            { name: 'tokenId', type: 'uint256' }
+                        ],
+                        name: 'approve',
+                        outputs: [],
+                        stateMutability: 'nonpayable',
+                        type: 'function'
+                    }
+                ],
+                functionName: 'approve',
+                args: [marketplaceAddress, BigInt(tokenId)]
+            });
+
+            console.log('Transaction d\'approbation envoyée:', hash);
+
+            // Attendre la confirmation de la transaction
+            const receipt = await publicClient.waitForTransactionReceipt({ hash });
+            console.log('Transaction d\'approbation confirmée:', receipt);
+
+            setApprovalSuccess(true);
+            if (onSuccess) onSuccess();
+
+            return { success: true, hash };
+        } catch (error: any) {
+            console.error('Erreur lors de l\'approbation:', error);
+            //setApprovalError(error.message || 'Erreur lors de l\'approbation');
+            return { success: false, error };
+        } finally {
+            setIsApproving(false);
+        }
+    };
+
+    // Fonction pour transférer le NFT à la marketplace
+    const transferNftToMarketplace = async ({
+        collectionAddress,
+        tokenId,
+        marketplaceAddress,
+        walletClient,
+        onSuccess
+    }: {
+        collectionAddress: Address;
+        tokenId: string | number;
+        marketplaceAddress: Address;
+        walletClient: any;
+        onSuccess?: () => void;
+    }) => {
+        setIsTransferring(true);
+        setTransferError(null);
+        setTransferSuccess(false);
+
+        try {
+            const hash = await walletClient.writeContract({
+                address: marketplaceAddress,
+                abi: [
+                    {
+                        inputs: [
+                            { name: 'nftContract', type: 'address' },
+                            { name: 'tokenId', type: 'uint256' }
+                        ],
+                        name: 'transferToFeeAdminMarketPlace',
+                        outputs: [],
+                        stateMutability: 'nonpayable',
+                        type: 'function'
+                    }
+                ],
+                functionName: 'transferToFeeAdminMarketPlace',
+                args: [collectionAddress, BigInt(tokenId)]
+            });
+
+            console.log('Transaction de transfert envoyée:', hash);
+
+            // Attendre la confirmation de la transaction
+            const receipt = await publicClient.waitForTransactionReceipt({ hash });
+            console.log('Transaction de transfert confirmée:', receipt);
+
+            setTransferSuccess(true);
+            if (onSuccess) onSuccess();
+
+            return { success: true, hash };
+        } catch (error: any) {
+            console.error('Erreur lors du transfert:', error);
+            setTransferError(error.message || 'Erreur lors du transfert');
+            return { success: false, error };
+        } finally {
+            setIsTransferring(false);
+        }
+    };
+
+    const canPerformAction = {
+        // Vérifie si l'utilisateur peut transférer le NFT
+        transfer: (params: {
+            isUserCollectionAdmin: boolean,
+            isWalletRabby: boolean,
+            isNftOwnedByAdmin: boolean
+        }) => {
+            const { isUserCollectionAdmin, isWalletRabby, isNftOwnedByAdmin } = params;
+            return isUserCollectionAdmin && isWalletRabby && isNftOwnedByAdmin;
+        },
+
+        // Vérifie si l'utilisateur peut lister le NFT
+        list: (params: {
+            hasMarketplaceRole: boolean,
+            isNftOwnedByAdmin: boolean,
+            isMarketplaceOwner: boolean
+        }) => {
+            const { hasMarketplaceRole, isNftOwnedByAdmin, isMarketplaceOwner } = params;
+            return hasMarketplaceRole && (isMarketplaceOwner || !isNftOwnedByAdmin);
+        }
+    };
+
     return {
         listNftOnMarketplace,
         checkMarketplaceRole,
@@ -198,6 +368,15 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
         isCheckingRole,
         error,
         success,
-        txHash
+        txHash,
+        approveMarketplaceForNft: approveMarketplaceForNft as any,
+        transferNftToMarketplace: transferNftToMarketplace as any,
+        isApproving,
+        isTransferring,
+        approvalError,
+        transferError,
+        approvalSuccess,
+        transferSuccess,
+        canPerformAction
     }
 } 
