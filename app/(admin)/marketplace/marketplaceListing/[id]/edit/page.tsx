@@ -17,6 +17,8 @@ import { CONTRACT_ADDRESSES, ContractName } from '@/constants/contracts'
 import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { useMarketplaceListing } from '@/app/(admin)/marketplace/hooks/useMarketplaceListing'
 import { NetworkType } from '@prisma/client'
+import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
+import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
 
 type ParamsType = { id: string }
 
@@ -44,6 +46,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
     error: listingError, 
     success: listingSuccess 
   } = useMarketplaceListing()
+  const [product, setProduct] = useState<any>(null)
 
   const unwrappedParams = React.use(params as any) as ParamsType
   const id = unwrappedParams.id
@@ -122,6 +125,23 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
         if (isMounted) {
           if (itemResult && itemResult.id) {
             setItem(itemResult)
+            console.log('Item récupéré:', itemResult)
+            // Récupérer les données du produit Shopify d'abord
+            if (itemResult.id) {
+              try {
+                const productResult = await getShopifyProductById(itemResult.id)
+                if (productResult && productResult.success) {
+                  console.log('Produit Shopify récupéré:', productResult.product)
+                  setProduct(productResult.product)
+                } else {
+                  console.error('Erreur lors de la récupération du produit Shopify:', productResult?.error || 'Erreur inconnue')
+                }
+              } catch (shopifyError) {
+                console.error('Exception lors de la récupération du produit Shopify:', shopifyError)
+              }
+            }
+            
+            // Ensuite récupérer la ressource NFT
             try {
               const nftResourceResult = await getNftResourceByItemId(itemResult.id)
               if (nftResourceResult) {
@@ -276,15 +296,27 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
             <NftStatusBadge status={nftResource.status} />
           </div>
           
-          {nftResource.imageUri && (
-            <div className={styles.imageContainer}>
-              <img 
-                src={nftResource.imageUri} 
-                alt={nftResource.name} 
-                className={styles.nftImage} 
-              />
-            </div>
-          )}
+          <div className={styles.imageSection}>
+            {product && product.imageUrl ? (
+              <div className={styles.imageContainer}>
+                <img 
+                  src={product.imageUrl} 
+                  alt={nftResource.name} 
+                  className={styles.nftImage} 
+                />
+              </div>
+            ) : nftResource.imageUri ? (
+              <div className={styles.imageContainer}>
+                <img 
+                  src={nftResource.imageUri} 
+                  alt={nftResource.name} 
+                  className={styles.nftImage} 
+                />
+              </div>
+            ) : (
+              <div className={styles.noImage}>Aucune image disponible</div>
+            )}
+          </div>
           
           <div className={styles.nftDetails}>
             <div className={styles.detailItem}>
@@ -297,10 +329,13 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
             </div>
             {nftResource.collection?.contractAddress && (
               <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Contrat:</span>
-                <span className={styles.contractAddress}>
-                  {`${nftResource.collection.contractAddress.substring(0, 6)}...${nftResource.collection.contractAddress.substring(nftResource.collection.contractAddress.length - 4)}`}
-                </span>
+                <span className={styles.detailLabel}>Address de la collection NFT :</span>
+                <BlockchainAddress 
+                  address={nftResource.collection.contractAddress} 
+                  network={item?.network?.toLowerCase() || 'sepolia'}
+                  showExplorerLink={true}
+                  className={styles.contractAddress}
+                />
               </div>
             )}
           </div>
@@ -310,40 +345,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       <div className={styles.formContainer}>
         <h3 className={styles.formTitle}>Configuration du listing</h3>
         
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="nftAddress" className={styles.label}>
-              Adresse de la collection NFT
-            </label>
-            <input
-              id="nftAddress"
-              name="nftAddress"
-              type="text"
-              value={nftResource?.collection.contractAddress}
-              disabled
-              placeholder="0x..."
-              className={styles.input}
-              required
-            />
-            <p className={styles.fieldHelp}>Adresse du contrat ERC-721 de la collection</p>
-          </div>
-          
-          <div className={styles.formGroup}>
-            <label htmlFor="tokenId" className={styles.label}>
-              ID du token
-            </label>
-            <input
-              id="tokenId"
-              name="tokenId"
-              type="number"
-              value={nftResource?.tokenId}
-              disabled
-              className={styles.input}
-              required
-            />
-            <p className={styles.fieldHelp}>Identifiant unique du NFT dans la collection</p>
-          </div>
-          
+        <form onSubmit={handleSubmit} className={styles.form}>          
           <div className={styles.formGroup}>
             <label htmlFor="price" className={styles.label}>
               Prix (ETH)
@@ -362,7 +364,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
               className={styles.input}
               required
             />
-            <p className={styles.fieldHelp}>Prix de vente en ETH (sera converti en wei)</p>
+            {/* <p className={styles.fieldHelp}>Prix de vente en ETH (sera converti en wei)</p> */}
           </div>
           
           <div className={styles.formActions}>

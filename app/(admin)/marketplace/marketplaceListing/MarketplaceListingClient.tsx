@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { Item, ResourceNftStatuses, ResourceTypes, SmartContract } from '@prisma/client'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
+import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
+import { truncateAddress } from '@/lib/blockchain/utils'
 
 // Importez ou créez un fichier CSS pour les styles
 import styles from './MarketplaceListingClient.module.scss'
-import { truncateAddress } from '@/lib/blockchain/utils'
 
 // Type pour les NFTs avec statut ROYALTYSET
 type RoyaltysetItemWithRelations = Item & {
@@ -185,10 +186,10 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
                       <td className={styles.hiddenMobile}>
                         {smartContract ? (
                           <div className={styles.smartContractCell}>
-                            <span className={styles.truncatedAddress}>
-                              {truncateAddress(smartContract.factoryAddress)}
-                            </span>
-                            &nbsp;&nbsp;
+                            <BlockchainAddress 
+                              address={smartContract.factoryAddress} 
+                              network={smartContract.network}
+                            />
                             <span className={`${styles.statusBadge} ${smartContract.active 
                               ? styles.activeBadge 
                               : styles.inactiveBadge}`}>
