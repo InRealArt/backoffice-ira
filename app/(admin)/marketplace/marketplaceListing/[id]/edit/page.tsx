@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
-import { getItemById, getNftResourceByItemId, updateNftResourceStatusToListed } from '@/app/actions/prisma/prismaActions'
+import { getItemById, getNftResourceByItemId, getSmartContractAddress, updateNftResourceStatusToListed } from '@/app/actions/prisma/prismaActions'
 import styles from './marketplaceListing.module.scss'
 import React from 'react'
 import { toast } from 'react-hot-toast'
@@ -16,6 +16,7 @@ import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import { CONTRACT_ADDRESSES, ContractName } from '@/constants/contracts'
 import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { useMarketplaceListing } from '@/app/(admin)/marketplace/hooks/useMarketplaceListing'
+import { NetworkType } from '@prisma/client'
 
 type ParamsType = { id: string }
 
@@ -80,9 +81,10 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   // Vérifier le rôle marketplace pour l'utilisateur actuel
   const checkUserMarketplaceRole = async (address: string) => {
     const network = getNetwork()
+    const marketplaceAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address
     const hasRole = await checkMarketplaceRole(
       address,
-      CONTRACT_ADDRESSES[network.id][ContractName.NFT_MARKETPLACE]
+      marketplaceAddress
     )
     if (hasRole) {
       setMarketplaceManager(address as Address)

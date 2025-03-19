@@ -3,7 +3,7 @@
 import { memberSchema } from "@/app/(admin)/shopify/create-member/schema";
 import { MemberFormData } from "@/app/(admin)/shopify/create-member/schema";
 import { prisma } from "@/lib/prisma"
-import { NotificationStatus, BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus } from "@prisma/client"
+import { NotificationStatus, BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType } from "@prisma/client"
 import { revalidatePath } from "next/cache";
 import { PrismaClient } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -1015,11 +1015,11 @@ export async function updateNftResourceStatusToRoyaltySet(id: number): Promise<U
   }
 }
 
-  /**
- * Met à jour le statut d'une ressource NFT à LISTED
- * @param id - L'ID de la ressource NFT à mettre à jour
- * @returns Un objet indiquant le succès ou l'échec de l'opération
- */
+/**
+* Met à jour le statut d'une ressource NFT à LISTED
+* @param id - L'ID de la ressource NFT à mettre à jour
+* @returns Un objet indiquant le succès ou l'échec de l'opération
+*/
 export async function updateNftResourceStatusToListed(id: number): Promise<UpdateNftResourceStatusResult> {
   try {
     // Vérifier si la ressource existe
@@ -1032,7 +1032,7 @@ export async function updateNftResourceStatusToListed(id: number): Promise<Updat
         success: false,
         message: 'Ressource NFT non trouvée'
       }
-    } 
+    }
 
     // Mettre à jour le statut de la ressource NFT
     await prisma.nftResource.update({
@@ -1040,18 +1040,18 @@ export async function updateNftResourceStatusToListed(id: number): Promise<Updat
       data: {
         status: ResourceNftStatuses.LISTED
       }
-    })  
+    })
 
     // Revalider les chemins potentiels où cette donnée pourrait être affichée
     revalidatePath('/marketplace/marketplaceListing')
 
-    return {  
+    return {
       success: true,
       message: 'Statut de la ressource NFT mis à jour avec succès'
     }
   } catch (error) {
     console.error('Erreur lors de la mise à jour du statut de la ressource NFT:', error)
-    return {  
+    return {
       success: false,
       error: error instanceof Error ? error.message : 'Une erreur inconnue est survenue lors de la mise à jour du statut'
     }
@@ -1256,5 +1256,59 @@ export async function createRoyaltyBeneficiary(
       success: false,
       error: error instanceof Error ? error.message : 'Une erreur inconnue est survenue lors de la création du bénéficiaire'
     }
+  }
+}
+
+/**
+ * Récupère l'adresse d'un smart contract actif en fonction du type spécifié et du réseau
+ * @param type - Le type d'adresse à récupérer: 'Factory', 'Royalties' ou 'Marketplace'
+ * @param network - Le réseau sur lequel se trouve le smart contract (optionnel)
+ * @returns L'adresse du smart contract correspondant au type et au réseau, ou null si aucun trouvé
+ */
+export async function getSmartContractAddress(
+  type: 'Factory' | 'Royalties' | 'Marketplace',
+  network?: NetworkType
+): Promise<string | null> {
+  try {
+    // Préparer la condition de recherche
+    const whereCondition: any = {
+      active: true
+    }
+
+    // Ajouter le filtre par réseau si spécifié
+    if (network) {
+      whereCondition.network = network
+    }
+
+    // Récupérer un smart contract actif sur le réseau spécifié
+    const smartContract = await prisma.smartContract.findFirst({
+      where: whereCondition,
+      select: {
+        factoryAddress: true,
+        royaltiesAddress: true,
+        marketplaceAddress: true,
+        network: true
+      }
+    })
+
+    if (!smartContract) {
+      console.error(`Aucun smart contract actif trouvé${network ? ` pour le réseau ${network}` : ''}`)
+      return null
+    }
+
+    // Retourner l'adresse correspondante selon le type demandé
+    switch (type) {
+      case 'Factory':
+        return smartContract.factoryAddress
+      case 'Royalties':
+        return smartContract.royaltiesAddress
+      case 'Marketplace':
+        return smartContract.marketplaceAddress
+      default:
+        return null
+    }
+  } catch (error) {
+    console.error(`Erreur lors de la récupération de l'adresse du smart contract:`, error)
+    return null
   }
 }

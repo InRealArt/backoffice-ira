@@ -9,6 +9,8 @@ import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
 import { publicClient } from '@/lib/providers'
 import { marketplaceAbi } from '@/lib/contracts/MarketplaceAbi'
+import { getSmartContractAddress } from '@/app/actions/prisma/prismaActions'
+import { NetworkType } from '@prisma/client'
 
 interface ListingParams {
     nftResource: {
@@ -110,8 +112,8 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
         const expirationTimestamp = BigInt(currentTimestamp + (duration * 24 * 60 * 60))
 
         try {
-            const network = getNetwork()
-            const marketplaceContractAddress = CONTRACT_ADDRESSES[network.id][ContractName.NFT_MARKETPLACE] as Address
+            const currentNetwork = getNetwork()
+            const marketplaceContractAddress = await getSmartContractAddress('Marketplace', currentNetwork as NetworkType) as Address
 
             // Création des arguments pour le listing
             const args = [

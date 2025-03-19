@@ -6,7 +6,7 @@ import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-re
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getNftResourceByItemId, getActiveCollections } from '@/app/actions/prisma/prismaActions'
+import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getNftResourceByItemId, getActiveCollections, getSmartContractAddress } from '@/app/actions/prisma/prismaActions'
 import styles from './royaltySettings.module.scss'
 import React from 'react'
 import { z } from 'zod'
@@ -23,6 +23,8 @@ import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { isValidEthereumAddress } from '@/lib/blockchain/utils'
 import { useRoyaltySettings } from '@/app/(admin)/marketplace/hooks/useRoyaltySettings'
 import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
+import { NetworkType } from '@prisma/client'
+import { getBlockExplorerUrl } from '@/lib/blockchain/explorerUtils'
 
 type ParamsType = { id: string }
 
@@ -211,9 +213,10 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
 
   const checkUserRoyaltyRole = async (address: string) => {
     const network = getNetwork()
+    const artistRoyaltiesAddress = await getSmartContractAddress('Royalties', network as NetworkType) as Address
     const hasRole = await checkRoyaltyRole(
       address,
-      CONTRACT_ADDRESSES[network.id][ContractName.NFT_ROYALTIES]
+      artistRoyaltiesAddress
     )
     if (hasRole) {
       setRoyaltiesManager(address as Address)
@@ -509,7 +512,23 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
                   <IpfsUriField label="Métadonnées URI (IPFS)" uri={nftResource.tokenUri} />
                   
                   <div className={styles.royaltiesConfig}>
-                    <h3 className={styles.sectionTitle}>Configuration des royalties</h3>
+                    <div className={styles.sectionTitleContainer}>
+                      <h3 className={styles.sectionTitle}>Configuration des royalties</h3>
+                      {nftResource?.collection?.smartContract?.royaltiesAddress && (
+                        <a 
+                          href={getBlockExplorerUrl(
+                            nftResource.collection.smartContract.network || 'sepolia', 
+                            nftResource.collection.smartContract.royaltiesAddress
+                          )} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={styles.contractAddressBadge}
+                        >
+                          <span className={styles.contractLabel}>Smart Contract de Royalties:</span>
+                          {`${nftResource.collection.smartContract.royaltiesAddress.substring(0, 6)}...${nftResource.collection.smartContract.royaltiesAddress.substring(38)}`}
+                        </a>
+                      )}
+                    </div>
                     <p className={styles.infoNote}>
                       Définissez les bénéficiaires des royalties et leur pourcentage respectif
                     </p>

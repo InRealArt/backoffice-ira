@@ -503,4 +503,46 @@
   gap: 1rem;
   margin-top: 1.5rem;
   justify-content: flex-end;
+}
+
+.sectionTitleContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.contractAddressBadge {
+  background-color: #22c55e;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 350px;
+  text-decoration: none;
+  transition: background-color 0.2s, transform 0.1s;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: #16a34a;
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.contractLabel {
+  font-weight: 600;
+  margin-right: 0.25rem;
 } 

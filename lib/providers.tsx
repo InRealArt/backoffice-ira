@@ -5,11 +5,24 @@ import { DynamicWagmiConnector } from "@dynamic-labs/wagmi-connector";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { createConfig, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createPublicClient, http } from "viem";
+import { Chain, createPublicClient, http } from "viem";
 import { mainnet, polygonMumbai, sepolia, polygon } from "viem/chains";
 import AuthStateManager from "@/app/components/Auth/AuthStateManager";
 import { useRouter } from "next/navigation";
 import { getNetwork } from "./blockchain/networkConfig";
+
+// Fonction qui transforme une chaîne en objet Chain
+function getChainByName(networkName: string): Chain {
+  const chainMap: Record<string, Chain> = {
+    mainnet: mainnet,
+    polygon: polygon,
+    sepolia: sepolia,
+    polygonMumbai: polygonMumbai
+  }
+  
+  // Récupérer la chaîne correspondante ou utiliser sepolia par défaut
+  return chainMap[networkName] || sepolia
+}
 
 const config = createConfig({
   chains: [mainnet],
@@ -24,9 +37,15 @@ const config = createConfig({
 
 const queryClient = new QueryClient();
 
+const currentNetworkName = getNetwork()
+console.log('currentNetwork', currentNetworkName)
+
+// Utiliser la fonction pour convertir le nom en objet Chain
+const currentChain = getChainByName(currentNetworkName)
+
 export const publicClient = createPublicClient({
-  chain: getNetwork(),
-  transport: http(process.env.RPC_URL),
+  chain: currentChain,
+  transport: http(process.env.NEXT_PUBLIC_RPC_URL || "https://rpc.sepolia.org"),
 });
 
 
