@@ -690,6 +690,7 @@ model RoyaltyBeneficiary {
   wallet        String
   percentage    Int
   totalPercentage Int
+  txHash         String?
   nftResourceId Int
   nftResource   NftResource @relation(fields: [nftResourceId], references: [id])
 

@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
+import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import styles from './RoyaltyBeneficiariesClient.module.scss'
 import { SmartContract } from '@prisma/client'
+import { truncateAddress } from '@/lib/blockchain/utils'
 
 // Types pour les relations imbriquées
 type NftCollection = {
@@ -27,6 +29,7 @@ type RoyaltyBeneficiaryWithRelations = {
   wallet: string
   percentage: number
   totalPercentage: number
+  txHash?: string
   nftResourceId: number
   nftResource?: NftResource
 }
@@ -61,25 +64,6 @@ export default function RoyaltyBeneficiariesClient({
       window.removeEventListener('resize', checkIfMobile)
     }
   }, [])
-  
-  // Fonction pour copier l'adresse dans le presse-papier
-  const copyToClipboard = (text: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        alert('Adresse copiée dans le presse-papier')
-      })
-      .catch(err => {
-        console.error('Erreur lors de la copie :', err)
-      })
-  }
-  
-  // Fonction pour tronquer l'adresse
-  const truncateAddress = (address: string): string => {
-    if (!address) return 'Non défini'
-    if (address.length <= 16) return address
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
-  }
   
   // Filtrage des bénéficiaries comme dans CollectionsClient
   const filteredBeneficiaries = selectedSmartContractId
@@ -139,6 +123,7 @@ export default function RoyaltyBeneficiariesClient({
                 <th>Bénéficiaire</th>
                 <th>Part (%)</th>
                 <th>% total du prix du NFT</th>
+                <th className={styles.hiddenMobile}>Transaction Hash</th>
                 <th className={styles.hiddenMobile}>NFT Resource</th>
                 <th className={styles.hiddenMobile}>Token ID</th>
                 <th className={styles.hiddenMobile}>Collection</th>
@@ -153,21 +138,25 @@ export default function RoyaltyBeneficiariesClient({
                   <tr key={beneficiary?.id} className={styles.tableRow}>
                     <td>{beneficiary?.id}</td>
                     <td>
-                      <div className={styles.addressContainer}>
-                        <span className={styles.address} title={beneficiary?.wallet}>
-                          {truncateAddress(beneficiary?.wallet)}
-                        </span>
-                        <button
-                          className={styles.copyButton}
-                          onClick={(e) => copyToClipboard(beneficiary?.wallet, e)}
-                          title="Copier l'adresse"
-                        >
-                          📋
-                        </button>
-                      </div>
+                      <BlockchainAddress 
+                        address={beneficiary?.wallet} 
+                        network={smartContract?.network || 'sepolia'} 
+                      />
                     </td>
                     <td>{beneficiary?.percentage}%</td>
                     <td>{beneficiary?.totalPercentage}%</td>
+                    <td className={styles.hiddenMobile}>
+                      {beneficiary?.txHash ? (
+                        <BlockchainAddress 
+                          address={beneficiary.txHash} 
+                          network={smartContract?.network || 'sepolia'} 
+                          isTransaction={true}
+                          showExplorerLink={true}
+                        />
+                      ) : (
+                        <span className={styles.noData}>Non défini</span>
+                      )}
+                    </td>
                     <td className={styles.hiddenMobile}>
                       {beneficiary?.nftResource?.name || 'Non défini'}
                     </td>
@@ -176,19 +165,10 @@ export default function RoyaltyBeneficiariesClient({
                     </td>
                     <td className={styles.hiddenMobile}>
                       {beneficiary?.nftResource?.collection?.contractAddress ? (
-                        <div className={styles.addressContainer}>
-                          <span className={styles.address} title={beneficiary?.nftResource?.collection.contractAddress}>
-                            {truncateAddress(beneficiary?.nftResource?.collection.contractAddress || '')}
-                          </span>
-                          <button
-                            className={styles.copyButton}
-                            onClick={(e) => beneficiary?.nftResource?.collection?.contractAddress && 
-                              copyToClipboard(beneficiary?.nftResource.collection.contractAddress, e)}
-                            title="Copier l'adresse"
-                          >
-                            📋
-                          </button>
-                        </div>
+                        <BlockchainAddress 
+                          address={beneficiary.nftResource.collection.contractAddress} 
+                          network={smartContract?.network || 'sepolia'} 
+                        />
                       ) : (
                         <span className={styles.noData}>Non déployée</span>
                       )}
@@ -196,9 +176,10 @@ export default function RoyaltyBeneficiariesClient({
                     <td className={styles.hiddenMobile}>
                       {smartContract ? (
                         <div className={styles.smartContractCell}>
-                          <span className={styles.truncatedAddress}>
-                            {truncateAddress(smartContract.factoryAddress)}
-                          </span>
+                          <BlockchainAddress 
+                            address={smartContract.factoryAddress} 
+                            network={smartContract.network} 
+                          />
                           <span className={`${styles.statusBadge} ${smartContract.active 
                             ? styles.activeBadge 
                             : styles.inactiveBadge}`}>

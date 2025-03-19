@@ -1,6 +1,4 @@
-import { Address, isAddress } from 'viem'
-import { artistRoyaltiesAbi } from '../contracts/ArtistRoyalties'
-import { serverPublicClient } from '../server-providers'
+import { isAddress } from 'viem'
 
 /**
  * Vérifie si une chaîne de caractères est une adresse Ethereum valide
@@ -40,3 +38,11 @@ export function isValidEthereumAddress(address: string): boolean {
   
     return true
   }
+
+  export function truncateAddress(address: string): string {
+    if (!address) return 'Non défini'
+    if (address.length <= 16) return address
+    return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
+  }
+  
+  

@@ -8,6 +8,7 @@ import { formatChainName } from '@/lib/blockchain/chainUtils'
 
 // Importez ou créez un fichier CSS pour les styles
 import styles from './RoyaltiesSettingsClient.module.scss'
+import { truncateAddress } from '@/lib/blockchain/utils'
 
 // Modification du type pour inclure le smartContractId
 type MinedItemWithRelations = Item & {
@@ -70,13 +71,6 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
     setLoadingItemId(itemId)
     // Navigation vers une page de détail où les royalties peuvent être modifiées
     router.push(`/marketplace/royaltiesSettings/${itemId}/edit`)
-  }
-  
-  // Fonction pour tronquer l'adresse du contrat
-  function truncateAddress(address: string): string {
-    if (!address) return 'Non défini'
-    if (address.length <= 16) return address
-    return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
   }
   
   // Fonction pour obtenir le badge en fonction du statut de la ressource NFT

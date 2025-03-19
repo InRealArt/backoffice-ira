@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Artist } from '@prisma/client'
 import styles from './ArtistsClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
+import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import Image from 'next/image'
 
 interface ArtistsClientProps {
@@ -114,9 +115,11 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
                         </div>
                       </td>
                       <td className={styles.hiddenMobile}>
-                        <span className={styles.truncatedKey} title={artist.publicKey}>
-                          {truncatePublicKey(artist.publicKey)}
-                        </span>
+                        <BlockchainAddress 
+                          address={artist.publicKey} 
+                          network="sepolia" // Valeur par défaut, peut être ajustée si vous stockez le réseau préféré de l'artiste
+                          className={styles.publicKeyAddress}
+                        />
                       </td>
                     </tr>
                   )
@@ -130,8 +133,3 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
   )
 }
 
-// Fonction pour tronquer la clé publique
-function truncatePublicKey(key: string): string {
-  if (key.length <= 16) return key
-  return `${key.substring(0, 8)}...${key.substring(key.length - 8)}`
-} 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import styles from './NftsToMintClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { ItemStatus, ResourceNftStatuses } from '@prisma/client'
+import { truncateAddress } from '@/lib/blockchain/utils'
 
 interface Item {
   id: number
@@ -120,13 +121,6 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
     
     // Défaut pour les autres statuts
     return <span className={`${styles.statusBadge} ${styles.defaultBadge}`}>{status}</span>
-  }
-  
-  // Fonction pour tronquer l'adresse du contrat
-  function truncateAddress(address: string | undefined): string {
-    if (!address) return 'Non défini'
-    if (address.length <= 16) return address
-    return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
   }
   
   return (
@@ -257,7 +251,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                           {product.nftResource?.collection?.smartContract ? (
                             <>
                               <span className={styles.truncatedAddress}>
-                                {truncateAddress(product.nftResource.collection.smartContract.factoryAddress)}
+                                {product.nftResource.collection.smartContract.factoryAddress ? truncateAddress(product.nftResource.collection.smartContract.factoryAddress) : 'Non défini'}
                               </span>
                               &nbsp;&nbsp;
                               <span className={`${styles.statusBadge} ${product.nftResource.collection.smartContract.active 

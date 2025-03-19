@@ -1201,7 +1201,8 @@ export async function createRoyaltyBeneficiary(
   nftResourceId: number,
   wallet: string,
   percentage: number,
-  totalPercentage: number
+  totalPercentage: number,
+  txHash: string
 ): Promise<CreateRoyaltyBeneficiaryResult> {
   try {
     // Vérifier si la ressource NFT existe
@@ -1238,6 +1239,7 @@ export async function createRoyaltyBeneficiary(
         wallet,
         percentage,
         totalPercentage,
+        txHash,
         nftResourceId
       }
     })

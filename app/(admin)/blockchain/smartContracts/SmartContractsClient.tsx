@@ -6,6 +6,7 @@ import { SmartContract } from '@prisma/client'
 import styles from './SmartContractsClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
+import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import Link from 'next/link'
 
 interface SmartContractsClientProps {
@@ -44,12 +45,6 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
     router.push('/blockchain/smartContracts/create')
   }
   
-  // Fonction pour tronquer l'adresse du contrat
-  function truncateAddress(address: string): string {
-    if (address.length <= 16) return address
-    return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
-  }
-
   // Fonction pour copier l'adresse du contrat dans le presse-papiers
   const copyToClipboard = (address: string, event: React.MouseEvent) => {
     event.stopPropagation() // Empêche la propagation de l'événement
@@ -91,50 +86,26 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
               <tr key={contract.id} className={styles.tableRow}>
                 <td>{contract.id}</td>
                 <td>
-                  <div className={styles.addressContainer}>
-                    <span className={styles.address} title={contract.factoryAddress}>
-                      {contract.factoryAddress.slice(0, 6)}...{contract.factoryAddress.slice(-4)}
-                    </span>
-                    <button
-                      className={styles.copyButton}
-                      onClick={(e) => copyToClipboard(contract.factoryAddress, e)}
-                      title="Copier l'adresse"
-                    >
-                      📋
-                    </button>
-                  </div>
+                  <BlockchainAddress
+                    address={contract.factoryAddress}
+                    network={contract.network}
+                  />
                 </td>
                 <td>
-                  <div className={styles.addressContainer}>
-                    <span className={styles.address} title={contract.royaltiesAddress}>
-                      {contract.royaltiesAddress.slice(0, 6)}...{contract.royaltiesAddress.slice(-4)}
-                    </span>
-                    <button
-                      className={styles.copyButton}
-                      onClick={(e) => copyToClipboard(contract.royaltiesAddress, e)}
-                      title="Copier l'adresse"
-                    >
-                      📋
-                    </button>
-                  </div>
+                  <BlockchainAddress
+                    address={contract.royaltiesAddress}
+                    network={contract.network}
+                  />
                 </td>
                 <td>
-                  <div className={styles.addressContainer}>
-                    <span className={styles.address} title={contract.marketplaceAddress}>
-                      {contract.marketplaceAddress.slice(0, 6)}...{contract.marketplaceAddress.slice(-4)}
-                    </span>
-                    <button
-                      className={styles.copyButton}
-                      onClick={(e) => copyToClipboard(contract.marketplaceAddress, e)}
-                      title="Copier l'adresse"
-                    >
-                      📋
-                    </button>
-                  </div>
+                  <BlockchainAddress
+                    address={contract.marketplaceAddress}
+                    network={contract.network}
+                  />
                 </td>
                 <td>
                   <span className={styles.network}>
-                    {contract.network}
+                    {formatChainName(contract.network)}
                   </span>
                 </td>
                 <td>

@@ -11,6 +11,7 @@ import { Artist, Collection, CollectionStatus, SmartContract } from '@prisma/cli
 import { updateCollection, syncCollection } from '@/lib/actions/collection-actions'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import { RefreshCw } from 'lucide-react'
+import { truncateAddress } from '@/lib/blockchain/utils'
 
 // Validation simplifiée (seulement pour contractAddress)
 const formSchema = z.object({
@@ -129,12 +130,6 @@ export default function EditCollectionForm({ collection, artists, smartContracts
     router.push('/blockchain/collections')
   }
   
-  // Fonction pour tronquer l'adresse du contrat
-  function truncateAddress(address: string): string {
-    if (!address || address.length <= 16) return address
-    return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
-  }
-
   // Obtenir l'artiste et la factory actuels pour l'affichage
   const currentArtist = artists.find(a => a.id === collection.artistId)
   const currentSmartContract = smartContracts.find(f => f.id === collection.smartContractId)

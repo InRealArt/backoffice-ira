@@ -8,6 +8,8 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import Modal from '@/app/components/Common/Modal'
 import { getAuthToken } from '@dynamic-labs/sdk-react-core' 
+import { truncateAddress } from '@/lib/blockchain/utils'
+import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 
 interface CollectionWithRelations extends Collection {
   artist: Artist
@@ -100,13 +102,6 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
     router.push('/blockchain/collections/create')
   }
   
-  // Fonction pour tronquer l'adresse du contrat
-  function truncateAddress(address: string): string {
-    if (!address) return 'Non défini'
-    if (address.length <= 16) return address
-    return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
-  }
-  
   // Filtrer les collections en fonction de la factory sélectionnée
   const filteredCollections = selectedSmartContractId
     ? collections.filter(collection => collection.smartContractId === selectedSmartContractId)
@@ -145,7 +140,7 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
               {smartContracts.map(smartContract => (
                 <option key={smartContract.id} value={smartContract.id}>
                   {formatChainName(smartContract.network)}
-                  (Factory address) {truncateAddress(smartContract.factoryAddress)}
+                  (Factory) {truncateAddress(smartContract.factoryAddress)}
                   &nbsp;{smartContract.active ? '🟢 ' : '🔴 '}
                 </option>
               ))}
@@ -195,9 +190,10 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                       <td className={styles.hiddenMobile}>
                         {collection.smartContract ? (
                           <div className={styles.factoryWithStatus}>
-                            <div className={styles.truncatedAddress}>
-                              {formatChainName(collection.smartContract.factoryAddress)}
-                            </div>
+                            <BlockchainAddress 
+                              address={collection.smartContract.factoryAddress} 
+                              network={collection.smartContract.network}
+                            />
                             <span className={collection.smartContract.active 
                               ? styles.statusBadgeActive 
                               : styles.statusBadgeInactive}>
@@ -219,14 +215,20 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                         )}
                       </td>
                       <td className={styles.hiddenMobile}>
-                        <span className={styles.truncatedAddress} title={collection.contractAddress as string}>
-                          {truncateAddress(collection.contractAddress as string)}
-                        </span>
+                        {collection.contractAddress ? (
+                          <BlockchainAddress 
+                            address={collection.contractAddress} 
+                            network={collection.smartContract?.network || 'sepolia'}
+                          />
+                        ) : (
+                          <span className={styles.noFactory}>Non défini</span>
+                        )}
                       </td>
                       <td className={styles.hiddenMobile}>
-                        <span className={styles.truncatedAddress} title={collection.addressAdmin}>
-                          {truncateAddress(collection.addressAdmin)}
-                        </span>
+                        <BlockchainAddress 
+                          address={collection.addressAdmin} 
+                          network={collection.smartContract?.network || 'sepolia'}
+                        />
                       </td>
                       <td className={styles.actionsCell}>
                         <button

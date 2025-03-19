@@ -158,12 +158,12 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
             // Vérifier si la transaction est réussie
             if (receipt.status === 'success') {
                 toast.dismiss(waitingBlockchainConfirmationToast)
-                setSuccess(true)
+                setSuccess(true)    
                 toast.success('Royalties configurées avec succès!')
                 //Update Status to ROYALTYSET
                 await updateNftResourceStatus(nftResource)
                 // Créer les beneficiaires
-                await createRoyaltyArray(nftResource, recipients, percentages, totalPercentage)
+                await createRoyaltyArray(nftResource, recipients, percentages, totalPercentage, hash)
                 // Appeler le callback de succès
                 onSuccess()
 
@@ -232,11 +232,11 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
         }
     }
 
-    const createRoyaltyArray = async (nftResource: { id: string | number }, recipients: Address[], percentages: number[], totalPercentage: number) => {
+    const createRoyaltyArray = async (nftResource: { id: string | number }, recipients: Address[], percentages: number[], totalPercentage: number, txHash: string) => {
         let i = 0
         for (const recipient of recipients) {
             try {
-                const createdRoyalty = await createRoyaltyBeneficiary(Number(nftResource.id), recipient, percentages[i], totalPercentage)
+                const createdRoyalty = await createRoyaltyBeneficiary(Number(nftResource.id), recipient, percentages[i], totalPercentage, txHash)
             } catch (updateError) {
                 console.error('Erreur lors de la création du beneficiaire:', updateError)
                 toast.error('NFT minté, mais erreur lors de la création du beneficiaire')

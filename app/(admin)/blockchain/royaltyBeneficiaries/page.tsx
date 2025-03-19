@@ -55,9 +55,16 @@ export default async function RoyaltyBeneficiariesPage() {
   })
 
   console.log('Nombre de bénéficiaires récupérés:', rawRoyaltyBeneficiaries.length)
-  console.log('Premier bénéficiaire (si disponible):', 
-    rawRoyaltyBeneficiaries.length > 0 ? 
-    JSON.stringify(rawRoyaltyBeneficiaries[0], null, 2) : 'Aucun')
+  
+  // Vérification de la présence du champ txHash
+  // if (rawRoyaltyBeneficiaries.length > 0) {
+  //   console.log('Premier bénéficiaire avec txHash:', {
+  //     id: rawRoyaltyBeneficiaries[0].id,
+  //     wallet: rawRoyaltyBeneficiaries[0].wallet,
+  //     txHash: rawRoyaltyBeneficiaries[0].txHash || 'Non défini'
+  //   })
+    
+  // }
 
   // Récupération des smart contracts pour le filtre
   const smartContracts = await prisma.smartContract.findMany({
@@ -75,10 +82,10 @@ export default async function RoyaltyBeneficiariesPage() {
   if (rawRoyaltyBeneficiaries.length > 0) {
     // Essayer d'utiliser directement les données brutes si la transformation échoue
     const transformedBeneficiaries = nullToUndefined(rawRoyaltyBeneficiaries);
-    console.log('Transformation réussie?', 
-      Array.isArray(transformedBeneficiaries), 
-      transformedBeneficiaries?.length || 0
-    );
+    // console.log('Transformation réussie?', 
+    //   Array.isArray(transformedBeneficiaries), 
+    //   transformedBeneficiaries?.length || 0
+    // );
     
     // Utiliser les données transformées si elles sont valides, sinon utiliser les données brutes
     const beneficiariesToUse = 

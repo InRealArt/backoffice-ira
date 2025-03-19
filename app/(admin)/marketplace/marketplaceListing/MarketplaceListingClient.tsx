@@ -8,6 +8,7 @@ import { formatChainName } from '@/lib/blockchain/chainUtils'
 
 // Importez ou créez un fichier CSS pour les styles
 import styles from './MarketplaceListingClient.module.scss'
+import { truncateAddress } from '@/lib/blockchain/utils'
 
 // Type pour les NFTs avec statut ROYALTYSET
 type RoyaltysetItemWithRelations = Item & {
@@ -72,12 +73,6 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
     router.push(`/marketplace/marketplaceListing/${itemId}/edit`)
   }
   
-  // Fonction pour tronquer l'adresse du contrat
-  function truncateAddress(address: string): string {
-    if (!address) return 'Non défini'
-    if (address.length <= 16) return address
-    return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`
-  }
   
   // Fonction pour obtenir le badge en fonction du statut de la ressource NFT
   const getNftResourceStatusBadge = (status: ResourceNftStatuses) => {
