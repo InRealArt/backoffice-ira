@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { Item, ResourceNftStatuses, ResourceTypes, SmartContract } from '@prisma/client'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
+import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
+import { getActiveBadge } from '@/app/components/StatusBadge/StatusBadge'
+import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 
 // Importez ou créez un fichier CSS pour les styles
 import styles from './RoyaltiesSettingsClient.module.scss'
@@ -69,19 +72,7 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
   
   const handleItemClick = (itemId: number) => {
     setLoadingItemId(itemId)
-    // Navigation vers une page de détail où les royalties peuvent être modifiées
     router.push(`/marketplace/royaltiesSettings/${itemId}/edit`)
-  }
-  
-  // Fonction pour obtenir le badge en fonction du statut de la ressource NFT
-  const getNftResourceStatusBadge = (status: ResourceNftStatuses) => {
-    // Jaune pour MINED
-    if (status === 'MINED') {
-      return <span className={`${styles.statusBadge} ${styles.minedBadge}`}>{status}</span>
-    }
-    
-    // Défaut pour les autres statuts (bien que normalement on n'aura que MINED ici)
-    return <span className={`${styles.statusBadge} ${styles.defaultBadge}`}>{status}</span>
   }
   
   // Dans le code de debugging
@@ -197,15 +188,11 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
                       <td className={styles.hiddenMobile}>
                         {smartContract ? (
                           <div className={styles.smartContractCell}>
-                            <span className={styles.truncatedAddress}>
-                              {truncateAddress(smartContract.factoryAddress)}
-                            </span>
-                            &nbsp;&nbsp;
-                            <span className={`${styles.statusBadge} ${smartContract.active 
-                              ? styles.activeBadge 
-                              : styles.inactiveBadge}`}>
-                              {smartContract.active ? 'Actif' : 'Inactif'}
-                            </span>
+                            <BlockchainAddress 
+                              address={smartContract.factoryAddress} 
+                              network={smartContract.network}
+                            />
+                            {getActiveBadge(smartContract.active)}
                           </div>
                         ) : (
                           'N/A'
@@ -213,7 +200,7 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
                       </td>
                       <td>
                         <div className={styles.statusCell}>
-                          {getNftResourceStatusBadge(item.nftResource?.status || 'MINED')}
+                          <NftStatusBadge status={item.nftResource?.status || 'MINED'} />
                         </div>
                       </td>
 

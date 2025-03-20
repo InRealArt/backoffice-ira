@@ -7,6 +7,8 @@ import { Item, ResourceNftStatuses, ResourceTypes, SmartContract } from '@prisma
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import { truncateAddress } from '@/lib/blockchain/utils'
+import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
+import { getActiveBadge } from '@/app/components/StatusBadge/StatusBadge'
 
 // Importez ou créez un fichier CSS pour les styles
 import styles from './MarketplaceListingClient.module.scss'
@@ -70,20 +72,7 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
   
   const handleItemClick = (itemId: number) => {
     setLoadingItemId(itemId)
-    // Navigation vers une page où l'utilisateur pourra configurer le listing marketplace
     router.push(`/marketplace/marketplaceListing/${itemId}/edit`)
-  }
-  
-  
-  // Fonction pour obtenir le badge en fonction du statut de la ressource NFT
-  const getNftResourceStatusBadge = (status: ResourceNftStatuses) => {
-    // Vert pour ROYALTYSET
-    if (status === 'ROYALTYSET') {
-      return <span className={`${styles.statusBadge} ${styles.royaltysetBadge}`}>{status}</span>
-    }
-    
-    // Défaut pour les autres statuts (bien que normalement on n'aura que ROYALTYSET ici)
-    return <span className={`${styles.statusBadge} ${styles.defaultBadge}`}>{status}</span>
   }
   
   // Amélioration du filtrage
@@ -190,11 +179,7 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
                               address={smartContract.factoryAddress} 
                               network={smartContract.network}
                             />
-                            <span className={`${styles.statusBadge} ${smartContract.active 
-                              ? styles.activeBadge 
-                              : styles.inactiveBadge}`}>
-                              {smartContract.active ? 'Actif' : 'Inactif'}
-                            </span>
+                            {getActiveBadge(smartContract.active)}
                           </div>
                         ) : (
                           'N/A'
@@ -202,7 +187,7 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
                       </td>
                       <td>
                         <div className={styles.statusCell}>
-                          {getNftResourceStatusBadge(item.nftResource?.status || 'ROYALTYSET')}
+                          <NftStatusBadge status={item.nftResource?.status || 'ROYALTYSET'} />
                         </div>
                       </td>
                     </tr>

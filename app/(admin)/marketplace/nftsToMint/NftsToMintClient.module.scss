@@ -97,6 +97,10 @@
   &:hover {
     background-color: #f9fafb;
   }
+  
+  &.naStatusRow:hover {
+    background-color: #e3d2ff; /* Version plus claire de la couleur de fond pour le hover */
+  }
 }
 
 .loadingRow {
@@ -107,6 +111,10 @@
 .disabledRow {
   opacity: 0.6;
   pointer-events: none;
+}
+
+.naStatusRow {
+  background-color: #d9c2ff; /* Lavande plus foncée pour les lignes avec status N/A */
 }
 
 .loadingText {

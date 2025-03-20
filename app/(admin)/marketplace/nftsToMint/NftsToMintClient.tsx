@@ -6,6 +6,8 @@ import styles from './NftsToMintClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { ItemStatus, ResourceNftStatuses } from '@prisma/client'
 import { truncateAddress } from '@/lib/blockchain/utils'
+import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
+import { getItemStatusBadge, getActiveBadge } from '@/app/components/StatusBadge/StatusBadge'
 
 interface Item {
   id: number
@@ -80,47 +82,6 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
   const handleItemClick = (itemId: number) => {
     setLoadingItemId(itemId)
     router.push(`/marketplace/nftsToMint/${itemId}/edit`)
-  }
-  
-  // Fonction pour obtenir le badge en fonction du statut
-  const getStatusBadge = (status: ItemStatus) => {
-    switch(status) {
-      case 'created':
-        return <span className={`${styles.statusBadge} ${styles.createdBadge}`}>Créé</span>
-      case 'pending':
-        return <span className={`${styles.statusBadge} ${styles.pendingBadge}`}>En attente</span>
-      case 'minted':
-        return <span className={`${styles.statusBadge} ${styles.mintedBadge}`}>Minté</span>
-      case 'listed':
-        return <span className={`${styles.statusBadge} ${styles.listedBadge}`}>Listé</span>
-      default:
-        return <span className={`${styles.statusBadge} ${styles.defaultBadge}`}>{status}</span>
-    }
-  }
-  
-  // Fonction pour obtenir le badge en fonction du statut de la ressource NFT
-  const getNftResourceStatusBadge = (nftResource: { status: ResourceNftStatuses } | null) => {
-    if (!nftResource) return null
-
-    const status = nftResource.status
-    
-    // Orange pour UPLOADIPFS, UPLOADCERTIFICATE, et UPLOADMETADATA
-    if (['UPLOADIPFS', 'UPLOADCERTIFICATE', 'UPLOADMETADATA'].includes(status)) {
-      return <span className={`${styles.statusBadge} ${styles.uploadBadge}`}>{status}</span>
-    }
-    
-    // Jaune pour MINED
-    if (status === 'MINED') {
-      return <span className={`${styles.statusBadge} ${styles.minedBadge}`}>{status}</span>
-    }
-    
-    // Vert pour LISTED
-    if (status === 'LISTED') {
-      return <span className={`${styles.statusBadge} ${styles.listedBadge}`}>{status}</span>
-    }
-    
-    // Défaut pour les autres statuts
-    return <span className={`${styles.statusBadge} ${styles.defaultBadge}`}>{status}</span>
   }
   
   return (
@@ -210,7 +171,10 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                     <tr 
                       key={product.id} 
                       onClick={() => !loadingItemId && handleItemClick(product.id)}
-                      className={`${styles.clickableRow} ${isLoading ? styles.loadingRow : ''} ${loadingItemId && !isLoading ? styles.disabledRow : ''}`}
+                      className={`${styles.clickableRow} 
+                        ${isLoading ? styles.loadingRow : ''} 
+                        ${loadingItemId && !isLoading ? styles.disabledRow : ''}
+                        ${!product.nftResource ? styles.naStatusRow : ''}`}
                     >
                       <td>
                         <div className={styles.idCell}>
@@ -229,7 +193,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                       </td>
                       <td>
                         <div className={styles.statusCell}>
-                          {getStatusBadge(product.status)}
+                          {getItemStatusBadge(product.status)}
                         </div>
                       </td>
                       <td className={styles.hiddenMobile}>
@@ -242,7 +206,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                       </td>
                       <td className={styles.hiddenMobile}>
                         {product.nftResource 
-                          ? getNftResourceStatusBadge(product.nftResource) 
+                          ? <NftStatusBadge status={product.nftResource.status} /> 
                           : 'N/A'
                         }
                       </td>
@@ -254,11 +218,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                                 {product.nftResource.collection.smartContract.factoryAddress ? truncateAddress(product.nftResource.collection.smartContract.factoryAddress) : 'Non défini'}
                               </span>
                               &nbsp;&nbsp;
-                              <span className={`${styles.statusBadge} ${product.nftResource.collection.smartContract.active 
-                                ? styles.activeBadge 
-                                : styles.inactiveBadge}`}>
-                                {product.nftResource.collection.smartContract.active ? 'Actif' : 'Inactif'}
-                              </span>
+                              {getActiveBadge(product.nftResource.collection.smartContract.active)}
                             </>
                           ) : (
                             'N/A'

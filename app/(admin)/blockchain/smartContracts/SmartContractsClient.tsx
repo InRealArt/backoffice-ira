@@ -75,18 +75,21 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
                   <BlockchainAddress
                     address={contract.factoryAddress}
                     network={contract.network}
+                    showExplorerLink={true}
                   />
                 </td>
                 <td>
                   <BlockchainAddress
                     address={contract.royaltiesAddress}
                     network={contract.network}
+                    showExplorerLink={true}
                   />
                 </td>
                 <td>
                   <BlockchainAddress
                     address={contract.marketplaceAddress}
                     network={contract.network}
+                    showExplorerLink={true}
                   />
                 </td>
                 <td>

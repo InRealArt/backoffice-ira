@@ -32,7 +32,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="page-layout">
       <div className="content-container">
         You're not authorized to access this page or you  are not connected.<br/>
-        Please connect as admin to see this page
+        Please connect to see this page
       </div>
     </div>
 </>
