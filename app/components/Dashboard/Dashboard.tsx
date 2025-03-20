@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import Button from '../Button/Button';
 import { DashboardCard } from './DashboardCard/DashboardCard'
-import { getPendingItemsCount, getUserMintedItemsCount, getUserListedItemsCount } from '@/app/actions/prisma/prismaActions'
+import { getPendingItemsCount, getUserMintedItemsCount, getUserListedItemsCount, getBackofficeUserByEmail } from '@/app/actions/prisma/prismaActions'
 import { useIsAdmin } from '@/app/hooks/useIsAdmin';
 
 export default function Dashboard() {
@@ -49,11 +49,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchUserItemsStats = async () => {
-      if (!isAdmin && user?.userId) {
+      if (!isAdmin && user?.email) {
         try {
-          const userId = parseInt(user.userId);
-          const mintedResult = await getUserMintedItemsCount(userId);
-          const listedResult = await getUserListedItemsCount(userId);
+          const backofficeUser = await getBackofficeUserByEmail(user.email);
+          
+          if (!backofficeUser) {
+            console.error('Utilisateur Backoffice non trouvé pour cet email');
+            setIsLoadingUserCounts(false);
+            return;
+          }
+          
+          const mintedResult = await getUserMintedItemsCount(backofficeUser.id);
+          const listedResult = await getUserListedItemsCount(backofficeUser.id);
           
           setMintedItemsCount(mintedResult.count);
           setListedItemsCount(listedResult.count);
