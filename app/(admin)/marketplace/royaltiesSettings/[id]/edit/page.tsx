@@ -132,9 +132,9 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     
     const fetchProduct = async () => {
       try {
-        const productId = params.id.includes('gid://shopify/Product/') 
-          ? params.id.split('/').pop() 
-          : params.id
+        const productId = id.includes('gid://shopify/Product/') 
+          ? id.split('/').pop() 
+          : id
         
         const result = await getShopifyProductById(productId as string)
         if (isMounted) {

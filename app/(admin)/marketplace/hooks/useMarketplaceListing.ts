@@ -9,7 +9,7 @@ import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
 import { publicClient } from '@/lib/providers'
 import { marketplaceAbi } from '@/lib/contracts/MarketplaceAbi'
-import { getSmartContractAddress } from '@/app/actions/prisma/prismaActions'
+import { getSmartContractAddress, updateItemStatusToListedByNftResourceId, updateNftResourceStatusToListed, updateNftResourceStatusToMinted, createMarketPlaceTransaction } from '@/app/actions/prisma/prismaActions'
 import { NetworkType } from '@prisma/client'
 
 interface ListingParams {
@@ -21,7 +21,6 @@ interface ListingParams {
         tokenId: number
     }
     price: string // ETH amount
-    duration: number // Days
     publicClient: PublicClient
     walletClient: WalletClient
     marketplaceManager: Address
@@ -32,7 +31,7 @@ interface ListingParams {
 
 interface UseMarketplaceListingReturn {
     listNftOnMarketplace: (params: ListingParams) => Promise<boolean>
-    checkMarketplaceRole: (userAddress: string, contractAddress: string) => Promise<boolean>
+    checkMarketplaceSellerRole: (userAddress: string, contractAddress: string) => Promise<boolean>
     isLoading: boolean
     isCheckingRole: boolean
     error: string | null
@@ -48,7 +47,7 @@ interface UseMarketplaceListingReturn {
     transferNftToAdminMarketplace: (params: {
         collectionAddress: Address;
         tokenId: string | number;
-        marketplaceAddress: Address;
+        adminMarketplace: Address;
         walletClient: any;
         onSuccess?: () => void;
     }) => Promise<{ success: boolean; hash: string }>
@@ -95,7 +94,7 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
      * @param contractAddress - Adresse du contrat de marketplace
      * @returns Promise<boolean> - Vrai si l'utilisateur a les droits nécessaires
      */
-    const checkMarketplaceRole = async (userAddress: string, contractAddress: string): Promise<boolean> => {
+    const checkMarketplaceSellerRole = async (userAddress: string, contractAddress: string): Promise<boolean> => {
         if (!userAddress || !contractAddress) return false
 
         setIsCheckingRole(true)
@@ -125,7 +124,6 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
     const listNftOnMarketplace = async ({
         nftResource,
         price,
-        duration,
         publicClient,
         walletClient,
         marketplaceManager,
@@ -139,13 +137,28 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
         setSuccess(false)
         setTxHash(null)
 
+        // Vérification explicite de walletClient et walletClient.account
+        console.log("walletClient :", walletClient)
+        console.log("marketplaceManager :", marketplaceManager)
+        console.log("nftResource :", nftResource)
+
+        if (!walletClient || !walletClient.account) {
+            setError('Wallet client non disponible ou non connecté')
+            toast.error('Portefeuille non connecté. Veuillez vous connecter avec Rabby.')
+            setIsLoading(false)
+            return false
+        }
+
         // Afficher un toast de chargement
         const listingToast = toast.loading('Listing du NFT sur la marketplace en cours...')
-        console.log('price', price)
 
         try {
             const currentNetwork = getNetwork()
             const marketplaceContractAddress = await getSmartContractAddress('Marketplace', currentNetwork as NetworkType) as Address
+
+            if (!marketplaceContractAddress) {
+                throw new Error('Adresse du contrat Marketplace non disponible')
+            }
 
             // Création des arguments pour le listing
             const args = [
@@ -163,10 +176,6 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
                 args: args,
                 account: marketplaceManager
             })
-
-            if (!walletClient) {
-                throw new Error('Wallet client non disponible')
-            }
 
             // Exécution de la transaction
             const hash = await walletClient.writeContract(request)
@@ -188,6 +197,23 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
                 setSuccess(true)
                 toast.success('NFT listé sur la marketplace avec succès!')
 
+                // Mettre à jour le statut de la ressource NFT
+                await updateNftResourceStatusToListed(Number(nftResource.id))
+
+                // Mettre à jour le statut de l'item
+                await updateItemStatusToListedByNftResourceId(Number(nftResource.id))
+
+                // Ajouter l'enregistrement de la transaction
+                await createMarketPlaceTransaction({
+                    nftResourceId: Number(nftResource.id),
+                    functionName: 'listItem',
+                    transactionHash: hash,
+                    from: walletClient.account.address,
+                    to: marketplaceContractAddress,
+                    price: price,
+                    contractAddress: marketplaceContractAddress
+                })
+
                 // Appeler le callback de succès
                 onSuccess()
 
@@ -206,13 +232,14 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
             }
 
         } catch (error: any) {
-            console.error('Erreur lors du listing du NFT:', error.message)
-            if (error.message.includes('User rejected the request')) {
+            console.error('Erreur lors du listing du NFT:', error)
+            const errorMessage = error.message || 'Une erreur est survenue'
+
+            if (errorMessage.includes('User rejected the request')) {
                 toast.dismiss(listingToast)
                 toast.error('La transaction a été refusée par l\'utilisateur')
-                setError('La transaction a été refusée par l\'utilisateur')
+                //setError('La transaction a été refusée par l\'utilisateur')
             } else {
-                const errorMessage = error.message || 'Une erreur est survenue'
                 setError(errorMessage)
                 toast.dismiss(listingToast)
                 toast.error(`Erreur lors du listing du NFT: ${errorMessage}`)
@@ -297,6 +324,10 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
         setTransferError(null);
         setTransferSuccess(false);
 
+        console.log("adminMarketplace : ", adminMarketplace)
+        console.log("collectionAddress : ", collectionAddress)
+        console.log("tokenId : ", tokenId)
+        console.log("walletClient : ", walletClient.account.address)
         try {
             // Préparer l'ABI pour l'appel à safeTransferFrom de l'ERC721
             const erc721ABI = [
@@ -326,6 +357,7 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
 
             // Préparer la transaction selon le format attendu par walletClient
             const txHash = await walletClient.sendTransaction({
+                account: walletClient.account,
                 to: collectionAddress,
                 data,
                 value: BigInt(0)
@@ -371,7 +403,7 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
 
     return {
         listNftOnMarketplace,
-        checkMarketplaceRole,
+        checkMarketplaceSellerRole,
         isLoading,
         isCheckingRole,
         error,

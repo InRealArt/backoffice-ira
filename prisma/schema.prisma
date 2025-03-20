@@ -85,28 +85,29 @@ model ResourceNft {
 }
 
 model NftResource {
-  id                   Int                  @id @default(autoincrement())
-  tokenId              Int?
-  tokenUri             String?              @unique
-  status               ResourceNftStatuses
-  type                 ResourceTypes
-  minter               String?
-  collectionId         Int
-  name                 String               @unique
-  imageUri             String?
-  description          String
-  certificateUri       String?              @unique
-  blockchainItemId     Int?                 @unique
-  mockups              String[]
-  owner                String?
-  transactionHash      String?
-  tags                 String[]
-  purchasedOnce        Boolean?             @default(false)
-  previousOwner        String?
-  Order                Order[]
-  collection           NftCollection        @relation(fields: [collectionId], references: [id])
-  items                Item[]
-  royaltyBeneficiaries RoyaltyBeneficiary[]
+  id                      Int                      @id @default(autoincrement())
+  tokenId                 Int?
+  tokenUri                String?                  @unique
+  status                  ResourceNftStatuses
+  type                    ResourceTypes
+  minter                  String?
+  collectionId            Int
+  name                    String                   @unique
+  imageUri                String?
+  description             String
+  certificateUri          String?                  @unique
+  blockchainItemId        Int?                     @unique
+  mockups                 String[]
+  owner                   String?
+  transactionHash         String?
+  tags                    String[]
+  purchasedOnce           Boolean?                 @default(false)
+  previousOwner           String?
+  Order                   Order[]
+  collection              NftCollection            @relation(fields: [collectionId], references: [id])
+  items                   Item[]
+  royaltyBeneficiaries    RoyaltyBeneficiary[]
+  marketPlaceTransactions MarketPlaceTransaction[]
 
   @@schema("public")
 }
@@ -467,17 +468,17 @@ model Transaction {
 }
 
 model BackofficeUser {
-  id               Int               @id @default(autoincrement())
-  email            String?           @unique
-  walletAddress    String            @unique
-  linkedWallets    Json              @default("[]") // Tableau de wallets au format JSON
-  lastLogin        DateTime          @db.Timestamp(6)
+  id               Int                  @id @default(autoincrement())
+  email            String?              @unique
+  walletAddress    String               @unique
+  linkedWallets    Json                 @default("[]") // Tableau de wallets au format JSON
+  lastLogin        DateTime             @db.Timestamp(6)
   userMetadata     Json
   role             BackofficeUserRoles?
   firstName        String?
   lastName         String?
-  isShopifyGranted Boolean           @default(false)
-  createdAt        DateTime          @default(now()) @db.Timestamp(6)
+  isShopifyGranted Boolean              @default(false)
+  createdAt        DateTime             @default(now()) @db.Timestamp(6)
   items            Item[]
 
   @@index([email])
@@ -686,13 +687,31 @@ enum NetworkType {
 }
 
 model RoyaltyBeneficiary {
-  id            Int         @id @default(autoincrement())
-  wallet        String
-  percentage    Int
+  id              Int         @id @default(autoincrement())
+  wallet          String
+  percentage      Int
   totalPercentage Int
-  txHash         String?
-  nftResourceId Int
-  nftResource   NftResource @relation(fields: [nftResourceId], references: [id])
+  txHash          String?
+  nftResourceId   Int
+  nftResource     NftResource @relation(fields: [nftResourceId], references: [id])
+
+  @@index([nftResourceId])
+  @@schema("public")
+}
+
+model MarketPlaceTransaction {
+  id              Int         @id @default(autoincrement())
+  nftResourceId   Int
+  nftResource     NftResource @relation(fields: [nftResourceId], references: [id])
+  functionName    String?
+  transactionHash String?     @unique(map: "MarketPlaceTransaction_txHash_key")
+  from            String
+  to              String
+  created_at      DateTime?   @default(now()) @db.Timestamptz(6)
+  price           Decimal?    @db.Decimal
+  transferFrom    String?
+  transferTo      String?
+  contractAddress String?
 
   @@index([nftResourceId])
   @@schema("public")

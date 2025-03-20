@@ -63,7 +63,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   const [marketplaceManager, setMarketplaceManager] = useState<Address | null>(null)
   const { 
     listNftOnMarketplace, 
-    checkMarketplaceRole,
+    checkMarketplaceSellerRole,
     approveMarketplaceForNft,
     transferNftToAdminMarketplace,
     isLoading: isListing,
@@ -122,7 +122,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
     async ({ accounts }, connector) => {
       if (connector.name === 'Rabby') {
         console.log('Rabby wallet account changed:', accounts);
-        await checkUserMarketplaceRole(accounts[0]);
+        await checkUserMarketplaceSellerRole(accounts[0]);
       }
     }
   );
@@ -134,16 +134,16 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
     async ({ chain }, connector) => {
       console.log('Changement de chaîne détecté:', chain);
       if (address) {
-        await checkUserMarketplaceRole(address);
+        await checkUserMarketplaceSellerRole(address);
       }
     }
   );
 
   // Vérifier le rôle marketplace pour l'utilisateur actuel
-  const checkUserMarketplaceRole = async (address: string) => {
+  const checkUserMarketplaceSellerRole = async (address: string) => {
     const network = getNetwork()
     const marketplaceAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address
-    const hasRole = await checkMarketplaceRole(
+    const hasRole = await checkMarketplaceSellerRole(
       address,
       marketplaceAddress
     )
@@ -161,7 +161,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
         primaryWallet?.address
       ) {
         console.log('Adresse Rabby détectée:', primaryWallet.address)
-        await checkUserMarketplaceRole(primaryWallet.address as string)
+        await checkUserMarketplaceSellerRole(primaryWallet.address as string)
       }
     }
 
@@ -269,14 +269,33 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       if (ownerAddress) {
         const network = getNetwork();
         const marketplaceAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address;
-        // Vérifier si le propriétaire est l'admin de la marketplace
-        // Note: Dans un cas réel, ce serait l'adresse de l'admin marketplace, pas l'adresse du contrat
-        const isMarketplaceAdmin = ownerAddress.toLowerCase() === marketplaceAddress.toLowerCase();
-        setIsMarketplaceOwner(isMarketplaceAdmin);
         
-        // Si le transfert est déjà complété
-        if (isMarketplaceAdmin) {
-          setTransferStep('completed');
+        // Récupérer l'adresse du super admin via getSuperAdmin
+        let marketplaceAdminAddress: Address;
+        try {
+          marketplaceAdminAddress = await publicClient.readContract({
+            address: marketplaceAddress,
+            abi: marketplaceAbi,
+            functionName: 'getSuperAdmin',
+          }) as Address;
+          
+          console.log("[DEBUG] Adresse du super admin de la marketplace:", marketplaceAdminAddress);
+          
+          if (!marketplaceAdminAddress || marketplaceAdminAddress === '0x0000000000000000000000000000000000000000') {
+            throw new Error("L'adresse du super admin de la marketplace est invalide ou non définie");
+          }
+          
+          // Vérifier si le propriétaire est l'admin de la marketplace
+          const isMarketplaceAdmin = ownerAddress.toLowerCase() === marketplaceAdminAddress.toLowerCase();
+          setIsMarketplaceOwner(isMarketplaceAdmin);
+          
+          // Si le transfert est déjà complété
+          if (isMarketplaceAdmin) {
+            setTransferStep('completed');
+          }
+        } catch (error) {
+          console.error("Erreur lors de la récupération de l'adresse du super admin:", error);
+          setIsMarketplaceOwner(false);
         }
       }
       
@@ -435,12 +454,15 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       
       console.log("[DEBUG] Transfert vers l'adresse du super admin marketplace:", marketplaceAdminAddress);
       
+      console.log("marketplaceAdminAddress : ", marketplaceAdminAddress)
+      console.log("nftResource.collection.contractAddress : ", nftResource.collection.contractAddress)
+      console.log("walletClient : ", walletClient)
       // Utilisation de transferNftToAdminMarketplace mais en spécifiant qu'il s'agit d'un appel à safeTransferFrom
       // Comme dans le test foundry: artistNft.safeTransferFrom(nftProperties.nftAdmin, MARKETPLACE_DEPLOYER, tokenId)
       await transferNftToAdminMarketplace({
         collectionAddress: nftResource.collection.contractAddress as Address,
         tokenId: nftResource.tokenId,
-        marketplaceAddress: marketplaceAdminAddress, // Adresse du super admin marketplace (personne)
+        adminMarketplace: marketplaceAdminAddress, // Adresse du super admin marketplace (personne)
         walletClient,
         onSuccess: () => {
           toast.success("NFT transféré avec succès à l'administrateur de la marketplace");
@@ -638,7 +660,6 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
           tokenId: nftResource.tokenId
         },
         price: priceInWei.toString(),
-        duration: parseInt(formData.listingDuration),
         publicClient: publicClient as any,
         walletClient: walletClient as any,
         marketplaceManager: marketplaceManager as `0x${string}`,
@@ -790,44 +811,6 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
         </div>
       )}
       
-      {/* Section de transfert - n'afficher que si un transfert est nécessaire ET que l'utilisateur est l'admin Rabby */}
-      {canPerformTransfer && (
-        <div className={styles.warningBox}>
-          <p>En tant qu'admin de la collection, vous devez d'abord transférer ce NFT à l'admin de la marketplace avant de pouvoir le lister.</p>
-          
-          <div className={styles.transferActions}>
-            {transferStep === 'idle' && (
-              <Button
-                onClick={handleTransferProcess}
-                variant="primary"
-                disabled={!nftResource || isTransferring}
-              >
-                Transférer le NFT à l'admin marketplace
-              </Button>
-            )}
-            
-            {transferStep === 'transfer' && (
-              <Button
-                onClick={handleTransferNft}
-                variant="primary"
-                disabled={isTransferring}
-                isLoading={isTransferring}
-              >
-                {isTransferring ? 'Transfert en cours...' : 'Transférer via safeTransferFrom'}
-              </Button>
-            )}
-            
-            {transferStep === 'completed' && (
-              <div className={styles.successMessage}>
-                <p>Le NFT a été transféré avec succès à l'admin de la marketplace. Il peut maintenant le lister.</p>
-              </div>
-            )}
-            
-            {transferError && <p className={styles.errorText}>{transferError}</p>}
-          </div>
-        </div>
-      )}
-      
       {/* Message d'erreur si le NFT appartient à l'admin mais l'utilisateur n'est pas Rabby admin */}
       {needsTransferBeforeListing && !isRabbyWalletCollectionAdmin && (
         <div className={styles.errorBox}>
@@ -934,6 +917,14 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
               <div className={styles.stepStatus}>
                 {isNftApproved ? '✓ Complété' : '○ En attente'}
               </div>
+              {/*<div>
+                    <p>
+                      {hasMarketplaceRole ? 'hasMarketplaceRole OK' : 'hasMarketplaceRole KO'}<br/>
+                      {isMarketplaceOwner ? 'isMarketplaceOwner OK' : 'isMarketplaceOwner KO'}<br/>
+                      {isNftApproved ? 'isNftApproved OK' : 'isNftApproved KO'}<br/>
+                      {walletClient ? 'walletClient OK' : 'walletClient KO'}
+                    </p>
+              </div>*/}
               {hasMarketplaceRole && isMarketplaceOwner && !isNftApproved && walletClient && (
                 <div className={styles.stepAction}>
                   <Button
@@ -943,9 +934,12 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
                     isLoading={isApprovingNft}
                     size="small"
                   >
-                    {isApprovingNft ? 'Approbation en cours...' : 'Approuver pour le contrat'}
+                    {isApprovingNft ? 'Approbation en cours...' : 'Approuver pour le contrat de Marketplace'}
                   </Button>
+                  
+                
                 </div>
+                
               )}
             </div>
           </div>

@@ -1315,3 +1315,124 @@ export async function getSmartContractAddress(
     return null
   }
 }
+
+/**
+ * Met à jour le statut de l'item lié à une ressource NFT en "listed"
+ * @param nftResourceId - L'ID de la ressource NFT
+ * @returns Un objet indiquant le succès ou l'échec de l'opération
+ */
+export async function updateItemStatusToListedByNftResourceId(nftResourceId: number): Promise<StatusUpdateResult> {
+  'use server';
+
+  try {
+    // Trouver l'item associé à cette ressource NFT
+    const item = await prisma.item.findFirst({
+      where: {
+        idNftResource: nftResourceId
+      }
+    });
+
+    if (!item) {
+      return {
+        success: false,
+        message: 'Aucun item associé à cette ressource NFT n\'a été trouvé'
+      };
+    }
+
+    // Mettre à jour le statut de l'item à "listed"
+    await prisma.item.update({
+      where: { id: item.id },
+      data: { status: ItemStatus.listed }
+    });
+
+    // Revalider les chemins pour rafraîchir les données sur l'interface
+    revalidatePath('/marketplace/marketplaceListing');
+    revalidatePath('/marketplace');
+
+    return {
+      success: true,
+      message: 'Statut de l\'item mis à jour avec succès en "listed"'
+    };
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du statut de l\'item:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Une erreur est survenue lors de la mise à jour du statut'
+    };
+  }
+}
+
+/**
+ * Crée un enregistrement de transaction marketplace pour une ressource NFT
+ * @param params - Les paramètres de la transaction
+ * @returns Un objet indiquant le succès ou l'échec de l'opération
+ */
+export async function createMarketPlaceTransaction(params: {
+  nftResourceId: number;
+  functionName?: string;
+  transactionHash?: string;
+  from: string;
+  to: string;
+  price?: number | string;
+  transferFrom?: string;
+  transferTo?: string;
+  contractAddress?: string;
+}): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+  transaction?: any;
+}> {
+  'use server';
+
+  try {
+    // Vérifier si la ressource NFT existe
+    const nftResource = await prisma.nftResource.findUnique({
+      where: { id: params.nftResourceId }
+    });
+
+    if (!nftResource) {
+      return {
+        success: false,
+        message: 'Ressource NFT non trouvée'
+      };
+    }
+
+    // Convertir le prix en Decimal si fourni
+    const priceDecimal = params.price
+      ? new Decimal(params.price.toString())
+      : null;
+
+    // Créer l'enregistrement de transaction
+    const transaction = await prisma.marketPlaceTransaction.create({
+      data: {
+        nftResourceId: params.nftResourceId,
+        functionName: params.functionName,
+        transactionHash: params.transactionHash,
+        from: params.from,
+        to: params.to,
+        price: priceDecimal,
+        transferFrom: params.transferFrom,
+        transferTo: params.transferTo,
+        contractAddress: params.contractAddress,
+      }
+    });
+
+    // Revalider les chemins pour rafraîchir les données sur l'interface
+    revalidatePath('/marketplace/marketplaceListing');
+    revalidatePath('/marketplace');
+
+    return {
+      success: true,
+      message: 'Transaction marketplace enregistrée avec succès',
+      transaction: serializeData(transaction)
+    };
+  } catch (error) {
+    console.error('Erreur lors de la création de la transaction marketplace:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Une erreur est survenue lors de la création de la transaction',
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
+    };
+  }
+}

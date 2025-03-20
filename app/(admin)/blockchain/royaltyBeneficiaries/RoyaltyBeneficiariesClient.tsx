@@ -127,7 +127,7 @@ export default function RoyaltyBeneficiariesClient({
                 <th className={styles.hiddenMobile}>NFT Resource</th>
                 <th className={styles.hiddenMobile}>Token ID</th>
                 <th className={styles.hiddenMobile}>Collection</th>
-                <th className={styles.hiddenMobile}>Smart Contract</th>
+                <th className={styles.hiddenMobile}>Factory Address</th>
                 <th className={styles.hiddenMobile}>Réseau</th>
               </tr>
             </thead>
@@ -168,6 +168,7 @@ export default function RoyaltyBeneficiariesClient({
                         <BlockchainAddress 
                           address={beneficiary.nftResource.collection.contractAddress} 
                           network={smartContract?.network || 'sepolia'} 
+                          showExplorerLink={true}
                         />
                       ) : (
                         <span className={styles.noData}>Non déployée</span>
@@ -179,6 +180,7 @@ export default function RoyaltyBeneficiariesClient({
                           <BlockchainAddress 
                             address={smartContract.factoryAddress} 
                             network={smartContract.network} 
+                            showExplorerLink={true}
                           />
                           <span className={`${styles.statusBadge} ${smartContract.active 
                             ? styles.activeBadge 
