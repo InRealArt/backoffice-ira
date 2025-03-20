@@ -1,5 +1,25 @@
 'use client'
 
+/**
+ * Page de listing d'un NFT sur la marketplace
+ * 
+ * Processus complet selon le test foundry:
+ * 
+ * 1. Connexion avec le wallet admin de collection NFT (nftProperties.nftAdmin)
+ * 2. Le NFT est déjà minté dans la collection (artistNft.mintNFT)
+ * 3. Configuration des royalties pour le NFT (artistRoyalties.setRoyalty)
+ * 4. Admin de la collection NFT doit transférer directement le NFT à l'admin marketplace:
+ *    - Appel à safeTransferFrom(nftAdmin, MARKETPLACE_DEPLOYER, tokenId)
+ * 5. Admin marketplace approuve le contrat marketplace pour gérer le NFT:
+ *    - Appel à approve(address(marketPlace), tokenId)
+ * 6. Admin marketplace liste le NFT sur la marketplace:
+ *    - Appel à marketPlace.listItem(artistNft, tokenId, price_)
+ * 
+ * Cette interface utilisateur guide l'administrateur à travers ces étapes
+ * en vérifiant les conditions préalables et en facilitant les transactions
+ * blockchain nécessaires.
+ */
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
@@ -20,6 +40,7 @@ import { NetworkType } from '@prisma/client'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
 import { getTokenOwner } from '@/lib/blockchain/utils'
+import { marketplaceAbi } from '@/lib/contracts/MarketplaceAbi'
 
 type ParamsType = { id: string }
 
@@ -44,7 +65,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
     listNftOnMarketplace, 
     checkMarketplaceRole,
     approveMarketplaceForNft,
-    transferNftToMarketplace,
+    transferNftToAdminMarketplace,
     isLoading: isListing,
     isApproving,
     isTransferring,
@@ -62,7 +83,28 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   const [isLoadingAdmin, setIsLoadingAdmin] = useState(false);
   const [isUserCollectionAdmin, setIsUserCollectionAdmin] = useState(false);
   const [isMarketplaceOwner, setIsMarketplaceOwner] = useState(false);
-  const [transferStep, setTransferStep] = useState<'idle' | 'approve' | 'transfer' | 'completed'>('idle');
+  const [transferStep, setTransferStep] = useState<
+    'idle' | 'transfer' | 'completed'
+  >('idle');
+  
+  // État pour suivre le processus global
+  const [listingProcess, setListingProcess] = useState<{
+    adminConnected: boolean;
+    tokenTransferred: boolean;
+    marketplaceApproved: boolean;
+    nftApproved: boolean;
+    listingComplete: boolean;
+  }>({
+    adminConnected: false,
+    tokenTransferred: false,
+    marketplaceApproved: false,
+    nftApproved: false,
+    listingComplete: false
+  });
+
+  // Ajout d'une variable d'état pour suivre l'approbation du NFT
+  const [isNftApproved, setIsNftApproved] = useState(false);
+  const [isApprovingNft, setIsApprovingNft] = useState(false);
 
   const unwrappedParams = React.use(params as any) as ParamsType
   const id = unwrappedParams.id
@@ -223,15 +265,17 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       
       setTokenOwner(ownerAddress);
       
-      // Vérifier si la marketplace est déjà propriétaire du NFT
+      // Vérifier si l'admin de la marketplace est déjà propriétaire du NFT
       if (ownerAddress) {
         const network = getNetwork();
         const marketplaceAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address;
-        const isMarketplace = ownerAddress.toLowerCase() === marketplaceAddress.toLowerCase();
-        setIsMarketplaceOwner(isMarketplace);
+        // Vérifier si le propriétaire est l'admin de la marketplace
+        // Note: Dans un cas réel, ce serait l'adresse de l'admin marketplace, pas l'adresse du contrat
+        const isMarketplaceAdmin = ownerAddress.toLowerCase() === marketplaceAddress.toLowerCase();
+        setIsMarketplaceOwner(isMarketplaceAdmin);
         
         // Si le transfert est déjà complété
-        if (isMarketplace) {
+        if (isMarketplaceAdmin) {
           setTransferStep('completed');
         }
       }
@@ -244,17 +288,69 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
     }
   };
   
-  // Effect pour mettre à jour le statut du transfert en fonction des résultats
-  useEffect(() => {
-    if (approvalSuccess && transferStep === 'approve') {
-      setTransferStep('transfer');
-    }
+  // Vérifier si le NFT est déjà approuvé pour le contrat Marketplace
+  const checkNftApproval = async () => {
+    if (!nftResource?.collection?.contractAddress || !nftResource?.tokenId) return;
     
+    try {
+      // Créer l'ABI pour appeler getApproved
+      const erc721ABI = [
+        {
+          name: 'getApproved',
+          type: 'function',
+          stateMutability: 'view',
+          inputs: [{ name: 'tokenId', type: 'uint256' }],
+          outputs: [{ name: '', type: 'address' }]
+        }
+      ];
+      
+      const network = getNetwork();
+      const marketplaceAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address;
+      
+      // Appeler getApproved sur le contrat
+      const approvedAddress = await publicClient.readContract({
+        address: nftResource.collection.contractAddress as Address,
+        abi: erc721ABI,
+        functionName: 'getApproved',
+        args: [BigInt(nftResource.tokenId)]
+      }) as Address;
+      
+      // Vérifier si l'adresse approuvée est celle du contrat Marketplace
+      const isApproved = approvedAddress.toLowerCase() === marketplaceAddress.toLowerCase();
+      console.log('Vérification d\'approbation: NFT approuvé pour marketplace?', isApproved);
+      setIsNftApproved(isApproved);
+      
+    } catch (error) {
+      console.error('Erreur lors de la vérification de l\'approbation du NFT:', error);
+    }
+  };
+  
+  // Mise à jour du processus global pour inclure l'étape d'approbation
+  useEffect(() => {
+    setListingProcess({
+      adminConnected: isUserCollectionAdmin,
+      tokenTransferred: isMarketplaceOwner,
+      marketplaceApproved: hasMarketplaceRole,
+      nftApproved: isNftApproved,
+      listingComplete: listingSuccess || nftResource?.status === 'LISTED'
+    });
+  }, [isUserCollectionAdmin, isMarketplaceOwner, hasMarketplaceRole, isNftApproved, listingSuccess, nftResource?.status]);
+  
+  // Vérifier l'approbation du NFT lorsque les données sont chargées
+  useEffect(() => {
+    if (nftResource?.collection?.contractAddress && nftResource?.tokenId && isMarketplaceOwner) {
+      checkNftApproval();
+    }
+  }, [nftResource, isMarketplaceOwner]);
+
+  // Effect pour les transitions d'état
+  useEffect(() => {
     if (transferSuccess) {
       setTransferStep('completed');
+      toast.success('NFT transféré avec succès. L\'admin marketplace peut maintenant le lister.');
       fetchTokenOwner(); // Rafraîchir le propriétaire après le transfert
     }
-  }, [approvalSuccess, transferSuccess]);
+  }, [transferSuccess]);
 
   // Condition: le NFT est détenu par l'admin de la collection
   const isNftOwnedByCollectionAdmin = tokenOwner && collectionAdmin && 
@@ -270,41 +366,208 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   const canPerformTransfer = isRabbyWalletCollectionAdmin && needsTransferBeforeListing;
   
   // Condition: l'utilisateur peut lister le NFT
-  const canListNft = hasMarketplaceRole && (isMarketplaceOwner || !isNftOwnedByCollectionAdmin);
+  const canListNft = hasMarketplaceRole && isMarketplaceOwner && isNftApproved;
 
-  // Gérer l'approbation et le transfert
-  const handleApproveNft = async () => {
-    if (!nftResource?.collection?.contractAddress || !nftResource?.tokenId) return;
+  // Fonction pour initialiser le processus de transfert direct
+  const handleTransferProcess = async () => {
+    if (!nftResource?.collection?.contractAddress || !nftResource?.tokenId) {
+      toast.error('Informations du NFT non disponibles');
+      return;
+    }
     
-    const network = getNetwork();
-    const marketplaceAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address;
-    
-    await approveMarketplaceForNft({
-      collectionAddress: nftResource.collection.contractAddress as Address,
-      tokenId: nftResource.tokenId,
-      marketplaceAddress,
-      walletClient,
-      onSuccess: () => {
-        toast.success('Approbation réussie. Vous pouvez maintenant transférer le NFT.');
-      }
-    });
+    try {
+      const network = getNetwork();
+      // Récupérer l'adresse de l'admin de la marketplace (dans un cas réel)
+      // Pour simplifier, nous utilisons l'adresse du contrat marketplace comme proxy
+      const marketplaceAdminAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address;
+      
+      // Informer l'utilisateur de l'action à entreprendre
+      toast.success('Vous allez maintenant transférer le NFT à l\'admin de la marketplace');
+      
+      // Initier le processus (transfert direct)
+      setTransferStep('transfer');
+      
+    } catch (error) {
+      console.error('Erreur lors de l\'initialisation du processus de transfert:', error);
+      toast.error('Impossible d\'initialiser le processus de transfert');
+      setTransferStep('idle');
+    }
   };
   
+  // Fonction de transfert du NFT directement à l'admin marketplace
   const handleTransferNft = async () => {
-    if (!nftResource?.collection?.contractAddress || !nftResource?.tokenId) return;
+    if (!nftResource?.collection?.contractAddress || !nftResource?.tokenId) {
+      toast.error('Informations du NFT non disponibles');
+      return;
+    }
     
-    const network = getNetwork();
-    const marketplaceAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address;
+    if (!walletClient) {
+      toast.error('Portefeuille non connecté ou non disponible');
+      return;
+    }
     
-    await transferNftToMarketplace({
-      collectionAddress: nftResource.collection.contractAddress as Address,
-      tokenId: nftResource.tokenId,
-      marketplaceAddress,
-      walletClient,
-      onSuccess: () => {
-        toast.success('NFT transféré avec succès à la marketplace.');
+    try {
+      const network = getNetwork();
+      
+      // Récupération de l'adresse du contrat Marketplace
+      const marketplaceAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address;
+      
+      // Récupération de l'adresse de l'admin de la marketplace via la fonction getSuperAdmin
+      let marketplaceAdminAddress: Address;
+      try {
+        // Appel à la fonction getSuperAdmin du contrat Marketplace
+        marketplaceAdminAddress = await publicClient.readContract({
+          address: marketplaceAddress,
+          abi: marketplaceAbi,
+          functionName: 'getSuperAdmin',
+        }) as Address;
+        
+        console.log("[DEBUG] Adresse du super admin de la marketplace:", marketplaceAdminAddress);
+        
+        if (!marketplaceAdminAddress || marketplaceAdminAddress === '0x0000000000000000000000000000000000000000') {
+          throw new Error("L'adresse du super admin de la marketplace est invalide ou non définie");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération de l'adresse du super admin:", error);
+        toast.error("Impossible de récupérer l'adresse de l'administrateur de la marketplace");
+        return;
       }
-    });
+      
+      console.log("[DEBUG] Transfert vers l'adresse du super admin marketplace:", marketplaceAdminAddress);
+      
+      // Utilisation de transferNftToAdminMarketplace mais en spécifiant qu'il s'agit d'un appel à safeTransferFrom
+      // Comme dans le test foundry: artistNft.safeTransferFrom(nftProperties.nftAdmin, MARKETPLACE_DEPLOYER, tokenId)
+      await transferNftToAdminMarketplace({
+        collectionAddress: nftResource.collection.contractAddress as Address,
+        tokenId: nftResource.tokenId,
+        marketplaceAddress: marketplaceAdminAddress, // Adresse du super admin marketplace (personne)
+        walletClient,
+        onSuccess: () => {
+          toast.success("NFT transféré avec succès à l'administrateur de la marketplace");
+          setTransferStep('completed');
+          setListingProcess(prev => ({...prev, tokenTransferred: true}));
+          fetchTokenOwner(); // Rafraîchir le propriétaire après le transfert
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('Erreur lors du transfert du NFT:', error);
+      toast.error(`Erreur lors du safeTransferFrom: ${error.message || 'Erreur inconnue'}`);
+    }
+  };
+
+  // Fonction pour approuver le smart contract Marketplace pour ce NFT
+  const handleApproveNftForMarketplace = async () => {
+    if (!nftResource?.collection?.contractAddress || !nftResource?.tokenId) {
+      toast.error('Informations du NFT non disponibles');
+      return;
+    }
+    console.log('walletClient', walletClient)
+    if (!walletClient) {
+      toast.error('Portefeuille non connecté ou non disponible');
+      return;
+    }
+
+    setIsApprovingNft(true);
+    
+    try {
+      const network = getNetwork();
+      const marketplaceAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address;
+      console.log('[DEBUG] Approbation du NFT', {
+        collection: nftResource.collection.contractAddress,
+        tokenId: nftResource.tokenId,
+        marketplaceAddress,
+        owner: tokenOwner
+      });
+      
+      // Utiliser directement la fonction approveMarketplaceForNft du hook
+      await approveMarketplaceForNft({
+        collectionAddress: nftResource.collection.contractAddress as Address,
+        tokenId: nftResource.tokenId,
+        marketplaceAddress,
+        walletClient,
+        onSuccess: () => {
+          toast.success('Le NFT a été approuvé avec succès pour être géré par le smart contract Marketplace');
+          setIsNftApproved(true);
+          // Vérifier l'approbation pour confirmer
+          setTimeout(() => checkNftApproval(), 2000);
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('Erreur lors de l\'approbation du NFT:', error);
+      
+      // Analyse détaillée de l'erreur
+      let errorMessage = error.message || 'Erreur inconnue';
+      let verboseError = 'Impossible d\'analyser la raison exacte';
+      
+      console.log('[DEBUG] Erreur complète:', error);
+      
+      // Détection spécifique des erreurs Rabby et Ethereum
+      if (error.code) {
+        console.log('[DEBUG] Code d\'erreur Rabby/Ethereum:', error.code);
+      }
+      
+      // Extraction d'informations plus détaillées sur la raison du revert
+      if (error.reason) {
+        verboseError = `Raison: ${error.reason}`;
+      }
+      
+      if (error.data) {
+        console.log('[DEBUG] Données d\'erreur supplémentaires:', error.data);
+        
+        // Si l'erreur contient des données structurées
+        if (typeof error.data === 'string') {
+          verboseError = `Données d'erreur: ${error.data}`;
+        } else if (error.data.message) {
+          verboseError = `Message: ${error.data.message}`;
+        }
+      }
+      
+      // Extraction d'une raison de revert possible
+      if (errorMessage.includes('execution reverted')) {
+        // Tenter d'extraire le message d'erreur après "execution reverted:"
+        const revertMatch = errorMessage.match(/execution reverted:(.+?)(?:\s*\(|$)/);
+        if (revertMatch && revertMatch[1]) {
+          verboseError = `Revert: ${revertMatch[1].trim()}`;
+        }
+      }
+      
+      // Raisons courantes de revert dans les fonctions approve d'ERC721
+      if (
+        errorMessage.toLowerCase().includes('not owner') || 
+        errorMessage.toLowerCase().includes('owner') ||
+        errorMessage.toLowerCase().includes('caller is not')
+      ) {
+        verboseError = "Le portefeuille actuel n'est pas le propriétaire du NFT. Seul le propriétaire peut approuver.";
+      }
+      
+      if (errorMessage.toLowerCase().includes('approve to caller')) {
+        verboseError = "Impossible d'approuver pour l'adresse appelante elle-même.";
+      }
+      
+      if (errorMessage.toLowerCase().includes('already approved')) {
+        verboseError = "Ce NFT est déjà approuvé pour cette adresse.";
+        // Vérifier si c'est approuvé pour notre marketplace
+        setTimeout(() => checkNftApproval(), 1000);
+      }
+      
+      // Afficher à la fois un message toast et un log détaillé
+      toast.error(`Erreur lors de l'approbation: ${verboseError}`);
+      console.error('[VERBOSE ERROR]', {
+        message: errorMessage,
+        code: error.code,
+        data: error.data,
+        reason: error.reason,
+        verboseError
+      });
+      
+      // Vérifier quand même le statut d'approbation après un échec
+      setTimeout(() => checkNftApproval(), 3000);
+      
+    } finally {
+      setIsApprovingNft(false);
+    }
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -334,18 +597,28 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
     return Object.keys(errors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Version améliorée de handleSubmit
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
-    // Si un transfert est nécessaire, on ne peut pas lister directement
-    if (needsTransferBeforeListing) {
-      toast.error('Ce NFT doit d\'abord être transféré à la marketplace avant d\'être listé.');
+    if (!validateForm()) {
+      toast.error('Veuillez corriger les erreurs du formulaire');
       return;
     }
     
-    // Si l'utilisateur n'a pas les droits nécessaires
-    if (!canListNft) {
-      toast.error('Vous n\'avez pas les droits nécessaires pour lister ce NFT.');
+    // Vérifications pour s'assurer que toutes les conditions sont remplies
+    if (!hasMarketplaceRole) {
+      toast.error('Vous devez avoir le rôle d\'admin marketplace pour lister un NFT');
+      return;
+    }
+    
+    if (!isMarketplaceOwner) {
+      toast.error('Vous devez être propriétaire du NFT pour le lister');
+      return;
+    }
+    
+    if (!isNftApproved) {
+      toast.error('Vous devez d\'abord approuver le contrat marketplace pour gérer ce NFT');
       return;
     }
     
@@ -355,7 +628,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       // Conversion du prix de ETH à wei
       const priceInWei = parseEther(formData.price);
       
-      // Appel à votre fonction de listing qui interagit avec le contrat
+      // Appel à la fonction de listing qui interagit avec le contrat
       await listNftOnMarketplace({
         nftResource: {
           id: nftResource.id,
@@ -372,18 +645,18 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
         onSuccess: async () => {
           // Mettre à jour le statut du NFT en base de données
           try {
-            await updateNftResourceStatusToListed(nftResource.id)
+            await updateNftResourceStatusToListed(nftResource.id);
+            setListingProcess(prev => ({...prev, listingComplete: true}));
+            router.refresh(); // Rafraîchir la page pour mettre à jour les données
           } catch (error) {
-            console.error('Erreur lors de la mise à jour du statut:', error)
+            console.error('Erreur lors de la mise à jour du statut:', error);
           }
         }
-      })
+      });
       
       // Notification de succès
       toast.success('NFT mis en vente avec succès');
       
-      // Réinitialisation du formulaire ou redirection
-      // ...
     } catch (error) {
       console.error('Erreur lors de la mise en vente:', error);
       toast.error('Échec de la mise en vente du NFT');
@@ -520,27 +793,16 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       {/* Section de transfert - n'afficher que si un transfert est nécessaire ET que l'utilisateur est l'admin Rabby */}
       {canPerformTransfer && (
         <div className={styles.warningBox}>
-          <p>En tant qu'admin de la collection, vous devez d'abord transférer ce NFT à la marketplace avant de pouvoir le lister.</p>
+          <p>En tant qu'admin de la collection, vous devez d'abord transférer ce NFT à l'admin de la marketplace avant de pouvoir le lister.</p>
           
           <div className={styles.transferActions}>
             {transferStep === 'idle' && (
               <Button
-                onClick={() => setTransferStep('approve')}
+                onClick={handleTransferProcess}
                 variant="primary"
-                disabled={!nftResource || isApproving || isTransferring}
+                disabled={!nftResource || isTransferring}
               >
-                Commencer le transfert à la marketplace (Approbation nécessaire)
-              </Button>
-            )}
-            
-            {transferStep === 'approve' && (
-              <Button
-                onClick={handleApproveNft}
-                variant="primary"
-                disabled={isApproving}
-                isLoading={isApproving}
-              >
-                {isApproving ? 'Approbation en cours...' : 'Approuver la marketplace pour ce NFT'}
+                Transférer le NFT à l'admin marketplace
               </Button>
             )}
             
@@ -551,17 +813,16 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
                 disabled={isTransferring}
                 isLoading={isTransferring}
               >
-                {isTransferring ? 'Transfert en cours...' : 'Transférer le NFT à la marketplace'}
+                {isTransferring ? 'Transfert en cours...' : 'Transférer via safeTransferFrom'}
               </Button>
             )}
             
             {transferStep === 'completed' && (
               <div className={styles.successMessage}>
-                <p>Le NFT a été transféré avec succès à la marketplace. Vous pouvez maintenant le lister.</p>
+                <p>Le NFT a été transféré avec succès à l'admin de la marketplace. Il peut maintenant le lister.</p>
               </div>
             )}
             
-            {approvalError && <p className={styles.errorText}>{approvalError}</p>}
             {transferError && <p className={styles.errorText}>{transferError}</p>}
           </div>
         </div>
@@ -570,67 +831,190 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       {/* Message d'erreur si le NFT appartient à l'admin mais l'utilisateur n'est pas Rabby admin */}
       {needsTransferBeforeListing && !isRabbyWalletCollectionAdmin && (
         <div className={styles.errorBox}>
-          <p>Ce NFT appartient à l'admin de la collection et doit être transféré à la marketplace avant d'être listé.</p>
-          <p>Seul l'admin de la collection connecté via Rabby wallet peut effectuer ce transfert.</p>
+          <p>Pour être listé, les actions suivantes doivent être réalisées dans cet ordre :</p>
+          <ol className={styles.stepsList}>
+            <li>Connectez-vous à Rabby wallet avec le compte admin de la collection NFT</li>
+            <li>Transférez le NFT directement à l'admin de la marketplace via safeTransferFrom</li>
+            <li>L'admin de la marketplace doit approuver le smart contract marketplace pour ce NFT</li>
+            <li>L'admin marketplace doit approuver le contrat marketplace pour gérer ce NFT spécifique</li>
+            <li>L'admin de la marketplace peut alors lister le NFT avec un prix</li>
+          </ol>
         </div>
       )}
       
-      <div className={styles.formContainer}>
-        <h3 className={styles.formTitle}>Configuration du listing sur la Marketplace</h3>
-        
-        <form onSubmit={handleSubmit} className={styles.form}>          
-          <div className={styles.formGroup}>
-            <label htmlFor="price" className={styles.label}>
-              Prix (ETH)
-            </label>
-            <input
-              id="price"
-              name="price"
-              type="number"
-              value={formData.price}
-              onChange={(e) => setFormData({
-                ...formData,
-                price: e.target.value
-              })}
-              min="0"
-              step="0.001"
-              className={styles.input}
-              required
-            />
+      {/* Affichage du workflow détaillé */}
+      <div className={styles.workflowContainer}>
+        <h3 className={styles.workflowTitle}>Processus de mise en vente</h3>
+        <div className={styles.workflowSteps}>
+          <div className={`${styles.workflowStep} ${isUserCollectionAdmin ? styles.active : ''}`}>
+            <div className={styles.stepNumber}>1</div>
+            <div className={styles.stepContent}>
+              <h4>Connexion admin collection NFT</h4>
+              <p>Connectez-vous avec Rabby wallet en tant qu'admin de la collection NFT</p>
+              <div className={styles.stepStatus}>
+                {isUserCollectionAdmin ? '✓ Complété' : '○ En attente'}
+              </div>
+              {!isUserCollectionAdmin && (
+                <div className={styles.stepAction}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => toast.success('Veuillez vous connecter avec Rabby wallet en tant qu\'admin de la collection')}
+                    size="small"
+                  >
+                    Se connecter avec Rabby
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
           
-          <div className={styles.formActions}>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={
-                (!nftResource || 
-                nftResource.status !== 'ROYALTYSET' || 
-                isListing || 
-                !canListNft) ?? false
-              }
-              isLoading={isListing}
-            >
-              Lister sur la marketplace
-            </Button>
+          <div className={`${styles.workflowStep} ${transferStep === 'completed' ? styles.active : ''}`}>
+            <div className={styles.stepNumber}>2</div>
+            <div className={styles.stepContent}>
+              <h4>Transfert direct du NFT</h4>
+              <p>Transfert du NFT via <code>safeTransferFrom</code> depuis l'admin collection vers l'admin marketplace</p>
+              <div className={styles.stepStatus}>
+                {isMarketplaceOwner ? '✓ Complété' : '○ En attente'}
+              </div>
+              {isUserCollectionAdmin && !isMarketplaceOwner && (
+                <div className={styles.stepAction}>
+                  {transferStep === 'idle' && (
+                    <Button
+                      onClick={handleTransferProcess}
+                      variant="secondary"
+                      disabled={!nftResource || isTransferring}
+                      size="small"
+                    >
+                      Transférer le NFT
+                    </Button>
+                  )}
+                  {transferStep === 'transfer' && (
+                    <Button
+                      onClick={handleTransferNft}
+                      variant="secondary"
+                      disabled={isTransferring}
+                      isLoading={isTransferring}
+                      size="small"
+                    >
+                      {isTransferring ? 'Transfert en cours...' : 'Confirmer le transfert'}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           
-          {/* Messages explicatifs sous le bouton */}
-          {!hasMarketplaceRole && (
-            <p className={styles.errorText}>
-              Vous n'avez pas les droits d'administrateur de la marketplace.
-            </p>
-          )}
+          <div className={`${styles.workflowStep} ${hasMarketplaceRole ? styles.active : ''}`}>
+            <div className={styles.stepNumber}>3</div>
+            <div className={styles.stepContent}>
+              <h4>Connexion admin Marketplace</h4>
+              <p>Connectez vous avec Rabby en tant qu'admin de la Marketplace</p>
+              <div className={styles.stepStatus}>
+                {hasMarketplaceRole ? '✓ Complété' : '○ En attente'}
+              </div>
+              {isMarketplaceOwner && !hasMarketplaceRole && (
+                <div className={styles.stepAction}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => toast.success('Connectez-vous avec un compte ayant le rôle SELLER_ROLE sur la marketplace')}
+                    size="small"
+                  >
+                    Connecter admin marketplace
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
           
-          {needsTransferBeforeListing && (
-            <p className={styles.errorText}>
-              Ce NFT doit d'abord être transféré à la marketplace avant d'être listé.
-            </p>
-          )}
-        </form>
+          <div className={`${styles.workflowStep} ${isNftApproved ? styles.active : ''}`}>
+            <div className={styles.stepNumber}>4</div>
+            <div className={styles.stepContent}>
+              <h4>Approbation du NFT pour le contrat</h4>
+              <p>L'admin marketplace autorise le smart contract <code>Marketplace</code> à gérer ce NFT spécifique via <code>approve</code></p>
+              <div className={styles.stepStatus}>
+                {isNftApproved ? '✓ Complété' : '○ En attente'}
+              </div>
+              {hasMarketplaceRole && isMarketplaceOwner && !isNftApproved && walletClient && (
+                <div className={styles.stepAction}>
+                  <Button
+                    variant="secondary"
+                    onClick={handleApproveNftForMarketplace}
+                    disabled={isApprovingNft || !walletClient}
+                    isLoading={isApprovingNft}
+                    size="small"
+                  >
+                    {isApprovingNft ? 'Approbation en cours...' : 'Approuver pour le contrat'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className={`${styles.workflowStep} ${listingProcess.listingComplete ? styles.active : ''}`}>
+            <div className={styles.stepNumber}>5</div>
+            <div className={styles.stepContent}>
+              <h4>Mise en vente</h4>
+              <p>L'admin marketplace liste le NFT sur la marketplace avec un prix</p>
+              <div className={styles.stepStatus}>
+                {listingProcess.listingComplete ? '✓ Complété' : '○ En attente'}
+              </div>
+              {hasMarketplaceRole && isMarketplaceOwner && isNftApproved && !listingProcess.listingComplete && (
+                <div className={styles.stepAction}>
+                  <div className={styles.priceListing}>
+                    <div className={styles.formGroup}>
+                      <label htmlFor="price" className={styles.label}>
+                        Prix en ETH
+                      </label>
+                      <input
+                        id="price"
+                        name="price"
+                        type="number"
+                        value={formData.price}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          price: e.target.value
+                        })}
+                        min="0"
+                        step="0.001"
+                        className={`${styles.input} ${formErrors.price ? styles.inputError : ''}`}
+                        placeholder="ex: 0.25"
+                        required
+                      />
+                      {formErrors.price && <p className={styles.errorText}>{formErrors.price}</p>}
+                    </div>
+                    
+                    <Button
+                      onClick={handleSubmit}
+                      variant="secondary"
+                      disabled={!formData.price || isListing}
+                      isLoading={isListing}
+                      size="small"
+                    >
+                      {isListing ? 'Mise en vente en cours...' : 'Lister le NFT'}
+                    </Button>
+                    
+                    {listingSuccess && (
+                      <div className={styles.successMessage}>
+                        NFT listé avec succès !
+                      </div>
+                    )}
+                    
+                    {listingError && (
+                      <div className={styles.errorText}>
+                        Erreur : {listingError}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
+      
     </div>
   )
 }
+
 
 

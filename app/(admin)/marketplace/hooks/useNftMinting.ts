@@ -130,7 +130,7 @@ export function useNftMinting(): UseNftMintingReturn {
             }
 
             toast.dismiss(mintingToast)
-            const waitingBlockchainconfirmationToast = toast.loading(`Transaction soumise en attente de confirmation dans la blcokchain. Hash: ${hash.slice(0, 10)}...`)
+            const waitingBlockchainconfirmationToast = toast.loading(`Transaction soumise en attente de confirmation dans la blockchain. Hash: ${hash.slice(0, 10)}...`)
 
             // Attendre la confirmation de la transaction
             const receipt = await publicClient.waitForTransactionReceipt({

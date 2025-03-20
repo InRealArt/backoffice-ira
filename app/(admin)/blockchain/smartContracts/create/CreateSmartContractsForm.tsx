@@ -100,7 +100,7 @@ export default function CreateSmartContractsForm() {
 
             <div className={styles.formGroup}>
               <label htmlFor="royaltiesAddress" className={styles.formLabel}>
-                Adresse du contrat Royalties
+                Adresse du contrat Royalties (Proxy)
               </label>
               <input
                 id="royaltiesAddress"
@@ -116,7 +116,7 @@ export default function CreateSmartContractsForm() {
 
             <div className={styles.formGroup}>
               <label htmlFor="marketplaceAddress" className={styles.formLabel}>
-                Adresse du contrat Marketplace
+                Adresse du contrat Marketplace (Proxy)
               </label>
               <input
                 id="marketplaceAddress"

@@ -163,7 +163,7 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                   <th>Artiste</th>
                   <th className={styles.hiddenMobile}>Factory</th>
                   <th className={styles.hiddenMobile}>Réseau</th>
-                  <th className={styles.hiddenMobile}>Adresse de la factory</th>
+                  <th className={styles.hiddenMobile}>Adresse de la collection NFT</th>
                   <th className={styles.hiddenMobile}>Admin</th>
                   <th>Actions</th>
                 </tr>
@@ -178,6 +178,7 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                       onClick={() => !loadingCollectionId && !deletingCollectionId && handleCollectionClick(collection.id)}
                       className={`${styles.clickableRow} ${isLoading || isDeleting ? styles.loadingRow : ''} ${(loadingCollectionId || deletingCollectionId) && !isLoading && !isDeleting ? styles.disabledRow : ''}`}
                     >
+                      {/* Symbol */}
                       <td>
                         <div className={styles.symbolCell}>
                           {isLoading && <LoadingSpinner size="small" message="" inline />}
@@ -186,13 +187,16 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                           </span>
                         </div>
                       </td>
+                      {/* Artiste */}
                       <td>{collection.artist.pseudo}</td>
+                      {/* Factory */}
                       <td className={styles.hiddenMobile}>
                         {collection.smartContract ? (
                           <div className={styles.factoryWithStatus}>
                             <BlockchainAddress 
                               address={collection.smartContract.factoryAddress} 
                               network={collection.smartContract.network}
+                              showExplorerLink={true}
                             />
                             <span className={collection.smartContract.active 
                               ? styles.statusBadgeActive 
@@ -204,6 +208,7 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                           <span className={styles.noFactory}>Non défini</span>
                         )}
                       </td>
+                      {/* Réseau */}
                       <td className={styles.hiddenMobile}>
                         {collection.smartContract ? (
                           <div className={styles.factoryBadge}>
@@ -214,11 +219,13 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                           <span className={styles.noFactory}>Non défini</span>
                         )}
                       </td>
+                      {/* Adresse de la collection */}
                       <td className={styles.hiddenMobile}>
                         {collection.contractAddress ? (
                           <BlockchainAddress 
                             address={collection.contractAddress} 
                             network={collection.smartContract?.network || 'sepolia'}
+                            showExplorerLink={true}
                           />
                         ) : (
                           <span className={styles.noFactory}>Non défini</span>

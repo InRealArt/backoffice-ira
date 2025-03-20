@@ -45,26 +45,12 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
     router.push('/blockchain/smartContracts/create')
   }
   
-  // Fonction pour copier l'adresse du contrat dans le presse-papiers
-  const copyToClipboard = (address: string, event: React.MouseEvent) => {
-    event.stopPropagation() // Empêche la propagation de l'événement
-    navigator.clipboard.writeText(address)
-      .then(() => {
-        setCopiedAddress(address)
-        // Réinitialiser le message après 2 secondes
-        setTimeout(() => setCopiedAddress(null), 2000)
-      })
-      .catch(err => {
-        console.error('Erreur lors de la copie :', err)
-      })
-  }
-
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h1>Smart Contracts</h1>
         <Link href="/blockchain/smartContracts/create" className={styles.createButton}>
-          Créer un smart contract
+          Créer des smart contracts
         </Link>
       </div>
 
@@ -74,8 +60,8 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
             <tr>
               <th>ID</th>
               <th>Factory</th>
-              <th>Royalties</th>
-              <th>Marketplace</th>
+              <th>Royalties (Proxy)</th>
+              <th>Marketplace (Proxy)</th>
               <th>Réseau</th>
               <th>Statut</th>
               <th>Actions</th>

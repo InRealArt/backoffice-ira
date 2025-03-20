@@ -60,6 +60,17 @@ export async function createSmartContracts(data: CreateSmartContractInput) {
             }
         }
 
+        // Désactiver tous les smartContracts sur ce réseau avant d'activer celui-ci
+        // Car il ne doit y avoir qu'un seul smart contract actif par réseau
+        await prisma.smartContract.updateMany({
+            where: { 
+                network: network 
+            },
+            data: { 
+                active: false 
+            }
+        })
+
         // Créer le nouveau smart contract
         const smartContract = await prisma.smartContract.create({
             data: {

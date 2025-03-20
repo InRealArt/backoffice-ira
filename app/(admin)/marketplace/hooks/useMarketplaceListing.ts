@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
-import { Address, PublicClient, WalletClient } from 'viem'
+import { Address, PublicClient, WalletClient, encodeFunctionData } from 'viem'
 import { CONTRACT_ADDRESSES, ContractName } from '@/constants/contracts'
 import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
@@ -45,7 +45,7 @@ interface UseMarketplaceListingReturn {
         walletClient: any;
         onSuccess?: () => void;
     }) => Promise<{ success: boolean; hash: string }>
-    transferNftToMarketplace: (params: {
+    transferNftToAdminMarketplace: (params: {
         collectionAddress: Address;
         tokenId: string | number;
         marketplaceAddress: Address;
@@ -142,10 +142,6 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
         // Afficher un toast de chargement
         const listingToast = toast.loading('Listing du NFT sur la marketplace en cours...')
         console.log('price', price)
-
-        // Calcul de la date d'expiration (timestamp actuel + durée en jours convertie en secondes)
-        const currentTimestamp = Math.floor(Date.now() / 1000) // timestamp en secondes
-        const expirationTimestamp = BigInt(currentTimestamp + (duration * 24 * 60 * 60))
 
         try {
             const currentNetwork = getNetwork()
@@ -284,16 +280,16 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
     };
 
     // Fonction pour transférer le NFT à la marketplace
-    const transferNftToMarketplace = async ({
+    const transferNftToAdminMarketplace = async ({
         collectionAddress,
         tokenId,
-        marketplaceAddress,
+        adminMarketplace,
         walletClient,
         onSuccess
     }: {
         collectionAddress: Address;
         tokenId: string | number;
-        marketplaceAddress: Address;
+        adminMarketplace: Address;
         walletClient: any;
         onSuccess?: () => void;
     }) => {
@@ -302,34 +298,46 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
         setTransferSuccess(false);
 
         try {
-            const hash = await walletClient.writeContract({
-                address: marketplaceAddress,
-                abi: [
-                    {
-                        inputs: [
-                            { name: 'nftContract', type: 'address' },
-                            { name: 'tokenId', type: 'uint256' }
-                        ],
-                        name: 'transferToFeeAdminMarketPlace',
-                        outputs: [],
-                        stateMutability: 'nonpayable',
-                        type: 'function'
-                    }
-                ],
-                functionName: 'transferToFeeAdminMarketPlace',
-                args: [collectionAddress, BigInt(tokenId)]
+            // Préparer l'ABI pour l'appel à safeTransferFrom de l'ERC721
+            const erc721ABI = [
+                {
+                    name: 'safeTransferFrom',
+                    type: 'function',
+                    stateMutability: 'nonpayable',
+                    inputs: [
+                        { name: 'from', type: 'address' },
+                        { name: 'to', type: 'address' },
+                        { name: 'tokenId', type: 'uint256' }
+                    ],
+                    outputs: []
+                }
+            ];
+
+            // Encoder la fonction et les arguments
+            const data = encodeFunctionData({
+                abi: erc721ABI,
+                functionName: 'safeTransferFrom',
+                args: [
+                    walletClient.account.address, // from: adresse du wallet connecté
+                    adminMarketplace,           // to: adresse de l'admin marketplace
+                    BigInt(tokenId)               // tokenId
+                ]
             });
 
-            console.log('Transaction de transfert envoyée:', hash);
+            // Préparer la transaction selon le format attendu par walletClient
+            const txHash = await walletClient.sendTransaction({
+                to: collectionAddress,
+                data,
+                value: BigInt(0)
+            });
 
-            // Attendre la confirmation de la transaction
-            const receipt = await publicClient.waitForTransactionReceipt({ hash });
-            console.log('Transaction de transfert confirmée:', receipt);
+            // Attendre la confirmation
+            await publicClient.waitForTransactionReceipt({ hash: txHash });
 
             setTransferSuccess(true);
             if (onSuccess) onSuccess();
 
-            return { success: true, hash };
+            return { success: true, hash: txHash };
         } catch (error: any) {
             console.error('Erreur lors du transfert:', error);
             setTransferError(error.message || 'Erreur lors du transfert');
@@ -370,7 +378,7 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
         success,
         txHash,
         approveMarketplaceForNft: approveMarketplaceForNft as any,
-        transferNftToMarketplace: transferNftToMarketplace as any,
+        transferNftToAdminMarketplace: transferNftToAdminMarketplace as any,
         isApproving,
         isTransferring,
         approvalError,

@@ -93,7 +93,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
     const fetchProduct = async () => {
       try {
         // Extraire l'ID numérique si l'ID est au format GID
-        const productId = params.id.includes('gid://shopify/Product/') 
+        const productId = await params.id.includes('gid://shopify/Product/') 
           ? params.id.split('/').pop() 
           : params.id
         

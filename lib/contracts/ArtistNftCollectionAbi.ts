@@ -41,6 +41,19 @@ export const artistNftCollectionAbi =
   },
   {
     "type": "function",
+    "name": "BURNER_ROLE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "DEFAULT_ADMIN_ROLE",
     "inputs": [],
     "outputs": [
@@ -69,6 +82,19 @@ export const artistNftCollectionAbi =
     "type": "function",
     "name": "acceptDefaultAdminTransfer",
     "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "addBurnerRole",
+    "inputs": [
+      {
+        "name": "burner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -130,6 +156,19 @@ export const artistNftCollectionAbi =
         "name": "newAdmin",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "burnNFT",
+    "inputs": [
+      {
+        "name": "tokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "outputs": [],
@@ -809,6 +848,25 @@ export const artistNftCollectionAbi =
   },
   {
     "type": "event",
+    "name": "NftBurned",
+    "inputs": [
+      {
+        "name": "burner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "NftMinted",
     "inputs": [
       {
@@ -1096,12 +1154,17 @@ export const artistNftCollectionAbi =
   },
   {
     "type": "error",
+    "name": "NotAuthorizedToBurnError",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "SafeCastOverflowedUintDowncast",
     "inputs": [
       {
         "name": "bits",
         "type": "uint8",
-        "internalType": "uint8" 
+        "internalType": "uint8"
       },
       {
         "name": "value",
