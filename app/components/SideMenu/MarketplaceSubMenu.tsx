@@ -1,25 +1,20 @@
 'use client'
 
-import { MouseEvent } from 'react'
-import { ShoppingBag } from 'lucide-react'
-import { usePathname } from 'next/navigation'
 import SideMenuItem from './SideMenuItem'
 
 interface MarketplaceSubMenuProps {
   isActive: boolean
   isOpen: boolean
-  toggleSubmenu: (e?: MouseEvent) => void
-  onNavigate: (route: string, menuItem: string) => void
+  toggleSubmenu: () => void
+  onNavigate: (path: string, item: string) => void
 }
 
-export default function MarketplaceSubMenu({
-  isActive,
-  isOpen,
+export default function MarketplaceSubMenu({ 
+  isActive, 
+  isOpen, 
   toggleSubmenu,
-  onNavigate
+  onNavigate 
 }: MarketplaceSubMenuProps) {
-  const pathname = usePathname()
-  
   return (
     <>
       <SideMenuItem
@@ -30,25 +25,34 @@ export default function MarketplaceSubMenu({
         isOpen={isOpen}
       />
       
-      {isOpen && (
-        <div className="submenu-container">
-          <SideMenuItem
-            label="Oeuvres à minter"
-            isActive={isActive && pathname.includes('/marketplace/nftsToMint')}
+      <div className={`submenu-container ${isOpen ? 'open' : ''}`}>
+        <ul className="submenu-list">
+          <li 
+            className="submenu-item"
             onClick={() => onNavigate('/marketplace/nftsToMint', 'adminMarketplace')}
-          />
-          <SideMenuItem
-            label="Configuration des royalties"
-            isActive={isActive && pathname.includes('/marketplace/royaltiesSettings')}
+            tabIndex={isOpen ? 0 : -1}
+            role="menuitem"
+          >
+            Oeuvres à minter
+          </li>
+          <li 
+            className="submenu-item"
             onClick={() => onNavigate('/marketplace/royaltiesSettings', 'adminMarketplace')}
-          />
-          <SideMenuItem
-            label="Lister un NFT sur la marketplace"
-            isActive={isActive && pathname.includes('/marketplace/marketplaceListing')}
+            tabIndex={isOpen ? 0 : -1}
+            role="menuitem"
+          >
+            Configuration des royalties
+          </li>
+          <li 
+            className="submenu-item"
             onClick={() => onNavigate('/marketplace/marketplaceListing', 'adminMarketplace')}
-          />
-        </div>
-      )}
+            tabIndex={isOpen ? 0 : -1}
+            role="menuitem"
+          >
+            Lister un NFT sur la marketplace
+          </li>
+        </ul>
+      </div>
     </>
   )
 } 

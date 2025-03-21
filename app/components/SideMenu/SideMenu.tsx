@@ -1,7 +1,5 @@
 'use client'
 
-import './SideMenu.css'
-import styles from './SideMenu.module.scss'
 import SideMenuItem from './SideMenuItem'
 import ShopifySubMenu from './ShopifySubMenu'
 import BlockchainSubMenu from './BlockchainSubMenu'
@@ -24,10 +22,12 @@ export default function SideMenu() {
     toggleMarketplaceSubmenu
   } = useSideMenuLogic()
   
-  if (!isLoggedIn) return null
+  if (!isLoggedIn) {
+    return null;
+  }
 
   return (
-    <div className="side-menu">
+    <div className="side-menu side-menu-debug animate-side-menu">
       <ul className="menu-list">
         <SideMenuItem 
           label="Dashboard"

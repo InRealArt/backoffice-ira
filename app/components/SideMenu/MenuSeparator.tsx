@@ -1,5 +1,5 @@
-import styles from './SideMenu.module.scss'
+'use client'
 
 export default function MenuSeparator() {
-  return <hr className={styles.menuSeparator} />
+  return <div className="menu-separator" role="separator" />
 } 

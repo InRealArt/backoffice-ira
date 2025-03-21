@@ -10,6 +10,7 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 - [ ] Appliquer le système sur toutes les pages principales
 - [x] Optimiser la gestion des notifications d'erreur en utilisant la classe `toast-notification`
 - [ ] Créer une directive pour standardiser les modales dans l'ensemble de l'application
+- [x] Améliorer les styles de navigation et de menu
 
 ## Priorité Moyenne
 
@@ -31,18 +32,23 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 - [ ] Améliorer le contraste des couleurs pour l'accessibilité
 - [ ] Ajouter un mode sombre
 
-## Composants à Standardiser
+## Composants standardisés
 
-- [x] Forms et inputs
+- [x] LoadingSpinner
+- [x] Modal
+- [x] Form components
+- [x] Toast notifications
 - [ ] Dropdowns et menus déroulants
-- [ ] Notifications et alertes
 - [ ] Accordéons et onglets
 - [ ] Pagination
 - [ ] Breadcrumbs
-- [ ] DropdownMenu
-- [ ] Modal
+
+## Composants à standardiser
+
+- [ ] Menu déroulants
+- [ ] Datepicker
 - [ ] Tabs
-- [ ] Accordéon
+- [ ] Upload de fichier
 
 ## Pages migrées
 

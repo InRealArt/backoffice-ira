@@ -1,19 +1,9 @@
 'use client'
 
-import styles from './LoadingSpinner.module.scss'
+import LoadingSpinnerStandardized, { LoadingSpinnerProps } from './LoadingSpinner/LoadingSpinner'
 
-interface LoadingSpinnerProps {
-  message?: string
-}
+// Ce fichier existe pour maintenir la compatibilité avec les anciennes importations
+// Tout le code réel a été déplacé vers le composant standardisé
 
-export default function LoadingSpinner({ message = 'Chargement...' }: LoadingSpinnerProps) {
-  return (
-    <div className={styles.spinnerContainer}>
-      <div className={styles.spinner}>
-        <div className={styles.dot1}></div>
-        <div className={styles.dot2}></div>
-      </div>
-      {message && <p className={styles.message}>{message}</p>}
-    </div>
-  )
-} 
+export type { LoadingSpinnerProps }
+export default LoadingSpinnerStandardized 

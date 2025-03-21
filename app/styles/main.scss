@@ -1,5 +1,6 @@
 @import './variables.scss';
 @import './components.scss';
+@import './navigation.scss';
 
 // Styles généraux à appliquer globalement
 html,
@@ -40,7 +41,7 @@ a {
   padding: $spacing-xxl;
   margin-left: $sidemenu-width;
   transition: $transition-default;
-  width: 100%;
+  width: calc(100% - $sidemenu-width);
   overflow-x: hidden;
 }
 
@@ -48,6 +49,7 @@ a {
   .content-container {
     margin-left: 0;
     padding: $spacing-xl;
+    width: 100%;
   }
 }
 
