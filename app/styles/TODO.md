@@ -64,6 +64,7 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 - [x] blockchain/smartContracts
 - [x] blockchain/artists
 - [x] blockchain/royalties
+- [x] blockchain/royaltyBeneficiaries
 - [x] marketplace/nftsToMint
 - [x] marketplace/nftsToMint/[id]/edit
 - [x] marketplace/royaltiesSettings

@@ -6,6 +6,7 @@ import { formatChainName } from '@/lib/blockchain/chainUtils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import { SmartContract } from '@prisma/client'
 import { truncateAddress } from '@/lib/blockchain/utils'
+import { Filters, FilterItem } from '@/app/components/Common'
 
 // Types pour les relations imbriquées
 type NftCollection = {
@@ -91,28 +92,21 @@ export default function RoyaltyBeneficiariesClient({
         </p>
       </div>
       
-      <div className="filter-container mb-lg">
-        <div className="d-flex gap-md flex-wrap">
-          <div className="d-flex flex-column gap-sm">
-            <label htmlFor="smartContractFilter" className="form-label">
-              Filtrer par smart contract:
-            </label>
-            <select
-              id="smartContractFilter"
-              className="form-select"
-              value={selectedSmartContractId || ''}
-              onChange={(e) => setSelectedSmartContractId(e.target.value ? parseInt(e.target.value) : null)}
-            >
-              <option value="">Tous les smart contracts</option>
-              {smartContracts.map(smartContract => (
-                <option key={smartContract.id} value={smartContract.id}>
-                  {smartContract.active ? '🟢 ' : '🔴 '} {formatChainName(smartContract.network)} - {truncateAddress(smartContract.factoryAddress)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+      <Filters>
+        <FilterItem
+          id="smartContractFilter"
+          label="Filtrer par smart contract:"
+          value={selectedSmartContractId ? selectedSmartContractId.toString() : ''}
+          onChange={(value) => setSelectedSmartContractId(value ? parseInt(value) : null)}
+          options={[
+            { value: '', label: 'Tous les smart contracts' },
+            ...smartContracts.map(smartContract => ({
+              value: smartContract.id.toString(),
+              label: `${smartContract.active ? '🟢 ' : '🔴 '} ${formatChainName(smartContract.network)} - ${truncateAddress(smartContract.factoryAddress)}`
+            }))
+          ]}
+        />
+      </Filters>
       
       <div className="page-content">
         {!Array.isArray(filteredBeneficiaries) || filteredBeneficiaries.length === 0 ? (
