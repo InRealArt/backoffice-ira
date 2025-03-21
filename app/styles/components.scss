@@ -1,0 +1,482 @@
+@import './variables.scss';
+
+// Styles de conteneur principal pour les pages
+.page-container {
+  width: 100%;
+  padding: $spacing-xl;
+  background-color: $color-background-main;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-md;
+}
+
+// Styles pour les en-têtes de page
+.page-header {
+  margin-bottom: $spacing-xxl;
+
+  .header-top-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-sm;
+
+    @media (max-width: $breakpoint-sm) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: $spacing-md;
+    }
+  }
+
+  .page-title {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $spacing-sm;
+    color: $color-text-primary;
+  }
+
+  .page-subtitle {
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+  }
+}
+
+// Styles pour le contenu des pages
+.page-content {
+  background-color: $color-background-white;
+  border-radius: $border-radius-md;
+  overflow: hidden;
+}
+
+// Sections de filtres 
+.filter-section {
+  margin: $spacing-lg 0;
+  padding: $spacing-lg;
+  background-color: $color-background-white;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-sm;
+
+  .filter-item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+
+    @media (max-width: $breakpoint-sm) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: $spacing-sm;
+    }
+  }
+
+  .filter-label {
+    font-weight: $font-weight-medium;
+    color: $color-text-secondary;
+    min-width: 120px;
+  }
+
+  .select-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .filter-select {
+    width: 100%;
+    padding: $spacing-sm $spacing-md;
+    border: 1px solid $color-border-input;
+    border-radius: $border-radius-sm;
+    background-color: $color-background-white;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 36px;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 1px rgba($color-primary, 0.2);
+    }
+  }
+}
+
+// Styles de formulaire
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-card {
+  background-color: $color-background-white;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-sm;
+  overflow: hidden;
+  margin-bottom: $spacing-xl;
+}
+
+.card-content {
+  padding: $spacing-xl;
+}
+
+.form-group {
+  margin-bottom: $spacing-lg;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: $spacing-xs;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+
+  &.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    margin: 0;
+  }
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: $spacing-md;
+  font-size: $font-size-sm;
+  border: 1px solid $color-border-input;
+  border-radius: $border-radius-sm;
+  background-color: $color-background-white;
+  color: $color-text-primary;
+  transition: $transition-default;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 1px rgba($color-primary, 0.2);
+  }
+
+  &.input-error {
+    border-color: $color-error;
+
+    &:focus {
+      box-shadow: 0 0 0 1px rgba($color-error, 0.2);
+    }
+  }
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 36px;
+}
+
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-checkbox {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.form-error {
+  color: $color-error;
+  font-size: $font-size-xs;
+  margin-top: $spacing-xs;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+}
+
+// Styles de tableau
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: $spacing-md $spacing-lg;
+    text-align: left;
+    border-bottom: 1px solid $color-border;
+  }
+
+  th {
+    font-weight: $font-weight-semibold;
+    color: $color-text-secondary;
+    background-color: $color-background-light;
+  }
+
+  .clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: $color-background-hover;
+    }
+  }
+
+  .loading-row {
+    opacity: 0.7;
+    background-color: $color-background-disabled;
+  }
+
+  .disabled-row {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .actions-cell {
+    text-align: center;
+    white-space: nowrap;
+  }
+}
+
+// État vide
+.empty-state {
+  padding: $spacing-4xl;
+  text-align: center;
+  color: $color-text-tertiary;
+}
+
+// Responsive helpers
+.hidden-mobile {
+  @media (max-width: $breakpoint-md) {
+    display: none;
+  }
+}
+
+// Badges
+.status-badge {
+  display: inline-block;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+
+  &.active {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+
+  &.inactive {
+    background-color: #fef2f2;
+    color: #991b1b;
+  }
+}
+
+.info-badge {
+  display: inline-block;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  background-color: $color-primary-light;
+  color: $color-primary;
+}
+
+// Boutons
+.btn {
+  padding: $spacing-sm $spacing-lg;
+  border: none;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: $transition-default;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  &.btn-primary {
+    background-color: $color-primary;
+    color: white;
+
+    &:hover {
+      background-color: $color-primary-dark;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 2px rgba($color-primary, 0.3);
+    }
+  }
+
+  &.btn-secondary {
+    background-color: #e5e7eb;
+    color: #4b5563;
+
+    &:hover {
+      background-color: #d1d5db;
+    }
+  }
+
+  &.btn-danger {
+    background-color: $color-error;
+    color: white;
+
+    &:hover {
+      background-color: $color-error-dark;
+    }
+
+    &:disabled {
+      background-color: $color-error-light;
+    }
+  }
+
+  &.btn-small {
+    padding: $spacing-xs $spacing-md;
+    font-size: $font-size-xs;
+    min-width: 80px;
+  }
+}
+
+// Loader
+.loading-spinner {
+  display: inline-block;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+
+  &.small {
+    width: 16px;
+    height: 16px;
+  }
+
+  &.medium {
+    width: 24px;
+    height: 24px;
+  }
+
+  &.inline {
+    vertical-align: middle;
+    margin-right: $spacing-sm;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Classes utilitaires pour le texte
+.text-primary {
+  color: $color-text-primary;
+}
+
+.text-secondary {
+  color: $color-text-secondary;
+}
+
+.text-muted {
+  color: $color-text-light;
+}
+
+.text-danger {
+  color: $color-error;
+}
+
+// Classes utilitaires pour les espacements
+.gap-xs {
+  gap: $spacing-xs;
+}
+
+.gap-sm {
+  gap: $spacing-sm;
+}
+
+.gap-md {
+  gap: $spacing-md;
+}
+
+.gap-lg {
+  gap: $spacing-lg;
+}
+
+// Classes utilitaires d'alignement et de mise en page
+.d-flex {
+  display: flex;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.align-items-start {
+  align-items: flex-start;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+// Classes pour les composants de modal
+.modal-content {
+  padding: $spacing-xl 0;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-md;
+  margin-top: $spacing-xl;
+}
+
+// Notification Toast
+.toast-notification {
+  position: fixed;
+  bottom: $spacing-xl;
+  right: $spacing-xl;
+  background-color: #1f2937;
+  color: white;
+  padding: $spacing-md $spacing-lg;
+  border-radius: $border-radius-sm;
+  box-shadow: $shadow-lg;
+  z-index: 50;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
-import styles from './RoyaltyBeneficiariesClient.module.scss'
 import { SmartContract } from '@prisma/client'
 import { truncateAddress } from '@/lib/blockchain/utils'
 
@@ -82,20 +81,25 @@ export default function RoyaltyBeneficiariesClient({
   }
   
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>Bénéficiaires de Royalties</h1>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="header-top-section">
+          <h1 className="page-title">Bénéficiaires de Royalties</h1>
+        </div>
+        <p className="page-subtitle">
+          Gérez les bénéficiaires de royalties dans le système
+        </p>
       </div>
       
-      <div className={styles.filterSection}>
-        <div className={styles.filterItem}>
-          <label htmlFor="smartContractFilter" className={styles.filterLabel}>
-            Filtrer par smart contract:
-          </label>
-          <div className={styles.selectWrapper}>
+      <div className="filter-container mb-lg">
+        <div className="d-flex gap-md flex-wrap">
+          <div className="d-flex flex-column gap-sm">
+            <label htmlFor="smartContractFilter" className="form-label">
+              Filtrer par smart contract:
+            </label>
             <select
               id="smartContractFilter"
-              className={styles.filterSelect}
+              className="form-select"
               value={selectedSmartContractId || ''}
               onChange={(e) => setSelectedSmartContractId(e.target.value ? parseInt(e.target.value) : null)}
             >
@@ -110,102 +114,102 @@ export default function RoyaltyBeneficiariesClient({
         </div>
       </div>
       
-      <div className={styles.tableContainer}>
+      <div className="page-content">
         {!Array.isArray(filteredBeneficiaries) || filteredBeneficiaries.length === 0 ? (
-          <div className={styles.emptyState}>
+          <div className="empty-state">
             <p>Aucun bénéficiaire de royalties trouvé.</p>
           </div>
         ) : (
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Bénéficiaire</th>
-                <th>Part (%)</th>
-                <th>% total du prix du NFT</th>
-                <th className={styles.hiddenMobile}>Transaction Hash</th>
-                <th className={styles.hiddenMobile}>NFT Resource</th>
-                <th className={styles.hiddenMobile}>Token ID</th>
-                <th className={styles.hiddenMobile}>Collection</th>
-                <th className={styles.hiddenMobile}>Factory Address</th>
-                <th className={styles.hiddenMobile}>Réseau</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBeneficiaries.map((beneficiary) => {
-                const smartContract = getSmartContract(beneficiary)
-                return (
-                  <tr key={beneficiary?.id} className={styles.tableRow}>
-                    <td>{beneficiary?.id}</td>
-                    <td>
-                      <BlockchainAddress 
-                        address={beneficiary?.wallet} 
-                        network={smartContract?.network || 'sepolia'} 
-                      />
-                    </td>
-                    <td>{beneficiary?.percentage}%</td>
-                    <td>{beneficiary?.totalPercentage}%</td>
-                    <td className={styles.hiddenMobile}>
-                      {beneficiary?.txHash ? (
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Bénéficiaire</th>
+                  <th>Part (%)</th>
+                  <th>% total du prix du NFT</th>
+                  <th className="hidden-mobile">Transaction Hash</th>
+                  <th className="hidden-mobile">NFT Resource</th>
+                  <th className="hidden-mobile">Token ID</th>
+                  <th className="hidden-mobile">Collection</th>
+                  <th className="hidden-mobile">Factory Address</th>
+                  <th className="hidden-mobile">Réseau</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredBeneficiaries.map((beneficiary) => {
+                  const smartContract = getSmartContract(beneficiary)
+                  return (
+                    <tr key={beneficiary?.id} className="table-row">
+                      <td>{beneficiary?.id}</td>
+                      <td>
                         <BlockchainAddress 
-                          address={beneficiary.txHash} 
+                          address={beneficiary?.wallet} 
                           network={smartContract?.network || 'sepolia'} 
-                          isTransaction={true}
-                          showExplorerLink={true}
                         />
-                      ) : (
-                        <span className={styles.noData}>Non défini</span>
-                      )}
-                    </td>
-                    <td className={styles.hiddenMobile}>
-                      {beneficiary?.nftResource?.name || 'Non défini'}
-                    </td>
-                    <td className={styles.hiddenMobile}>
-                      {beneficiary?.nftResource?.tokenId || 'Non défini'}
-                    </td>
-                    <td className={styles.hiddenMobile}>
-                      {beneficiary?.nftResource?.collection?.contractAddress ? (
-                        <BlockchainAddress 
-                          address={beneficiary.nftResource.collection.contractAddress} 
-                          network={smartContract?.network || 'sepolia'} 
-                          showExplorerLink={true}
-                        />
-                      ) : (
-                        <span className={styles.noData}>Non déployée</span>
-                      )}
-                    </td>
-                    <td className={styles.hiddenMobile}>
-                      {smartContract ? (
-                        <div className={styles.smartContractCell}>
+                      </td>
+                      <td>{beneficiary?.percentage}%</td>
+                      <td>{beneficiary?.totalPercentage}%</td>
+                      <td className="hidden-mobile">
+                        {beneficiary?.txHash ? (
                           <BlockchainAddress 
-                            address={smartContract.factoryAddress} 
-                            network={smartContract.network} 
+                            address={beneficiary.txHash} 
+                            network={smartContract?.network || 'sepolia'} 
+                            isTransaction={true}
                             showExplorerLink={true}
                           />
-                          <span className={`${styles.statusBadge} ${smartContract.active 
-                            ? styles.activeBadge 
-                            : styles.inactiveBadge}`}>
-                            {smartContract.active ? 'Actif' : 'Inactif'}
+                        ) : (
+                          <span className="text-muted fst-italic">Non défini</span>
+                        )}
+                      </td>
+                      <td className="hidden-mobile">
+                        {beneficiary?.nftResource?.name || 'Non défini'}
+                      </td>
+                      <td className="hidden-mobile">
+                        {beneficiary?.nftResource?.tokenId || 'Non défini'}
+                      </td>
+                      <td className="hidden-mobile">
+                        {beneficiary?.nftResource?.collection?.contractAddress ? (
+                          <BlockchainAddress 
+                            address={beneficiary.nftResource.collection.contractAddress} 
+                            network={smartContract?.network || 'sepolia'} 
+                            showExplorerLink={true}
+                          />
+                        ) : (
+                          <span className="text-muted fst-italic">Non déployée</span>
+                        )}
+                      </td>
+                      <td className="hidden-mobile">
+                        {smartContract ? (
+                          <div className="d-flex align-items-center gap-sm">
+                            <BlockchainAddress 
+                              address={smartContract.factoryAddress} 
+                              network={smartContract.network} 
+                              showExplorerLink={true}
+                            />
+                            <span className={`badge ${smartContract.active ? 'badge-success' : 'badge-danger'}`}>
+                              {smartContract.active ? 'Actif' : 'Inactif'}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted fst-italic">Aucun</span>
+                        )}
+                      </td>
+                      <td className="hidden-mobile">
+                        {smartContract ? (
+                          <span className="badge badge-neutral">
+                            {formatChainName(smartContract.network)}
                           </span>
-                        </div>
-                      ) : (
-                        <span className={styles.noData}>Aucun</span>
-                      )}
-                    </td>
-                    <td className={styles.hiddenMobile}>
-                      {smartContract ? (
-                        <span className={styles.network}>
-                          {formatChainName(smartContract.network)}
-                        </span>
-                      ) : (
-                        <span className={styles.noData}>-</span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

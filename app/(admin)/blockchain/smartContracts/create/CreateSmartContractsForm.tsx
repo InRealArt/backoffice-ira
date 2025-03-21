@@ -6,7 +6,6 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-hot-toast'
-import styles from './CreateSmartContractsForm.module.scss'
 import { NetworkType } from '@prisma/client'
 import { createSmartContracts } from '@/lib/actions/smartContract-actions'
 
@@ -50,13 +49,13 @@ export default function CreateSmartContractsForm() {
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
-    
+
     try {
       const result = await createSmartContracts(data)
 
       if (result.success) {
         toast.success('Smart contract ajouté avec succès')
-        
+
         // Rediriger après 1 seconde
         setTimeout(() => {
           router.push('/blockchain/smartContracts')
@@ -72,72 +71,81 @@ export default function CreateSmartContractsForm() {
       setIsSubmitting(false)
     }
   }
-  
+
   const handleCancel = () => {
     router.push('/blockchain/smartContracts')
   }
-  
+
   return (
-    <div className={styles.container}>
-      <form onSubmit={handleSubmit(onSubmit)} className={styles.formContainer}>
-        <div className={styles.formCard}>
-          <div className={styles.cardContent}>
-            <div className={styles.formGroup}>
-              <label htmlFor="factoryAddress" className={styles.formLabel}>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="header-top-section">
+          <h1 className="page-title">Créer un Smart Contract</h1>
+        </div>
+        <p className="page-subtitle">
+          Enregistrez un nouveau smart contract pour le déploiement de collections NFT
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="form-container">
+        <div className="form-card">
+          <div className="card-content">
+            <div className="form-group">
+              <label htmlFor="factoryAddress" className="form-label">
                 Adresse du contrat Factory
               </label>
               <input
                 id="factoryAddress"
                 type="text"
                 {...register('factoryAddress')}
-                className={`${styles.formInput} ${errors.factoryAddress ? styles.formInputError : ''}`}
+                className={`form-input ${errors.factoryAddress ? 'input-error' : ''}`}
                 placeholder="0x..."
               />
               {errors.factoryAddress && (
-                <p className={styles.formError}>{errors.factoryAddress.message}</p>
+                <p className="form-error">{errors.factoryAddress.message}</p>
               )}
             </div>
 
-            <div className={styles.formGroup}>
-              <label htmlFor="royaltiesAddress" className={styles.formLabel}>
+            <div className="form-group">
+              <label htmlFor="royaltiesAddress" className="form-label">
                 Adresse du contrat Royalties (Proxy)
               </label>
               <input
                 id="royaltiesAddress"
                 type="text"
                 {...register('royaltiesAddress')}
-                className={`${styles.formInput} ${errors.royaltiesAddress ? styles.formInputError : ''}`}
+                className={`form-input ${errors.royaltiesAddress ? 'input-error' : ''}`}
                 placeholder="0x..."
               />
               {errors.royaltiesAddress && (
-                <p className={styles.formError}>{errors.royaltiesAddress.message}</p>
+                <p className="form-error">{errors.royaltiesAddress.message}</p>
               )}
             </div>
 
-            <div className={styles.formGroup}>
-              <label htmlFor="marketplaceAddress" className={styles.formLabel}>
+            <div className="form-group">
+              <label htmlFor="marketplaceAddress" className="form-label">
                 Adresse du contrat Marketplace (Proxy)
               </label>
               <input
                 id="marketplaceAddress"
                 type="text"
                 {...register('marketplaceAddress')}
-                className={`${styles.formInput} ${errors.marketplaceAddress ? styles.formInputError : ''}`}
+                className={`form-input ${errors.marketplaceAddress ? 'input-error' : ''}`}
                 placeholder="0x..."
               />
               {errors.marketplaceAddress && (
-                <p className={styles.formError}>{errors.marketplaceAddress.message}</p>
+                <p className="form-error">{errors.marketplaceAddress.message}</p>
               )}
             </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="network" className={styles.formLabel}>
+
+            <div className="form-group">
+              <label htmlFor="network" className="form-label">
                 Réseau blockchain
               </label>
               <select
                 id="network"
                 {...register('network')}
-                className={`${styles.formSelect} ${errors.network ? styles.formInputError : ''}`}
+                className={`form-select ${errors.network ? 'input-error' : ''}`}
               >
                 <option value="mainnet">Ethereum Mainnet</option>
                 <option value="sepolia">Sepolia</option>
@@ -148,35 +156,35 @@ export default function CreateSmartContractsForm() {
                 <option value="sepoliaBase">Sepolia Base</option>
               </select>
               {errors.network && (
-                <p className={styles.formError}>{errors.network.message}</p>
+                <p className="form-error">{errors.network.message}</p>
               )}
             </div>
 
-            <div className={styles.formGroup}>
-              <label className={styles.formLabel}>
+            <div className="form-group">
+              <label className="form-label checkbox-label">
                 <input
                   type="checkbox"
                   {...register('active')}
-                  className={styles.formCheckbox}
+                  className="form-checkbox"
                 />
                 Actif
               </label>
             </div>
           </div>
         </div>
-        
-        <div className={styles.formActions}>
-          <button 
-            type="button" 
+
+        <div className="form-actions">
+          <button
+            type="button"
             onClick={handleCancel}
-            className={`${styles.button} ${styles.buttonSecondary}`}
+            className="btn btn-secondary"
             disabled={isSubmitting}
           >
             Annuler
           </button>
-          <button 
-            type="submit" 
-            className={`${styles.button} ${styles.buttonPrimary}`}
+          <button
+            type="submit"
+            className="btn btn-primary"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Création en cours...' : 'Créer'}

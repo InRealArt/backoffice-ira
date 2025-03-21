@@ -1,0 +1,58 @@
+@import './variables.scss';
+@import './components.scss';
+
+// Styles généraux à appliquer globalement
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  color: $color-text-primary;
+  background: $color-background-main;
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding-top: $navbar-height;
+  min-height: 100vh;
+}
+
+*, 
+*::before, 
+*::after {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-layout {
+  display: flex;
+  min-height: calc(100vh - $navbar-height);
+  margin-top: $navbar-height;
+}
+
+.content-container {
+  flex: 1;
+  padding: $spacing-xxl;
+  margin-left: $sidemenu-width;
+  transition: $transition-default;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: $breakpoint-md) {
+  .content-container {
+    margin-left: 0;
+    padding: $spacing-xl;
+  }
+}
+
+@media (max-width: $breakpoint-xs) {
+  .content-container {
+    padding: $spacing-lg;
+  }
+} 

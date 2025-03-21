@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Collection, Artist, SmartContract } from '@prisma/client'
-import styles from './CollectionsClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import Modal from '@/app/components/Common/Modal'
@@ -108,31 +107,31 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
     : collections
       
   return (
-    <div className={styles.collectionsContainer}>
-      <div className={styles.collectionsHeader}>
-        <div className={styles.headerTopSection}>
-          <h1 className={styles.pageTitle}>Collections</h1>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="header-top-section">
+          <h1 className="page-title">Collections</h1>
           <button 
             onClick={handleCreateCollection}
-            className={styles.createButton}
+            className="btn btn-primary"
           >
             Créer une collection de NFT
           </button>
         </div>
-        <p className={styles.subtitle}>
+        <p className="page-subtitle">
           Liste des collections enregistrées dans le système
         </p>
       </div>
       
-      <div className={styles.filterSection}>
-        <div className={styles.filterItem}>
-          <label htmlFor="smartContractFilter" className={styles.filterLabel}>
+      <div className="filter-section">
+        <div className="filter-item">
+          <label htmlFor="smartContractFilter" className="filter-label">
             Filtrer par smart contract:
           </label>
-          <div className={styles.selectWrapper}>
+          <div className="select-wrapper">
             <select
               id="smartContractFilter"
-              className={styles.filterSelect}
+              className="filter-select"
               value={selectedSmartContractId || ''}
               onChange={(e) => setSelectedSmartContractId(e.target.value ? parseInt(e.target.value) : null)}
             >
@@ -149,22 +148,22 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
         </div>
       </div>
       
-      <div className={styles.collectionsContent}>
+      <div className="page-content">
         {filteredCollections.length === 0 ? (
-          <div className={styles.emptyState}>
+          <div className="empty-state">
             <p>Aucune collection trouvée</p>
           </div>
         ) : (
-          <div className={styles.tableContainer}>
-            <table className={styles.collectionsTable}>
+          <div className="table-container">
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>Symbol</th>
                   <th>Artiste</th>
-                  <th className={styles.hiddenMobile}>Factory</th>
-                  <th className={styles.hiddenMobile}>Réseau</th>
-                  <th className={styles.hiddenMobile}>Adresse de la collection NFT</th>
-                  <th className={styles.hiddenMobile}>Admin</th>
+                  <th className="hidden-mobile">Factory</th>
+                  <th className="hidden-mobile">Réseau</th>
+                  <th className="hidden-mobile">Adresse de la collection NFT</th>
+                  <th className="hidden-mobile">Admin</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -176,13 +175,13 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                     <tr 
                       key={collection.id} 
                       onClick={() => !loadingCollectionId && !deletingCollectionId && handleCollectionClick(collection.id)}
-                      className={`${styles.clickableRow} ${isLoading || isDeleting ? styles.loadingRow : ''} ${(loadingCollectionId || deletingCollectionId) && !isLoading && !isDeleting ? styles.disabledRow : ''}`}
+                      className={`clickable-row ${isLoading || isDeleting ? 'loading-row' : ''} ${(loadingCollectionId || deletingCollectionId) && !isLoading && !isDeleting ? 'disabled-row' : ''}`}
                     >
                       {/* Symbol */}
                       <td>
-                        <div className={styles.symbolCell}>
+                        <div className="d-flex align-items-center gap-sm">
                           {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? styles.loadingText : ''}>
+                          <span className={isLoading ? 'text-muted' : ''}>
                             {collection.symbol}
                           </span>
                         </div>
@@ -190,37 +189,35 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                       {/* Artiste */}
                       <td>{collection.artist.pseudo}</td>
                       {/* Factory */}
-                      <td className={styles.hiddenMobile}>
+                      <td className="hidden-mobile">
                         {collection.smartContract ? (
-                          <div className={styles.factoryWithStatus}>
+                          <div className="d-flex align-items-center justify-content-between gap-xs">
                             <BlockchainAddress 
                               address={collection.smartContract.factoryAddress} 
                               network={collection.smartContract.network}
                               showExplorerLink={true}
                             />
-                            <span className={collection.smartContract.active 
-                              ? styles.statusBadgeActive 
-                              : styles.statusBadgeInactive}>
+                            <span className={`status-badge ${collection.smartContract.active ? 'active' : 'inactive'}`}>
                               {collection.smartContract.active ? 'Actif' : 'Inactif'}
                             </span>
                           </div>
                         ) : (
-                          <span className={styles.noFactory}>Non défini</span>
+                          <span className="text-muted">Non défini</span>
                         )}
                       </td>
                       {/* Réseau */}
-                      <td className={styles.hiddenMobile}>
+                      <td className="hidden-mobile">
                         {collection.smartContract ? (
-                          <div className={styles.factoryBadge}>
+                          <div className="info-badge">
                             {formatChainName(collection.smartContract.network)}
                           </div>
                           
                         ) : (
-                          <span className={styles.noFactory}>Non défini</span>
+                          <span className="text-muted">Non défini</span>
                         )}
                       </td>
                       {/* Adresse de la collection */}
-                      <td className={styles.hiddenMobile}>
+                      <td className="hidden-mobile">
                         {collection.contractAddress ? (
                           <BlockchainAddress 
                             address={collection.contractAddress} 
@@ -228,18 +225,18 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                             showExplorerLink={true}
                           />
                         ) : (
-                          <span className={styles.noFactory}>Non défini</span>
+                          <span className="text-muted">Non défini</span>
                         )}
                       </td>
-                      <td className={styles.hiddenMobile}>
+                      <td className="hidden-mobile">
                         <BlockchainAddress 
                           address={collection.addressAdmin} 
                           network={collection.smartContract?.network || 'sepolia'}
                         />
                       </td>
-                      <td className={styles.actionsCell}>
+                      <td className="actions-cell">
                         <button
-                          className={styles.deleteButton}
+                          className="btn btn-danger btn-small"
                           onClick={(e) => handleDeleteClick(e, collection.id)}
                           disabled={isLoading || isDeleting || !!loadingCollectionId || !!deletingCollectionId}
                         >
@@ -259,26 +256,22 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
         )}
       </div>
       
+      {/* Modal de confirmation de suppression */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={handleDeleteCancel}
-        title="Confirmer la suppression"
+        title="Confirmation de suppression"
       >
-        <div className={styles.deleteModalContent}>
-          <p>Êtes-vous sûr de vouloir supprimer cette collection (id: {collectionToDelete})?</p>
-          <p className={styles.deleteModalWarning}>Cette action est irréversible.</p>
+        <div className="modal-content">
+          <p className="text-danger">
+            Êtes-vous sûr de vouloir supprimer cette collection ? Cette action est irréversible.
+          </p>
           
-          <div className={styles.deleteModalActions}>
-            <button 
-              className={styles.cancelButton}
-              onClick={handleDeleteCancel}
-            >
+          <div className="modal-actions">
+            <button className="btn btn-secondary" onClick={handleDeleteCancel}>
               Annuler
             </button>
-            <button 
-              className={styles.confirmDeleteButton}
-              onClick={handleDeleteConfirm}
-            >
+            <button className="btn btn-danger" onClick={handleDeleteConfirm}>
               Confirmer la suppression
             </button>
           </div>

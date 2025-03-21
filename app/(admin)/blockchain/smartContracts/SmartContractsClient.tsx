@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { SmartContract } from '@prisma/client'
-import styles from './SmartContractsClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
@@ -46,93 +45,97 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
   }
   
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>Smart Contracts</h1>
-        <Link href="/blockchain/smartContracts/create" className={styles.createButton}>
-          Créer des smart contracts
-        </Link>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="header-top-section">
+          <h1 className="page-title">Smart Contracts</h1>
+          <Link href="/blockchain/smartContracts/create" className="btn btn-primary">
+            Créer des smart contracts
+          </Link>
+        </div>
+        <p className="page-subtitle">
+          Gérez les smart contracts déployés dans le système
+        </p>
       </div>
 
-      <div className={styles.tableContainer}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Factory</th>
-              <th>Royalties (Proxy)</th>
-              <th>Marketplace (Proxy)</th>
-              <th>Réseau</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {smartContracts.map((contract) => (
-              <tr key={contract.id} className={styles.tableRow}>
-                <td>{contract.id}</td>
-                <td>
-                  <BlockchainAddress
-                    address={contract.factoryAddress}
-                    network={contract.network}
-                    showExplorerLink={true}
-                  />
-                </td>
-                <td>
-                  <BlockchainAddress
-                    address={contract.royaltiesAddress}
-                    network={contract.network}
-                    showExplorerLink={true}
-                  />
-                </td>
-                <td>
-                  <BlockchainAddress
-                    address={contract.marketplaceAddress}
-                    network={contract.network}
-                    showExplorerLink={true}
-                  />
-                </td>
-                <td>
-                  <span className={styles.network}>
-                    {formatChainName(contract.network)}
-                  </span>
-                </td>
-                <td>
-                  <span className={`${styles.status} ${contract.active ? styles.active : styles.inactive}`}>
-                    {contract.active ? 'Actif' : 'Inactif'}
-                  </span>
-                </td>
-                <td>
-                  <div className={styles.actions}>
-                    {loadingContractId === contract.id ? (
-                      <LoadingSpinner size="small" />
-                    ) : (
-                      <>
-                        <button
-                          className={styles.editButton}
-                          onClick={() => handleContractEdit(contract.id)}
-                        >
-                          Éditer
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {smartContracts.length === 0 && (
-              <tr>
-                <td colSpan={7} className={styles.emptyState}>
-                  Aucun smart contract trouvé
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="page-content">
+        {smartContracts.length === 0 ? (
+          <div className="empty-state">
+            <p>Aucun smart contract trouvé</p>
+          </div>
+        ) : (
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Factory</th>
+                  <th>Royalties (Proxy)</th>
+                  <th>Marketplace (Proxy)</th>
+                  <th>Réseau</th>
+                  <th>Statut</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {smartContracts.map((contract) => (
+                  <tr key={contract.id} className="clickable-row">
+                    <td>{contract.id}</td>
+                    <td>
+                      <BlockchainAddress
+                        address={contract.factoryAddress}
+                        network={contract.network}
+                        showExplorerLink={true}
+                      />
+                    </td>
+                    <td>
+                      <BlockchainAddress
+                        address={contract.royaltiesAddress}
+                        network={contract.network}
+                        showExplorerLink={true}
+                      />
+                    </td>
+                    <td>
+                      <BlockchainAddress
+                        address={contract.marketplaceAddress}
+                        network={contract.network}
+                        showExplorerLink={true}
+                      />
+                    </td>
+                    <td>
+                      <span className="info-badge">
+                        {formatChainName(contract.network)}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${contract.active ? 'active' : 'inactive'}`}>
+                        {contract.active ? 'Actif' : 'Inactif'}
+                      </span>
+                    </td>
+                    <td className="actions-cell">
+                      <div className="d-flex gap-sm">
+                        {loadingContractId === contract.id ? (
+                          <LoadingSpinner size="small" />
+                        ) : (
+                          <button
+                            className="btn btn-primary btn-small"
+                            onClick={() => handleContractEdit(contract.id)}
+                          >
+                            Éditer
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
       
       {copiedAddress && (
-        <div className={styles.copyToast}>
+        <div className="toast-notification">
           Adresse copiée !
         </div>
       )}

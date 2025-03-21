@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Artist } from '@prisma/client'
-import styles from './ArtistsClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import Image from 'next/image'
@@ -42,36 +41,37 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
   // Fonction pour obtenir le badge en fonction du type d'artiste
   const getArtistTypeBadge = (isGallery: boolean | null) => {
     if (isGallery === true) {
-      return <span className={`${styles.typeBadge} ${styles.galleryBadge}`}>Galerie</span>
+      return <span className="info-badge" style={{ backgroundColor: '#e8eaf6', color: '#3f51b5' }}>Galerie</span>
     } else {
-      return <span className={`${styles.typeBadge} ${styles.artistBadge}`}>Artiste</span>
+      return <span className="info-badge" style={{ backgroundColor: '#e0f2f1', color: '#00796b' }}>Artiste</span>
     }
   }
   
   return (
-    <div className={styles.artistsContainer}>
-      <div className={styles.artistsHeader}>
-        <h1 className={styles.pageTitle}>Artistes</h1>
-        <p className={styles.subtitle}>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="header-top-section">
+          <h1 className="page-title">Artistes</h1>
+        </div>
+        <p className="page-subtitle">
           Liste des artistes enregistrés dans le système
         </p>
       </div>
       
-      <div className={styles.artistsContent}>
+      <div className="page-content">
         {artists.length === 0 ? (
-          <div className={styles.emptyState}>
+          <div className="empty-state">
             <p>Aucun artiste trouvé</p>
           </div>
         ) : (
-          <div className={styles.tableContainer}>
-            <table className={styles.artistsTable}>
+          <div className="table-container">
+            <table className="data-table">
               <thead>
                 <tr>
-                  {/* <th className={styles.imageColumn}>Image</th> */}
                   <th>Nom</th>
                   <th>Pseudo</th>
                   <th>Type</th>
-                  <th className={styles.hiddenMobile}>Clé publique</th>
+                  <th className="hidden-mobile">Clé publique</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,44 +81,26 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
                     <tr 
                       key={artist.id} 
                       onClick={() => !loadingArtistId && handleArtistClick(artist.id)}
-                      className={`${styles.clickableRow} ${isLoading ? styles.loadingRow : ''} ${loadingArtistId && !isLoading ? styles.disabledRow : ''}`}
+                      className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingArtistId && !isLoading ? 'disabled-row' : ''}`}
                     >
-                      {/* <td className={styles.imageColumn}>
-                        <div className={styles.artistImage}>
-                          {artist.imageUrl ? (
-                            <Image 
-                              src={artist.imageUrl} 
-                              alt={`${artist.name} ${artist.surname}`}
-                              width={40}
-                              height={40}
-                              className={styles.avatarImage}
-                            />
-                          ) : (
-                            <div className={styles.placeholderImage}>
-                              {artist.name.charAt(0)}{artist.surname.charAt(0)}
-                            </div>
-                          )}
-                        </div>
-                      </td> */}
                       <td>
-                        <div className={styles.nameCell}>
+                        <div className="d-flex align-items-center gap-sm">
                           {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? styles.loadingText : ''}>
+                          <span className={isLoading ? 'text-muted' : ''}>
                             {artist.name} {artist.surname}
                           </span>
                         </div>
                       </td>
                       <td>{artist.pseudo}</td>
                       <td>
-                        <div className={styles.typeCell}>
+                        <div className="d-flex align-items-center">
                           {getArtistTypeBadge(artist.isGallery)}
                         </div>
                       </td>
-                      <td className={styles.hiddenMobile}>
+                      <td className="hidden-mobile">
                         <BlockchainAddress 
                           address={artist.publicKey} 
                           network="sepolia" // Valeur par défaut, peut être ajustée si vous stockez le réseau préféré de l'artiste
-                          className={styles.publicKeyAddress}
                         />
                       </td>
                     </tr>

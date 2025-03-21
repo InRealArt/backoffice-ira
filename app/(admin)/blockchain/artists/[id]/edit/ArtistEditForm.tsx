@@ -9,7 +9,6 @@ import Image from 'next/image'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import styles from './ArtistEditForm.module.scss'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -91,101 +90,105 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   }
   
   return (
-    <div className={styles.container}>
-      <form onSubmit={handleSubmit(onSubmit)} className={styles.formContainer}>
-        <div className={styles.formHeader}>
-          <h1 className={styles.formTitle}>Modifier l'artiste</h1>
-          <p className={styles.formSubtitle}>
-            Modifier les informations de {artist.name} {artist.surname}
-          </p>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="header-top-section">
+          <h1 className="page-title">Modifier l'artiste</h1>
         </div>
+        <p className="page-subtitle">
+          Modifier les informations de {artist.name} {artist.surname}
+        </p>
+      </div>
 
-        <div className={styles.formCard}>
-          <div className={styles.cardContent}>
-            <div className={styles.profileSection}>
-              <div className={styles.imageSection}>
+      <form onSubmit={handleSubmit(onSubmit)} className="form-container">
+        <div className="form-card">
+          <div className="card-content">
+            <div className="d-flex gap-lg">
+              <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
                 {imageUrl ? (
-                  <div className={styles.imageContainer}>
+                  <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
                     <Image
                       src={imageUrl}
                       alt={`${artist.name} ${artist.surname}`}
                       fill
-                      className={styles.profileImage}
+                      style={{ objectFit: 'cover' }}
                     />
                   </div>
                 ) : (
-                  <div className={styles.placeholderImage}>
+                  <div style={{ width: '200px', height: '200px', borderRadius: '8px', backgroundColor: '#e0e0e0', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '1.5rem' }}>
                     {artist.name.charAt(0)}{artist.surname.charAt(0)}
                   </div>
                 )}
-                <div className={styles.formGroup}>
-                  <label htmlFor="imageUrl" className={styles.formLabel}>URL de l'image</label>
+                <div className="form-group">
+                  <label htmlFor="imageUrl" className="form-label">URL de l'image</label>
                   <input
                     id="imageUrl"
                     type="text"
                     {...register('imageUrl')}
-                    className={`${styles.formInput} ${errors.imageUrl ? styles.formInputError : ''}`}
+                    className={`form-input ${errors.imageUrl ? 'input-error' : ''}`}
                     placeholder="https://example.com/image.jpg"
                   />
                   {errors.imageUrl && (
-                    <p className={styles.formError}>{errors.imageUrl.message}</p>
+                    <p className="form-error">{errors.imageUrl.message}</p>
                   )}
                 </div>
               </div>
               
-              <div className={styles.detailsSection}>
-                <div className={styles.formCheckboxGroup}>
-                  <div className={styles.typeSelector}>
-                    <span className={!isGallery ? styles.typeActive : ''}>Artiste</span>
-                    <label className={styles.switch}>
+              <div style={{ flex: 1 }}>
+                <div className="form-group">
+                  <div className="d-flex align-items-center gap-md" style={{ marginBottom: '20px' }}>
+                    <span className={isGallery ? 'text-muted' : 'text-primary'} style={{ fontWeight: isGallery ? 'normal' : 'bold' }}>Artiste</span>
+                    <label className="d-flex align-items-center" style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}>
                       <input
                         type="checkbox"
                         {...register('isGallery')}
-                        className={styles.switchInput}
+                        style={{ opacity: 0, width: 0, height: 0 }}
                       />
-                      <span className={styles.slider}></span>
+                      <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: isGallery ? '#4f46e5' : '#ccc', borderRadius: '34px', transition: '0.4s' }}>
+                        <span style={{ position: 'absolute', content: '""', height: '22px', width: '22px', left: '4px', bottom: '4px', backgroundColor: 'white', borderRadius: '50%', transition: '0.4s', transform: isGallery ? 'translateX(30px)' : 'translateX(0)' }}></span>
+                      </span>
                     </label>
-                    <span className={isGallery ? styles.typeActive : ''}>Galerie</span>
+                    <span className={isGallery ? 'text-primary' : 'text-muted'} style={{ fontWeight: isGallery ? 'bold' : 'normal' }}>Galerie</span>
                   </div>
                 </div>
                 
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="name" className={styles.formLabel}>Prénom</label>
+                <div className="d-flex gap-md">
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label htmlFor="name" className="form-label">Prénom</label>
                     <input
                       id="name"
                       type="text"
                       {...register('name')}
-                      className={`${styles.formInput} ${errors.name ? styles.formInputError : ''}`}
+                      className={`form-input ${errors.name ? 'input-error' : ''}`}
                     />
                     {errors.name && (
-                      <p className={styles.formError}>{errors.name.message}</p>
+                      <p className="form-error">{errors.name.message}</p>
                     )}
                   </div>
-                  <div className={styles.formGroup}>
-                    <label htmlFor="surname" className={styles.formLabel}>Nom</label>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label htmlFor="surname" className="form-label">Nom</label>
                     <input
                       id="surname"
                       type="text"
                       {...register('surname')}
-                      className={`${styles.formInput} ${errors.surname ? styles.formInputError : ''}`}
+                      className={`form-input ${errors.surname ? 'input-error' : ''}`}
                     />
                     {errors.surname && (
-                      <p className={styles.formError}>{errors.surname.message}</p>
+                      <p className="form-error">{errors.surname.message}</p>
                     )}
                   </div>
                 </div>
                 
-                <div className={styles.formGroup}>
-                  <label htmlFor="pseudo" className={styles.formLabel}>Pseudo</label>
+                <div className="form-group">
+                  <label htmlFor="pseudo" className="form-label">Pseudo</label>
                   <input
                     id="pseudo"
                     type="text"
                     {...register('pseudo')}
-                    className={`${styles.formInput} ${errors.pseudo ? styles.formInputError : ''}`}
+                    className={`form-input ${errors.pseudo ? 'input-error' : ''}`}
                   />
                   {errors.pseudo && (
-                    <p className={styles.formError}>{errors.pseudo.message}</p>
+                    <p className="form-error">{errors.pseudo.message}</p>
                   )}
                 </div>
               </div>
@@ -193,67 +196,67 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
           </div>
         </div>
         
-        <div className={styles.formCard}>
-          <div className={styles.cardContent}>
-            <div className={styles.formGroup}>
-              <label htmlFor="description" className={styles.formLabel}>Description</label>
+        <div className="form-card">
+          <div className="card-content">
+            <div className="form-group">
+              <label htmlFor="description" className="form-label">Description</label>
               <textarea
                 id="description"
                 {...register('description')}
-                className={`${styles.formTextarea} ${errors.description ? styles.formInputError : ''}`}
+                className={`form-textarea ${errors.description ? 'input-error' : ''}`}
                 rows={5}
               />
               {errors.description && (
-                <p className={styles.formError}>{errors.description.message}</p>
+                <p className="form-error">{errors.description.message}</p>
               )}
             </div>
             
-            <div className={styles.formGroup}>
-              <label htmlFor="publicKey" className={styles.formLabel}>Clé publique</label>
+            <div className="form-group">
+              <label htmlFor="publicKey" className="form-label">Clé publique</label>
               <input
                 id="publicKey"
                 type="text"
                 {...register('publicKey')}
-                className={`${styles.formInput} ${errors.publicKey ? styles.formInputError : ''}`}
+                className={`form-input ${errors.publicKey ? 'input-error' : ''}`}
               />
               {errors.publicKey && (
-                <p className={styles.formError}>{errors.publicKey.message}</p>
+                <p className="form-error">{errors.publicKey.message}</p>
               )}
             </div>
             
-            <div className={styles.formGroup}>
-              <label htmlFor="backgroundImage" className={styles.formLabel}>
+            <div className="form-group">
+              <label htmlFor="backgroundImage" className="form-label">
                 Image d'arrière-plan (optionnel)
               </label>
               <input
                 id="backgroundImage"
                 type="text"
                 {...register('backgroundImage')}
-                className={`${styles.formInput} ${errors.backgroundImage ? styles.formInputError : ''}`}
+                className={`form-input ${errors.backgroundImage ? 'input-error' : ''}`}
                 placeholder="https://example.com/background.jpg"
               />
               {errors.backgroundImage && (
-                <p className={styles.formError}>{errors.backgroundImage.message}</p>
+                <p className="form-error">{errors.backgroundImage.message}</p>
               )}
             </div>
           </div>
         </div>
         
-        <div className={styles.formActions}>
+        <div className="form-actions">
           <button 
             type="button" 
             onClick={handleCancel}
-            className={`${styles.button} ${styles.buttonSecondary}`}
+            className="btn btn-secondary"
             disabled={isSubmitting}
           >
             Annuler
           </button>
           <button 
             type="submit" 
-            className={`${styles.button} ${styles.buttonPrimary}`}
+            className="btn btn-primary"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Enregistrement...' : 'Sauvegarder'}
+            {isSubmitting ? 'Mise à jour en cours...' : 'Enregistrer les modifications'}
           </button>
         </div>
       </form>
