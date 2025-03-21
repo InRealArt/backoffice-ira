@@ -140,4 +140,17 @@ body.dark {
       background-color: var(--color-background-hover);
     }
   }
+}
+
+// Grille de produits
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+  
+  @media (max-width: $breakpoint-xs) {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+  }
 } 
