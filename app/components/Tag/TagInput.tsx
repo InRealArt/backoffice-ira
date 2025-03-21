@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import styles from './TagInput.module.scss'
 
 interface TagInputProps {
   value: string[]
@@ -73,14 +72,14 @@ export function TagInput({
     <div 
       ref={containerRef}
       onClick={handleContainerClick}
-      className={`${styles.tagContainer} ${className}`}
+      className={`tag-container ${className}`}
     >
       {value.map((tag, index) => (
-        <span key={index} className={styles.tag}>
+        <span key={index} className="tag">
           {tag}
           <button
             type="button"
-            className={styles.tagRemove}
+            className="tag-remove"
             onClick={(e) => {
               e.stopPropagation()
               removeTag(index)
@@ -97,7 +96,7 @@ export function TagInput({
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={value.length === 0 ? placeholder : ''}
-        className={styles.tagInput}
+        className="tag-input"
       />
     </div>
   )

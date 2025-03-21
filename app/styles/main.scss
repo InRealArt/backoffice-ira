@@ -1,6 +1,6 @@
-@use './variables.scss' as *;
-@use './components.scss' as components;
-@use './navigation.scss' as navigation;
+@import './variables.scss';
+@import './components.scss';
+@import './navigation.scss';
 
 // Styles généraux à appliquer globalement
 html,

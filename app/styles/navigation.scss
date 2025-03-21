@@ -3,7 +3,7 @@
 // --------------------------------------------------------
 
 // Variables importées depuis variables.scss
-@use 'variables' as *;
+@import 'variables';
 
 // Animation d'entrée du menu latéral
 @keyframes slideInMenu {

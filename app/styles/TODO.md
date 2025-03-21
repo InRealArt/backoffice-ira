@@ -45,6 +45,7 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 - [x] Modal
 - [x] Form components
 - [x] Toast notifications
+- [x] TagInput - Composant pour la saisie de tags multiples
 - [ ] Dropdowns et menus déroulants
 - [ ] Accordéons et onglets
 - [ ] Pagination
