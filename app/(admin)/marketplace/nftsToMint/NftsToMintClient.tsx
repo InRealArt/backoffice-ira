@@ -6,7 +6,7 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { ItemStatus, ResourceNftStatuses } from '@prisma/client'
 import { truncateAddress } from '@/lib/blockchain/utils'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
-import { getItemStatusBadge, getActiveBadge } from '@/app/components/StatusBadge/StatusBadge'
+import { getItemStatusBadge, getActiveBadge } from '@/app/components/StatusBadge'
 
 interface Item {
   id: number

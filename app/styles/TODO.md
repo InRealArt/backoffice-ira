@@ -15,7 +15,6 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 ## Priorité Moyenne
 
 - [ ] Créer des composants pour les cartes et tiles
-- [ ] Améliorer les styles de navigation et de menu
 - [ ] Ajouter une fonctionnalité de thème (clair/sombre)
 - [ ] Optimiser les performances CSS (purge des classes non utilisées)
 - [ ] Standardiser les styles des tableaux de données avec pagination
@@ -34,7 +33,10 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 
 ## Composants standardisés
 
-- [x] LoadingSpinner
+- [x] LoadingSpinner - Réutilisable
+- [x] RoleBadge - Pour les badges de rôle utilisateur
+- [x] StatusBadge - Pour les badges de statut dans toute l'application
+- [x] NftStatusBadge - Utilise maintenant StatusBadge
 - [x] Modal
 - [x] Form components
 - [x] Toast notifications

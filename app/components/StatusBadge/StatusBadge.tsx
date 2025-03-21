@@ -1,23 +1,17 @@
 'use client'
 
+import React from 'react'
 import { ItemStatus, ResourceNftStatuses } from '@prisma/client'
-import styles from './StatusBadge.module.scss'
 
 /**
  * Types de badges supportés
  */
-export type BadgeType = 
-  | 'default'   // Gris - style par défaut
-  | 'success'   // Vert - pour les statuts positifs/complétés
-  | 'warning'   // Jaune/Orange - pour les statuts en cours/attention
-  | 'error'     // Rouge - pour les erreurs
-  | 'info'      // Bleu - pour les statuts informatifs
-  | 'primary'   // Couleur primaire du thème
+export type BadgeType = 'default' | 'success' | 'warning' | 'error' | 'info' | 'primary'
 
 /**
  * Props du composant StatusBadge
  */
-interface StatusBadgeProps {
+export interface StatusBadgeProps {
   /**
    * Texte à afficher dans le badge
    */
@@ -35,33 +29,21 @@ interface StatusBadgeProps {
 /**
  * Composant StatusBadge générique pour afficher des indicateurs de statut
  */
-export default function StatusBadge({ text, type = 'default', className = '' }: StatusBadgeProps) {
-  const getBadgeClass = () => {
-    switch(type) {
-      case 'success':
-        return styles.success
-      case 'warning':
-        return styles.warning
-      case 'error':
-        return styles.error
-      case 'info':
-        return styles.info
-      case 'primary':
-        return styles.primary
-      default:
-        return styles.default
-    }
-  }
+export function StatusBadge({ text, type = 'default', className = '' }: StatusBadgeProps) {
+  // Utiliser les classes globales au lieu des classes du module
+  const baseClass = 'status-badge'
+  const typeClass = `status-${type}`
+  const badgeClass = `${baseClass} ${typeClass} ${className}`
 
   return (
-    <span className={`${styles.badge} ${getBadgeClass()} ${className}`}>
+    <span className={badgeClass}>
       {text}
     </span>
   )
 }
 
 /**
- * Helper pour obtenir un badge correspondant à un ItemStatus
+ * Obtenir un badge de statut pour les items (oeuvres d'art)
  */
 export function getItemStatusBadge(status: ItemStatus, className = '') {
   const getType = (): BadgeType => {
@@ -98,7 +80,7 @@ export function getItemStatusBadge(status: ItemStatus, className = '') {
 }
 
 /**
- * Helper pour obtenir un badge correspondant à un ResourceNftStatuses
+ * Obtenir un badge de statut pour les NFTs
  */
 export function getNftStatusBadge(status: ResourceNftStatuses | string | null | undefined, className = '') {
   if (!status) return null
@@ -146,7 +128,7 @@ export function getNftStatusBadge(status: ResourceNftStatuses | string | null | 
 }
 
 /**
- * Helper pour obtenir un badge actif/inactif
+ * Obtenir un badge pour indiquer si quelque chose est actif ou non
  */
 export function getActiveBadge(isActive: boolean, className = '') {
   return <StatusBadge 

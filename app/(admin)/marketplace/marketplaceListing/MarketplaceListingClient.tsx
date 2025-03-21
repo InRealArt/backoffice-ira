@@ -8,7 +8,7 @@ import { formatChainName } from '@/lib/blockchain/chainUtils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import { truncateAddress } from '@/lib/blockchain/utils'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
-import { getActiveBadge } from '@/app/components/StatusBadge/StatusBadge'
+import { getActiveBadge } from '@/app/components/StatusBadge'
 
 // Type pour les NFTs avec statut ROYALTYSET
 type RoyaltysetItemWithRelations = Item & {
