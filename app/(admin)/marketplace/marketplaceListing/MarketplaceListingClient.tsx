@@ -10,9 +10,6 @@ import { truncateAddress } from '@/lib/blockchain/utils'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import { getActiveBadge } from '@/app/components/StatusBadge/StatusBadge'
 
-// Importez ou créez un fichier CSS pour les styles
-import styles from './MarketplaceListingClient.module.scss'
-
 // Type pour les NFTs avec statut ROYALTYSET
 type RoyaltysetItemWithRelations = Item & {
   user: {
@@ -93,12 +90,12 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
   return (
     <div className="page-container">
       <div className="page-header">
-        <div>
+        <div className="header-top-section">
           <h1 className="page-title">Lister un NFT sur la marketplace</h1>
-          <p className="header-subtitle">
-            Listez les œuvres avec royalties configurées sur la marketplace
-          </p>
         </div>
+        <p className="page-subtitle">
+          Listez les œuvres avec royalties configurées sur la marketplace
+        </p>
       </div>
       
       <div className="filter-section">
@@ -106,10 +103,10 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
           <label htmlFor="smartContractFilter" className="filter-label">
             Filtrer par smart contract:
           </label>
-          <div className={styles.selectWrapper}>
+          <div className="select-wrapper">
             <select
               id="smartContractFilter"
-              className="form-select"
+              className="filter-select"
               value={selectedSmartContractId || ''}
               onChange={(e) => setSelectedSmartContractId(e.target.value ? parseInt(e.target.value) : null)}
             >
@@ -124,21 +121,21 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
         </div>
       </div>
       
-      <div className="data-container">
+      <div className="page-content">
         {!filteredItems.length ? (
           <div className="empty-state">
             <p>Aucune œuvre avec royalties configurées disponible</p>
           </div>
         ) : (
-          <div className="data-table-container">
+          <div className="table-container">
             <table className="data-table">
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th className={isMobile ? 'hidden' : ''}>Token ID</th>
+                  <th className={isMobile ? 'hidden-mobile' : ''}>Token ID</th>
                   <th>Œuvre</th>
-                  <th className={isMobile ? 'hidden' : ''}>Artiste</th>
-                  <th className={isMobile ? 'hidden' : ''}>Factory</th>
+                  <th className={isMobile ? 'hidden-mobile' : ''}>Artiste</th>
+                  <th className={isMobile ? 'hidden-mobile' : ''}>Factory</th>
                   <th>Statut</th>
                 </tr>
               </thead>
@@ -153,28 +150,28 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
                       className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingItemId && !isLoading ? 'disabled-row' : ''}`}
                     >
                       <td>
-                        <div className="cell-with-icon">
+                        <div className="d-flex align-items-center gap-sm">
                           {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? 'text-faded' : ''}>
+                          <span className={isLoading ? 'text-muted' : ''}>
                             {item.id}
                           </span>
                         </div>
                       </td>
-                      <td className={isMobile ? 'hidden' : ''}>
+                      <td className={isMobile ? 'hidden-mobile' : ''}>
                         {item.nftResource?.tokenId || 'N/A'}
                       </td>
                       <td>
                         {item.nftResource?.name}
                       </td>
-                      <td className={isMobile ? 'hidden' : ''}>
+                      <td className={isMobile ? 'hidden-mobile' : ''}>
                         {item.user ? 
                           `${item.user.firstName || ''} ${item.user.lastName || ''} ${item.user.email ? `(${item.user.email})` : ''}`.trim() : 
                           'N/A'
                         }
                       </td>
-                      <td className={isMobile ? 'hidden' : ''}>
+                      <td className={isMobile ? 'hidden-mobile' : ''}>
                         {smartContract ? (
-                          <div className="contract-cell">
+                          <div className="d-flex align-items-center gap-xs">
                             <BlockchainAddress 
                               address={smartContract.factoryAddress} 
                               network={smartContract.network}
@@ -186,7 +183,7 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
                         )}
                       </td>
                       <td>
-                        <div className="status-cell">
+                        <div className="status-badge-container">
                           <NftStatusBadge status={item.nftResource?.status || 'ROYALTYSET'} />
                         </div>
                       </td>
