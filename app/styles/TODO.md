@@ -18,7 +18,7 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 - [ ] Ajouter une fonctionnalité de thème (clair/sombre)
 - [x] Optimiser les performances CSS (purge des classes non utilisées) - Documentation: [docs/css-optimization.md](/docs/css-optimization.md)
 - [ ] Standardiser les styles des tableaux de données avec pagination
-- [ ] Créer un composant de filtre réutilisable
+- [x] Créer un composant de filtre réutilisable
 - [ ] Ajouter des animations de transition pour les changements d'état
 - [ ] Ajouter une option de prévisualisation pour les modifications
 

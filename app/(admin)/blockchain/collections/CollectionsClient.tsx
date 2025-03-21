@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation'
 import { Collection, Artist, SmartContract } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
-import Modal from '@/app/components/Common/Modal'
+import { Filters, FilterItem } from '@/app/components/Common'
 import { getAuthToken } from '@dynamic-labs/sdk-react-core' 
 import { truncateAddress } from '@/lib/blockchain/utils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
+import Modal from '@/app/components/Common/Modal'
 
 interface CollectionWithRelations extends Collection {
   artist: Artist
@@ -123,30 +124,21 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
         </p>
       </div>
       
-      <div className="filter-section">
-        <div className="filter-item">
-          <label htmlFor="smartContractFilter" className="filter-label">
-            Filtrer par smart contract:
-          </label>
-          <div className="select-wrapper">
-            <select
-              id="smartContractFilter"
-              className="filter-select"
-              value={selectedSmartContractId || ''}
-              onChange={(e) => setSelectedSmartContractId(e.target.value ? parseInt(e.target.value) : null)}
-            >
-              <option value="">Toutes les smart contracts</option>
-              {smartContracts.map(smartContract => (
-                <option key={smartContract.id} value={smartContract.id}>
-                  {formatChainName(smartContract.network)}
-                  (Factory) {truncateAddress(smartContract.factoryAddress)}
-                  &nbsp;{smartContract.active ? '🟢 ' : '🔴 '}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+      <Filters>
+        <FilterItem
+          id="smartContractFilter"
+          label="Filtrer par smart contract:"
+          value={selectedSmartContractId ? selectedSmartContractId.toString() : ''}
+          onChange={(value) => setSelectedSmartContractId(value ? parseInt(value) : null)}
+          options={[
+            { value: '', label: 'Toutes les smart contracts' },
+            ...smartContracts.map(smartContract => ({
+              value: smartContract.id.toString(),
+              label: `${formatChainName(smartContract.network)} (Factory) ${truncateAddress(smartContract.factoryAddress)} ${smartContract.active ? '🟢 ' : '🔴 '}`
+            }))
+          ]}
+        />
+      </Filters>
       
       <div className="page-content">
         {filteredCollections.length === 0 ? (

@@ -7,6 +7,7 @@ import { ItemStatus, ResourceNftStatuses } from '@prisma/client'
 import { truncateAddress } from '@/lib/blockchain/utils'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import { getItemStatusBadge, getActiveBadge } from '@/app/components/StatusBadge'
+import { Filters, FilterItem, SearchInput } from '@/app/components/Common'
 
 interface Item {
   id: number
@@ -41,6 +42,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
   const [loadingItemId, setLoadingItemId] = useState<number | null>(null)
   const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all')
   const [smartContractFilter, setSmartContractFilter] = useState('all')
+  const [searchTerm, setSearchTerm] = useState('')
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
   // Vérifier que products n'est pas undefined avant de filtrer
   const safeProducts = Array.isArray(products) ? products : []
   
-  // Filtrer les produits par statut et smart contract
+  // Filtrer les produits par statut, smart contract et terme de recherche
   const filteredProducts = safeProducts.filter(product => {
     // Filtre par statut
     const matchesStatus = statusFilter === 'all' || product.status === statusFilter
@@ -75,7 +77,25 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
       matchesSmartContract = factoryAddress === smartContractFilter
     }
     
-    return matchesStatus && matchesSmartContract
+    // Filtre par recherche
+    let matchesSearch = true
+    if (searchTerm.trim() !== '') {
+      const searchLower = searchTerm.toLowerCase().trim()
+      
+      // Recherche dans les champs pertinents
+      const userName = `${product.user?.firstName || ''} ${product.user?.lastName || ''}`.toLowerCase()
+      const userEmail = (product.user?.email || '').toLowerCase()
+      const nftName = (product.nftResource?.name || '').toLowerCase()
+      const idShopify = product.idShopify.toString()
+      
+      matchesSearch = 
+        userName.includes(searchLower) || 
+        userEmail.includes(searchLower) || 
+        nftName.includes(searchLower) ||
+        idShopify.includes(searchLower)
+    }
+    
+    return matchesStatus && matchesSmartContract && matchesSearch
   })
   
   const handleItemClick = (itemId: number) => {
@@ -94,55 +114,46 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
         </p>
       </div>
       
-      <div className="filter-section">
-        <div className="d-flex gap-md flex-wrap">
-          <div className="filter-item">
-            <label htmlFor="status-filter" className="filter-label">
-              Filtrer par statut:
-            </label>
-            <div className="select-wrapper">
-              <select 
-                id="status-filter" 
-                className="filter-select"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as ItemStatus | 'all')}
-              >
-                <option value="all">Tous les statuts</option>
-                <option value="pending">En attente</option>
-                <option value="listed">Listé</option>
-              </select>
-            </div>
-          </div>
+      <Filters>
+        <FilterItem
+          id="status-filter" 
+          label="Filtrer par statut:"
+          value={statusFilter}
+          onChange={(value) => setStatusFilter(value as ItemStatus | 'all')}
+          options={[
+            { value: 'all', label: 'Tous les statuts' },
+            { value: 'pending', label: 'En attente' },
+            { value: 'listed', label: 'Listé' }
+          ]}
+        />
           
-          <div className="filter-item">
-            <label htmlFor="smartcontract-filter" className="filter-label">
-              Smart Contract:
-            </label>
-            <div className="select-wrapper">
-              <select
-                id="smartcontract-filter"
-                className="filter-select"
-                value={smartContractFilter}
-                onChange={(e) => setSmartContractFilter(e.target.value)}
-              >
-                <option value="all">Tous</option>
-                {safeProducts.map((product) => {
-                  const factoryAddress = product.nftResource?.collection?.smartContract?.factoryAddress
-                  const isActive = product.nftResource?.collection?.smartContract?.active
-                  if (factoryAddress) {
-                    return (
-                      <option key={factoryAddress} value={factoryAddress}>
-                        {isActive ? '🟢 ' : '🔴 '} {truncateAddress(factoryAddress)}
-                      </option>
-                    )
-                  }
-                  return null
-                })}
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
+        <FilterItem
+          id="smartcontract-filter"
+          label="Smart Contract:"
+          value={smartContractFilter}
+          onChange={(value) => setSmartContractFilter(value)}
+          options={[
+            { value: 'all', label: 'Tous' },
+            ...safeProducts
+              .filter(product => {
+                const factoryAddress = product.nftResource?.collection?.smartContract?.factoryAddress
+                return !!factoryAddress
+              })
+              .map(product => {
+                const factoryAddress = product.nftResource?.collection?.smartContract?.factoryAddress || ''
+                const isActive = product.nftResource?.collection?.smartContract?.active || false
+                return {
+                  value: factoryAddress,
+                  label: `${isActive ? '🟢 ' : '🔴 '} ${truncateAddress(factoryAddress)}`
+                }
+              })
+              .filter((option, index, self) => 
+                index === self.findIndex(t => t.value === option.value)
+              )
+          ]}
+        />
+        
+      </Filters>
       
       <div className="page-content">
         {!safeProducts.length || filteredProducts.length === 0 ? (

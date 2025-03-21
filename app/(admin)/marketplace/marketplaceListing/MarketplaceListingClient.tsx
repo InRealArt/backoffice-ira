@@ -9,6 +9,7 @@ import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import { truncateAddress } from '@/lib/blockchain/utils'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import { getActiveBadge } from '@/app/components/StatusBadge'
+import { Filters, FilterItem } from '@/app/components/Common'
 
 // Type pour les NFTs avec statut ROYALTYSET
 type RoyaltysetItemWithRelations = Item & {
@@ -98,28 +99,21 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
         </p>
       </div>
       
-      <div className="filter-section">
-        <div className="filter-item">
-          <label htmlFor="smartContractFilter" className="filter-label">
-            Filtrer par smart contract:
-          </label>
-          <div className="select-wrapper">
-            <select
-              id="smartContractFilter"
-              className="filter-select"
-              value={selectedSmartContractId || ''}
-              onChange={(e) => setSelectedSmartContractId(e.target.value ? parseInt(e.target.value) : null)}
-            >
-              <option value="">Tous les smart contracts</option>
-              {smartContracts.map(smartContract => (
-                <option key={smartContract.id} value={smartContract.id}>
-                  {smartContract.active ? '🟢 ' : '🔴 '} {formatChainName(smartContract.network)} - {truncateAddress(smartContract.factoryAddress)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+      <Filters>
+        <FilterItem
+          id="smartContractFilter"
+          label="Filtrer par smart contract:"
+          value={selectedSmartContractId ? selectedSmartContractId.toString() : ''}
+          onChange={(value) => setSelectedSmartContractId(value ? parseInt(value) : null)}
+          options={[
+            { value: '', label: 'Tous les smart contracts' },
+            ...smartContracts.map(smartContract => ({
+              value: smartContract.id.toString(),
+              label: `${smartContract.active ? '🟢 ' : '🔴 '} ${formatChainName(smartContract.network)} - ${truncateAddress(smartContract.factoryAddress)}`
+            }))
+          ]}
+        />
+      </Filters>
       
       <div className="page-content">
         {!filteredItems.length ? (

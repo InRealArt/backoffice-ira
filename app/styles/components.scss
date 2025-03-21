@@ -97,6 +97,47 @@
       box-shadow: 0 0 0 1px rgba($color-primary, 0.2);
     }
   }
+  
+  // Styles pour le champ de recherche
+  .search-filter {
+    min-width: 250px;
+    flex-grow: 1;
+    max-width: 400px;
+  }
+  
+  .search-input-container {
+    position: relative;
+    width: 100%;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: $spacing-sm $spacing-lg $spacing-sm $spacing-md;
+    border: 1px solid $color-border-input;
+    border-radius: $border-radius-sm;
+    background-color: $color-background-white;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      box-shadow: 0 0 0 1px rgba($color-primary, 0.2);
+    }
+    
+    &::placeholder {
+      color: $color-text-muted;
+    }
+  }
+  
+  .search-icon {
+    position: absolute;
+    right: $spacing-md;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $color-text-muted;
+    pointer-events: none;
+  }
 }
 
 // Styles de formulaire
