@@ -94,48 +94,52 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
         </p>
       </div>
       
-      <div className="filter-container mb-lg">
+      <div className="filter-section">
         <div className="d-flex gap-md flex-wrap">
-          <div className="d-flex flex-column gap-sm">
-            <label htmlFor="status-filter" className="form-label">
+          <div className="filter-item">
+            <label htmlFor="status-filter" className="filter-label">
               Filtrer par statut:
             </label>
-            <select 
-              id="status-filter" 
-              className="form-select"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as ItemStatus | 'all')}
-            >
-              <option value="all">Tous les statuts</option>
-              <option value="pending">En attente</option>
-              <option value="listed">Listé</option>
-            </select>
+            <div className="select-wrapper">
+              <select 
+                id="status-filter" 
+                className="filter-select"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as ItemStatus | 'all')}
+              >
+                <option value="all">Tous les statuts</option>
+                <option value="pending">En attente</option>
+                <option value="listed">Listé</option>
+              </select>
+            </div>
           </div>
           
-          <div className="d-flex flex-column gap-sm">
-            <label htmlFor="smartcontract-filter" className="form-label">
+          <div className="filter-item">
+            <label htmlFor="smartcontract-filter" className="filter-label">
               Smart Contract:
             </label>
-            <select
-              id="smartcontract-filter"
-              className="form-select"
-              value={smartContractFilter}
-              onChange={(e) => setSmartContractFilter(e.target.value)}
-            >
-              <option value="all">Tous</option>
-              {safeProducts.map((product) => {
-                const factoryAddress = product.nftResource?.collection?.smartContract?.factoryAddress
-                const isActive = product.nftResource?.collection?.smartContract?.active
-                if (factoryAddress) {
-                  return (
-                    <option key={factoryAddress} value={factoryAddress}>
-                      {isActive ? '🟢 ' : '🔴 '} {truncateAddress(factoryAddress)}
-                    </option>
-                  )
-                }
-                return null
-              })}
-            </select>
+            <div className="select-wrapper">
+              <select
+                id="smartcontract-filter"
+                className="filter-select"
+                value={smartContractFilter}
+                onChange={(e) => setSmartContractFilter(e.target.value)}
+              >
+                <option value="all">Tous</option>
+                {safeProducts.map((product) => {
+                  const factoryAddress = product.nftResource?.collection?.smartContract?.factoryAddress
+                  const isActive = product.nftResource?.collection?.smartContract?.active
+                  if (factoryAddress) {
+                    return (
+                      <option key={factoryAddress} value={factoryAddress}>
+                        {isActive ? '🟢 ' : '🔴 '} {truncateAddress(factoryAddress)}
+                      </option>
+                    )
+                  }
+                  return null
+                })}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -156,29 +160,23 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                   <th>Statut</th>
                   <th className="hidden-mobile">NFT associé</th>
                   <th className="hidden-mobile">Statut NFT</th>
-                  <th>Smart Contract (Factory address)</th>
+                  <th>Smart Contract</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredProducts.map((product) => {
-                  const isLoading = loadingItemId === product.id
-                  console.log('ID product :', product.id)
-                  console.log('Factory Address:', product.nftResource)
-                  const rowClass = `table-row clickable 
-                    ${isLoading ? 'disabled opacity-50' : ''} 
-                    ${loadingItemId && !isLoading ? 'disabled opacity-60' : ''}
-                    ${!product.nftResource ? 'bg-light-purple' : ''}`
+                  const isLoading = loadingItemId === product.id;
                   
                   return (
                     <tr 
                       key={product.id} 
                       onClick={() => !loadingItemId && handleItemClick(product.id)}
-                      className={rowClass}
+                      className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingItemId && !isLoading ? 'disabled-row' : ''} ${!product.nftResource ? 'highlight-row' : ''}`}
                     >
                       <td>
                         <div className="d-flex align-items-center gap-sm">
                           {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? 'opacity-50' : ''}>
+                          <span className={isLoading ? 'text-muted' : ''}>
                             {product.id}
                           </span>
                         </div>
@@ -191,7 +189,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                         }
                       </td>
                       <td>
-                        <div className="d-flex align-items-center">
+                        <div className="status-badge-container">
                           {getItemStatusBadge(product.status)}
                         </div>
                       </td>
@@ -209,7 +207,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                           : 'N/A'
                         }
                       </td>
-                      <td className="hidden-mobile">
+                      <td>
                         <div className="d-flex align-items-center gap-sm">
                           {product.nftResource?.collection?.smartContract ? (
                             <>

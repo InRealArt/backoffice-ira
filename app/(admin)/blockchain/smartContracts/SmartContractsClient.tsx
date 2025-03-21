@@ -35,7 +35,7 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
     }
   }, [])
   
-  const handleContractEdit = (contractId: number) => {
+  const handleContractClick = (contractId: number) => {
     setLoadingContractId(contractId)
     router.push(`/blockchain/smartContracts/${contractId}`)
   }
@@ -74,60 +74,59 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
                   <th>Marketplace (Proxy)</th>
                   <th>Réseau</th>
                   <th>Statut</th>
-                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {smartContracts.map((contract) => (
-                  <tr key={contract.id} className="clickable-row">
-                    <td>{contract.id}</td>
-                    <td>
-                      <BlockchainAddress
-                        address={contract.factoryAddress}
-                        network={contract.network}
-                        showExplorerLink={true}
-                      />
-                    </td>
-                    <td>
-                      <BlockchainAddress
-                        address={contract.royaltiesAddress}
-                        network={contract.network}
-                        showExplorerLink={true}
-                      />
-                    </td>
-                    <td>
-                      <BlockchainAddress
-                        address={contract.marketplaceAddress}
-                        network={contract.network}
-                        showExplorerLink={true}
-                      />
-                    </td>
-                    <td>
-                      <span className="info-badge">
-                        {formatChainName(contract.network)}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`status-badge ${contract.active ? 'active' : 'inactive'}`}>
-                        {contract.active ? 'Actif' : 'Inactif'}
-                      </span>
-                    </td>
-                    <td className="actions-cell">
-                      <div className="d-flex gap-sm">
-                        {loadingContractId === contract.id ? (
-                          <LoadingSpinner size="small" />
-                        ) : (
-                          <button
-                            className="btn btn-primary btn-small"
-                            onClick={() => handleContractEdit(contract.id)}
-                          >
-                            Éditer
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {smartContracts.map((contract) => {
+                  const isLoading = loadingContractId === contract.id;
+                  return (
+                    <tr 
+                      key={contract.id} 
+                      className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingContractId && !isLoading ? 'disabled-row' : ''}`}
+                      onClick={() => !loadingContractId && handleContractClick(contract.id)}
+                    >
+                      <td>
+                        <div className="d-flex align-items-center gap-sm">
+                          {isLoading && <LoadingSpinner size="small" message="" inline />}
+                          <span className={isLoading ? 'text-muted' : ''}>
+                            {contract.id}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <BlockchainAddress
+                          address={contract.factoryAddress}
+                          network={contract.network}
+                          showExplorerLink={true}
+                        />
+                      </td>
+                      <td>
+                        <BlockchainAddress
+                          address={contract.royaltiesAddress}
+                          network={contract.network}
+                          showExplorerLink={true}
+                        />
+                      </td>
+                      <td>
+                        <BlockchainAddress
+                          address={contract.marketplaceAddress}
+                          network={contract.network}
+                          showExplorerLink={true}
+                        />
+                      </td>
+                      <td>
+                        <span className="info-badge">
+                          {formatChainName(contract.network)}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${contract.active ? 'active' : 'inactive'}`}>
+                          {contract.active ? 'Actif' : 'Inactif'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
