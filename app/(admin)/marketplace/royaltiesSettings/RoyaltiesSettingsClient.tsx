@@ -75,20 +75,7 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
     router.push(`/marketplace/royaltiesSettings/${itemId}/edit`)
   }
   
-  // Dans le code de debugging
-  useEffect(() => {
-    if (selectedSmartContractId) {
-      console.log('Smart Contract ID sélectionné:', selectedSmartContractId);
-      items.forEach(item => {
-        // Vérifier à la fois smartContractId et smartContract.id
-        const collectionSmartContractId = item.nftResource?.collection?.smartContractId;
-        const smartContractId = item.nftResource?.collection?.smartContract?.id;
-        console.log(`Item ${item.id}, Collection smartContractId: ${collectionSmartContractId}, SmartContract.id: ${smartContractId}`);
-      });
-    }
-  }, [selectedSmartContractId, items]);
-  
-  // Amélioration du filtrage
+  // Filtrage des items par smart contract
   const filteredItems = selectedSmartContractId
     ? items.filter(item => {
         // Utiliser smartContractId de la collection en priorité
@@ -104,25 +91,25 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
     : items;
   
   return (
-    <div className={styles.productsContainer}>
-      <div className={styles.productsHeader}>
+    <div className="page-container">
+      <div className="page-header">
         <div>
-          <h1 className={styles.pageTitle}>Configuration des royalties</h1>
-          <p className={styles.subtitle}>
+          <h1 className="page-title">Configuration des royalties</h1>
+          <p className="header-subtitle">
             Gérez les paramètres de royalties pour les œuvres mintées
           </p>
         </div>
       </div>
       
-      <div className={styles.filterSection}>
-        <div className={styles.filterItem}>
-          <label htmlFor="smartContractFilter" className={styles.filterLabel}>
+      <div className="filter-section">
+        <div className="filter-item">
+          <label htmlFor="smartContractFilter" className="filter-label">
             Filtrer par smart contract:
           </label>
           <div className={styles.selectWrapper}>
             <select
               id="smartContractFilter"
-              className={styles.filterSelect}
+              className="form-select"
               value={selectedSmartContractId || ''}
               onChange={(e) => setSelectedSmartContractId(e.target.value ? parseInt(e.target.value) : null)}
             >
@@ -137,21 +124,21 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
         </div>
       </div>
       
-      <div className={styles.productsContent}>
+      <div className="data-container">
         {!filteredItems.length ? (
-          <div className={styles.emptyState}>
+          <div className="empty-state">
             <p>Aucune œuvre mintée disponible</p>
           </div>
         ) : (
-          <div className={styles.tableContainer}>
-            <table className={styles.productsTable}>
+          <div className="data-table-container">
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th className={styles.hiddenMobile}>Token ID</th>
+                  <th className={isMobile ? 'hidden' : ''}>Token ID</th>
                   <th>Œuvre</th>
-                  <th className={styles.hiddenMobile}>Artiste</th>
-                  <th className={styles.hiddenMobile}>Factory</th>
+                  <th className={isMobile ? 'hidden' : ''}>Artiste</th>
+                  <th className={isMobile ? 'hidden' : ''}>Factory</th>
                   <th>Statut</th>
                 </tr>
               </thead>
@@ -163,31 +150,31 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
                     <tr 
                       key={item.id} 
                       onClick={() => !loadingItemId && handleItemClick(item.id)}
-                      className={`${styles.clickableRow} ${isLoading ? styles.loadingRow : ''} ${loadingItemId && !isLoading ? styles.disabledRow : ''}`}
+                      className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingItemId && !isLoading ? 'disabled-row' : ''}`}
                     >
                       <td>
-                        <div className={styles.idCell}>
+                        <div className="cell-with-icon">
                           {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? styles.loadingText : ''}>
+                          <span className={isLoading ? 'text-faded' : ''}>
                             {item.id}
                           </span>
                         </div>
                       </td>
-                      <td className={styles.hiddenMobile}>
+                      <td className={isMobile ? 'hidden' : ''}>
                         {item.nftResource?.tokenId || 'N/A'}
                       </td>
                       <td>
                         {item.nftResource?.name}
                       </td>
-                      <td className={styles.hiddenMobile}>
+                      <td className={isMobile ? 'hidden' : ''}>
                         {item.user ? 
                           `${item.user.firstName || ''} ${item.user.lastName || ''} ${item.user.email ? `(${item.user.email})` : ''}`.trim() : 
                           'N/A'
                         }
                       </td>
-                      <td className={styles.hiddenMobile}>
+                      <td className={isMobile ? 'hidden' : ''}>
                         {smartContract ? (
-                          <div className={styles.smartContractCell}>
+                          <div className="contract-cell">
                             <BlockchainAddress 
                               address={smartContract.factoryAddress} 
                               network={smartContract.network}
@@ -199,11 +186,10 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
                         )}
                       </td>
                       <td>
-                        <div className={styles.statusCell}>
+                        <div className="status-cell">
                           <NftStatusBadge status={item.nftResource?.status || 'MINED'} />
                         </div>
                       </td>
-
                     </tr>
                   )
                 })}
