@@ -35,14 +35,6 @@ export default function ShopifySubMenu({
           >
             Utilisateurs
           </li>
-          <li 
-            className="submenu-item"
-            onClick={() => onNavigate('/shopify/artistApplications', 'adminShopify')}
-            tabIndex={isOpen ? 0 : -1}
-            role="menuitem"
-          >
-            Demandes d'artistes
-          </li>
         </ul>
       </div>
     </>

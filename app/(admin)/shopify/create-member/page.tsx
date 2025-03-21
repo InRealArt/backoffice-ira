@@ -1,9 +1,7 @@
 'use client'
 
-
 import { Toaster } from 'react-hot-toast'
 import { useEffect, useState } from 'react'
-import styles from './create-member.module.scss'
 import CreateMemberForm from './CreateMemberForm'
 
 export default function CreateMemberPage() {
@@ -29,14 +27,16 @@ export default function CreateMemberPage() {
         toastOptions={{ duration: isMobile ? 5000 : 3000 }}
       />
       
-      <div className={styles.createMemberHeader}>
-        <h1>Créer un membre Shopify</h1>
-        <p className={styles.subtitle}>
-          Ajoutez un nouvel artiste ou galleriste à votre boutique Shopify
-        </p>
-      </div>
-      
-      <div className={styles.createMemberContent}>
+      <div className="page-container">
+        <div className="page-header">
+          <div className="header-top-section">
+            <h1 className="page-title">Créer un membre Shopify</h1>
+          </div>
+          <p className="page-subtitle">
+            Ajoutez un nouvel artiste ou galleriste à votre boutique Shopify
+          </p>
+        </div>
+        
         <CreateMemberForm />
       </div>
     </>

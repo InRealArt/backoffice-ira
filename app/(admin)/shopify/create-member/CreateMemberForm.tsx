@@ -6,13 +6,15 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { memberSchema, MemberFormData } from './schema'
 import { createMember, checkUserExists } from '@/app/actions/prisma/prismaActions'
 import toast from 'react-hot-toast'
-import styles from './CreateMemberForm.module.scss'
 import { createShopifyCollection } from '@/app/actions/shopify/shopifyActions'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
+import Button from '@/app/components/Button/Button'
+import { useRouter } from 'next/navigation'
 
 export default function CreateMemberForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uniqueError, setUniqueError] = useState<string | null>(null)
+  const router = useRouter()
   
   const {
     register,
@@ -92,115 +94,111 @@ export default function CreateMemberForm() {
   }
   
   return (
-    <div className={styles.formContainer}>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Affichage de l'erreur d'unicité globale */}
-        {uniqueError && (
-          <div className={styles.uniqueErrorContainer}>
-            <p className={styles.uniqueError}>{uniqueError}</p>
-          </div>
-        )}
-        
-        <div className={styles.formGrid}>
-          {/* Prénom */}
-          <div className={styles.formGroup}>
-            <label htmlFor="firstName" className={styles.formLabel}>
-              Prénom
-            </label>
-            <input
-              id="firstName"
-              type="text"
-              {...register('firstName')}
-              className={`${styles.formInput} ${errors.firstName || uniqueError ? styles.formInputError : ''}`}
-              placeholder="John"
-            />
-            {errors.firstName && (
-              <p className={styles.formError}>{errors.firstName.message}</p>
+    <div className="page-content">
+      <div className="card">
+        <div className="card-body">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Affichage de l'erreur d'unicité globale */}
+            {uniqueError && (
+              <div className="alert alert-danger mb-4">
+                <p>{uniqueError}</p>
+              </div>
             )}
-          </div>
-          
-          {/* Nom */}
-          <div className={styles.formGroup}>
-            <label htmlFor="lastName" className={styles.formLabel}>
-              Nom
-            </label>
-            <input
-              id="lastName"
-              type="text"
-              {...register('lastName')}
-              className={`${styles.formInput} ${errors.lastName || uniqueError ? styles.formInputError : ''}`}
-              placeholder="Doe"
-            />
-            {errors.lastName && (
-              <p className={styles.formError}>{errors.lastName.message}</p>
-            )}
-          </div>
+            
+            <div className="d-grid grid-md-2 gap-md">
+              {/* Prénom */}
+              <div className="form-group">
+                <label htmlFor="firstName" className="form-label">
+                  Prénom
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  {...register('firstName')}
+                  className={`form-input ${errors.firstName || uniqueError ? 'input-error' : ''}`}
+                  placeholder="John"
+                />
+                {errors.firstName && (
+                  <p className="form-error text-danger">{errors.firstName.message}</p>
+                )}
+              </div>
+              
+              {/* Nom */}
+              <div className="form-group">
+                <label htmlFor="lastName" className="form-label">
+                  Nom
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  {...register('lastName')}
+                  className={`form-input ${errors.lastName || uniqueError ? 'input-error' : ''}`}
+                  placeholder="Doe"
+                />
+                {errors.lastName && (
+                  <p className="form-error text-danger">{errors.lastName.message}</p>
+                )}
+              </div>
+            </div>
+            
+            {/* Email */}
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                {...register('email')}
+                className={`form-input ${errors.email || uniqueError ? 'input-error' : ''}`}
+                placeholder="email@exemple.com"
+              />
+              {errors.email && (
+                <p className="form-error text-danger">{errors.email.message}</p>
+              )}
+            </div>
+            
+            {/* Type */}
+            <div className="form-group">
+              <label htmlFor="role" className="form-label">
+                Rôle
+              </label>
+              <select
+                id="role"
+                {...register('role')}
+                className="form-select"
+              >
+                <option value="artist">Artiste</option>
+                <option value="galleryManager">Responsable de galerie</option>
+                <option value="admin">Administrateur</option>
+              </select>
+              {errors.role && (
+                <p className="form-error text-danger">{errors.role.message}</p>
+              )}
+            </div>
+            
+            <div className="form-actions mt-4 d-flex justify-content-between gap-md">
+              <Button
+                variant="secondary"
+                onClick={() => router.push('/shopify/users')}
+                disabled={isSubmitting}
+                type="button"
+              >
+                Annuler
+              </Button>
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={isSubmitting}
+                isLoading={isSubmitting}
+                loadingText="Création en cours..."
+              >
+                Créer le membre
+              </Button>
+            </div>
+          </form>
         </div>
-        
-        {/* Email */}
-        <div className={styles.formGroup}>
-          <label htmlFor="email" className={styles.formLabel}>
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            {...register('email')}
-            className={`${styles.formInput} ${errors.email || uniqueError ? styles.formInputError : ''}`}
-            placeholder="email@exemple.com"
-          />
-          {errors.email && (
-            <p className={styles.formError}>{errors.email.message}</p>
-          )}
-        </div>
-        
-        {/* Type */}
-        <div className={styles.formGroup}>
-          <label htmlFor="role" className={styles.formLabel}>
-            Rôle
-          </label>
-          <select
-            id="role"
-            {...register('role')}
-            className={styles.formSelect}
-          >
-            <option value="artist">Artiste</option>
-            <option value="galleryManager">Responsable de galerie</option>
-            <option value="admin">Administrateur</option>
-          </select>
-          {errors.role && (
-            <p className={styles.formError}>{errors.role.message}</p>
-          )}
-        </div>
-        
-        <div className={styles.formActions}>
-          <button
-            type="button"
-            onClick={() => {
-              reset()
-              setUniqueError(null)
-            }}
-            className={styles.buttonSecondary}
-            disabled={isSubmitting}
-          >
-            Réinitialiser
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={styles.buttonPrimary}
-          >
-            {isSubmitting ? (
-              <span className={styles.loadingContainer}>
-                <LoadingSpinner size="small" message="" inline color="light" />
-                <span className={styles.loadingText}>Création en cours...</span>
-              </span>
-            ) : (
-              'Créer le membre'
-            )}
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   )
 } 

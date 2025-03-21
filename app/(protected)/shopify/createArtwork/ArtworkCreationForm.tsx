@@ -553,7 +553,7 @@ export default function ArtworkCreationForm() {
             className={`${styles.formFileInput} ${errors.images ? styles.formInputError : ''}`}
           />
           {errors.images && (
-            <p className={styles.formError}>{errors.images.message}</p>
+            <p className={styles.formError}>{errors.images?.message ? String(errors.images.message) : 'Les images sont requises'}</p>
           )}
         </div>
         

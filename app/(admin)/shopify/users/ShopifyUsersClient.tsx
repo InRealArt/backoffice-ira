@@ -13,6 +13,7 @@ export default function BackofficeUsersClient({ users }: BackofficeUsersClientPr
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null)
+  const [isCreatingUser, setIsCreatingUser] = useState(false)
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -34,6 +35,11 @@ export default function BackofficeUsersClient({ users }: BackofficeUsersClientPr
   const handleUserClick = (userId: string) => {
     setLoadingUserId(userId)
     router.push(`/shopify/users/${userId}/edit`)
+  }
+  
+  const handleCreateUser = () => {
+    setIsCreatingUser(true)
+    router.push('/shopify/create-member')
   }
   
   // Fonction pour déterminer la classe et le texte du badge selon le rôle
@@ -58,6 +64,20 @@ export default function BackofficeUsersClient({ users }: BackofficeUsersClientPr
       <div className="page-header">
         <div className="header-top-section">
           <h1 className="page-title">Utilisateurs Shopify</h1>
+          <button 
+            className="btn btn-primary btn-medium"
+            onClick={handleCreateUser}
+            disabled={isCreatingUser}
+          >
+            {isCreatingUser ? (
+              <>
+                <LoadingSpinner size="small" message="" inline />
+                <span>Création...</span>
+              </>
+            ) : (
+              'Créer un utilisateur de backoffice'
+            )}
+          </button>
         </div>
         <p className="page-subtitle">
           Liste des utilisateurs Shopify enregistrés dans le système
