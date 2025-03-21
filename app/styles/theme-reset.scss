@@ -1,0 +1,44 @@
+// Fichier de reset pour les thèmes en SCSS
+body.dark {
+  .page-layout,
+  .dashboard-page,
+  [class*="pageLayout"],
+  [class*="page-layout"],
+  .content-container,
+  .contentContainer,
+  [class*="contentContainer"],
+  [class*="content-container"],
+  .page-container,
+  .pageContainer,
+  [class*="pageContainer"],
+  [class*="page-container"],
+  .page-content,
+  .pageContent,
+  [class*="pageContent"],
+  [class*="page-content"] {
+    background-color: #111827 !important;
+    color: #ffffff !important;
+  }
+}
+
+body.light {
+  .page-layout,
+  .dashboard-page,
+  [class*="pageLayout"],
+  [class*="page-layout"],
+  .content-container,
+  .contentContainer,
+  [class*="contentContainer"],
+  [class*="content-container"],
+  .page-container,
+  .pageContainer,
+  [class*="pageContainer"],
+  [class*="page-container"],
+  .page-content,
+  .pageContent,
+  [class*="pageContent"],
+  [class*="page-content"] {
+    background-color: #f9f9f9 !important;
+    color: #333333 !important;
+  }
+} 

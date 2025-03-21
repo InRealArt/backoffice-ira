@@ -1,15 +1,46 @@
-:root {
+:root,
+.light-theme,
+body.light {
   --background: #ffffff;
   --foreground: #171717;
   --navbar-height: 90px; /* Définition d'une variable pour la hauteur de la navbar */
   --sidemenu-width: 250px; /* Définition d'une variable pour la largeur du menu latéral */
+
+  /* Couleurs en mode clair */
+  --color-primary: #4f46e5;
+  --color-primary-dark: #4338ca;
+  --color-primary-light: #eef2ff;
+  --color-text-primary: #333;
+  --color-text-secondary: #666;
+  --color-text-muted: #a0aec0;
+  --color-background-main: #f9f9f9;
+  --color-background-white: #ffffff;
+  --color-background-light: #f5f5f5;
+  --color-background-hover: #f7f9fc;
+  --color-border: #eee;
+  --color-border-input: #e2e8f0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark-theme,
+body.dark {
+  --background: #0a0a0a;
+  --foreground: #ffffff; /* Plus blanc pour le mode sombre */
+  --navbar-height: 90px;
+  --sidemenu-width: 250px;
+
+  /* Couleurs en mode sombre */
+  --color-primary: #6366f1;
+  --color-primary-dark: #4f46e5;
+  --color-primary-light: #312e81;
+  --color-text-primary: #ffffff; /* Plus blanc pour le texte principal */
+  --color-text-secondary: #f3f4f6; /* Plus blanc pour le texte secondaire */
+  --color-text-muted: #d1d5db; /* Plus blanc pour le texte muté */
+  --color-background-main: #111827;
+  --color-background-white: #1f2937;
+  --color-background-light: #374151;
+  --color-background-hover: #2d3748;
+  --color-border: #4a5568;
+  --color-border-input: #4b5563;
 }
 
 html,
@@ -26,6 +57,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
   padding-top: var(--navbar-height); /* Espace pour la navbar */
   min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark {
+  color: var(--foreground);
+  background: var(--background);
 }
 
 *, 
@@ -39,12 +76,6 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-}
-
 /* Classes génériques pour les layouts de page */
 .page-layout,
 .dashboard-page,
@@ -54,6 +85,22 @@ a {
   display: flex;
   min-height: calc(100vh - var(--navbar-height));
   margin-top: var(--navbar-height);
+  background-color: var(--color-background-main);
+  transition: background-color 0.3s ease;
+}
+
+/* Styles de page spécifiques au mode sombre */
+body.dark .page-layout,
+body.dark .dashboard-page,
+body.dark .pageLayout,
+body.dark [class*="pageLayout"],
+body.dark [class*="page-layout"],
+.dark-theme .page-layout,
+.dark-theme .dashboard-page,
+.dark-theme .pageLayout,
+.dark-theme [class*="pageLayout"],
+.dark-theme [class*="page-layout"] {
+  background-color: var(--color-background-main);
 }
 
 /* Classes génériques pour les conteneurs de contenu */
@@ -67,6 +114,7 @@ a {
   transition: all 0.3s ease;
   width: 100%;
   overflow-x: hidden;
+  background-color: var(--color-background-main);
 }
 
 /* Ajustements responsifs génériques */
@@ -87,4 +135,28 @@ a {
   [class*="content-container"] {
     padding: 16px;
   }
+}
+
+/* Solution avec forte spécificité - ajouter ceci à la fin du fichier */
+body.dark .page-layout,
+body.dark .dashboard-page,
+body.dark .pageLayout,
+body.dark [class*="pageLayout"],
+body.dark [class*="page-layout"] {
+  background-color: #111827 !important;
+  color: #ffffff !important;
+}
+
+html.dark-theme .page-layout,
+html.dark-theme .dashboard-page,
+html.dark-theme .pageLayout,
+html.dark-theme [class*="pageLayout"],
+html.dark-theme [class*="page-layout"] {
+  background-color: #111827 !important;
+  color: #ffffff !important;
+}
+
+/* Assurer également que les styles pour l'élément parent sont corrects */
+body.dark {
+  background-color: #111827 !important;
 }

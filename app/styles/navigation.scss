@@ -52,9 +52,47 @@
   box-shadow: $shadow-md;
   transition: $transition-default;
   
-  .dark & {
+  .dark-theme &,
+  body.dark & {
     background-color: rgba(12, 14, 20, 0.95);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .navbar-menu-container {
+    position: relative;
+    
+    .menu-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: $spacing-sm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+      color: $color-text-primary;
+      
+      .dark-theme &,
+      body.dark & {
+        color: white;
+      }
+      
+      &:hover {
+        transform: scale(1.1);
+      }
+      
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba($color-primary, 0.3);
+        border-radius: $border-radius-sm;
+      }
+    }
+
+    .navbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
   }
 }
 
@@ -85,36 +123,6 @@
   }
 }
 
-.navbar-menu-container {
-  position: relative;
-  
-  .menu-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: $spacing-sm;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s;
-    color: $color-text-primary;
-    
-    .dark & {
-      color: white;
-    }
-    
-    &:hover {
-      transform: scale(1.1);
-    }
-    
-    &:focus {
-      outline: none;
-      box-shadow: 0 0 0 2px rgba($color-primary, 0.3);
-      border-radius: $border-radius-sm;
-    }
-  }
-}
-
 .dropdown-menu {
   position: absolute;
   top: calc(100% + $spacing-sm);
@@ -127,7 +135,8 @@
   padding: $spacing-md;
   animation: dropdownFadeIn 0.2s ease-out;
   
-  .dark & {
+  .dark-theme &,
+  body.dark & {
     background-color: #1a1c23;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
@@ -143,7 +152,8 @@
     &:hover {
       background-color: rgba(0, 0, 0, 0.05);
       
-      .dark & {
+      .dark-theme &,
+      body.dark & {
         background-color: rgba(255, 255, 255, 0.05);
       }
     }
@@ -224,7 +234,8 @@
     border-radius: 3px;
   }
   
-  .dark & {
+  .dark-theme &,
+  body.dark & {
     background-color: #1a1c23;
     border-right: 1px solid #2f3035;
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
@@ -266,7 +277,8 @@
   &:hover {
     background-color: rgba(0, 0, 0, 0.04);
     
-    .dark & {
+    .dark-theme &,
+    body.dark & {
       background-color: rgba(255, 255, 255, 0.04);
     }
   }
@@ -292,7 +304,8 @@
       opacity: 0.5;
     }
     
-    .dark & {
+    .dark-theme &,
+    body.dark & {
       background-color: rgba($color-primary, 0.15);
     }
   }
@@ -304,7 +317,8 @@
   &.submenu-open {
     background-color: rgba($color-primary, 0.08);
     
-    .dark & {
+    .dark-theme &,
+    body.dark & {
       background-color: rgba($color-primary, 0.15);
     }
   }

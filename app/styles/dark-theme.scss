@@ -1,0 +1,58 @@
+// Feuille de style spécifique au mode sombre avec une spécificité élevée
+@import './variables.scss';
+
+// Application forcée des styles en mode sombre
+body.dark,
+html.dark-theme {
+  // Couleurs de fond générales
+  background-color: $color-background-main !important;
+  color: #ffffff !important;
+  
+  // Toutes les mises en page et conteneurs
+  .page-layout,
+  .dashboard-page,
+  .pageLayout,
+  [class*="pageLayout"],
+  [class*="page-layout"],
+  .content-container,
+  .contentContainer,
+  [class*="contentContainer"],
+  [class*="content-container"],
+  .page-container,
+  .pageContainer,
+  [class*="pageContainer"],
+  [class*="page-container"] {
+    background-color: $color-background-main !important;
+    color: #ffffff !important;
+  }
+  
+  // Tous les éléments texte
+  p, h1, h2, h3, h4, h5, h6, span, div, a, button, input, textarea, select, li, td, th {
+    color: #ffffff !important;
+  }
+  
+  // Classes secondaires
+  .text-secondary,
+  [class*="text-secondary"],
+  .secondary-text,
+  [class*="secondary-text"] {
+    color: $color-text-secondary !important;
+  }
+  
+  // Classes muettes
+  .text-muted,
+  [class*="text-muted"],
+  .muted-text,
+  [class*="muted-text"] {
+    color: $color-text-muted !important;
+  }
+  
+  // Ajouter spécifiquement les classes de contenu de page
+  .page-content,
+  .pageContent,
+  [class*="pageContent"],
+  [class*="page-content"] {
+    background-color: $color-background-white !important; // Utilise la variable pour le fond sombre
+    color: #ffffff !important;
+  }
+} 

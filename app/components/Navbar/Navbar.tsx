@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { DynamicWidget } from '@dynamic-labs/sdk-react-core';
 import Image from 'next/image';
+import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -26,11 +27,14 @@ export default function Navbar() {
         <span className="logo-text">InRealArt backoffice</span>
       </div>
       <div className="navbar-menu-container">
-        <button className="menu-button" onClick={toggleMenu} aria-label="Menu utilisateur">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+        <div className="navbar-actions">
+          <ThemeToggle />
+          <button className="menu-button" onClick={toggleMenu} aria-label="Menu utilisateur">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
         
         {menuOpen && (
           <div className="dropdown-menu">

@@ -11,6 +11,7 @@ import AuthStateManager from "@/app/components/Auth/AuthStateManager";
 import { useRouter } from "next/navigation";
 import { getNetwork } from "./blockchain/networkConfig";
 import { ToastProvider, CustomToaster } from "@/app/components/Toast/ToastContext";
+import { ThemeProvider } from "@/app/components/ThemeProvider/ThemeProvider";
 
 // Fonction qui transforme une chaîne en objet Chain
 function getChainByName(networkName: string): Chain {
@@ -73,9 +74,11 @@ export default function Providers({
         <QueryClientProvider client={queryClient}>
           <DynamicWagmiConnector>
             <ToastProvider>
-              <AuthStateManager />
-              {children}
-              <CustomToaster />
+              <ThemeProvider>
+                <AuthStateManager />
+                {children}
+                <CustomToaster />
+              </ThemeProvider>
             </ToastProvider>
           </DynamicWagmiConnector>
         </QueryClientProvider>

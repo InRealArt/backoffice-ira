@@ -1,18 +1,22 @@
 @import './variables.scss';
 @import './components.scss';
 @import './navigation.scss';
+@import './dark-theme.scss';
+@import './theme-reset.scss';
 
 // Styles généraux à appliquer globalement
 html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.5;
+  font-size: 16px;
 }
 
 body {
   color: $color-text-primary;
   background: $color-background-main;
-  font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding-top: $navbar-height;
@@ -30,10 +34,18 @@ a {
   text-decoration: none;
 }
 
+// Définition de base des layouts
 .page-layout {
   display: flex;
   min-height: calc(100vh - $navbar-height);
   margin-top: $navbar-height;
+  background-color: $color-background-main !important;
+}
+
+// Surcharge explicite pour le mode sombre
+body.dark .page-layout,
+html.dark-theme .page-layout {
+  background-color: $color-background-main !important;
 }
 
 .content-container {
@@ -43,6 +55,13 @@ a {
   transition: $transition-default;
   width: calc(100% - $sidemenu-width);
   overflow-x: hidden;
+  background-color: $color-background-main;
+}
+
+// Surcharge explicite pour le mode sombre
+body.dark .content-container,
+html.dark-theme .content-container {
+  background-color: $color-background-main;
 }
 
 @media (max-width: $breakpoint-md) {
@@ -56,5 +75,69 @@ a {
 @media (max-width: $breakpoint-xs) {
   .content-container {
     padding: $spacing-lg;
+  }
+}
+
+// Règles générales pour améliorer l'interface en mode sombre
+.dark-theme,
+body.dark {
+  // Améliorer la lisibilité du texte
+  p, span, div, h1, h2, h3, h4, h5, h6, li, a, button {
+    color: var(--color-text-primary);
+  }
+  
+  // Styles spécifiques pour les layouts en mode sombre avec spécificité élevée
+  .page-layout,
+  .dashboard-page,
+  .pageLayout,
+  [class*="pageLayout"],
+  [class*="page-layout"] {
+    background-color: $color-background-main !important;
+  }
+  
+  // Styles spécifiques pour les conteneurs en mode sombre
+  .content-container,
+  .contentContainer,
+  [class*="contentContainer"], 
+  [class*="content-container"] {
+    background-color: $color-background-main !important;
+  }
+  
+  // Améliorer le contraste des bordures
+  .card, .panel, .box, [class*='card'], [class*='panel'], [class*='box'] {
+    background-color: var(--color-background-white);
+    border-color: var(--color-border);
+  }
+  
+  // Améliorer les inputs en mode sombre
+  input, select, textarea {
+    background-color: var(--color-background-light);
+    border-color: var(--color-border-input);
+    color: var(--color-text-primary);
+    
+    &::placeholder {
+      color: var(--color-text-muted);
+    }
+  }
+  
+  // Améliorer les tableaux en mode sombre
+  table {
+    background-color: var(--color-background-white);
+    
+    th, td {
+      border-color: var(--color-border);
+    }
+    
+    th {
+      background-color: var(--color-background-light);
+    }
+    
+    tr:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+    
+    tr:hover {
+      background-color: var(--color-background-hover);
+    }
   }
 } 
