@@ -1,7 +1,6 @@
 'use client'
 
 import { ComponentPropsWithoutRef, ReactNode } from 'react'
-import styles from './Button.module.scss'
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner'
 
 interface ButtonProps extends ComponentPropsWithoutRef<'button'> {
@@ -24,27 +23,29 @@ export default function Button({
   className,
   ...props
 }: ButtonProps) {
+  const buttonClasses = [
+    'btn',
+    `btn-${variant}`,
+    `btn-${size}`,
+    fullWidth ? 'btn-full-width' : '',
+    className || ''
+  ].filter(Boolean).join(' ');
+
   return (
     <button
-      className={`
-        ${styles.button} 
-        ${styles[variant]} 
-        ${styles[size]}
-        ${fullWidth ? styles.fullWidth : ''}
-        ${className || ''}
-      `}
+      className={buttonClasses}
       disabled={isLoading || disabled}
       {...props}
     >
       {isLoading ? (
-        <span className={styles.loadingContainer}>
+        <span className="btn-loading-container">
           <LoadingSpinner 
             message="" 
             size="small" 
             inline={true} 
             color={variant === 'primary' ? 'light' : 'primary'} 
           />
-          <span className={styles.loadingText}>{loadingText}</span>
+          <span className="btn-loading-text">{loadingText}</span>
         </span>
       ) : (
         children

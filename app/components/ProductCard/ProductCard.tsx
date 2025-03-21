@@ -5,7 +5,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { updateItemStatus } from '@/app/actions/prisma/prismaActions'
 import toast from 'react-hot-toast'
-import styles from './ProductCard.module.scss'
 
 type ProductCardProps = {
   id: number
@@ -87,29 +86,29 @@ export default function ProductCard({
 
   return (
     <div 
-      className={styles.card}
+      className="product-card"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={styles.statusBadge} style={{ backgroundColor: getStatusColor() }}>
+      <div className="product-status-badge" style={{ backgroundColor: getStatusColor() }}>
         {getStatusLabel()}
       </div>
       
-      <div className={styles.imageContainer}>
+      <div className="product-image-container">
         <Image
           src={imageUrl || '/images/no-image.jpg'}
           alt={title}
           width={300}
           height={300}
-          className={styles.image}
+          className="product-image"
           priority
         />
         
         {isHovered && userId && (
-          <div className={styles.overlay}>
+          <div className="product-overlay">
             <Link 
               href={`/shopify/editArtwork/${id}`} 
-              className={styles.editButton}
+              className="product-edit-button"
             >
               Modifier
             </Link>
@@ -118,7 +117,7 @@ export default function ProductCard({
               <button 
                 onClick={handleRequestListing}
                 disabled={isSubmitting}
-                className={styles.listingButton}
+                className="product-listing-button"
               >
                 {isSubmitting ? 'En cours...' : 'Demande de listing'}
               </button>
@@ -127,16 +126,16 @@ export default function ProductCard({
         )}
       </div>
       
-      <div className={styles.content}>
-        <h3 className={styles.title}>{title}</h3>
-        <p className={styles.price}>{formattedPrice}</p>
+      <div className="product-content">
+        <h3 className="product-title">{title}</h3>
+        <p className="product-price">{formattedPrice}</p>
         
         {tags && tags.length > 0 && (
-          <div className={styles.tags}>
+          <div className="product-tags">
             {tags.slice(0, 3).map((tag, index) => (
-              <span key={index} className={styles.tag}>{tag}</span>
+              <span key={index} className="product-tag">{tag}</span>
             ))}
-            {tags.length > 3 && <span className={styles.tag}>+{tags.length - 3}</span>}
+            {tags.length > 3 && <span className="product-tag">+{tags.length - 3}</span>}
           </div>
         )}
       </div>

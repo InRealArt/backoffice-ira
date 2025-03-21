@@ -1,7 +1,6 @@
 'use client'
 
 import { getBlockExplorerUrl } from '@/lib/blockchain/explorerUtils'
-import styles from './BlockchainAddress.module.scss'
 
 type BlockchainAddressProps = {
   address: string
@@ -47,19 +46,19 @@ export default function BlockchainAddress({
   }
   
   if (!address) {
-    return <span className={styles.noData}>Non défini</span>
+    return <span className="address-no-data">Non défini</span>
   }
   
   return (
-    <div className={`${styles.addressContainer} ${className || ''}`}>
-      {label && <span className={styles.label}>{label}</span>}
-      <span className={styles.address} title={address}>
+    <div className={`blockchain-address ${className || ''}`}>
+      {label && <span className="address-label">{label}</span>}
+      <span className="address-text" title={address}>
         {truncateAddress(address)}
       </span>
       
       {showExplorerLink ? (
         <a
-          className={styles.actionButton}
+          className="address-action-button"
           href={getExplorerUrl(address, network, isTransaction)}
           target="_blank"
           rel="noopener noreferrer"
@@ -84,7 +83,7 @@ export default function BlockchainAddress({
         </a>
       ) : (
         <button
-          className={styles.actionButton}
+          className="address-action-button"
           onClick={(e) => copyToClipboard(address, e)}
           title="Copier l'adresse"
         >

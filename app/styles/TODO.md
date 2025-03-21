@@ -37,6 +37,10 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 - [x] RoleBadge - Pour les badges de rôle utilisateur
 - [x] StatusBadge - Pour les badges de statut dans toute l'application
 - [x] NftStatusBadge - Utilise maintenant StatusBadge
+- [x] Button - Boutons standards avec variants et états de chargement
+- [x] BlockchainAddress - Affichage des adresses blockchain
+- [x] ProductCard - Cartes de produits standardisées
+- [x] Dashboard et DashboardCard - Composants du tableau de bord
 - [x] Modal
 - [x] Form components
 - [x] Toast notifications

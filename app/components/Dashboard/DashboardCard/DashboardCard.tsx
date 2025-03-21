@@ -1,7 +1,6 @@
 'use client'
 
 import { ReactNode } from 'react'
-import styles from './DashboardCard.module.scss'
 
 interface DashboardCardProps {
   title: string
@@ -10,7 +9,7 @@ interface DashboardCardProps {
 
 export function DashboardCard({ title, children }: DashboardCardProps) {
   return (
-    <div className={styles.dashboardCard}>
+    <div className="dashboard-card">
       <h3>{title}</h3>
       {children}
     </div>

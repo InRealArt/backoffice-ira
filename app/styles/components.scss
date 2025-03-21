@@ -409,68 +409,89 @@
   color: $color-primary;
 }
 
-// Boutons
+// Styles pour les boutons
 .btn {
-  padding: $spacing-sm $spacing-lg;
-  border: none;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  cursor: pointer;
-  transition: $transition-default;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: $spacing-xs;
-
-  &:focus {
-    outline: none;
-  }
-
+  gap: 0.5rem;
+  font-weight: 500;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
   &:disabled {
-    cursor: not-allowed;
     opacity: 0.7;
+    cursor: not-allowed;
   }
-
+  
+  // Variants
   &.btn-primary {
-    background-color: $color-primary;
+    background-color: #4779fe;
     color: white;
-
-    &:hover {
-      background-color: $color-primary-dark;
-    }
-
-    &:focus {
-      box-shadow: 0 0 0 2px rgba($color-primary, 0.3);
+    
+    &:hover:not(:disabled) {
+      background-color: #3a67e0;
     }
   }
-
+  
   &.btn-secondary {
-    background-color: #e5e7eb;
-    color: #4b5563;
-
-    &:hover {
-      background-color: #d1d5db;
+    background-color: #f3f4f6;
+    color: #374151;
+    
+    &:hover:not(:disabled) {
+      background-color: #e5e7eb;
     }
   }
-
+  
   &.btn-danger {
-    background-color: $color-error;
+    background-color: #ef4444;
     color: white;
-
-    &:hover {
-      background-color: $color-error-dark;
-    }
-
-    &:disabled {
-      background-color: $color-error-light;
+    
+    &:hover:not(:disabled) {
+      background-color: #dc2626;
     }
   }
-
+  
+  &.btn-success {
+    background-color: #10b981;
+    color: white;
+    
+    &:hover:not(:disabled) {
+      background-color: #059669;
+    }
+  }
+  
+  // Tailles
   &.btn-small {
-    padding: $spacing-xs $spacing-md;
-    font-size: $font-size-xs;
-    min-width: 80px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+  
+  &.btn-medium {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+  }
+  
+  &.btn-large {
+    padding: 0.8rem 1.6rem;
+    font-size: 1.05rem;
+  }
+  
+  &.btn-full-width {
+    width: 100%;
+  }
+  
+  // État de chargement
+  .btn-loading-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-loading-text {
+    opacity: 0.9;
   }
 }
 
@@ -842,4 +863,270 @@
 .status-badge-container {
   display: flex;
   align-items: center;
+}
+
+// Styles pour les adresses blockchain
+.blockchain-address {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  
+  .address-text {
+    font-family: monospace;
+    display: inline-block;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .address-label {
+    color: #666;
+    margin-right: 4px;
+  }
+  
+  .address-action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s, transform 0.1s;
+    cursor: pointer;
+    margin-left: 4px;
+    border: none;
+    
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+    
+    svg {
+      color: #666;
+    }
+  }
+  
+  .address-no-data {
+    color: #999;
+    font-style: italic;
+  }
+}
+
+// Styles pour les cartes de produit
+.product-card {
+  position: relative;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+  
+  .product-status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    border-radius: 4px;
+    z-index: 2;
+  }
+  
+  .product-image-container {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    
+    .product-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .product-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 10px;
+    }
+    
+    .product-edit-button {
+      padding: 8px 16px;
+      background-color: #ffffff;
+      color: #333;
+      font-weight: 600;
+      border-radius: 4px;
+      text-decoration: none;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: #f1f1f1;
+      }
+    }
+    
+    .product-listing-button {
+      display: inline-block;
+      background-color: #e67e22;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      margin-left: 8px;
+      transition: background-color 0.2s ease;
+      border: none;
+      cursor: pointer;
+      
+      &:hover {
+        background-color: #d35400;
+      }
+      
+      &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+    }
+  }
+  
+  .product-content {
+    padding: 16px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    
+    .product-title {
+      margin: 0 0 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .product-price {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #2d3748;
+    }
+    
+    .product-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 8px;
+      
+      .product-tag {
+        font-size: 0.75rem;
+        padding: 2px 6px;
+        background-color: #e2e8f0;
+        color: #4a5568;
+        border-radius: 4px;
+      }
+    }
+  }
+}
+
+// Styles pour le tableau de bord
+.dashboard-container {
+  padding: 2rem;
+  margin-top: 60px;
+  margin-left: 220px;
+  width: calc(100% - 220px);
+  
+  @media (max-width: 768px) {
+    margin-left: 0;
+    width: 100%;
+    padding: 1rem;
+  }
+}
+
+.dashboard-title {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.dashboard-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  
+  @media (max-width: 576px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-small-text {
+  font-size: 0.8rem;
+}
+
+// Carte du tableau de bord
+.dashboard-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+
+  h3 {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  p {
+    margin-bottom: 0.75rem;
+    color: #4b5563;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  strong {
+    font-weight: 500;
+  }
+  
+  .dashboard-button {
+    background-color: #4779fe;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    margin-top: 1rem;
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background-color: #3a67e0;
+    }
+  }
 }

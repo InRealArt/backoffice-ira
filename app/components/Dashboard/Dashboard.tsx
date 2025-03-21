@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
-import styles from './Dashboard.module.scss';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import Button from '../Button/Button';
@@ -83,13 +82,13 @@ export default function Dashboard() {
   if (isLoading) return <LoadingSpinner fullPage message="Chargement du tableau de bord..." />;
 
   return (
-    <div className={styles.dashboardContainer}>
-      <h2 className={styles.dashboardTitle}>Tableau de bord</h2>
+    <div className="dashboard-container">
+      <h2 className="dashboard-title">Tableau de bord</h2>
       
-      <div className={styles.dashboardContent}>
+      <div className="dashboard-content">
         <DashboardCard title="Informations utilisateur">
           <p><strong>Email:</strong> {user?.email || 'Non défini'}</p>
-          <p><strong>Adresse wallet:</strong> <span className={styles.smallText}>{truncateAddress(primaryWallet?.address)}</span></p>
+          <p><strong>Adresse wallet:</strong> <span className="dashboard-small-text">{truncateAddress(primaryWallet?.address)}</span></p>
         </DashboardCard>
 
         {isAdmin ? (
@@ -132,7 +131,7 @@ export default function Dashboard() {
             <DashboardCard title="Création d'œuvre">
               <p>Créez et publiez une nouvelle œuvre d'art dans Shopify.</p>
               <button 
-                className={styles.dashboardButton} 
+                className="dashboard-button" 
                 onClick={() => router.push('/shopify/createArtwork')}
               >
                 Créer une œuvre dans Shopify
