@@ -1,82 +1,84 @@
+@import '/app/styles/variables.scss';
+
 .formContainer {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
+  background-color: $color-background-white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-lg;
+  padding: $spacing-3xl;
   max-width: 800px;
   margin: 0 auto;
 }
 
 .form {
   display: grid;
-  gap: 1.5rem;
+  gap: $spacing-xxl;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: $spacing-sm;
 }
 
 .label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #374151;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
 }
 
 .input, .select {
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: border-color 0.15s ease-in-out;
+  padding: $spacing-md;
+  border: 1px solid $color-border-input;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-md;
+  transition: $transition-default;
   width: 100%;
   
   &:focus {
-    border-color: #4f46e5;
+    border-color: $color-primary;
     outline: none;
-    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+    box-shadow: 0 0 0 2px rgba($color-primary, 0.1);
   }
   
   &::placeholder {
-    color: #9ca3af;
+    color: $color-text-light;
   }
 }
 
 .readOnlyField {
-  padding: 0.75rem;
-  background-color: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  color: #6b7280;
+  padding: $spacing-md;
+  background-color: $color-background-light;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-sm;
+  color: $color-text-secondary;
   font-family: monospace;
 }
 
 .helperText {
-  color: #6b7280;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
+  color: $color-text-secondary;
+  font-size: $font-size-xs;
+  margin-top: $spacing-xs;
 }
 
 .errorText {
-  color: #ef4444;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
+  color: $color-error;
+  font-size: $font-size-xs;
+  margin-top: $spacing-xs;
 }
 
 .formActions {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
 }
 
 .button {
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-weight: 500;
+  padding: $spacing-md $spacing-xl;
+  border-radius: $border-radius-sm;
+  font-weight: $font-weight-medium;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: $transition-default;
   
   &:disabled {
     opacity: 0.7;
@@ -85,29 +87,29 @@
 }
 
 .buttonPrimary {
-  background-color: #4f46e5;
+  background-color: $color-primary;
   color: white;
   border: none;
   
   &:hover:not(:disabled) {
-    background-color: #4338ca;
+    background-color: $color-primary-dark;
   }
 }
 
 .buttonSecondary {
-  background-color: white;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background-color: $color-background-white;
+  color: $color-text-primary;
+  border: 1px solid $color-border-input;
   
   &:hover:not(:disabled) {
-    background-color: #f9fafb;
+    background-color: $color-background-light;
   }
 }
 
 /* Responsive design */
-@media (max-width: 768px) {
+@media (max-width: $breakpoint-md) {
   .formContainer {
-    padding: 1.5rem;
+    padding: $spacing-xl;
   }
   
   .formActions {
@@ -119,7 +121,7 @@
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: $breakpoint-md) {
   .form {
     grid-template-columns: repeat(2, 1fr);
     
@@ -131,10 +133,10 @@
 }
 
 .editableLabel {
-  color: #4f46e5;
-  font-size: 0.8rem;
+  color: $color-primary;
+  font-size: $font-size-xs;
   font-weight: normal;
-  margin-left: 0.5rem;
+  margin-left: $spacing-sm;
 }
 
 .labelWithAction {
@@ -147,18 +149,18 @@
 .syncButton {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.8rem;
-  color: #4f46e5;
-  background-color: #eff6ff;
-  border: 1px solid #dbeafe;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  gap: $spacing-sm;
+  padding: $spacing-xs $spacing-md;
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background-color: $color-primary-light;
+  border: 1px solid rgba($color-primary, 0.2);
+  border-radius: $border-radius-sm;
+  transition: $transition-default;
   cursor: pointer;
   
   &:hover:not(:disabled) {
-    background-color: #dbeafe;
+    background-color: rgba($color-primary, 0.1);
   }
   
   &:disabled {
@@ -168,8 +170,8 @@
 }
 
 .syncIcon {
-  width: 1rem;
-  height: 1rem;
+  width: $font-size-md;
+  height: $font-size-md;
 }
 
 @keyframes spin {

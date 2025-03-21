@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import styles from './NftsToMintClient.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { ItemStatus, ResourceNftStatuses } from '@prisma/client'
 import { truncateAddress } from '@/lib/blockchain/utils'
@@ -85,25 +84,25 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
   }
   
   return (
-    <div className={styles.productsContainer}>
-      <div className={styles.productsHeader}>
-        <div>
-          <h1 className={styles.pageTitle}>Liste des oeuvres (à minter)</h1>
-          <p className={styles.subtitle}>
-            Gérez les uploads des oeuvres sur IPFS et mint des NFT
-          </p>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="header-top-section">
+          <h1 className="page-title">Liste des oeuvres (à minter)</h1>
         </div>
+        <p className="page-subtitle">
+          Gérez les uploads des oeuvres sur IPFS et mint des NFT
+        </p>
       </div>
       
-      <div className={styles.filterSection}>
-        <div className={styles.filterItem}>
-          <label htmlFor="status-filter" className={styles.filterLabel}>
-            Filtrer par statut:
-          </label>
-          <div className={styles.selectWrapper}>
+      <div className="filter-container mb-lg">
+        <div className="d-flex gap-md flex-wrap">
+          <div className="d-flex flex-column gap-sm">
+            <label htmlFor="status-filter" className="form-label">
+              Filtrer par statut:
+            </label>
             <select 
               id="status-filter" 
-              className={styles.filterSelect}
+              className="form-select"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as ItemStatus | 'all')}
             >
@@ -112,16 +111,14 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
               <option value="listed">Listé</option>
             </select>
           </div>
-        </div>
-        
-        <div className={styles.filterItem}>
-          <label htmlFor="smartcontract-filter" className={styles.filterLabel}>
-            Smart Contract:
-          </label>
-          <div className={styles.selectWrapper}>
+          
+          <div className="d-flex flex-column gap-sm">
+            <label htmlFor="smartcontract-filter" className="form-label">
+              Smart Contract:
+            </label>
             <select
               id="smartcontract-filter"
-              className={styles.filterSelect}
+              className="form-select"
               value={smartContractFilter}
               onChange={(e) => setSmartContractFilter(e.target.value)}
             >
@@ -143,22 +140,22 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
         </div>
       </div>
       
-      <div className={styles.productsContent}>
+      <div className="page-content">
         {!safeProducts.length || filteredProducts.length === 0 ? (
-          <div className={styles.emptyState}>
+          <div className="empty-state">
             <p>Aucun produit trouvé</p>
           </div>
         ) : (
-          <div className={styles.tableContainer}>
-            <table className={styles.productsTable}>
+          <div className="table-container">
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>ID</th>
                   <th>ID Shopify</th>
-                  <th className={styles.hiddenMobile}>Utilisateur</th>
+                  <th className="hidden-mobile">Utilisateur</th>
                   <th>Statut</th>
-                  <th className={styles.hiddenMobile}>NFT associé</th>
-                  <th className={styles.hiddenMobile}>Statut NFT</th>
+                  <th className="hidden-mobile">NFT associé</th>
+                  <th className="hidden-mobile">Statut NFT</th>
                   <th>Smart Contract (Factory address)</th>
                 </tr>
               </thead>
@@ -167,36 +164,38 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                   const isLoading = loadingItemId === product.id
                   console.log('ID product :', product.id)
                   console.log('Factory Address:', product.nftResource)
+                  const rowClass = `table-row clickable 
+                    ${isLoading ? 'disabled opacity-50' : ''} 
+                    ${loadingItemId && !isLoading ? 'disabled opacity-60' : ''}
+                    ${!product.nftResource ? 'bg-light-purple' : ''}`
+                  
                   return (
                     <tr 
                       key={product.id} 
                       onClick={() => !loadingItemId && handleItemClick(product.id)}
-                      className={`${styles.clickableRow} 
-                        ${isLoading ? styles.loadingRow : ''} 
-                        ${loadingItemId && !isLoading ? styles.disabledRow : ''}
-                        ${!product.nftResource ? styles.naStatusRow : ''}`}
+                      className={rowClass}
                     >
                       <td>
-                        <div className={styles.idCell}>
+                        <div className="d-flex align-items-center gap-sm">
                           {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? styles.loadingText : ''}>
+                          <span className={isLoading ? 'opacity-50' : ''}>
                             {product.id}
                           </span>
                         </div>
                       </td>
                       <td>{String(product.idShopify)}</td>
-                      <td className={styles.hiddenMobile}>
+                      <td className="hidden-mobile">
                         {product.user ? 
                           `${product.user.firstName || ''} ${product.user.lastName || ''} ${product.user.email ? `(${product.user.email})` : ''}`.trim() : 
                           `ID: ${product.idUser}`
                         }
                       </td>
                       <td>
-                        <div className={styles.statusCell}>
+                        <div className="d-flex align-items-center">
                           {getItemStatusBadge(product.status)}
                         </div>
                       </td>
-                      <td className={styles.hiddenMobile}>
+                      <td className="hidden-mobile">
                         {product.nftResource 
                           ? product.nftResource.name 
                           : product.idNftResource 
@@ -204,24 +203,23 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                             : 'Non associé'
                         }
                       </td>
-                      <td className={styles.hiddenMobile}>
+                      <td className="hidden-mobile">
                         {product.nftResource 
                           ? <NftStatusBadge status={product.nftResource.status} /> 
                           : 'N/A'
                         }
                       </td>
-                      <td className={styles.hiddenMobile}>
-                        <div className={styles.smartContractCell}>
+                      <td className="hidden-mobile">
+                        <div className="d-flex align-items-center gap-sm">
                           {product.nftResource?.collection?.smartContract ? (
                             <>
-                              <span className={styles.truncatedAddress}>
+                              <span className="text-monospace">
                                 {product.nftResource.collection.smartContract.factoryAddress ? truncateAddress(product.nftResource.collection.smartContract.factoryAddress) : 'Non défini'}
                               </span>
-                              &nbsp;&nbsp;
                               {getActiveBadge(product.nftResource.collection.smartContract.active)}
                             </>
                           ) : (
-                            'N/A'
+                            <span className="text-muted">N/A</span>
                           )}
                         </div>
                       </td>

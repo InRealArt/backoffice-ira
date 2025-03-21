@@ -1,13 +1,11 @@
 'use client'
 
-import { useState, useEffect, Usable } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import Button from '@/app/components/Button/Button'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
 import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, isCertificateUriUnique } from '@/app/actions/prisma/prismaActions'
-import styles from './nftToMint.module.scss'
 import React from 'react'
 import { z } from 'zod'
 import { toast } from 'react-hot-toast'
@@ -19,7 +17,7 @@ import { artistNftCollectionAbi } from '@/lib/contracts/ArtistNftCollectionAbi'
 import { useNftMinting } from '../../../hooks/useNftMinting'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
-
+import Image from 'next/image'
 
 type ParamsType = { id: string }
 
@@ -49,7 +47,6 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isMinter, setIsMinter] = useState<boolean>(false)
   const [isCheckingMinter, setIsCheckingMinter] = useState<boolean>(false)
-  // Récupérer le walletClient pour les transactions
   const { data: walletClient } = useWalletClient()
 
   const unwrappedParams = React.use(params as any) as ParamsType
@@ -72,7 +69,6 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   const fetchCollections = async () => {
     try {
       const collectionsData = await getActiveCollections()
-      //console.log('Collections Data:', collectionsData)
       if (collectionsData && Array.isArray(collectionsData)) {
         setCollections(collectionsData)
       }
@@ -93,12 +89,11 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
     const fetchProduct = async () => {
       try {
         // Extraire l'ID numérique si l'ID est au format GID
-        const productId = await params.id.includes('gid://shopify/Product/') 
-          ? params.id.split('/').pop() 
-          : params.id
+        const productId = id.includes('gid://shopify/Product/') 
+          ? id.split('/').pop() 
+          : id
         
         const result = await getShopifyProductById(productId as string)
-        //console.log('Shopify Product:', result)
         if (isMounted) {
           if (result.success && result.product) {
             setProduct(result.product)
@@ -110,7 +105,6 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
 
             // Rechercher l'Item associé 
             const itemResult = await getItemByShopifyId(shopifyProductId)
-            //console.log('Item Result:', itemResult)
             if (itemResult?.id) {
               setItem(itemResult)
               try {
@@ -127,12 +121,9 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
                 }
                 
                 // Récupérer le nftResource associé à cet item
-                console.log('itemResult : ', itemResult)
                 const nftResourceResult = await getNftResourceByItemId(itemResult.id)
                 fetchCollections()
-                //console.log('NftResource Result:', nftResourceResult)
                 if (nftResourceResult) {
-                  console.log('nftResourceResult : ', nftResourceResult)
                   setNftResource(nftResourceResult)
                   // Pré-remplir le formulaire avec les données existantes
                   if (nftResourceResult.status === 'UPLOADIPFS') {
@@ -210,7 +201,9 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
 
   //---------------------------------------------------------------- verifyMinter
   const verifyMinter = async (address: string) => { 
-      const collectionAddress = nftResource.collection.contractAddress
+      const collectionAddress = nftResource?.collection?.contractAddress
+      if (!collectionAddress) return false
+      
       const result = await checkIsMinter(collectionAddress, address)
       if (result) {
         setMinterWallet(address as Address)
@@ -281,8 +274,6 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
         toast.error('Le certificat d\'authenticité existe déjà sur IPFS')
         return
       }
-      console.log('Image uploadée sur IPFS:', response.image)
-      console.log('Certificat uploadé sur IPFS:', response.certificate)
       
       // Upload des métadonnées sur IPFS via la Server Action
       const metadataToast = toast.loading('Upload des métadonnées NFT sur IPFS...');
@@ -303,7 +294,6 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
         }
         
         const tokenUri = metadataResponse.metadata?.data.cid;
-        console.log('Métadonnées uploadées sur IPFS:', tokenUri);
         toast.dismiss(metadataToast);
         
         // Création d'un enregistrement dans la table NftResource
@@ -360,42 +350,9 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
     }
   }
 
-  // Fonction pour gérer l'action selon le statut de l'item
-  const handleItemAction = async () => {
-    if (item?.status === 'pending') {
-      if (nftResource && nftResource.status === 'UPLOADMETADATA') {
-        // Si les ressources sont déjà sur IPFS, passer à l'étape suivante (mint)
-        console.log('Ressources déjà sur IPFS, prêt pour le mint')
-        // Logique pour mint NFT
-        console.log('Mint NFT pour le produit:', product.id)
-        // Appel à l'API de mint
-      } else {
-        // Afficher le formulaire pour upload sur IPFS
-        setShowUploadIpfsForm(true)
-      }
-    } else {
-      // Logique pour mint NFT
-      console.log('Mint NFT pour le produit:', product.id)
-      // Appel à l'API de mint
-    }
-  }
-
-  // Détermine le texte du bouton en fonction du statut de l'item et du nftResource
-  const getActionButtonText = () => {
-    if (item?.status === 'pending') {
-      if (nftResource?.status === 'UPLOADIPFS') {
-        return 'Mint NFT'
-      }
-      return 'Préparer pour le mint'
-    }
-    return 'Lister sur la marketplace'
-  }
-
   // Nouvelle fonction pour vérifier si l'utilisateur est un minter
   const checkIsMinter = async (collectionAddress: string, userAddress: string) => {
-    console.log('collectionAddress : ', collectionAddress)
-    console.log('userAddress : ', userAddress)
-    //if (!collectionAddress || !userAddress) return false
+    if (!collectionAddress || !userAddress) return false
     
     setIsCheckingMinter(true)
     try {
@@ -405,11 +362,9 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
         abi: artistNftCollectionAbi,
         functionName: 'getMinters'
       }) as Address[]
-      console.log('minters : ', minters)
+      
       // Vérifier si l'adresse de l'utilisateur est dans la liste des minters
       const userIsMinter = minters.map(m => m.toLowerCase()).includes(userAddress.toLowerCase())
-      console.log(`L'utilisateur ${userAddress} ${userIsMinter ? 'est' : 'n\'est pas'} un minter sur la collection ${collectionAddress}`)
-      console.log('Liste des minters:', minters)
       
       return userIsMinter
     } catch (error) {
@@ -420,31 +375,20 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
     }
   }
   
-  // useEffect(() => {
-    
-    
-  //   verifyMinter()
-  // }, [nftResource, address, isConnected])
-
-  
   useWalletConnectorEvent(
     primaryWallet?.connector, 
     'accountChange',
     async ({ accounts }, connector) => {
       if (connector.name === 'Rabby') {
-        console.log('Rabby wallet account changed:', accounts);
-        // Handle Rabby wallet account change
         await verifyMinter(accounts[0]);
       }
     }
   );
 
-  // CORRECTION: Utilisation correcte de useWalletConnectorEvent pour les changements de chaîne
   useWalletConnectorEvent(
     primaryWallet?.connector,
     'chainChange',
     async ({ chain }, connector) => {
-      console.log('Changement de chaîne détecté via useWalletConnectorEvent:', chain);
       if (address) {
         await verifyMinter(address);
       }
@@ -452,28 +396,21 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   );
   
   // Ajout d'un useEffect pour la vérification initiale du minter
- // Remplacer l'useEffect à la ligne 469 par celui-ci
   useEffect(() => {
     const checkInitialMinterStatus = async () => {
-      console.log('Vérification initiale du statut minter - primaryWallet:', {
-        primaryWalletAddress: primaryWallet?.address,
-        nftResource: nftResource?.collection?.contractAddress
-      })
-
       if (
         primaryWallet?.connector?.name === 'Rabby' && 
         primaryWallet?.address && 
         nftResource?.collection?.contractAddress
       ) {
-        console.log('Adresse Rabby détectée:', primaryWallet.address)
         await verifyMinter(primaryWallet.address)
       }
     }
 
     checkInitialMinterStatus()
-  }, [primaryWallet?.address, nftResource]) // Changement des dépendances pour utiliser primaryWallet.address
+  }, [primaryWallet?.address, nftResource])
 
-  //---------------------------------------------------------------- handleMintNFT2
+  //---------------------------------------------------------------- handleMintNFT
   const handleMintNFT = async (): Promise<void> => {
     if (!nftResource || !publicClient || !minterWallet) {
       toast.error('Données manquantes pour le minting')
@@ -492,281 +429,343 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
     })
   }
 
+  const handleCancel = () => {
+    router.push('/marketplace/nftsToMint')
+  }
+
+  if (isLoading) {
+    return (
+      <div className="page-container">
+        <div className="d-flex justify-content-center align-items-center p-xl">
+          <LoadingSpinner size="large" message="Chargement des données du produit..." />
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="page-container">
+        <div className="alert alert-danger">
+          <strong>Erreur:</strong> {error}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <>
-      <div className={styles.container}>
-        <h1 className={styles.pageTitle}>Détails de l'oeuvre</h1>
-        
-        {isLoading ? (
-          <LoadingSpinner message="Chargement du produit..." />
-        ) : error ? (
-          <div className={styles.error}>{error}</div>
-        ) : (
-          <div className={styles.productView}>
-            <div className={styles.productGrid}>
-              <div className={styles.imageSection}>
-                {product?.imageUrl ? (
-                  <div className={styles.imageContainer}>
-                    <img src={product.imageUrl} alt={product.title} className={styles.productImage} />
-                  </div>
-                ) : (
-                  <div className={styles.noImage}>Aucune image disponible</div>
-                )}
-              </div>
-              
-              <div className={styles.detailsSection}>
-                <div className={styles.productInfo}>
-                  <h2 className={styles.productTitle}>
-                    {product.title}
-                    {nftResource && (
-                      <NftStatusBadge status={nftResource.status} className={styles.titleBadge} />
-                    )}
-                  </h2>
-                  
-                  {productOwner && (
-                    <div className={styles.infoGroup}>
-                      <span className={styles.label}>Propriétaire:</span>
-                      <span className={styles.value}>
-                        {productOwner.firstName} {productOwner.lastName}
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className={styles.infoGroup}>
-                    <span className={styles.label}>Prix:</span>
-                    <span className={styles.value}>{product.price} {product.currency}</span>
-                  </div>
-                  
-                  {certificate && (
-                    <div className={styles.certificateSection}>
-                      <span className={styles.label}>Certificat d'authenticité:</span>
-                      <Button 
-                        type="button" 
-                        variant="secondary"
-                        onClick={viewCertificate}
-                        className={styles.certificateButton}
-                      >
-                        Voir le certificat
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                
-                <div className={styles.productDescription}>
-                  <h3 className={styles.sectionTitle}>Description</h3>
-                  <div 
-                    className={styles.description}
-                    dangerouslySetInnerHTML={{ __html: product.description || 'Aucune description disponible' }}
-                  />
-                </div>
-                
-                {item?.status === 'pending' && nftResource?.status === 'UPLOADMETADATA' ? (
-                  <div className={styles.nftResourceInfo}>
-                    <h3 className={styles.formTitle}>Ressources NFT uploadées sur IPFS</h3>
-                    <p className={styles.infoNote}>
-                      Pour l'instant, le NFT de l'oeuvre n'est toujours pas mintée ...
-                    </p>
-                    
-                    <div className={styles.formGroup}>
-                      <label>Nom du NFT</label>
-                      <input
-                        type="text"
-                        value={nftResource.name || ''}
-                        readOnly
-                        className={styles.formInput}
-                      />
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                      <label>Description du NFT</label>
-                      <textarea
-                        value={nftResource.description || ''}
-                        readOnly
-                        className={styles.formTextarea}
-                        rows={4}
-                      />
-                    </div>
-                    
-                    <div className={styles.formGroup}>
-                      <label>Collection</label>
-                      <input
-                        type="text"
-                        value={collections.find(c => c.id === nftResource.collectionId)?.name || 'Collection inconnue'}
-                        readOnly
-                        className={styles.formInput}
-                      />
-                    </div>
-                    
-                    <IpfsUriField label="Image URI (IPFS)" uri={nftResource.imageUri} />
-                    
-                    <IpfsUriField label="Certificat URI (IPFS)" uri={nftResource.certificateUri} />
-                    
-                    <IpfsUriField label="Métadonnées URI (IPFS)" uri={nftResource.tokenUri} />
-                                        
-                    <div className={styles.actionButtons}>
-                      <Button 
-                        type="button" 
-                        variant="secondary"
-                        onClick={() => router.back()}
-                      >
-                        Annuler
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="primary"
-                        onClick={handleMintNFT}
-                        disabled={isCheckingMinter || !isMinter || isMinting}
-                      >
-                        {isCheckingMinter 
-                          ? 'Vérification des permissions...' 
-                          : !isMinter 
-                          ? 'Vous n\'êtes pas autorisé à minter' 
-                          : 'Mint NFT'}
-                      </Button>
-                    </div>
-                  </div>
-                ) : showUploadIpfsForm && item?.status === 'pending' ? (
-                  <div className={styles.listingFormContainer}>
-                    <h3 className={styles.formTitle}>Upload sur IPFS</h3>
-                    <form onSubmit={handleUploadOnIpfs} className={styles.listingForm}>
-                      <div className={styles.formGroup}>
-                        <label htmlFor="name">Nom du NFT</label>
-                        <input
-                          id="name"
-                          name="name"
-                          type="text"
-                          value={formData.name}
-                          onChange={handleFormChange}
-                          required
-                          className={styles.formInput}
-                          placeholder="Nom du NFT"
-                        />
-                        {formErrors.name && (
-                          <span className={styles.errorMessage}>{formErrors.name}</span>
-                        )}
-                      </div>
-                      
-                      <div className={styles.formGroup}>
-                        <label htmlFor="description">Description du NFT</label>
-                        <textarea
-                          id="description"
-                          name="description"
-                          value={formData.description}
-                          onChange={handleFormChange}
-                          required
-                          className={styles.formTextarea}
-                          placeholder="Description du NFT"
-                          rows={4}
-                        />
-                        {formErrors.description && (
-                          <span className={styles.errorMessage}>{formErrors.description}</span>
-                        )}
-                      </div>
-                      
-                      <div className={styles.formGroup}>
-                        <label htmlFor="collection">Collection</label>
-                        <select
-                          id="collection"
-                          name="collection"
-                          value={formData.collection}
-                          onChange={handleFormChange}
-                          required
-                          className={styles.formSelect}
-                        >
-                          <option value="">Sélectionnez une collection</option>
-                          {collections.map((collection) => (
-                            <option key={collection.id} value={collection.id.toString()}>
-                              {collection.name}
-                            </option>
-                          ))}
-                        </select>
-                        {formErrors.collection && (
-                          <span className={styles.errorMessage}>{formErrors.collection}</span>
-                        )}
-                      </div>
-                      
-                      <div className={styles.formGroup}>
-                        <label htmlFor="image">Image du NFT</label>
-                        <input
-                          id="image"
-                          name="image"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFormChange}
-                          required
-                          className={styles.formFileInput}
-                        />
-                        {formErrors.image && (
-                          <span className={styles.errorMessage}>{formErrors.image}</span>
-                        )}
-                      </div>
-                      
-                      <div className={styles.formGroup}>
-                        <label htmlFor="certificate">Certificat d'authenticité</label>
-                        <input
-                          id="certificate"
-                          name="certificate"
-                          type="file"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={handleFormChange}
-                          required
-                          className={styles.formFileInput}
-                        />
-                        {formErrors.certificate && (
-                          <span className={styles.errorMessage}>{formErrors.certificate}</span>
-                        )}
-                      </div>
-                      
-                      <div className={styles.formActions}>
-                        <Button 
-                          type="button" 
-                          variant="secondary"
-                          onClick={() => setShowUploadIpfsForm(false)}
-                        >
-                          Annuler
-                        </Button>
-                        <Button 
-                          type="submit" 
-                          variant="primary"
-                        >
-                          Upload sur IPFS
-                        </Button>
-                      </div>
-                    </form>
-                  </div>
-                ) : nftResource?.status === 'MINED' || nftResource?.status === 'ROYALTYSET' ? (
-                  <div className={styles.actionButtons}>
-                    <Button 
-                      type="button" 
-                      variant="secondary"
-                      onClick={() => router.back()}
-                    >
-                      Annuler
-                    </Button>
-                  </div>
-                ) : (
-                  <div className={styles.actionButtons}>
-                    <Button 
-                      type="button" 
-                      variant="secondary"
-                      onClick={() => router.back()}
-                    >
-                      Annuler
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="primary"
-                      onClick={handleItemAction}
-                    >
-                      {getActionButtonText()}
-                    </Button>
-                  </div>
-                )}
-              </div>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="header-top-section">
+          <h1 className="page-title">Détails de l'œuvre à minter</h1>
+          {nftResource && <NftStatusBadge status={nftResource.status} />}
+        </div>
+        <p className="page-subtitle">
+          {product?.title || "Œuvre"} - ID Shopify: {typeof product?.id === 'string' ? product.id.replace('gid://shopify/Product/', '') : product?.id}
+        </p>
+      </div>
+
+      {/* Informations sur l'œuvre */}
+      <div className="edit-form-container">
+        <div className="edit-form">
+          {/* Image de l'œuvre */}
+          <div className="form-group">
+            <label className="form-label">Image</label>
+            <div className="form-readonly" style={{ height: "240px", display: "flex", justifyContent: "center", alignItems: "center" }}>
+              {product && product.images && product.images[0] ? (
+                <img 
+                  src={product.images[0].src} 
+                  alt={product.title} 
+                  style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} 
+                />
+              ) : (
+                <span className="text-muted">Aucune image disponible</span>
+              )}
             </div>
           </div>
+
+          {/* Titre de l'œuvre */}
+          <div className="form-group">
+            <label className="form-label">Titre</label>
+            <div className="form-readonly">{product?.title || "Non défini"}</div>
+          </div>
+
+          {/* Prix */}
+          <div className="form-group">
+            <label className="form-label">Prix</label>
+            <div className="form-readonly">
+              {product?.variants && product.variants[0] ? 
+                `${product.variants[0].price} ${product.variants[0].currency || "EUR"}` : 
+                "Non défini"}
+            </div>
+          </div>
+
+          {/* Statut Shopify */}
+          <div className="form-group">
+            <label className="form-label">Statut Shopify</label>
+            <div className="form-readonly">
+              {product?.status ? (
+                <span className={`status-badge ${product.status === 'ACTIVE' ? 'active' : 'inactive'}`}>
+                  {product.status}
+                </span>
+              ) : "Non défini"}
+            </div>
+          </div>
+
+          {/* Propriétaire */}
+          <div className="form-group">
+            <label className="form-label">Propriétaire</label>
+            <div className="form-readonly">
+              {productOwner ? 
+                `${productOwner.firstName || ''} ${productOwner.lastName || ''} (${productOwner.email})` : 
+                "Non trouvé"}
+            </div>
+          </div>
+
+          {/* Certificat */}
+          <div className="form-group">
+            <label className="form-label">Certificat d'authenticité</label>
+            <div className="form-readonly">
+              {certificate ? (
+                <button 
+                  onClick={viewCertificate} 
+                  className="btn btn-secondary btn-small"
+                >
+                  Voir le certificat
+                </button>
+              ) : (
+                "Aucun certificat disponible"
+              )}
+            </div>
+          </div>
+
+          {/* Description (pleine largeur) */}
+          <div className="form-group full-width">
+            <label className="form-label">Description</label>
+            <div className="form-readonly" style={{ minHeight: "100px" }}>
+              {product?.description ? (
+                <div dangerouslySetInnerHTML={{ __html: product.description }} />
+              ) : (
+                <p>Aucune description disponible.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Formulaire d'upload IPFS */}
+      {showUploadIpfsForm && (
+        <div className="edit-form-container" style={{ marginTop: "2rem" }}>
+          <h2 className="card-title" style={{ marginBottom: "1.5rem" }}>
+            {nftResource ? 'Mettre à jour le NFT Resource' : 'Créer un NFT Resource'}
+          </h2>
+          <form onSubmit={handleUploadOnIpfs} className="edit-form">
+            <div className="form-group">
+              <label htmlFor="name" className="form-label">Nom du NFT</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleFormChange}
+                className={`form-input ${formErrors.name ? 'input-error' : ''}`}
+                placeholder="Nom du NFT"
+              />
+              {formErrors.name && <p className="form-error">{formErrors.name}</p>}
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="collection" className="form-label">Collection</label>
+              <select
+                id="collection"
+                name="collection"
+                value={formData.collection}
+                onChange={handleFormChange}
+                className={`form-select ${formErrors.collection ? 'input-error' : ''}`}
+              >
+                <option value="">Sélectionner une collection</option>
+                {collections.map(collection => (
+                  <option key={collection.id} value={collection.id}>
+                    {collection.name} ({collection.symbol})
+                  </option>
+                ))}
+              </select>
+              {formErrors.collection && <p className="form-error">{formErrors.collection}</p>}
+            </div>
+            
+            <div className="form-group full-width">
+              <label htmlFor="description" className="form-label">Description</label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleFormChange}
+                className={`form-textarea ${formErrors.description ? 'input-error' : ''}`}
+                rows={4}
+                placeholder="Description du NFT"
+              ></textarea>
+              {formErrors.description && <p className="form-error">{formErrors.description}</p>}
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="image" className="form-label">Image du NFT</label>
+              <input
+                type="file"
+                id="image"
+                name="image"
+                onChange={handleFormChange}
+                className={`form-input ${formErrors.image ? 'input-error' : ''}`}
+                accept="image/*"
+              />
+              {formErrors.image && <p className="form-error">{formErrors.image}</p>}
+              <p className="form-helper-text">Format recommandé: JPG, PNG ou WEBP, maximum 10MB</p>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="certificate" className="form-label">Certificat d'authenticité</label>
+              <input
+                type="file"
+                id="certificate"
+                name="certificate"
+                onChange={handleFormChange}
+                className={`form-input ${formErrors.certificate ? 'input-error' : ''}`}
+                accept="application/pdf"
+              />
+              {formErrors.certificate && <p className="form-error">{formErrors.certificate}</p>}
+              <p className="form-helper-text">Fichier PDF uniquement, maximum 10MB</p>
+            </div>
+            
+            <div className="form-group full-width">
+              <div className="d-flex align-items-center gap-sm">
+                <input
+                  type="checkbox"
+                  id="intellectualProperty"
+                  name="intellectualProperty"
+                  checked={formData.intellectualProperty}
+                  onChange={handleFormChange}
+                  className="form-checkbox"
+                />
+                <label htmlFor="intellectualProperty" className="form-label mb-0">
+                  Je certifie être le propriétaire des droits intellectuels de ces fichiers
+                </label>
+              </div>
+            </div>
+            
+            <div className="form-actions full-width">
+              <button
+                type="button"
+                onClick={() => setShowUploadIpfsForm(false)}
+                className="btn btn-secondary"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={!formData.intellectualProperty}
+              >
+                Uploader sur IPFS
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+      
+      {/* Informations du NFT */}
+      {nftResource && (
+        <div className="edit-form-container" style={{ marginTop: "2rem" }}>
+          <h2 className="card-title" style={{ marginBottom: "1.5rem" }}>Informations du NFT</h2>
+          <div className="edit-form">
+            <div className="form-group">
+              <label className="form-label">ID</label>
+              <div className="form-readonly">{nftResource.id}</div>
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">Nom</label>
+              <div className="form-readonly">{nftResource.name}</div>
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">Statut</label>
+              <div className="form-readonly"><NftStatusBadge status={nftResource.status} /></div>
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">Collection</label>
+              <div className="form-readonly">
+                {nftResource.collection?.name} ({nftResource.collection?.symbol})
+              </div>
+            </div>
+            
+            {nftResource.imageUri && (
+              <div className="form-group full-width">
+                <label className="form-label">Image URI</label>
+                <IpfsUriField label="" uri={nftResource.imageUri} />
+              </div>
+            )}
+            
+            {nftResource.certificateUri && (
+              <div className="form-group full-width">
+                <label className="form-label">Certificat URI</label>
+                <IpfsUriField label="" uri={nftResource.certificateUri} />
+              </div>
+            )}
+            
+            {nftResource.metadataUri && (
+              <div className="form-group full-width">
+                <label className="form-label">Metadata URI</label>
+                <IpfsUriField label="" uri={nftResource.metadataUri} />
+              </div>
+            )}
+            
+            {nftResource.tokenId !== null && (
+              <div className="form-group">
+                <label className="form-label">Token ID</label>
+                <div className="form-readonly">{nftResource.tokenId}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Actions */}
+      <div className="form-actions" style={{ marginTop: "2rem" }}>
+        <button
+          onClick={handleCancel}
+          className="btn btn-secondary"
+        >
+          Retour à la liste
+        </button>
+        
+        {nftResource && nftResource.status === 'UPLOADIPFS' && (
+          <button
+            onClick={() => setShowUploadIpfsForm(!showUploadIpfsForm)}
+            className="btn btn-primary"
+          >
+            {showUploadIpfsForm ? 'Masquer le formulaire' : 'Uploader sur IPFS'}
+          </button>
+        )}
+        
+        {!nftResource && (
+          <button
+            onClick={() => setShowUploadIpfsForm(!showUploadIpfsForm)}
+            className="btn btn-primary"
+          >
+            {showUploadIpfsForm ? 'Masquer le formulaire' : 'Créer NFT Resource'}
+          </button>
+        )}
+        
+        {nftResource && nftResource.status === 'UPLOADMETADATA' && (
+          <button
+            onClick={handleMintNFT}
+            className="btn btn-primary"
+            disabled={isMinting || !isConnected || isCheckingMinter || !isMinter}
+          >
+            {isMinting ? 'Minting en cours...' : isCheckingMinter ? 'Vérification des permissions...' : !isMinter ? 'Non autorisé à minter' : 'Minter le NFT'}
+          </button>
         )}
       </div>
-    </>
+    </div>
   )
 } 

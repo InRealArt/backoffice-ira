@@ -6,7 +6,6 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-hot-toast'
-import styles from './EditCollectionForm.module.scss'
 import { Artist, Collection, CollectionStatus, SmartContract } from '@prisma/client'
 import { updateCollection, syncCollection } from '@/lib/actions/collection-actions'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
@@ -135,39 +134,39 @@ export default function EditCollectionForm({ collection, artists, smartContracts
   const currentSmartContract = smartContracts.find(f => f.id === collection.smartContractId)
 
   return (
-    <div className={styles.formContainer}>
-      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+    <div className="edit-form-container">
+      <form onSubmit={handleSubmit(onSubmit)} className="edit-form">
         {/* Nom (lecture seule) */}
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Nom de la collection</label>
-          <div className={styles.readOnlyField}>
+        <div className="form-group">
+          <label className="form-label">Nom de la collection</label>
+          <div className="form-readonly">
             {collection.name}
           </div>
           <input type="hidden" {...register('name')} />
         </div>
         
         {/* Symbole (lecture seule) */}
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Symbole</label>
-          <div className={styles.readOnlyField}>
+        <div className="form-group">
+          <label className="form-label">Symbole</label>
+          <div className="form-readonly">
             {collection.symbol}
           </div>
           <input type="hidden" {...register('symbol')} />
         </div>
         
         {/* Artiste (lecture seule) */}
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Artiste</label>
-          <div className={styles.readOnlyField}>
+        <div className="form-group">
+          <label className="form-label">Artiste</label>
+          <div className="form-readonly">
             {currentArtist ? currentArtist.pseudo : 'Inconnu'}
           </div>
           <input type="hidden" {...register('artistId')} />
         </div>
         
         {/* Factory (lecture seule) */}
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Factory</label>
-          <div className={styles.readOnlyField}>
+        <div className="form-group">
+          <label className="form-label">Factory</label>
+          <div className="form-readonly">
             {currentSmartContract ? 
               `${formatChainName(currentSmartContract.network)} - (Factory address) ${truncateAddress(currentSmartContract.factoryAddress)}` : 
               'Non spécifiée'}
@@ -176,42 +175,42 @@ export default function EditCollectionForm({ collection, artists, smartContracts
         </div>
         
         {/* Adresse Admin (lecture seule) */}
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Adresse Admin</label>
-          <div className={styles.readOnlyField}>
+        <div className="form-group">
+          <label className="form-label">Adresse Admin</label>
+          <div className="form-readonly">
             {truncateAddress(collection.addressAdmin)}
           </div>
           <input type="hidden" {...register('addressAdmin')} />
         </div>
         
         {/* Adresse du contrat (éditable) */}
-        <div className={styles.formGroup}>
-          <label htmlFor="contractAddress" className={styles.label}>
-            Adresse du contrat <span className={styles.editableLabel}>(éditable)</span>
+        <div className="form-group">
+          <label htmlFor="contractAddress" className="form-label">
+            Adresse du contrat <span className="editable-label">(éditable)</span>
           </label>
           <input
             type="text"
             id="contractAddress"
-            className={styles.input}
+            className={`form-input ${errors.contractAddress ? 'input-error' : ''}`}
             placeholder="0x... ou pending"
             {...register('contractAddress')}
           />
           {errors.contractAddress && (
-            <p className={styles.errorText}>{errors.contractAddress.message}</p>
+            <p className="form-error">{errors.contractAddress.message}</p>
           )}
-          <p className={styles.helperText}>
+          <p className="form-helper-text">
             Ce champ peut être modifié manuellement si l'adresse du contrat n'a pas été correctement récupérée depuis Rabby.
           </p>
         </div>
         
         {/* Statut (éditable) */}
-        <div className={styles.formGroup}>
-          <label htmlFor="status" className={styles.label}>
-            Statut <span className={styles.editableLabel}>(éditable)</span>
+        <div className="form-group">
+          <label htmlFor="status" className="form-label">
+            Statut <span className="editable-label">(éditable)</span>
           </label>
           <select
             id="status"
-            className={styles.input}
+            className={`form-select ${errors.status ? 'input-error' : ''}`}
             {...register('status')}
           >
             <option value="pending">En attente</option>
@@ -219,35 +218,35 @@ export default function EditCollectionForm({ collection, artists, smartContracts
             <option value="failed">Échoué</option>
           </select>
           {errors.status && (
-            <p className={styles.errorText}>{errors.status.message}</p>
+            <p className="form-error">{errors.status.message}</p>
           )}
-          <p className={styles.helperText}>
+          <p className="form-helper-text">
             Ce champ peut être modifié manuellement pour refléter l'état réel de la collection.
           </p>
         </div>
         
         {/* Transaction Hash (lecture seule) avec bouton de synchronisation */}
         {collection.transactionHash && (
-          <div className={styles.formGroup}>
-            <div className={styles.labelWithAction}>
-              <label className={styles.label}>Transaction Hash</label>
+          <div className="form-group full-width">
+            <div className="label-with-action">
+              <label className="form-label">Transaction Hash</label>
               {collection.status === 'pending' && (
                 <button 
                   type="button"
                   onClick={handleSync}
                   disabled={isSyncing}
-                  className={styles.syncButton}
+                  className="sync-button"
                 >
-                  <RefreshCw className={`${styles.syncIcon} ${isSyncing ? styles.spinning : ''}`} />
+                  <RefreshCw className={`sync-icon ${isSyncing ? 'spinning' : ''}`} />
                   Synchroniser
                 </button>
               )}
             </div>
-            <div className={styles.readOnlyField}>
+            <div className="form-readonly">
               {truncateAddress(collection.transactionHash)}
             </div>
             {collection.status === 'pending' && (
-              <p className={styles.helperText}>
+              <p className="form-helper-text">
                 Cliquez sur "Synchroniser" pour vérifier le statut de la transaction sur la blockchain.
               </p>
             )}
@@ -255,18 +254,18 @@ export default function EditCollectionForm({ collection, artists, smartContracts
         )}
         
         {/* Boutons d'action */}
-        <div className={styles.formActions}>
+        <div className="form-actions full-width">
           <button 
             type="button" 
             onClick={handleCancel}
-            className={`${styles.button} ${styles.buttonSecondary}`}
+            className="btn btn-secondary"
             disabled={isSubmitting || isSyncing}
           >
             Annuler
           </button>
           <button 
             type="submit" 
-            className={`${styles.button} ${styles.buttonPrimary}`}
+            className="btn btn-primary"
             disabled={isSubmitting || isSyncing}
           >
             {isSubmitting ? 'Mise à jour...' : 'Mettre à jour la collection'}

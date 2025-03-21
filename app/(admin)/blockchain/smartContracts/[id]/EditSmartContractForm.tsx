@@ -7,7 +7,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-hot-toast'
 import { SmartContract } from '@prisma/client'
-import styles from './EditSmartContractForm.module.scss'
 import { updateSmartContract } from '@/lib/actions/smartContract-actions'
 
 const formSchema = z.object({
@@ -72,57 +71,57 @@ export default function EditSmartContractForm({ smartContract }: EditSmartContra
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>Édition du smart contract</h1>
+    <div className="edit-form-container">
+      <div className="page-header">
+        <h1 className="page-title">Édition du smart contract</h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-        <div className={styles.formGroup}>
-          <label htmlFor="factoryAddress">Adresse Factory</label>
+      <form onSubmit={handleSubmit(onSubmit)} className="edit-form">
+        <div className="form-group">
+          <label htmlFor="factoryAddress" className="form-label">Adresse Factory</label>
           <input
             type="text"
             id="factoryAddress"
             {...register('factoryAddress')}
-            className={errors.factoryAddress ? styles.error : ''}
+            className={`form-input ${errors.factoryAddress ? 'input-error' : ''}`}
           />
           {errors.factoryAddress && (
-            <span className={styles.errorMessage}>{errors.factoryAddress.message}</span>
+            <p className="form-error">{errors.factoryAddress.message}</p>
           )}
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="royaltiesAddress">Adresse Royalties (Proxy)</label>
+        <div className="form-group">
+          <label htmlFor="royaltiesAddress" className="form-label">Adresse Royalties (Proxy)</label>
           <input
             type="text"
             id="royaltiesAddress"
             {...register('royaltiesAddress')}
-            className={errors.royaltiesAddress ? styles.error : ''}
+            className={`form-input ${errors.royaltiesAddress ? 'input-error' : ''}`}
           />
           {errors.royaltiesAddress && (
-            <span className={styles.errorMessage}>{errors.royaltiesAddress.message}</span>
+            <p className="form-error">{errors.royaltiesAddress.message}</p>
           )}
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="marketplaceAddress">Adresse Marketplace (Proxy)</label>
+        <div className="form-group">
+          <label htmlFor="marketplaceAddress" className="form-label">Adresse Marketplace (Proxy)</label>
           <input
             type="text"
             id="marketplaceAddress"
             {...register('marketplaceAddress')}
-            className={errors.marketplaceAddress ? styles.error : ''}
+            className={`form-input ${errors.marketplaceAddress ? 'input-error' : ''}`}
           />
           {errors.marketplaceAddress && (
-            <span className={styles.errorMessage}>{errors.marketplaceAddress.message}</span>
+            <p className="form-error">{errors.marketplaceAddress.message}</p>
           )}
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="network">Réseau</label>
+        <div className="form-group">
+          <label htmlFor="network" className="form-label">Réseau</label>
           <select
             id="network"
             {...register('network')}
-            className={errors.network ? styles.error : ''}
+            className={`form-select ${errors.network ? 'input-error' : ''}`}
           >
             <option value="mainnet">Ethereum Mainnet</option>
             <option value="sepolia">Sepolia</option>
@@ -133,32 +132,33 @@ export default function EditSmartContractForm({ smartContract }: EditSmartContra
             <option value="sepoliaBase">Sepolia Base</option>
           </select>
           {errors.network && (
-            <span className={styles.errorMessage}>{errors.network.message}</span>
+            <p className="form-error">{errors.network.message}</p>
           )}
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.checkboxLabel}>
+        <div className="form-group">
+          <label className="form-checkbox-label">
             <input
               type="checkbox"
               {...register('active')}
+              className="form-checkbox"
             />
-            Actif
+            <span>Actif</span>
           </label>
         </div>
 
-        <div className={styles.actions}>
+        <div className="form-actions">
           <button
             type="button"
             onClick={() => router.back()}
-            className={styles.cancelButton}
+            className="btn btn-secondary"
             disabled={isSubmitting}
           >
             Annuler
           </button>
           <button
             type="submit"
-            className={styles.submitButton}
+            className="btn btn-primary"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Mise à jour...' : 'Mettre à jour'}
