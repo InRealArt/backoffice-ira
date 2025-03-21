@@ -10,6 +10,7 @@ import { getAuthToken } from '@dynamic-labs/sdk-react-core'
 import { truncateAddress } from '@/lib/blockchain/utils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import Modal from '@/app/components/Common/Modal'
+import { StatusRow } from '@/app/components/Table'
 
 interface CollectionWithRelations extends Collection {
   artist: Artist
@@ -163,9 +164,13 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                 {filteredCollections.map((collection) => {
                   const isLoading = loadingCollectionId === collection.id
                   const isDeleting = deletingCollectionId === collection.id
+                  const isSmartContractActive = collection.smartContract?.active ?? true;
+                  
                   return (
-                    <tr 
+                    <StatusRow 
                       key={collection.id} 
+                      isActive={isSmartContractActive}
+                      colorType="danger"
                       onClick={() => !loadingCollectionId && !deletingCollectionId && handleCollectionClick(collection.id)}
                       className={`clickable-row ${isLoading || isDeleting ? 'loading-row' : ''} ${(loadingCollectionId || deletingCollectionId) && !isLoading && !isDeleting ? 'disabled-row' : ''}`}
                     >
@@ -239,7 +244,7 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                           )}
                         </button>
                       </td>
-                    </tr>
+                    </StatusRow>
                   )
                 })}
               </tbody>

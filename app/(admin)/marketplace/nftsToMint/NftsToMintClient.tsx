@@ -8,6 +8,7 @@ import { truncateAddress } from '@/lib/blockchain/utils'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import { getItemStatusBadge, getActiveBadge } from '@/app/components/StatusBadge'
 import { Filters, FilterItem, SearchInput } from '@/app/components/Common'
+import { StatusRow } from '@/app/components/Table'
 
 interface Item {
   id: number
@@ -177,10 +178,14 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
               <tbody>
                 {filteredProducts.map((product) => {
                   const isLoading = loadingItemId === product.id;
+                  const smartContract = product.nftResource?.collection?.smartContract;
+                  const isActive = smartContract?.active ?? true;
                   
                   return (
-                    <tr 
-                      key={product.id} 
+                    <StatusRow 
+                      key={product.id}
+                      isActive={isActive}
+                      colorType="danger" 
                       onClick={() => !loadingItemId && handleItemClick(product.id)}
                       className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingItemId && !isLoading ? 'disabled-row' : ''} ${!product.nftResource ? 'highlight-row' : ''}`}
                     >
@@ -232,7 +237,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                           )}
                         </div>
                       </td>
-                    </tr>
+                    </StatusRow>
                   )
                 })}
               </tbody>

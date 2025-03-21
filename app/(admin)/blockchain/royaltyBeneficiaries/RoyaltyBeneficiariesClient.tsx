@@ -7,6 +7,7 @@ import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import { SmartContract } from '@prisma/client'
 import { truncateAddress } from '@/lib/blockchain/utils'
 import { Filters, FilterItem } from '@/app/components/Common'
+import { StatusRow } from '@/app/components/Table'
 
 // Types pour les relations imbriquées
 type NftCollection = {
@@ -133,8 +134,15 @@ export default function RoyaltyBeneficiariesClient({
               <tbody>
                 {filteredBeneficiaries.map((beneficiary) => {
                   const smartContract = getSmartContract(beneficiary)
+                  const isActive = smartContract?.active ?? true;
+                  
                   return (
-                    <tr key={beneficiary?.id} className="table-row">
+                    <StatusRow 
+                      key={beneficiary?.id} 
+                      className="table-row"
+                      isActive={isActive}
+                      colorType="danger"
+                    >
                       <td>{beneficiary?.id}</td>
                       <td>
                         <BlockchainAddress 
@@ -198,7 +206,7 @@ export default function RoyaltyBeneficiariesClient({
                           <span className="text-muted">-</span>
                         )}
                       </td>
-                    </tr>
+                    </StatusRow>
                   )
                 })}
               </tbody>

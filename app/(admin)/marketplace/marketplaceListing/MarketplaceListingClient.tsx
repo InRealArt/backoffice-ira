@@ -10,6 +10,7 @@ import { truncateAddress } from '@/lib/blockchain/utils'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import { getActiveBadge } from '@/app/components/StatusBadge'
 import { Filters, FilterItem } from '@/app/components/Common'
+import { StatusRow } from '@/app/components/Table'
 
 // Type pour les NFTs avec statut ROYALTYSET
 type RoyaltysetItemWithRelations = Item & {
@@ -137,9 +138,13 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
                 {filteredItems.map((item) => {
                   const isLoading = loadingItemId === item.id
                   const smartContract = item.nftResource?.collection?.smartContract || null;
+                  const isActive = smartContract?.active ?? true;
+                  
                   return (
-                    <tr 
+                    <StatusRow 
                       key={item.id} 
+                      isActive={isActive}
+                      colorType="danger"
                       onClick={() => !loadingItemId && handleItemClick(item.id)}
                       className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingItemId && !isLoading ? 'disabled-row' : ''}`}
                     >
@@ -181,7 +186,7 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
                           <NftStatusBadge status={item.nftResource?.status || 'ROYALTYSET'} />
                         </div>
                       </td>
-                    </tr>
+                    </StatusRow>
                   )
                 })}
               </tbody>

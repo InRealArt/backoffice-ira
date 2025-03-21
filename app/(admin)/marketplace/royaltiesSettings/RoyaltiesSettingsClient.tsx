@@ -10,6 +10,7 @@ import { getActiveBadge } from '@/app/components/StatusBadge'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import { truncateAddress } from '@/lib/blockchain/utils'
 import { Filters, FilterItem } from '@/app/components/Common'
+import { StatusRow } from '@/app/components/Table'
 
 // Type pour inclure le smartContractId
 type MinedItemWithRelations = Item & {
@@ -137,11 +138,15 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
                 {filteredItems.map((item) => {
                   const isLoading = loadingItemId === item.id
                   const smartContract = item.nftResource?.collection?.smartContract || null;
+                  const isActive = smartContract?.active ?? true;
+                  
                   return (
-                    <tr 
-                      key={item.id} 
-                      onClick={() => !loadingItemId && handleItemClick(item.id)}
+                    <StatusRow 
+                      key={item.id}
+                      isActive={isActive}
+                      colorType="danger"
                       className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingItemId && !isLoading ? 'disabled-row' : ''}`}
+                      onClick={() => !loadingItemId && handleItemClick(item.id)}
                     >
                       <td>
                         <div className="d-flex align-items-center gap-sm">
@@ -181,7 +186,7 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
                           <NftStatusBadge status={item.nftResource?.status || 'MINED'} />
                         </div>
                       </td>
-                    </tr>
+                    </StatusRow>
                   )
                 })}
               </tbody>

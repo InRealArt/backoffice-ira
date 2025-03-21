@@ -7,6 +7,7 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import Link from 'next/link'
+import { StatusRow } from '@/app/components/Table'
 
 interface SmartContractsClientProps {
   smartContracts: SmartContract[]
@@ -80,8 +81,10 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
                 {smartContracts.map((contract) => {
                   const isLoading = loadingContractId === contract.id;
                   return (
-                    <tr 
+                    <StatusRow 
                       key={contract.id} 
+                      isActive={contract.active}
+                      colorType="danger"
                       className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingContractId && !isLoading ? 'disabled-row' : ''}`}
                       onClick={() => !loadingContractId && handleContractClick(contract.id)}
                     >
@@ -124,7 +127,7 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
                           {contract.active ? 'Actif' : 'Inactif'}
                         </span>
                       </td>
-                    </tr>
+                    </StatusRow>
                   );
                 })}
               </tbody>
