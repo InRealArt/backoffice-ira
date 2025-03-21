@@ -16,10 +16,11 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 
 - [ ] Créer des composants pour les cartes et tiles
 - [ ] Ajouter une fonctionnalité de thème (clair/sombre)
-- [ ] Optimiser les performances CSS (purge des classes non utilisées)
+- [x] Optimiser les performances CSS (purge des classes non utilisées) - Documentation: [docs/css-optimization.md](/docs/css-optimization.md)
 - [ ] Standardiser les styles des tableaux de données avec pagination
 - [ ] Créer un composant de filtre réutilisable
 - [ ] Ajouter des animations de transition pour les changements d'état
+- [ ] Ajouter une option de prévisualisation pour les modifications
 
 ## Priorité Basse
 

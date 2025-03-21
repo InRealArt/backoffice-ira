@@ -8,7 +8,9 @@
     "start": "next start",
     "stop": "next stop",
     "lint": "next lint",
-    "cleanDev": "rm -rf .next && npm run dev"
+    "cleanDev": "rm -rf .next && npm run dev",
+    "analyze-css": "node scripts/analyze-css.js",
+    "build:prod": "NODE_ENV=production npm run build"
   },
   "dependencies": {
     "@dynamic-labs/ethereum": "^4.7.2",
@@ -43,9 +45,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
     "pino-pretty": "^13.0.0",
+    "postcss": "^8.5.3",
+    "postcss-purgecss": "^5.0.0",
     "typescript": "^5"
   }
 }
