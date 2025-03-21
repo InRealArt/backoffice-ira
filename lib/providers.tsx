@@ -10,6 +10,7 @@ import { mainnet, polygonMumbai, sepolia, polygon } from "viem/chains";
 import AuthStateManager from "@/app/components/Auth/AuthStateManager";
 import { useRouter } from "next/navigation";
 import { getNetwork } from "./blockchain/networkConfig";
+import { ToastProvider, CustomToaster } from "@/app/components/Toast/ToastContext";
 
 // Fonction qui transforme une chaîne en objet Chain
 function getChainByName(networkName: string): Chain {
@@ -71,8 +72,11 @@ export default function Providers({
       <WagmiProvider config={config}>
         <QueryClientProvider client={queryClient}>
           <DynamicWagmiConnector>
-            <AuthStateManager />
-            {children}
+            <ToastProvider>
+              <AuthStateManager />
+              {children}
+              <CustomToaster />
+            </ToastProvider>
           </DynamicWagmiConnector>
         </QueryClientProvider>
       </WagmiProvider>

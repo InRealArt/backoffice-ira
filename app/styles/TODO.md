@@ -8,7 +8,7 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 - [ ] Ajouter des variantes de boutons (outline, text-only)
 - [x] Créer des styles de formulaire cohérents
 - [ ] Appliquer le système sur toutes les pages principales
-- [ ] Optimiser la gestion des notifications d'erreur en utilisant la classe `toast-notification`
+- [x] Optimiser la gestion des notifications d'erreur en utilisant la classe `toast-notification`
 - [ ] Créer une directive pour standardiser les modales dans l'ensemble de l'application
 
 ## Priorité Moyenne

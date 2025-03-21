@@ -684,23 +684,74 @@
   position: fixed;
   bottom: $spacing-xl;
   right: $spacing-xl;
-  background-color: #1f2937;
-  color: white;
   padding: $spacing-md $spacing-lg;
   border-radius: $border-radius-sm;
   box-shadow: $shadow-lg;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
   z-index: 50;
   animation: fadeIn 0.3s ease-out;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  min-width: 280px;
+  max-width: 450px;
+  opacity: 0.95;
+  
+  &::before {
+    font-size: $font-size-lg;
+    margin-right: $spacing-xs;
+  }
+  
+  &.toast-success {
+    background-color: #10b981;
+    color: white;
+    border-left: 4px solid #047857;
+    
+    &::before {
+      content: '✓';
+    }
+  }
+  
+  &.toast-error {
+    background-color: #ef4444;
+    color: white;
+    border-left: 4px solid #b91c1c;
+    
+    &::before {
+      content: '✗';
+    }
+  }
+  
+  &.toast-warning {
+    background-color: #f59e0b;
+    color: white;
+    border-left: 4px solid #b45309;
+    
+    &::before {
+      content: '⚠';
+    }
+  }
+  
+  &.toast-info {
+    background-color: #3b82f6;
+    color: white;
+    border-left: 4px solid #1d4ed8;
+    
+    &::before {
+      content: 'ℹ';
+    }
+  }
 }
 
+// Animation pour les toasts
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(1rem);
   }
-
   to {
-    opacity: 1;
+    opacity: 0.95;
     transform: translateY(0);
   }
 }
