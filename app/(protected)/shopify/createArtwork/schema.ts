@@ -41,10 +41,16 @@ export const artworkSchema = z.object({
             "La date de fin des droits doit être dans le futur"
         ),
     edition: z.string().optional(),
-    images: z.instanceof(FileList).nullable()
-        .refine((files) => files && files.length > 0, "Au moins une image est requise"),
-    certificate: z.instanceof(FileList).nullable()
-        .refine((files) => files && files.length > 0, "Le certificat d'authenticité est obligatoire"),
+    images: z.any()
+        .refine(
+            (val) => val instanceof FileList && val.length > 0,
+            "Veuillez sélectionner au moins une image pour votre œuvre"
+        ),
+    certificate: z.any()
+        .refine(
+            (val) => val instanceof FileList && val.length > 0,
+            "Le certificat d'authenticité est obligatoire"
+        ),
     artworkSupport: z.string().optional()
 })
 

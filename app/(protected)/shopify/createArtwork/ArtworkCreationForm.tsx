@@ -247,10 +247,10 @@ export default function ArtworkCreationForm() {
     }).filter(Boolean)
 
     if (missingFields.length > 0) {
-      toast.error(`Champs obligatoires manquants : ${missingFields.join(', ')}`, {
-        duration: 5000,
-        position: 'top-center'
-      })
+      // toast.error(`Champs obligatoires manquants : ${missingFields.join(', ')}`, {
+      //   duration: 5000,
+      //   position: 'top-center'
+      // })
       
       // Faire défiler jusqu'au premier champ en erreur
       scrollToError(errors)
