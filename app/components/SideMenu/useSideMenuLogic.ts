@@ -23,8 +23,8 @@ export function useSideMenuLogic() {
   // Si l'utilisateur est connecté - définir à true par défaut en développement
   const [isLoggedIn, setIsLoggedIn] = useState(true)
 
-  // Si l'utilisateur est un admin ou a accès à une collection - définir à true par défaut en développement
-  const [isAdmin, setIsAdmin] = useState(true)
+  // Si l'utilisateur est un admin ou a accès à une collection - définir par défaut à false
+  const [isAdmin, setIsAdmin] = useState(false)
   const [canAccessCollection, setCanAccessCollection] = useState(true)
 
   // Fermer tous les sous-menus sauf celui spécifié
@@ -91,39 +91,54 @@ export function useSideMenuLogic() {
     }
   }, [pathname])
 
-  // Vérification d'authentification simplifiée - décommenter en production
-  /* useEffect(() => {
-    const checkAuth = () => {
-      // Exemple simplifié - à remplacer par votre propre logique d'authentification
-      const userData = localStorage.getItem('user')
-      
-      if (userData) {
-        setIsLoggedIn(true)
-        
+  // Vérification de l'authentification et des rôles utilisateur
+  useEffect(() => {
+    const checkUserRole = async () => {
+      const { user } = dynamicContext;
+
+      if (user?.email) {
+        setIsLoggedIn(true);
+
         try {
-          const user = JSON.parse(userData)
-          setIsAdmin(user.role === 'admin')
-          setCanAccessCollection(user.hasCollection || user.role === 'artist')
-        } catch (e) {
-          console.error('Erreur lors de la lecture des données utilisateur:', e)
+          // Vérifier le rôle de l'utilisateur via l'API
+          const response = await fetch('/api/auth/checkAuthorizedUser', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: user.email
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+
+            // Vérifier si l'utilisateur a un rôle administrateur en inspectant ses métadonnées
+            const metadata = user.metadata as Record<string, any> | null | undefined;
+            const isUserAdmin = metadata && 'role' in metadata && metadata.role === 'admin';
+            setIsAdmin(!!isUserAdmin);
+
+            // Tous les utilisateurs autorisés peuvent accéder à leur collection
+            setCanAccessCollection(data.authorized);
+          } else {
+            setIsAdmin(false);
+            setCanAccessCollection(false);
+          }
+        } catch (error) {
+          console.error('Erreur lors de la vérification du rôle:', error);
+          setIsAdmin(false);
+          setCanAccessCollection(false);
         }
       } else {
-        setIsLoggedIn(false)
-        setIsAdmin(false)
-        setCanAccessCollection(false)
+        setIsLoggedIn(false);
+        setIsAdmin(false);
+        setCanAccessCollection(false);
       }
-    }
-    
-    checkAuth()
-    
-    window.addEventListener('storage', checkAuth)
-    document.addEventListener('dynamicAuthStateChanged', checkAuth)
-    
-    return () => {
-      window.removeEventListener('storage', checkAuth)
-      document.removeEventListener('dynamicAuthStateChanged', checkAuth)
-    }
-  }, []) */
+    };
+
+    checkUserRole();
+  }, [dynamicContext.user]);
 
   // Effet pour fermer les sous-menus sur clic en dehors
   useEffect(() => {
