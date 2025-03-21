@@ -114,10 +114,25 @@ export function useSideMenuLogic() {
           if (response.ok) {
             const data = await response.json();
 
-            // Vérifier si l'utilisateur a un rôle administrateur en inspectant ses métadonnées
-            const metadata = user.metadata as Record<string, any> | null | undefined;
-            const isUserAdmin = metadata && 'role' in metadata && metadata.role === 'admin';
-            setIsAdmin(!!isUserAdmin);
+            // Vérifier si l'utilisateur a un rôle administrateur
+            // Appel direct à l'API pour vérifier le rôle admin
+            const adminCheckResponse = await fetch('/api/auth/checkAdminRole', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: user.email,
+                walletAddress: dynamicContext.primaryWallet?.address || null
+              }),
+            });
+
+            if (adminCheckResponse.ok) {
+              const adminData = await adminCheckResponse.json();
+              setIsAdmin(adminData.isAdmin);
+            } else {
+              setIsAdmin(false);
+            }
 
             // Tous les utilisateurs autorisés peuvent accéder à leur collection
             setCanAccessCollection(data.authorized);
@@ -138,7 +153,7 @@ export function useSideMenuLogic() {
     };
 
     checkUserRole();
-  }, [dynamicContext.user]);
+  }, [dynamicContext.user, dynamicContext.primaryWallet]);
 
   // Effet pour fermer les sous-menus sur clic en dehors
   useEffect(() => {
