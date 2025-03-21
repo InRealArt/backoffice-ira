@@ -54,6 +54,7 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 - [x] marketplace/nftsToMint/[id]/edit
 - [x] marketplace/royaltiesSettings
 - [x] marketplace/marketplaceListing
+- [x] shopify/collection
 - [ ] blockchain/marketplace
 - [ ] users/list
 - [ ] settings

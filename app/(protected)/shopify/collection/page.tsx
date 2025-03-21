@@ -64,25 +64,27 @@ export default function CollectionPage() {
   }
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.pageTitle}>Mes Œuvres</h1>
+    <div className="page-container">
+      <h1 className="page-title">Mes Œuvres</h1>
 
       {error ? (
-        <div className={styles.error}>{error}</div>
+        <div className="alert alert-error">
+          {error}
+        </div>
       ) : !itemsData || itemsData.length === 0 ? (
-        <div className={styles.empty}>
+        <div className="empty-state">
           <p>Aucune œuvre trouvée dans votre collection</p>
         </div>
       ) : (
         <>
-          <div className={styles.collectionInfo}>
-            <h2 className={styles.collectionTitle}>Collection de {userDB?.firstName} {userDB?.lastName}</h2>
+          <div className="card">
+            <h2 className="card-title">Collection de {userDB?.firstName} {userDB?.lastName}</h2>
           </div>
 
-          <div className={styles.productsSection}>
-            <h3 className={styles.sectionTitle}>Mes œuvres ({itemsData.length})</h3>
+          <div className="section">
+            <h3 className="section-title">Mes œuvres ({itemsData.length})</h3>
             
-            <div className={styles.productsGrid}>
+            <div className="products-grid">
               {itemsData.map((item) => (
                 <ProductCard
                   key={item.id}
