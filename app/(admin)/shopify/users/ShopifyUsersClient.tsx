@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ShopifyUser } from '@prisma/client'
-import styles from './ShopifyUsersClient.module.scss'
+import { BackofficeUser } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 
-interface ShopifyUsersClientProps {
-  users: ShopifyUser[]
+interface BackofficeUsersClientProps {
+  users: BackofficeUser[]
 }
 
-export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
+export default function BackofficeUsersClient({ users }: BackofficeUsersClientProps) {
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null)
@@ -44,40 +43,42 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
     const roleLC = role.toLowerCase()
     
     if (roleLC === 'admin' || roleLC === 'administrateur') {
-      return <span className={`${styles.roleBadge} ${styles.adminBadge}`}>Admin</span>
+      return <span className="status-badge role-badge admin-badge">Admin</span>
     } else if (roleLC === 'artist' || roleLC === 'artiste') {
-      return <span className={`${styles.roleBadge} ${styles.artistBadge}`}>Artiste</span>
+      return <span className="status-badge role-badge artist-badge">Artiste</span>
     } else if (roleLC === 'gallerymanager') {
-      return <span className={`${styles.roleBadge} ${styles.galleryBadge}`}>Resp. galerie</span>
+      return <span className="status-badge role-badge gallery-badge">Resp. galerie</span>
     } else {
-      return <span className={`${styles.roleBadge} ${styles.userBadge}`}>Utilisateur</span>
+      return <span className="status-badge role-badge user-badge">Utilisateur</span>
     }
   }
   
   return (
-    <div className={styles.shopifyUsersContainer}>
-      <div className={styles.shopifyUsersHeader}>
-        <h1 className={styles.pageTitle}>Utilisateurs Shopify</h1>
-        <p className={styles.subtitle}>
+    <div className="page-container">
+      <div className="page-header">
+        <div className="header-top-section">
+          <h1 className="page-title">Utilisateurs Shopify</h1>
+        </div>
+        <p className="page-subtitle">
           Liste des utilisateurs Shopify enregistrés dans le système
         </p>
       </div>
       
-      <div className={styles.shopifyUsersContent}>
+      <div className="page-content">
         {users.length === 0 ? (
-          <div className={styles.emptyState}>
+          <div className="empty-state">
             <p>Aucun utilisateur Shopify trouvé</p>
           </div>
         ) : (
-          <div className={styles.tableContainer}>
-            <table className={styles.usersTable}>
+          <div className="table-container">
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>Nom</th>
                   <th>Email</th>
                   <th>Role</th>
-                  <th className={styles.hiddenMobile}>Wallet Address</th>
-                  <th className={styles.hiddenSmall}>Date de création</th>
+                  <th className="hidden-mobile">Wallet Address</th>
+                  <th className="hidden-mobile">Date de création</th>
                 </tr>
               </thead>
               <tbody>
@@ -87,24 +88,24 @@ export default function ShopifyUsersClient({ users }: ShopifyUsersClientProps) {
                     <tr 
                       key={user.id} 
                       onClick={() => !loadingUserId && handleUserClick(user.id.toString())}
-                      className={`${styles.clickableRow} ${isLoading ? styles.loadingRow : ''} ${loadingUserId && !isLoading ? styles.disabledRow : ''}`}
+                      className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingUserId && !isLoading ? 'disabled-row' : ''}`}
                     >
                       <td>
-                        <div className={styles.nameCell}>
+                        <div className="d-flex align-items-center gap-sm">
                           {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? styles.loadingText : ''}>
+                          <span className={isLoading ? 'text-muted' : ''}>
                             {user.firstName} {user.lastName}
                           </span>
                         </div>
                       </td>
                       <td>{user.email}</td>
                       <td>
-                        <div className={styles.roleCell}>
+                        <div className="status-badge-container">
                           {getRoleBadge(user.role)}
                         </div>
                       </td>
-                      <td className={styles.hiddenMobile}>{user.walletAddress}</td>
-                      <td className={styles.hiddenSmall}>{formatDate(user.createdAt)}</td>
+                      <td className="hidden-mobile">{user.walletAddress}</td>
+                      <td className="hidden-mobile">{formatDate(user.createdAt)}</td>
                     </tr>
                   )
                 })}
