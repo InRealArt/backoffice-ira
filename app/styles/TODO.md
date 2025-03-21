@@ -62,6 +62,7 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 - [ ] blockchain/artists/[id]/edit
 - [x] marketplace/nftsToMint/[id]/edit
 - [x] blockchain/smartContracts/[id]/EditSmartContractForm
+- [x] marketplace/royaltiesSettings/[id]/edit (avec conservation du SCSS pour les styles spécifiques)
 
 ## Bugs Connus
 

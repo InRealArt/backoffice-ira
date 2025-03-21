@@ -261,11 +261,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
       && (totalPercentage > 0 && total <= 100)
 
     setAllBeneficaryAddress(allAddressesValid)
-    // console.log('allAddressesValid : ', allAddressesValid)
-    // console.log('isRoyaltySettingOk : ', isRoyaltySettingOk)
-
     setRoyaltiesSettingsOk(isRoyaltySettingOk)
-    // console.log(royalties)
   }, [royalties, totalPercentage])
   
   const addRoyaltyRow = () => {
@@ -396,266 +392,264 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     } catch (error: any) {
       console.error('Erreur générale:', error)
       toast.error(`Erreur: ${error.message}`)
-    } finally {
-      
     }
   }
 
   return (
-    <>
-      <div className={styles.container}>
-        <h1 className={styles.pageTitle}>Détails du NFT</h1>
-        
-        {isLoading ? (
-          <LoadingSpinner message="Chargement du produit..." />
-        ) : error ? (
-          <div className={styles.error}>{error}</div>
-        ) : (
-          <div className={styles.productView}>
-            <div className={styles.productGrid}>
-              <div className={styles.imageSection}>
-                {product?.imageUrl ? (
-                  <div className={styles.imageContainer}>
-                    <img src={product.imageUrl} alt={product.title} className={styles.productImage} />
+    <div className={`${styles.container} page-container`}>
+      <h1 className={`${styles.pageTitle} page-title`}>Détails du NFT</h1>
+      
+      {isLoading ? (
+        <LoadingSpinner message="Chargement du produit..." />
+      ) : error ? (
+        <div className={`${styles.error} alert alert-error`}>{error}</div>
+      ) : (
+        <div className={styles.productView}>
+          <div className={styles.productGrid}>
+            <div className={styles.imageSection}>
+              {product?.imageUrl ? (
+                <div className={styles.imageContainer}>
+                  <img src={product.imageUrl} alt={product.title} className={styles.productImage} />
+                </div>
+              ) : (
+                <div className={styles.noImage}>Aucune image disponible</div>
+              )}
+            </div>
+            
+            <div className={styles.detailsSection}>
+              <div className={styles.productInfo}>
+                <h2 className={`${styles.productTitle} card-title`}>
+                  {product.title}
+                  {nftResource && (
+                    <NftStatusBadge status={nftResource.status} className={styles.titleBadge} />
+                  )}
+                </h2>
+                
+                {productOwner && (
+                  <div className={styles.infoGroup}>
+                    <span className={styles.label}>Propriétaire:</span>
+                    <span className={styles.value}>
+                      {productOwner.firstName} {productOwner.lastName}
+                    </span>
                   </div>
-                ) : (
-                  <div className={styles.noImage}>Aucune image disponible</div>
+                )}
+                
+                <div className={styles.infoGroup}>
+                  <span className={styles.label}>Prix:</span>
+                  <span className={styles.value}>{product.price} {product.currency}</span>
+                </div>
+                
+                {certificate && (
+                  <div className={styles.certificateSection}>
+                    <span className={styles.label}>Certificat d'authenticité:</span>
+                    <Button 
+                      type="button" 
+                      variant="secondary"
+                      onClick={viewCertificate}
+                      className={styles.certificateButton}
+                    >
+                      Voir le certificat
+                    </Button>
+                  </div>
                 )}
               </div>
               
-              <div className={styles.detailsSection}>
-                <div className={styles.productInfo}>
-                  <h2 className={styles.productTitle}>
-                    {product.title}
-                    {nftResource && (
-                      <NftStatusBadge status={nftResource.status} className={styles.titleBadge} />
-                    )}
-                  </h2>
-                  
-                  {productOwner && (
-                    <div className={styles.infoGroup}>
-                      <span className={styles.label}>Propriétaire:</span>
-                      <span className={styles.value}>
-                        {productOwner.firstName} {productOwner.lastName}
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className={styles.infoGroup}>
-                    <span className={styles.label}>Prix:</span>
-                    <span className={styles.value}>{product.price} {product.currency}</span>
-                  </div>
-                  
-                  {certificate && (
-                    <div className={styles.certificateSection}>
-                      <span className={styles.label}>Certificat d'authenticité:</span>
-                      <Button 
-                        type="button" 
-                        variant="secondary"
-                        onClick={viewCertificate}
-                        className={styles.certificateButton}
-                      >
-                        Voir le certificat
-                      </Button>
-                    </div>
-                  )}
-                </div>
+              <div className={styles.productDescription}>
+                <h3 className={`${styles.sectionTitle} section-title`}>Description</h3>
+                <div 
+                  className={styles.description}
+                  dangerouslySetInnerHTML={{ __html: product.description || 'Aucune description disponible' }}
+                />
+              </div>
+              
+              <div className={`${styles.nftResourceInfo} edit-form-container`}>
+                <h3 className={`${styles.formTitle} form-section-title`}>Ressources NFT uploadées sur IPFS</h3>
+                <p className={`${styles.infoNote} form-helper-text`}>
+                  Pour l'instant, le NFT de l'oeuvre n'est toujours pas mintée ...
+                </p>
                 
-                <div className={styles.productDescription}>
-                  <h3 className={styles.sectionTitle}>Description</h3>
-                  <div 
-                    className={styles.description}
-                    dangerouslySetInnerHTML={{ __html: product.description || 'Aucune description disponible' }}
+                <div className={`${styles.formGroup} form-group`}>
+                  <label className="form-label">Nom du NFT</label>
+                  <input
+                    type="text"
+                    value={nftResource.name || ''}
+                    readOnly
+                    className={`${styles.formInput} form-readonly`}
                   />
                 </div>
                 
-                <div className={styles.nftResourceInfo}>
-                  <h3 className={styles.formTitle}>Ressources NFT uploadées sur IPFS</h3>
-                  <p className={styles.infoNote}>
-                    Pour l'instant, le NFT de l'oeuvre n'est toujours pas mintée ...
+                <div className={`${styles.formGroup} form-group`}>
+                  <label className="form-label">Description du NFT</label>
+                  <textarea
+                    value={nftResource.description || ''}
+                    readOnly
+                    className={`${styles.formTextarea} form-readonly`}
+                    rows={4}
+                  />
+                </div>
+                
+                <div className={`${styles.formGroup} form-group`}>
+                  <label className="form-label">Collection</label>
+                  <input
+                    type="text"
+                    value={collections.find(c => c.id === nftResource.collectionId)?.name || 'Collection inconnue'}
+                    readOnly
+                    className={`${styles.formInput} form-readonly`}
+                  />
+                </div>
+                
+                <IpfsUriField label="Image URI (IPFS)" uri={nftResource.imageUri} />
+                
+                <IpfsUriField label="Certificat URI (IPFS)" uri={nftResource.certificateUri} />
+                
+                <IpfsUriField label="Métadonnées URI (IPFS)" uri={nftResource.tokenUri} />
+                
+                <div className={`${styles.royaltiesConfig} form-section full-width`}>
+                  <div className={styles.sectionTitleContainer}>
+                    <h3 className={`${styles.sectionTitle} section-title`}>Configuration des royalties</h3>
+                    {nftResource?.collection?.smartContract?.royaltiesAddress && (
+                      <a 
+                        href={getBlockExplorerUrl(
+                          nftResource.collection.smartContract.network || 'sepolia', 
+                          nftResource.collection.smartContract.royaltiesAddress
+                        )} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={styles.contractAddressBadge}
+                      >
+                        <span className={styles.contractLabel}>Smart Contract de Royalties:</span>
+                        {`${nftResource.collection.smartContract.royaltiesAddress.substring(0, 6)}...${nftResource.collection.smartContract.royaltiesAddress.substring(38)}`}
+                      </a>
+                    )}
+                  </div>
+                  <p className={`${styles.infoNote} form-helper-text`}>
+                    Définissez les bénéficiaires des royalties et leur pourcentage respectif
                   </p>
                   
-                  <div className={styles.formGroup}>
-                    <label>Nom du NFT</label>
-                    <input
-                      type="text"
-                      value={nftResource.name || ''}
-                      readOnly
-                      className={styles.formInput}
-                    />
-                  </div>
-                  
-                  <div className={styles.formGroup}>
-                    <label>Description du NFT</label>
-                    <textarea
-                      value={nftResource.description || ''}
-                      readOnly
-                      className={styles.formTextarea}
-                      rows={4}
-                    />
-                  </div>
-                  
-                  <div className={styles.formGroup}>
-                    <label>Collection</label>
-                    <input
-                      type="text"
-                      value={collections.find(c => c.id === nftResource.collectionId)?.name || 'Collection inconnue'}
-                      readOnly
-                      className={styles.formInput}
-                    />
-                  </div>
-                  
-                  <IpfsUriField label="Image URI (IPFS)" uri={nftResource.imageUri} />
-                  
-                  <IpfsUriField label="Certificat URI (IPFS)" uri={nftResource.certificateUri} />
-                  
-                  <IpfsUriField label="Métadonnées URI (IPFS)" uri={nftResource.tokenUri} />
-                  
-                  <div className={styles.royaltiesConfig}>
-                    <div className={styles.sectionTitleContainer}>
-                      <h3 className={styles.sectionTitle}>Configuration des royalties</h3>
-                      {nftResource?.collection?.smartContract?.royaltiesAddress && (
-                        <a 
-                          href={getBlockExplorerUrl(
-                            nftResource.collection.smartContract.network || 'sepolia', 
-                            nftResource.collection.smartContract.royaltiesAddress
-                          )} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className={styles.contractAddressBadge}
-                        >
-                          <span className={styles.contractLabel}>Smart Contract de Royalties:</span>
-                          {`${nftResource.collection.smartContract.royaltiesAddress.substring(0, 6)}...${nftResource.collection.smartContract.royaltiesAddress.substring(38)}`}
-                        </a>
-                      )}
+                  <div className={styles.royaltiesTable}>
+                    <div className={styles.tableHeader}>
+                      <div className={styles.tableHeaderCell}>Adresse</div>
+                      <div className={styles.tableHeaderCell}>Pourcentage (%)</div>
+                      <div className={styles.tableHeaderCell}></div>
                     </div>
-                    <p className={styles.infoNote}>
-                      Définissez les bénéficiaires des royalties et leur pourcentage respectif
-                    </p>
                     
-                    <div className={styles.royaltiesTable}>
-                      <div className={styles.tableHeader}>
-                        <div className={styles.tableHeaderCell}>Adresse</div>
-                        <div className={styles.tableHeaderCell}>Pourcentage (%)</div>
-                        <div className={styles.tableHeaderCell}></div>
-                      </div>
-                      
-                      {royalties.map((royalty, index) => (
-                        <div key={index} className={styles.tableRow}>
-                          <div className={styles.tableCell}>
-                            <input
-                              type="text"
-                              placeholder="0x..."
-                              value={royalty.address}
-                              onChange={(e) => handleRoyaltyChange(index, 'address', e.target.value)}
-                              className={styles.formInput}
-                            />
-                          </div>
-                          <div className={styles.tableCell}>
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
-                              step="0.1"
-                              placeholder="0.0"
-                              value={royalty.percentage}
-                              onChange={(e) => handleRoyaltyChange(index, 'percentage', e.target.value)}
-                              className={`${styles.formInput} ${styles.numberInput}`}
-                            />
-                          </div>
-                          <div className={styles.tableCell}>
-                            <button 
-                              type="button" 
-                              onClick={() => removeRoyaltyRow(index)}
-                              className={styles.removeButton}
-                            >
-                              Supprimer
-                            </button>
-                          </div>
+                    {royalties.map((royalty, index) => (
+                      <div key={index} className={styles.tableRow}>
+                        <div className={styles.tableCell}>
+                          <input
+                            type="text"
+                            placeholder="0x..."
+                            value={royalty.address}
+                            onChange={(e) => handleRoyaltyChange(index, 'address', e.target.value)}
+                            className={`${styles.formInput} form-input`}
+                          />
                         </div>
-                      ))}
-                      
-                      <div className={styles.tableActions}>
-                        <button 
-                          type="button" 
-                          onClick={addRoyaltyRow}
-                          className={styles.addButton}
-                        >
-                          + Ajouter un bénéficiaire
-                        </button>
-                        {totalPercentageBeneficiaries !== 100 && (
-                          <div className={styles.errorMessage}>
-                            Le total des pourcentages doit être exactement 100% (actuellement: {totalPercentageBeneficiaries.toFixed(1)}%)
-                          </div>
-                        )}<br></br>
-                        {!allBeneficaryAddress && (
-                          <div className={styles.errorMessage}>
-                            Une des adresses est invalide
-                          </div>
-                        )}
+                        <div className={styles.tableCell}>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            placeholder="0.0"
+                            value={royalty.percentage}
+                            onChange={(e) => handleRoyaltyChange(index, 'percentage', e.target.value)}
+                            className={`${styles.formInput} ${styles.numberInput} form-input`}
+                          />
+                        </div>
+                        <div className={styles.tableCell}>
+                          <button 
+                            type="button" 
+                            onClick={() => removeRoyaltyRow(index)}
+                            className={styles.removeButton}
+                          >
+                            Supprimer
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                     
-                    <div className={styles.totalPercentage}>
-                      <span className={styles.label}>Pourcentage total aux bénéficiaires :</span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        placeholder="0.0"
-                        value={totalPercentage}
-                        onChange={(e) => setTotalPercentage(parseFloat(e.target.value) || 0)}
-                        className={`${styles.formInput} ${styles.numberInput} ${totalPercentage === 0 || totalPercentage > 100 ? styles.error : ''}`}
-                      />
-                      <span>%</span>
-                      {totalPercentage === 0 || totalPercentage > 100 && (
-                        <span className={styles.errorMessage}>
-                          Le pourcentage total ne peut pas dépasser 100%
-                        </span>
+                    <div className={styles.tableActions}>
+                      <button 
+                        type="button" 
+                        onClick={addRoyaltyRow}
+                        className={styles.addButton}
+                      >
+                        + Ajouter un bénéficiaire
+                      </button>
+                      {totalPercentageBeneficiaries !== 100 && (
+                        <div className={`${styles.errorMessage} form-error`}>
+                          Le total des pourcentages doit être exactement 100% (actuellement: {totalPercentageBeneficiaries.toFixed(1)}%)
+                        </div>
+                      )}<br></br>
+                      {!allBeneficaryAddress && (
+                        <div className={`${styles.errorMessage} form-error`}>
+                          Une des adresses est invalide
+                        </div>
                       )}
-                    </div>
-                    
-                    <div className={styles.actionButtons}>
-                      <Button 
-                        type="button" 
-                        variant="secondary"
-                        onClick={() => router.back()}
-                      >
-                        Annuler
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="primary"
-                        onClick={handleConfigureRoyalties}
-                        disabled={
-                          isConfiguring || 
-                          totalPercentageBeneficiaries !== 100 || 
-                          royalties.length === 0 || 
-                          !hasRoyaltyRole ||
-                          !royaltiesSettingsOk ||
-                          isCheckingRole
-                        }
-                      >
-                        {isConfiguring 
-                          ? 'Configuration en cours...' 
-                          : isCheckingRole 
-                            ? 'Vérification des droits...'
-                            : !hasRoyaltyRole 
-                              ? 'Vous n\'avez pas les droits pour configurer les royalties'
-                              : !royaltiesSettingsOk
-                                ? `Mauvaise configuration des royalties`
-                                : 'Configurer les royalties pour le NFT'}
-                      </Button>
                     </div>
                   </div>
                   
-                </div>                
-              </div>
+                  <div className={styles.totalPercentage}>
+                    <span className={styles.label}>Pourcentage total aux bénéficiaires :</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      placeholder="0.0"
+                      value={totalPercentage}
+                      onChange={(e) => setTotalPercentage(parseFloat(e.target.value) || 0)}
+                      className={`${styles.formInput} ${styles.numberInput} form-input ${totalPercentage === 0 || totalPercentage > 100 ? 'input-error' : ''}`}
+                    />
+                    <span>%</span>
+                    {totalPercentage === 0 || totalPercentage > 100 && (
+                      <span className={`${styles.errorMessage} form-error`}>
+                        Le pourcentage total ne peut pas dépasser 100%
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className={`${styles.actionButtons} form-actions`}>
+                    <Button 
+                      type="button" 
+                      variant="secondary"
+                      onClick={() => router.back()}
+                      className="btn btn-secondary"
+                    >
+                      Annuler
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="primary"
+                      onClick={handleConfigureRoyalties}
+                      className="btn btn-primary"
+                      disabled={
+                        isConfiguring || 
+                        totalPercentageBeneficiaries !== 100 || 
+                        royalties.length === 0 || 
+                        !hasRoyaltyRole ||
+                        !royaltiesSettingsOk ||
+                        isCheckingRole
+                      }
+                    >
+                      {isConfiguring 
+                        ? 'Configuration en cours...' 
+                        : isCheckingRole 
+                          ? 'Vérification des droits...'
+                          : !hasRoyaltyRole 
+                            ? 'Vous n\'avez pas les droits pour configurer les royalties'
+                            : !royaltiesSettingsOk
+                              ? `Mauvaise configuration des royalties`
+                              : 'Configurer les royalties pour le NFT'}
+                    </Button>
+                  </div>
+                </div>
+                
+              </div>                
             </div>
           </div>
-        )}
-      </div>
-    </>
+        </div>
+      )}
+    </div>
   )
 } 
