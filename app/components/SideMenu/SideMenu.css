@@ -1,9 +1,9 @@
 .side-menu {
     position: fixed;
     left: 0;
-    top: var(--navbar-height); /* Utilisation de la variable */
+    top: 90px; /* Valeur fixe au lieu de var(--navbar-height) */
     width: 220px;
-    height: calc(100vh - var(--navbar-height)); /* Ajustement de la hauteur */
+    height: calc(100vh - 90px); /* Valeur fixe au lieu de var(--navbar-height) */
     background-color: #f8f8f8;
     border-right: 1px solid #e0e0e0;
     padding-top: 20px;

@@ -1,8 +1,6 @@
 'use client'
 
-import styles from './LoadingSpinner.module.scss'
-
-interface LoadingSpinnerProps {
+export interface LoadingSpinnerProps {
   message?: string
   size?: 'small' | 'medium' | 'large'
   fullPage?: boolean
@@ -19,16 +17,16 @@ export default function LoadingSpinner({
 }: LoadingSpinnerProps) {
   return (
     <div className={`
-      ${styles.spinnerContainer} 
-      ${fullPage ? styles.fullPage : ''} 
-      ${inline ? styles.inline : ''}
-      ${styles[size]}
+      spinner-container 
+      ${fullPage ? 'full-page' : ''} 
+      ${inline ? 'inline' : ''}
+      ${size}
     `}>
-      <div className={`${styles.spinner} ${styles[color]}`}>
-        <div className={styles.dot1}></div>
-        <div className={styles.dot2}></div>
+      <div className={`spinner ${color}`}>
+        <div className="dot1"></div>
+        <div className="dot2"></div>
       </div>
-      {message && <p className={styles.message}>{message}</p>}
+      {message && <p className="spinner-message">{message}</p>}
     </div>
   )
 } 

@@ -454,27 +454,78 @@
 }
 
 // Loader
-.loading-spinner {
-  display: inline-block;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
 
-  &.small {
-    width: 16px;
-    height: 16px;
-  }
-
-  &.medium {
-    width: 24px;
-    height: 24px;
+  &.full-page {
+    height: 100vh;
+    width: 100%;
   }
 
   &.inline {
-    vertical-align: middle;
-    margin-right: $spacing-sm;
+    display: inline-flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    height: auto;
   }
+
+  .spinner-message {
+    color: $color-text-secondary;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  &.small .spinner-message {
+    font-size: 0.8rem;
+  }
+
+  &.large .spinner-message {
+    font-size: 1.1rem;
+  }
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  animation: spin 0.8s ease-in-out infinite;
+  
+  &.primary {
+    border: 2px solid rgba($color-primary, 0.3);
+    border-radius: 50%;
+    border-top-color: $color-primary;
+  }
+  
+  &.light {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+  }
+  
+  &.dark {
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: #333;
+  }
+}
+
+.small .spinner {
+  width: 16px;
+  height: 16px;
+}
+
+.medium .spinner {
+  width: 24px;
+  height: 24px;
+}
+
+.large .spinner {
+  width: 32px;
+  height: 32px;
 }
 
 @keyframes spin {
@@ -560,15 +611,72 @@
 }
 
 // Classes pour les composants de modal
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: none;
+  
+  > * {
+    pointer-events: auto;
+  }
+}
+
+.modal-container {
+  background-color: $color-background-white;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-lg;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1px solid $color-border;
+  
+  h2 {
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+  }
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: $color-text-secondary;
+  
+  &:hover {
+    color: $color-text-primary;
+  }
+}
+
 .modal-content {
-  padding: $spacing-xl 0;
+  padding: $spacing-lg;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: $spacing-md;
-  margin-top: $spacing-xl;
+  margin-top: $spacing-lg;
+  padding-top: $spacing-md;
+  border-top: 1px solid $color-border;
 }
 
 // Notification Toast

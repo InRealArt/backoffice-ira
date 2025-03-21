@@ -4,7 +4,7 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 
 ## Priorité Haute
 
-- [ ] Migrer les composants LoadingSpinner et Modal vers le système de style global
+- [x] Migrer les composants LoadingSpinner et Modal vers le système de style global
 - [ ] Ajouter des variantes de boutons (outline, text-only)
 - [x] Créer des styles de formulaire cohérents
 - [ ] Appliquer le système sur toutes les pages principales
