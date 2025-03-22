@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { Item, ResourceNftStatuses, ResourceTypes, SmartContract } from '@prisma/client'
@@ -9,7 +9,7 @@ import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import { getActiveBadge } from '@/app/components/StatusBadge'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import { truncateAddress } from '@/lib/blockchain/utils'
-import { Filters, FilterItem } from '@/app/components/Common'
+import { Filters, FilterItem } from '@/app/components/Common/Filters'
 import { StatusRow } from '@/app/components/Table'
 
 // Type pour inclure le smartContractId
@@ -51,6 +51,26 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
   const [isMobile, setIsMobile] = useState(false)
   const [loadingItemId, setLoadingItemId] = useState<number | null>(null)
   const [selectedSmartContractId, setSelectedSmartContractId] = useState<number | null>(null)
+  const [collectionFilter, setCollectionFilter] = useState<string>('')
+  
+  // Extraction des collections uniques pour le filtre
+  const uniqueCollections = useMemo(() => {
+    const collectionsMap = new Map();
+    
+    items.forEach(item => {
+      if (item.nftResource?.collection?.id && item.nftResource?.collection?.name) {
+        collectionsMap.set(
+          item.nftResource.collection.id, 
+          item.nftResource.collection.name
+        );
+      }
+    });
+    
+    return Array.from(collectionsMap).map(([id, name]) => ({
+      value: id.toString(),
+      label: name
+    }));
+  }, [items]);
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -74,20 +94,27 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
     router.push(`/marketplace/royaltiesSettings/${itemId}/edit`)
   }
   
-  // Filtrage des items par smart contract
-  const filteredItems = selectedSmartContractId
-    ? items.filter(item => {
-        // Utiliser smartContractId de la collection en priorité
+  // Filtrage des items par smart contract et collection
+  const filteredItems = items
+    .filter(item => {
+      // Filtre par smart contract si sélectionné
+      if (selectedSmartContractId) {
         const smartContractId = item.nftResource?.collection?.smartContractId;
-        if (smartContractId === selectedSmartContractId) return true;
-        
-        // Si ce n'est pas trouvé, essayer via l'objet smartContract
         const smartContract = item.nftResource?.collection?.smartContract;
-        if (smartContract && Number(smartContract.id) === selectedSmartContractId) return true;
         
-        return false;
-      })
-    : items;
+        if (!(smartContractId === selectedSmartContractId || 
+              (smartContract && Number(smartContract.id) === selectedSmartContractId))) {
+          return false;
+        }
+      }
+      
+      // Filtre par collection si sélectionnée
+      if (collectionFilter && item.nftResource?.collection?.id) {
+        return item.nftResource.collection.id.toString() === collectionFilter;
+      }
+      
+      return true;
+    });
   
   return (
     <div className="page-container">
@@ -114,6 +141,17 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
             }))
           ]}
         />
+        
+        <FilterItem
+          id="collectionFilter"
+          label="Filtrer par collection:"
+          value={collectionFilter}
+          onChange={setCollectionFilter}
+          options={[
+            { value: '', label: 'Toutes les collections' },
+            ...uniqueCollections
+          ]}
+        />
       </Filters>
       
       <div className="page-content">
@@ -128,7 +166,8 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
                 <tr>
                   <th>ID</th>
                   <th className={isMobile ? 'hidden-mobile' : ''}>Token ID</th>
-                  <th>Œuvre</th>
+                  <th>Nom NFT</th>
+                  <th className={isMobile ? 'hidden-mobile' : ''}>Collection</th>
                   <th className={isMobile ? 'hidden-mobile' : ''}>Artiste</th>
                   <th className={isMobile ? 'hidden-mobile' : ''}>Factory</th>
                   <th>Statut</th>
@@ -161,6 +200,9 @@ export default function RoyaltiesSettingsClient({ minedItems = [], smartContract
                       </td>
                       <td>
                         {item.nftResource?.name}
+                      </td>
+                      <td className={isMobile ? 'hidden-mobile' : ''}>
+                        {item.nftResource?.collection?.name || 'N/A'}
                       </td>
                       <td className={isMobile ? 'hidden-mobile' : ''}>
                         {item.user ? 
