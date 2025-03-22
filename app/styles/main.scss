@@ -56,6 +56,12 @@ html.dark-theme .page-layout {
   width: calc(100% - $sidemenu-width);
   overflow-x: hidden;
   background-color: $color-background-main;
+  
+  // Adapter la marge et la largeur quand le menu est plié
+  .side-menu-collapsed ~ & {
+    margin-left: 60px;
+    width: calc(100% - 60px);
+  }
 }
 
 // Surcharge explicite pour le mode sombre

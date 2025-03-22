@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import SideMenuItem from './SideMenuItem'
 
 interface MarketplaceSubMenuProps {
@@ -7,52 +8,60 @@ interface MarketplaceSubMenuProps {
   isOpen: boolean
   toggleSubmenu: () => void
   onNavigate: (path: string, item: string) => void
+  isCollapsed?: boolean
 }
 
-export default function MarketplaceSubMenu({ 
-  isActive, 
-  isOpen, 
-  toggleSubmenu,
-  onNavigate 
-}: MarketplaceSubMenuProps) {
+export default function MarketplaceSubMenu({ isActive, isOpen, toggleSubmenu, onNavigate, isCollapsed = false }: MarketplaceSubMenuProps) {
   return (
     <>
-      <SideMenuItem
-        label="Marketplace"
+      <SideMenuItem 
+        label="Marketplace" 
         isActive={isActive}
+        hasSubmenu={true}
+        isSubmenuOpen={isOpen}
         onClick={toggleSubmenu}
-        isSubmenuHeader={true}
-        isOpen={isOpen}
+        isCollapsed={isCollapsed}
       />
       
-      <div className={`submenu-container ${isOpen ? 'open' : ''}`}>
-        <ul className="submenu-list">
-          <li 
-            className="submenu-item"
-            onClick={() => onNavigate('/marketplace/nftsToMint', 'adminMarketplace')}
-            tabIndex={isOpen ? 0 : -1}
-            role="menuitem"
-          >
-            Oeuvres à minter
-          </li>
-          <li 
-            className="submenu-item"
-            onClick={() => onNavigate('/marketplace/royaltiesSettings', 'adminMarketplace')}
-            tabIndex={isOpen ? 0 : -1}
-            role="menuitem"
-          >
-            Configuration des royalties
-          </li>
-          <li 
-            className="submenu-item"
-            onClick={() => onNavigate('/marketplace/marketplaceListing', 'adminMarketplace')}
-            tabIndex={isOpen ? 0 : -1}
-            role="menuitem"
-          >
-            Lister un NFT sur la marketplace
-          </li>
+      {isOpen && !isCollapsed && (
+        <ul className="submenu">
+          <SideMenuItem 
+            label="NFTs à minter" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/marketplace/nftsToMint', 'nftsToMint')}
+          />
+          <SideMenuItem 
+            label="Royalties" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/marketplace/royaltiesSettings', 'royaltiesSettings')}
+          />
+          <SideMenuItem 
+            label="Marketplace Listing" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/marketplace/marketplaceListing', 'marketplaceListing')}
+          />
         </ul>
-      </div>
+      )}
+      
+      {isOpen && isCollapsed && (
+        <ul className="submenu visible">
+          <SideMenuItem 
+            label="NFTs à minter" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/marketplace/nftsToMint', 'nftsToMint')}
+          />
+          <SideMenuItem 
+            label="Royalties" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/marketplace/royaltiesSettings', 'royaltiesSettings')}
+          />
+          <SideMenuItem 
+            label="Marketplace Listing" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/marketplace/marketplaceListing', 'marketplaceListing')}
+          />
+        </ul>
+      )}
     </>
   )
 } 

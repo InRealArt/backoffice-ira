@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import SideMenuItem from './SideMenuItem'
 
 interface ShopifySubMenuProps {
@@ -7,36 +8,50 @@ interface ShopifySubMenuProps {
   isOpen: boolean
   toggleSubmenu: () => void
   onNavigate: (path: string, item: string) => void
+  isCollapsed?: boolean
 }
 
-export default function ShopifySubMenu({ 
-  isActive, 
-  isOpen, 
-  toggleSubmenu,
-  onNavigate 
-}: ShopifySubMenuProps) {
+export default function ShopifySubMenu({ isActive, isOpen, toggleSubmenu, onNavigate, isCollapsed = false }: ShopifySubMenuProps) {
   return (
     <>
-      <SideMenuItem
-        label="Shopify"
+      <SideMenuItem 
+        label="Shopify Admin" 
         isActive={isActive}
+        hasSubmenu={true}
+        isSubmenuOpen={isOpen}
         onClick={toggleSubmenu}
-        isSubmenuHeader={true}
-        isOpen={isOpen}
+        isCollapsed={isCollapsed}
       />
       
-      <div className={`submenu-container ${isOpen ? 'open' : ''}`}>
-        <ul className="submenu-list">
-          <li 
-            className="submenu-item"
-            onClick={() => onNavigate('/shopify/users', 'adminShopify')}
-            tabIndex={isOpen ? 0 : -1}
-            role="menuitem"
-          >
-            Utilisateurs
-          </li>
+      {isOpen && !isCollapsed && (
+        <ul className="submenu">
+          <SideMenuItem 
+            label="Gestion des Membres" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/shopify/users', 'shopifyUsers')}
+          />
+          <SideMenuItem 
+            label="Créer un Membre" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/shopify/create-member', 'createMember')}
+          />
         </ul>
-      </div>
+      )}
+      
+      {isOpen && isCollapsed && (
+        <ul className="submenu visible">
+          <SideMenuItem 
+            label="Gestion des Membres" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/shopify/users', 'shopifyUsers')}
+          />
+          <SideMenuItem 
+            label="Créer un Membre" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/shopify/create-member', 'createMember')}
+          />
+        </ul>
+      )}
     </>
   )
 }

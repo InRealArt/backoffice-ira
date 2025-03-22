@@ -16,10 +16,12 @@ export default function SideMenu() {
     showShopifySubmenu,
     showBlockchainSubmenu,
     showMarketplaceSubmenu,
+    isMenuCollapsed,
     handleNavigation,
     toggleShopifySubmenu,
     toggleBlockchainSubmenu,
-    toggleMarketplaceSubmenu
+    toggleMarketplaceSubmenu,
+    toggleMenuCollapse
   } = useSideMenuLogic()
   
   if (!isLoggedIn) {
@@ -27,52 +29,70 @@ export default function SideMenu() {
   }
 
   return (
-    <div className="side-menu side-menu-debug animate-side-menu">
+    <div className={`side-menu side-menu-debug animate-side-menu ${isMenuCollapsed ? 'side-menu-collapsed' : ''}`}>
+      <button 
+        className="side-menu-toggle" 
+        onClick={toggleMenuCollapse}
+        aria-label={isMenuCollapsed ? 'Déplier le menu' : 'Plier le menu'}
+      >
+        <span className="toggle-icon">
+          {isMenuCollapsed ? '→' : '←'}
+        </span>
+      </button>
       <ul className="menu-list">
         <SideMenuItem 
           label="Dashboard"
           isActive={activeItem === 'dashboard'}
           onClick={() => handleNavigation('/dashboard', 'dashboard')}
+          isCollapsed={isMenuCollapsed}
+          icon={<span>📊</span>}
         />
         
         {canAccessCollection && !isAdmin && (
           <>
-            <MenuSeparator />
+            <MenuSeparator isCollapsed={isMenuCollapsed} />
             <SideMenuItem 
               label="Ma Collection"
               isActive={activeItem === 'collection'}
               onClick={() => handleNavigation('/shopify/collection', 'collection')}
+              isCollapsed={isMenuCollapsed}
+              icon={<span>🖼️</span>}
             />
             <SideMenuItem 
               label="Créer une œuvre"
               isActive={activeItem === 'createArtwork'}
               onClick={() => handleNavigation('/shopify/createArtwork', 'createArtwork')}
+              isCollapsed={isMenuCollapsed}
+              icon={<span>➕</span>}
             />
           </>
         )}
         
         {isAdmin && (
           <>
-            <MenuSeparator />
+            <MenuSeparator isCollapsed={isMenuCollapsed} />
             <ShopifySubMenu
               isActive={activeItem === 'adminShopify'}
               isOpen={showShopifySubmenu}
               toggleSubmenu={toggleShopifySubmenu}
               onNavigate={handleNavigation}
+              isCollapsed={isMenuCollapsed}
             />
-            <MenuSeparator />
+            <MenuSeparator isCollapsed={isMenuCollapsed} />
             <BlockchainSubMenu
               isActive={activeItem === 'adminBlockchain'}
               isOpen={showBlockchainSubmenu}
               toggleSubmenu={toggleBlockchainSubmenu}
               onNavigate={handleNavigation}
+              isCollapsed={isMenuCollapsed}
             />
-            <MenuSeparator />
+            <MenuSeparator isCollapsed={isMenuCollapsed} />
             <MarketplaceSubMenu
               isActive={activeItem === 'adminMarketplace'}
               isOpen={showMarketplaceSubmenu}
               toggleSubmenu={toggleMarketplaceSubmenu}
               onNavigate={handleNavigation}
+              isCollapsed={isMenuCollapsed}
             />
           </>
         )}

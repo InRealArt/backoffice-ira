@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import SideMenuItem from './SideMenuItem'
 
 interface BlockchainSubMenuProps {
@@ -7,60 +8,60 @@ interface BlockchainSubMenuProps {
   isOpen: boolean
   toggleSubmenu: () => void
   onNavigate: (path: string, item: string) => void
+  isCollapsed?: boolean
 }
 
-export default function BlockchainSubMenu({ 
-  isActive, 
-  isOpen, 
-  toggleSubmenu,
-  onNavigate 
-}: BlockchainSubMenuProps) {
+export default function BlockchainSubMenu({ isActive, isOpen, toggleSubmenu, onNavigate, isCollapsed = false }: BlockchainSubMenuProps) {
   return (
     <>
-      <SideMenuItem
-        label="Blockchain"
+      <SideMenuItem 
+        label="Blockchain" 
         isActive={isActive}
+        hasSubmenu={true}
+        isSubmenuOpen={isOpen}
         onClick={toggleSubmenu}
-        isSubmenuHeader={true}
-        isOpen={isOpen}
+        isCollapsed={isCollapsed}
       />
       
-      <div className={`submenu-container ${isOpen ? 'open' : ''}`}>
-        <ul className="submenu-list">
-          <li 
-            className="submenu-item"
-            onClick={() => onNavigate('/blockchain/collections', 'adminBlockchain')}
-            tabIndex={isOpen ? 0 : -1}
-            role="menuitem"
-          >
-            Collections
-          </li>
-          <li 
-            className="submenu-item"
-            onClick={() => onNavigate('/blockchain/smartContracts', 'adminBlockchain')}
-            tabIndex={isOpen ? 0 : -1}
-            role="menuitem"
-          >
-            Smart Contracts
-          </li>
-          <li 
-            className="submenu-item"
-            onClick={() => onNavigate('/blockchain/artists', 'adminBlockchain')}
-            tabIndex={isOpen ? 0 : -1}
-            role="menuitem"
-          >
-            Artistes
-          </li>
-          <li 
-            className="submenu-item"
-            onClick={() => onNavigate('/blockchain/royaltyBeneficiaries', 'adminBlockchain')}
-            tabIndex={isOpen ? 0 : -1}
-            role="menuitem"
-          >
-            Royalties
-          </li>
+      {isOpen && !isCollapsed && (
+        <ul className="submenu">
+          <SideMenuItem 
+            label="Smart Contracts" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/blockchain/smartContracts', 'smartContracts')}
+          />
+          <SideMenuItem 
+            label="Collections" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/blockchain/collections', 'collections')}
+          />
+          <SideMenuItem 
+            label="Artistes" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/blockchain/artists', 'artists')}
+          />
         </ul>
-      </div>
+      )}
+      
+      {isOpen && isCollapsed && (
+        <ul className="submenu visible">
+          <SideMenuItem 
+            label="Smart Contracts" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/blockchain/smartContracts', 'smartContracts')}
+          />
+          <SideMenuItem 
+            label="Collections" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/blockchain/collections', 'collections')}
+          />
+          <SideMenuItem 
+            label="Artistes" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/blockchain/artists', 'artists')}
+          />
+        </ul>
+      )}
     </>
   )
 } 

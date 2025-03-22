@@ -2,36 +2,44 @@
 
 interface SideMenuItemProps {
   label: string
-  isActive: boolean
-  onClick: (e?: React.MouseEvent) => void
-  isSubmenuHeader?: boolean
-  isOpen?: boolean
+  isActive?: boolean
+  onClick?: () => void
+  hasSubmenu?: boolean
+  isSubmenuOpen?: boolean
+  isSubmenuItem?: boolean
+  icon?: React.ReactNode
+  isCollapsed?: boolean
 }
 
-export default function SideMenuItem({ 
-  label, 
-  isActive, 
-  onClick, 
-  isSubmenuHeader,
-  isOpen 
+export default function SideMenuItem({
+  label,
+  isActive = false,
+  onClick,
+  hasSubmenu = false,
+  isSubmenuOpen = false,
+  isSubmenuItem = false,
+  icon,
+  isCollapsed = false
 }: SideMenuItemProps) {
+  const baseClass = isSubmenuItem ? 'submenu-item' : 'menu-item'
+  const activeClass = isActive ? 'active' : ''
+  const submenuClass = hasSubmenu ? 'has-submenu' : ''
+  const submenuOpenClass = isSubmenuOpen ? 'submenu-open' : ''
+  const collapsedClass = isCollapsed ? 'collapsed' : ''
+  
   return (
     <li 
-      className={`menu-item ${isActive ? 'active' : ''} ${isSubmenuHeader ? 'submenu-header' : ''} ${isOpen ? 'submenu-open' : ''}`}
+      className={`${baseClass} ${activeClass} ${submenuClass} ${submenuOpenClass} ${collapsedClass}`} 
       onClick={onClick}
-      role="menuitem"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      aria-current={isActive ? 'page' : undefined}
-      aria-expanded={isSubmenuHeader ? isOpen : undefined}
+      data-label={label}
     >
-      {label}
-      {isSubmenuHeader && <span className={`arrow ${isOpen ? 'open' : ''}`} aria-hidden="true">▼</span>}
+      {icon && <span className="menu-item-icon">{icon}</span>}
+      {(!isCollapsed || isSubmenuItem) && <span className="menu-item-label">{label}</span>}
+      {hasSubmenu && !isCollapsed && (
+        <span className="submenu-indicator">
+          {isSubmenuOpen ? '▼' : '▶'}
+        </span>
+      )}
     </li>
   )
 }

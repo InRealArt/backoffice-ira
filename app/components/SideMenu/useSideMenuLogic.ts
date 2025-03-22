@@ -16,6 +16,8 @@ export function useSideMenuLogic() {
   const [showShopifySubmenu, setShowShopifySubmenu] = useState(false)
   const [showBlockchainSubmenu, setShowBlockchainSubmenu] = useState(false)
   const [showMarketplaceSubmenu, setShowMarketplaceSubmenu] = useState(false)
+  // État pour le menu plié/déplié
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false)
 
   // État de l'élément actif
   const [activeItem, setActiveItem] = useState('')
@@ -61,13 +63,26 @@ export function useSideMenuLogic() {
     })
   }, [closeAllSubmenusExcept])
 
+  // Fonction pour plier/déplier le menu latéral
+  const toggleMenuCollapse = useCallback(() => {
+    setIsMenuCollapsed(prev => !prev)
+    // Stocker la préférence de l'utilisateur dans le localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sideMenuCollapsed', (!isMenuCollapsed).toString())
+    }
+  }, [isMenuCollapsed])
+
   // Fonction pour la navigation - Utiliser useRouter pour une navigation côté client
   const handleNavigation = useCallback((path: string, item: string) => {
     // Utiliser le router Next.js pour une navigation sans rechargement de page
     router.push(path)
     setActiveItem(item)
     closeAllSubmenusExcept(null)
-  }, [router, closeAllSubmenusExcept])
+    // Si le menu est plié sur mobile, le replier après la navigation
+    if (window.innerWidth <= 768 && !isMenuCollapsed) {
+      toggleMenuCollapse()
+    }
+  }, [router, closeAllSubmenusExcept, isMenuCollapsed, toggleMenuCollapse])
 
   // Déterminer l'élément actif en fonction du chemin
   useEffect(() => {
@@ -90,6 +105,16 @@ export function useSideMenuLogic() {
       }
     }
   }, [pathname])
+
+  // Récupérer la préférence de menu plié/déplié depuis localStorage au chargement
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedMenuState = localStorage.getItem('sideMenuCollapsed')
+      if (savedMenuState !== null) {
+        setIsMenuCollapsed(savedMenuState === 'true')
+      }
+    }
+  }, [])
 
   // Vérification de l'authentification et des rôles utilisateur
   useEffect(() => {
@@ -180,9 +205,11 @@ export function useSideMenuLogic() {
     showShopifySubmenu,
     showBlockchainSubmenu,
     showMarketplaceSubmenu,
+    isMenuCollapsed,
     handleNavigation,
     toggleShopifySubmenu,
     toggleBlockchainSubmenu,
-    toggleMarketplaceSubmenu
+    toggleMarketplaceSubmenu,
+    toggleMenuCollapse
   }
 }
