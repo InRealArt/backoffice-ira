@@ -51,6 +51,7 @@ export default function RoyaltyBeneficiariesClient({
 
   const [isMobile, setIsMobile] = useState(false)
   const [selectedSmartContractId, setSelectedSmartContractId] = useState<number | null>(null)
+  const [selectedCollectionId, setSelectedCollectionId] = useState<number | null>(null)
   
   // Détection du mode mobile
   useEffect(() => {
@@ -66,14 +67,33 @@ export default function RoyaltyBeneficiariesClient({
     }
   }, [])
   
-  // Filtrage des bénéficiaries comme dans CollectionsClient
-  const filteredBeneficiaries = selectedSmartContractId
-    ? (Array.isArray(royaltyBeneficiaries) 
-       ? royaltyBeneficiaries.filter(beneficiary => 
-           beneficiary?.nftResource?.collection?.smartContract?.id === selectedSmartContractId
-         )
-       : [])
-    : (Array.isArray(royaltyBeneficiaries) ? royaltyBeneficiaries : [])
+  // Obtenir toutes les collections uniques
+  const collections = Array.isArray(royaltyBeneficiaries)
+    ? royaltyBeneficiaries
+        .filter(b => b?.nftResource?.collection)
+        .map(b => b.nftResource!.collection)
+        .filter((collection, index, self) => 
+          index === self.findIndex(c => c.id === collection.id)
+        )
+    : []
+  
+  // Filtrage des bénéficiaries avec tous les filtres
+  const filteredBeneficiaries = (Array.isArray(royaltyBeneficiaries) ? royaltyBeneficiaries : [])
+    .filter(beneficiary => {
+      // Filtre par smart contract
+      if (selectedSmartContractId && 
+          beneficiary?.nftResource?.collection?.smartContract?.id !== selectedSmartContractId) {
+        return false
+      }
+      
+      // Filtre par collection NFT
+      if (selectedCollectionId && 
+          beneficiary?.nftResource?.collection?.id !== selectedCollectionId) {
+        return false
+      }
+      
+      return true
+    })
   
   console.log('Bénéficiaires filtrés:', filteredBeneficiaries?.length, filteredBeneficiaries?.[0])
   
@@ -107,6 +127,19 @@ export default function RoyaltyBeneficiariesClient({
             }))
           ]}
         />
+        <FilterItem
+          id="collectionFilter"
+          label="Filtrer par collection:"
+          value={selectedCollectionId ? selectedCollectionId.toString() : ''}
+          onChange={(value) => setSelectedCollectionId(value ? parseInt(value) : null)}
+          options={[
+            { value: '', label: 'Toutes les collections' },
+            ...collections.map(collection => ({
+              value: collection.id.toString(),
+              label: collection.name || `Collection #${collection.id}`
+            }))
+          ]}
+        />
       </Filters>
       
       <div className="page-content">
@@ -126,6 +159,7 @@ export default function RoyaltyBeneficiariesClient({
                   <th className="hidden-mobile">Transaction Hash</th>
                   <th className="hidden-mobile">NFT Resource</th>
                   <th className="hidden-mobile">Token ID</th>
+                  <th>Nom Collection</th>
                   <th className="hidden-mobile">Collection</th>
                   <th className="hidden-mobile">Factory Address</th>
                   <th className="hidden-mobile">Réseau</th>
@@ -169,6 +203,9 @@ export default function RoyaltyBeneficiariesClient({
                       </td>
                       <td className="hidden-mobile">
                         {beneficiary?.nftResource?.tokenId || 'Non défini'}
+                      </td>
+                      <td>
+                        {beneficiary?.nftResource?.collection?.name || 'Non défini'}
                       </td>
                       <td className="hidden-mobile">
                         {beneficiary?.nftResource?.collection?.contractAddress ? (
