@@ -246,14 +246,14 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
           <button 
             type="button" 
             onClick={handleCancel}
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-medium"
             disabled={isSubmitting}
           >
             Annuler
           </button>
           <button 
             type="submit" 
-            className="btn btn-primary"
+            className="btn btn-primary btn-medium"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Mise à jour en cours...' : 'Enregistrer les modifications'}

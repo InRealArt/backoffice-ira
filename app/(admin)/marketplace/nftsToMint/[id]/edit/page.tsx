@@ -655,13 +655,13 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
               <button
                 type="button"
                 onClick={() => setShowUploadIpfsForm(false)}
-                className="btn btn-secondary"
+                className="btn btn-secondary btn-medium"
               >
                 Annuler
               </button>
               <button
                 type="submit"
-                className="btn btn-primary"
+                className="btn btn-primary btn-medium "
                 disabled={!formData.intellectualProperty}
               >
                 Uploader sur IPFS
@@ -733,7 +733,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
       <div className="form-actions" style={{ marginTop: "2rem" }}>
         <button
           onClick={handleCancel}
-          className="btn btn-secondary"
+          className="btn btn-secondary btn-medium"
         >
           Retour à la liste
         </button>
@@ -741,7 +741,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
         {nftResource && nftResource.status === 'UPLOADIPFS' && (
           <button
             onClick={() => setShowUploadIpfsForm(!showUploadIpfsForm)}
-            className="btn btn-primary"
+            className="btn btn-primary btn-medium"
           >
             {showUploadIpfsForm ? 'Masquer le formulaire' : 'Uploader sur IPFS'}
           </button>
@@ -750,7 +750,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
         {!nftResource && (
           <button
             onClick={() => setShowUploadIpfsForm(!showUploadIpfsForm)}
-            className="btn btn-primary"
+            className="btn btn-primary btn-medium"
           >
             {showUploadIpfsForm ? 'Masquer le formulaire' : 'Créer NFT Resource'}
           </button>
@@ -759,7 +759,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
         {nftResource && nftResource.status === 'UPLOADMETADATA' && (
           <button
             onClick={handleMintNFT}
-            className="btn btn-primary"
+            className="btn btn-primary btn-medium"
             disabled={isMinting || !isConnected || isCheckingMinter || !isMinter}
           >
             {isMinting ? 'Minting en cours...' : isCheckingMinter ? 'Vérification des permissions...' : !isMinter ? 'Non autorisé à minter' : 'Minter le NFT'}

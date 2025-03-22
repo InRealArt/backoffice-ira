@@ -11,6 +11,7 @@ import { truncateAddress } from '@/lib/blockchain/utils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import Modal from '@/app/components/Common/Modal'
 import { StatusRow } from '@/app/components/Table'
+import { getActiveBadge } from '@/app/components/StatusBadge/StatusBadge'
 
 interface CollectionWithRelations extends Collection {
   artist: Artist
@@ -115,7 +116,7 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
           <h1 className="page-title">Collections</h1>
           <button 
             onClick={handleCreateCollection}
-            className="btn btn-primary"
+            className="btn btn-primary btn-medium"
           >
             Créer une collection de NFT
           </button>
@@ -188,15 +189,15 @@ export default function CollectionsClient({ collections, smartContracts }: Colle
                       {/* Factory */}
                       <td className="hidden-mobile">
                         {collection.smartContract ? (
-                          <div className="d-flex align-items-center justify-content-between gap-xs">
+                          <div className="d-flex flex-column gap-xs">
                             <BlockchainAddress 
                               address={collection.smartContract.factoryAddress} 
                               network={collection.smartContract.network}
                               showExplorerLink={true}
                             />
-                            <span className={`status-badge ${collection.smartContract.active ? 'active' : 'inactive'}`}>
-                              {collection.smartContract.active ? 'Actif' : 'Inactif'}
-                            </span>
+                            <div className="d-flex">
+                              {getActiveBadge(collection.smartContract.active, 'badge-small')}
+                            </div>
                           </div>
                         ) : (
                           <span className="text-muted">Non défini</span>

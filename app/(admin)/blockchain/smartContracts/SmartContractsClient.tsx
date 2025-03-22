@@ -8,6 +8,7 @@ import { formatChainName } from '@/lib/blockchain/chainUtils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import Link from 'next/link'
 import { StatusRow } from '@/app/components/Table'
+import { getActiveBadge } from '@/app/components/StatusBadge/StatusBadge'
 
 interface SmartContractsClientProps {
   smartContracts: SmartContract[]
@@ -50,7 +51,7 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
       <div className="page-header">
         <div className="header-top-section">
           <h1 className="page-title">Smart Contracts</h1>
-          <Link href="/blockchain/smartContracts/create" className="btn btn-primary">
+          <Link href="/blockchain/smartContracts/create" className="btn btn-primary btn-medium">
             Créer des smart contracts
           </Link>
         </div>
@@ -123,9 +124,9 @@ export default function SmartContractsClient({ smartContracts }: SmartContractsC
                         </span>
                       </td>
                       <td>
-                        <span className={`status-badge ${contract.active ? 'active' : 'inactive'}`}>
-                          {contract.active ? 'Actif' : 'Inactif'}
-                        </span>
+                        <div className="d-flex">
+                          {getActiveBadge(contract.active, 'badge-small')}
+                        </div>
                       </td>
                     </StatusRow>
                   );

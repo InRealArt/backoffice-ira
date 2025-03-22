@@ -258,14 +258,14 @@ export default function EditCollectionForm({ collection, artists, smartContracts
           <button 
             type="button" 
             onClick={handleCancel}
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-medium"
             disabled={isSubmitting || isSyncing}
           >
             Annuler
           </button>
           <button 
             type="submit" 
-            className="btn btn-primary"
+            className="btn btn-primary btn-medium"
             disabled={isSubmitting || isSyncing}
           >
             {isSubmitting ? 'Mise à jour...' : 'Mettre à jour la collection'}
