@@ -25,6 +25,7 @@ interface Item {
     name: string
     status: ResourceNftStatuses
     collection?: {
+      name?: string
       smartContract?: {
         active: boolean
         factoryAddress?: string
@@ -44,6 +45,9 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
   const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all')
   const [smartContractFilter, setSmartContractFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  
+  // Ajout du filtre pour les collections
+  const [collectionFilter, setCollectionFilter] = useState('all')
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -78,6 +82,13 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
       matchesSmartContract = factoryAddress === smartContractFilter
     }
     
+    // Filtre par collection
+    let matchesCollection = true
+    if (collectionFilter !== 'all') {
+      const collectionName = product.nftResource?.collection?.name
+      matchesCollection = collectionName === collectionFilter
+    }
+    
     // Filtre par recherche
     let matchesSearch = true
     if (searchTerm.trim() !== '') {
@@ -96,7 +107,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
         idShopify.includes(searchLower)
     }
     
-    return matchesStatus && matchesSmartContract && matchesSearch
+    return matchesStatus && matchesSmartContract && matchesCollection && matchesSearch
   })
   
   const handleItemClick = (itemId: number) => {
@@ -154,6 +165,27 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
           ]}
         />
         
+        <FilterItem
+          id="collection-filter"
+          label="Collection NFT:"
+          value={collectionFilter}
+          onChange={(value) => setCollectionFilter(value)}
+          options={[
+            { value: 'all', label: 'Toutes les collections' },
+            ...safeProducts
+              .filter(product => {
+                const collectionName = product.nftResource?.collection?.name
+                return !!collectionName
+              })
+              .map(product => ({
+                value: product.nftResource?.collection?.name || '',
+                label: product.nftResource?.collection?.name || 'Sans nom'
+              }))
+              .filter((option, index, self) => 
+                index === self.findIndex(t => t.value === option.value)
+              )
+          ]}
+        />
       </Filters>
       
       <div className="page-content">
@@ -172,6 +204,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                   <th>Statut</th>
                   <th className="hidden-mobile">NFT associé</th>
                   <th className="hidden-mobile">Statut NFT</th>
+                  <th className="hidden-mobile">Collection NFT</th>
                   <th>Smart Contract</th>
                 </tr>
               </thead>
@@ -180,6 +213,8 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                   const isLoading = loadingItemId === product.id;
                   const smartContract = product.nftResource?.collection?.smartContract;
                   const isActive = smartContract?.active ?? true;
+                  const isNftListed = product.nftResource?.status === 'LISTED';
+                  const isGreenHighlight = isNftListed && isActive;
                   
                   return (
                     <StatusRow 
@@ -188,6 +223,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                       colorType="danger" 
                       onClick={() => !loadingItemId && handleItemClick(product.id)}
                       className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingItemId && !isLoading ? 'disabled-row' : ''} ${!product.nftResource ? 'highlight-row' : ''}`}
+                      isSuccess={isGreenHighlight}
                     >
                       <td>
                         <div className="d-flex align-items-center gap-sm">
@@ -221,6 +257,12 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                         {product.nftResource 
                           ? <NftStatusBadge status={product.nftResource.status} /> 
                           : 'N/A'
+                        }
+                      </td>
+                      <td className="hidden-mobile">
+                        {product.nftResource?.collection?.name 
+                          ? product.nftResource.collection.name
+                          : <span className="text-muted">Non définie</span>
                         }
                       </td>
                       <td>

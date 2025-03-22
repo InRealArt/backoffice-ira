@@ -137,6 +137,16 @@ body.dark [class*="page-layout"],
   }
 }
 
+/* Style pour les lignes en succès (NFT listé et smart contract actif) */
+.success-row {
+  background-color: rgba(72, 187, 120, 0.15) !important;
+}
+
+.dark-theme .success-row,
+body.dark .success-row {
+  background-color: rgba(72, 187, 120, 0.2) !important;
+}
+
 /* Solution avec forte spécificité - ajouter ceci à la fin du fichier */
 body.dark .page-layout,
 body.dark .dashboard-page,

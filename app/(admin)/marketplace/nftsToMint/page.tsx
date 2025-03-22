@@ -48,6 +48,7 @@ export default async function NftsToMintPage() {
             tags: true,
             collection: {
               select: {
+                name: true,
                 smartContract: {
                   select: {
                     active: true,

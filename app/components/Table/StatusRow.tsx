@@ -8,6 +8,7 @@ interface StatusRowProps {
   children: ReactNode
   colorType?: 'danger' | 'warning' | 'success' | 'info'
   onClick?: () => void
+  isSuccess?: boolean
 }
 
 /**
@@ -17,6 +18,7 @@ interface StatusRowProps {
  * @param className - Classes CSS additionnelles à appliquer
  * @param colorType - Type de couleur à appliquer (danger, warning, success, info)
  * @param onClick - Fonction à exécuter lors du clic sur la ligne
+ * @param isSuccess - Si true, la ligne aura un fond vert (pour indiquer un succès)
  * @param children - Contenu de la ligne
  */
 export function StatusRow({ 
@@ -24,10 +26,15 @@ export function StatusRow({
   className = '',
   colorType = 'danger',
   onClick, 
+  isSuccess = false,
   children 
 }: StatusRowProps) {
   // Déterminer la couleur en fonction du type
   const getBackgroundColor = () => {
+    // Si c'est un succès, appliquer un fond vert indépendamment des autres conditions
+    if (isSuccess) return 'rgba(72, 187, 120, 0.2)'
+    
+    // Sinon, appliquer la logique habituelle
     if (isActive) return undefined
     
     switch (colorType) {
@@ -49,6 +56,7 @@ export function StatusRow({
       className={className}
       onClick={onClick}
       data-status={!isActive ? 'inactive' : 'active'}
+      data-success={isSuccess ? 'true' : 'false'}
       style={{ 
         backgroundColor: getBackgroundColor(),
         transition: 'background-color 0.2s ease'
