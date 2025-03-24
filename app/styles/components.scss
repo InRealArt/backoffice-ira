@@ -1278,3 +1278,64 @@
     }
   }
 }
+
+// Styles améliorés pour IpfsUriField
+.ipfs-field-container {
+  margin-bottom: $spacing-lg;
+  width: 100%;
+}
+
+.ipfs-field-group {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border-radius: $border-radius-sm;
+}
+
+.ipfs-field-input {
+  flex-grow: 1;
+  font-family: monospace;
+  font-size: $font-size-sm;
+  padding: $spacing-md $spacing-lg;
+  border: 1px solid $color-border-input;
+  background-color: $color-background-light;
+  color: $color-text-primary;
+  border-radius: $border-radius-sm 0 0 $border-radius-sm;
+  
+  &:read-only {
+    background-color: #f5f5f8;
+    border-color: $color-border;
+  }
+  
+  body.dark &:read-only,
+  .dark-theme &:read-only {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: $color-text-dark-muted;
+  }
+}
+
+.ipfs-field-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  padding: $spacing-md $spacing-lg;
+  background-color: $color-primary;
+  color: white;
+  font-weight: $font-weight-medium;
+  border: 1px solid $color-primary;
+  border-radius: 0 $border-radius-sm $border-radius-sm 0;
+  cursor: pointer;
+  transition: $transition-default;
+  min-width: 80px;
+  
+  &:hover {
+    background-color: $color-primary-dark;
+    border-color: $color-primary-dark;
+  }
+  
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
