@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, isCertificateUriUnique } from '@/app/actions/prisma/prismaActions'
+import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, isCertificateUriUnique, getItemById } from '@/app/actions/prisma/prismaActions'
 import React from 'react'
 import { z } from 'zod'
 import { toast } from 'react-hot-toast'
@@ -93,7 +93,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
           ? id.split('/').pop() 
           : id
         
-        const result = await getShopifyProductById(productId as string)
+        const result = await getShopifyProductById(id)
         if (isMounted) {
           if (result.success && result.product) {
             setProduct(result.product)
@@ -437,7 +437,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
     return (
       <div className="page-container">
         <div className="d-flex justify-content-center align-items-center p-xl">
-          <LoadingSpinner size="large" message="Chargement des données du produit..." />
+          <LoadingSpinner size="large" message="Chargement des données ..." />
         </div>
       </div>
     )
@@ -472,9 +472,9 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
           <div className="form-group">
             <label className="form-label">Image</label>
             <div className="form-readonly" style={{ height: "240px", display: "flex", justifyContent: "center", alignItems: "center" }}>
-              {product && product.images && product.images[0] ? (
+              {product && product.imageUrl ? (
                 <img 
-                  src={product.images[0].src} 
+                  src={product.imageUrl} 
                   alt={product.title} 
                   style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} 
                 />
