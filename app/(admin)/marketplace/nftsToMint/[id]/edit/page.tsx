@@ -18,6 +18,7 @@ import { useNftMinting } from '../../../hooks/useNftMinting'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
 import Image from 'next/image'
+import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 
 type ParamsType = { id: string }
 
@@ -124,6 +125,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
                 const nftResourceResult = await getNftResourceByItemId(itemResult.id)
                 fetchCollections()
                 if (nftResourceResult) {
+                  console.log('nftResourceResult', nftResourceResult)
                   setNftResource(nftResourceResult)
                   // Pré-remplir le formulaire avec les données existantes
                   if (nftResourceResult.status === 'UPLOADIPFS') {
@@ -674,7 +676,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
           <h2 className="card-title" style={{ marginBottom: "1.5rem" }}>Informations du NFT</h2>
           <div className="edit-form">
             <div className="form-group">
-              <label className="form-label">ID</label>
+              <label className="form-label">ID Nft Resource</label>
               <div className="form-readonly">{nftResource.id}</div>
             </div>
             
@@ -720,6 +722,20 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
               <div className="form-group">
                 <label className="form-label">Token ID</label>
                 <div className="form-readonly">{nftResource.tokenId}</div>
+              </div>
+            )}
+
+            {nftResource.transactionHash && (
+              <div className="form-group">
+                <label className="form-label">Transaction Hash</label>
+                <div className="form-readonly">
+                  <BlockchainAddress 
+                    address={nftResource.transactionHash}
+                    network={nftResource.collection?.chainId || 'sepolia'}
+                    isTransaction={true}
+                    showExplorerLink={true}
+                  />
+                </div>
               </div>
             )}
           </div>
