@@ -13,7 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter()
   const { isAdmin, isLoading } = useIsAdmin()
   
-  if (isAdmin === null) {
+  if (isLoading || isAdmin === null) {
     return <LoadingSpinner message="Vérification des droits administrateur..." />
   }
   
@@ -27,13 +27,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
     </>
-  ) : <>
-    <Navbar />
-    <div className="page-layout">
-      <div className="content-container">
-        You're not authorized to access this page or you  are not connected.<br/>
-        Please connect to see this page
+  ) : (
+    <>
+      <Navbar />
+      <div className="page-layout">
+        <div className="content-container">
+          <p>Vous n'êtes pas autorisé à accéder à cette page ou vous n'êtes pas connecté.</p>
+          <p>Veuillez vous connecter pour voir cette page.</p>
+        </div>
       </div>
-    </div>
-</>
+    </>
+  )
 } 
