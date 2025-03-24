@@ -1,4 +1,4 @@
-@import '/app/styles/variables.scss';
+@use '../../../styles/variables.scss' as *;
 
 .formContainer {
   background-color: $color-background-white;

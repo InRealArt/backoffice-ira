@@ -1,8 +1,8 @@
-@import './variables.scss';
-@import './components.scss';
-@import './navigation.scss';
-@import './dark-theme.scss';
-@import './theme-reset.scss';
+@use './variables.scss' as *;
+@use './dark-theme.scss' as *;
+@use './components.scss' as *;
+@use './navigation.scss' as *;
+@use './theme-reset.scss' as *;
 
 // Styles généraux à appliquer globalement
 html,

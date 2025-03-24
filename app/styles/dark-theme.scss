@@ -1,5 +1,5 @@
 // Feuille de style spécifique au mode sombre avec une spécificité élevée
-@import './variables.scss';
+@use './variables.scss' as *;
 
 // Application forcée des styles en mode sombre
 body.dark,
