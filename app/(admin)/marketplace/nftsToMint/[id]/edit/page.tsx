@@ -460,14 +460,17 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
           <h1 className="page-title">Détails de l'œuvre à minter</h1>
           {nftResource && <NftStatusBadge status={nftResource.status} />}
         </div>
-        <p className="page-subtitle">
-          {product?.title || "Œuvre"} - ID Shopify: {typeof product?.id === 'string' ? product.id.replace('gid://shopify/Product/', '') : product?.id}
-        </p>
       </div>
 
       {/* Informations sur l'œuvre */}
       <div className="edit-form-container">
         <div className="edit-form">
+          {/* Titre de l'œuvre */}
+          <div className="form-group">
+            <label className="form-label">Titre</label>
+            <div className="form-readonly">{product?.title || "Non défini"}</div>
+          </div>
+          
           {/* Image de l'œuvre */}
           <div className="form-group">
             <label className="form-label">Image</label>
@@ -484,11 +487,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
             </div>
           </div>
 
-          {/* Titre de l'œuvre */}
-          <div className="form-group">
-            <label className="form-label">Titre</label>
-            <div className="form-readonly">{product?.title || "Non défini"}</div>
-          </div>
+          
 
           {/* Prix */}
           <div className="form-group">
@@ -500,15 +499,13 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
             </div>
           </div>
 
-          {/* Statut Shopify */}
+          {/* ID Shopify */}
           <div className="form-group">
-            <label className="form-label">Statut Shopify</label>
+            <label className="form-label">ID Shopify</label>
             <div className="form-readonly">
-              {product?.status ? (
-                <span className={`status-badge ${product.status === 'ACTIVE' ? 'active' : 'inactive'}`}>
-                  {product.status}
-                </span>
-              ) : "Non défini"}
+              {typeof product?.id === 'string' ? 
+                product.id.replace('gid://shopify/Product/', '') : 
+                product?.id || "Non défini"}
             </div>
           </div>
 
