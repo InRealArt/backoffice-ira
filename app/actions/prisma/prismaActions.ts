@@ -1399,9 +1399,19 @@ export async function createMarketPlaceTransaction(params: {
     }
 
     // Convertir le prix en Decimal si fourni
-    const priceDecimal = params.price
-      ? new Decimal(params.price.toString())
-      : null;
+    let priceDecimal = null;
+    if (params.price !== undefined) {
+      try {
+        priceDecimal = new Decimal(params.price.toString());
+      } catch (error) {
+        console.error('Erreur lors de la conversion du prix en Decimal:', error);
+        return {
+          success: false,
+          message: 'Format de prix invalide',
+          error: 'Le prix fourni ne peut pas être converti en format décimal'
+        };
+      }
+    }
 
     // Créer l'enregistrement de transaction
     const transaction = await prisma.marketPlaceTransaction.create({
@@ -1433,6 +1443,71 @@ export async function createMarketPlaceTransaction(params: {
       success: false,
       message: error instanceof Error ? error.message : 'Une erreur est survenue lors de la création de la transaction',
       error: error instanceof Error ? error.message : 'Erreur inconnue'
+    };
+  }
+}
+
+/**
+ * Met à jour le propriétaire d'une ressource NFT
+ * @param nftResourceId - L'ID de la ressource NFT
+ * @param newOwner - La nouvelle adresse du propriétaire
+ * @returns Un objet indiquant le succès ou l'échec de l'opération
+ */
+export async function updateNftResourceOwner(
+  nftResourceId: number,
+  newOwner: string
+): Promise<{
+  success: boolean;
+  message?: string;
+}> {
+  'use server';
+
+  try {
+    // Vérifier si la ressource NFT existe
+    const nftResource = await prisma.nftResource.findUnique({
+      where: { id: nftResourceId }
+    });
+
+    if (!nftResource) {
+      return {
+        success: false,
+        message: 'Ressource NFT non trouvée'
+      };
+    }
+
+    // Vérifier que l'adresse du nouveau propriétaire est valide (format basique)
+    if (!newOwner.startsWith('0x') || newOwner.length !== 42) {
+      return {
+        success: false,
+        message: 'Format d\'adresse de portefeuille invalide'
+      };
+    }
+
+    // Stocker l'ancien propriétaire dans previousOwner
+    const previousOwner = nftResource.owner;
+
+    // Mettre à jour le propriétaire de la ressource NFT
+    await prisma.nftResource.update({
+      where: { id: nftResourceId },
+      data: {
+        owner: newOwner,
+        previousOwner: previousOwner || undefined
+      }
+    });
+
+    // Revalider les chemins pour rafraîchir les données sur l'interface
+    revalidatePath('/marketplace/marketplaceListing');
+    revalidatePath('/marketplace');
+
+    return {
+      success: true,
+      message: 'Propriétaire de la ressource NFT mis à jour avec succès'
+    };
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour du propriétaire de la ressource NFT:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Une erreur est survenue lors de la mise à jour du propriétaire'
     };
   }
 }

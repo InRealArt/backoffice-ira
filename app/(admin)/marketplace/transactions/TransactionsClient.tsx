@@ -10,6 +10,7 @@ import { getActiveBadge } from '@/app/components/StatusBadge'
 import { Filters, FilterItem } from '@/app/components/Common/Filters'
 import { StatusRow } from '@/app/components/Table'
 import { formatDate } from '@/lib/utils'
+import { parseEther, formatEther } from 'viem'
 
 // Type pour les transactions avec leurs relations
 type TransactionWithRelations = MarketPlaceTransaction & {
@@ -158,7 +159,8 @@ export default function TransactionsClient({
                   <th>Fonction</th>
                   <th className={isMobile ? 'hidden-mobile' : ''}>De</th>
                   <th className={isMobile ? 'hidden-mobile' : ''}>À</th>
-                  <th>Prix</th>
+                  <th className={isMobile ? 'hidden-mobile' : ''}>Prix (ETH)</th>
+                  <th className={isMobile ? 'hidden-mobile' : ''}>Prix (Wei)</th>
                   <th className={isMobile ? 'hidden-mobile' : ''}>Hash</th>
                 </tr>
               </thead>
@@ -185,7 +187,7 @@ export default function TransactionsClient({
                         {transaction.nftResource?.tokenId || 'N/A'}
                       </td>
                       <td>
-                        <span className="function-name">{transaction.functionName || 'N/A'}</span>
+                        <span className="info-badge">{transaction.functionName || 'N/A'}</span>
                       </td>
                       <td className={isMobile ? 'hidden-mobile' : ''}>
                         {transaction.from && (
@@ -203,16 +205,23 @@ export default function TransactionsClient({
                           />
                         )}
                       </td>
+                      <td className={isMobile ? 'hidden-mobile' : ''}>
+                        {transaction.price 
+                          ? `${formatEther(BigInt(transaction.price.toString()))} ETH` 
+                          : 'N/A'}
+                      </td>
                       <td>
                         {transaction.price 
                           ? `${transaction.price} ETH` 
                           : 'N/A'}
                       </td>
-                      <td className={isMobile ? 'hidden-mobile' : ''}>
+                      
+                      <td className={isMobile ? 'hidden-mobile' : ''} >
                         {transaction.transactionHash ? (
                           <BlockchainAddress 
                             address={transaction.transactionHash} 
                             network={smartContract?.network || 'mainnet'}
+                            showExplorerLink={true}
                             isTransaction
                           />
                         ) : 'N/A'}

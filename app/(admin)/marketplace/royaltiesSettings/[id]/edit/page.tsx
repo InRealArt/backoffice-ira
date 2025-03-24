@@ -205,12 +205,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     }
   }, [id, showUploadIpfsForm])
 
-  const viewCertificate = () => {
-    if (certificate && certificate.fileUrl) {
-      window.open(certificate.fileUrl, '_blank')
-    }
-  }
-
   const checkUserRoyaltyRole = async (address: string) => {
     const network = getNetwork()
     const artistRoyaltiesAddress = await getSmartContractAddress('Royalties', network as NetworkType) as Address
@@ -439,19 +433,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
                   <span className={styles.value}>{product.price} {product.currency}</span>
                 </div>
                 
-                {certificate && (
-                  <div className={styles.certificateSection}>
-                    <span className={styles.label}>Certificat d'authenticité:</span>
-                    <Button 
-                      type="button" 
-                      variant="secondary"
-                      onClick={viewCertificate}
-                      className={styles.certificateButton}
-                    >
-                      Voir le certificat
-                    </Button>
-                  </div>
-                )}
               </div>
               
               <div className={styles.productDescription}>

@@ -169,13 +169,6 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
     }
   }, [id, showUploadIpfsForm])
 
-  // Fonction pour ouvrir le certificat dans un nouvel onglet
-  const viewCertificate = () => {
-    if (certificate && certificate.fileUrl) {
-      window.open(certificate.fileUrl, '_blank')
-    }
-  }
-
   // Fonction pour gérer les changements de valeurs dans le formulaire
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target as HTMLInputElement
@@ -521,22 +514,6 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
             </div>
           </div>
 
-          {/* Certificat */}
-          <div className="form-group">
-            <label className="form-label">Certificat d'authenticité</label>
-            <div className="form-readonly">
-              {certificate ? (
-                <button 
-                  onClick={viewCertificate} 
-                  className="btn btn-secondary btn-small"
-                >
-                  Voir le certificat
-                </button>
-              ) : (
-                "Aucun certificat disponible"
-              )}
-            </div>
-          </div>
 
           {/* Description (pleine largeur) */}
           <div className="form-group full-width">

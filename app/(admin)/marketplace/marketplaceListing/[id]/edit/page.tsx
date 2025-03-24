@@ -106,6 +106,8 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   const [isNftApproved, setIsNftApproved] = useState(false);
   const [isApprovingNft, setIsApprovingNft] = useState(false);
 
+  const [adminMarketplace, setAdminMarketplace] = useState<Address | null>(null);
+
   const unwrappedParams = React.use(params as any) as ParamsType
   const id = unwrappedParams.id
 
@@ -254,6 +256,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   
   // Récupérer le propriétaire du NFT
   const fetchTokenOwner = async () => {
+    console.log('fetchTokenOwner !!!')
     if (!nftResource?.collection?.contractAddress || !nftResource?.tokenId) return;
     
     setIsLoadingOwner(true);
@@ -267,35 +270,47 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       
       // Vérifier si l'admin de la marketplace est déjà propriétaire du NFT
       if (ownerAddress) {
-        const network = getNetwork();
-        const marketplaceAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address;
-        
-        // Récupérer l'adresse du super admin via getSuperAdmin
         let marketplaceAdminAddress: Address;
-        try {
-          marketplaceAdminAddress = await publicClient.readContract({
-            address: marketplaceAddress,
-            abi: marketplaceAbi,
-            functionName: 'getSuperAdmin',
-          }) as Address;
+        
+        // Utiliser adminMarketplace s'il existe déjà, sinon le récupérer
+        if (adminMarketplace) {
+          marketplaceAdminAddress = adminMarketplace;
+          console.log("[DEBUG] Utilisation de l'adresse admin marketplace existante:", marketplaceAdminAddress);
+        } else {
+          const network = getNetwork();
+          const marketplaceAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address;
           
-          console.log("[DEBUG] Adresse du super admin de la marketplace:", marketplaceAdminAddress);
-          
-          if (!marketplaceAdminAddress || marketplaceAdminAddress === '0x0000000000000000000000000000000000000000') {
-            throw new Error("L'adresse du super admin de la marketplace est invalide ou non définie");
+          // Récupérer l'adresse du super admin via getSuperAdmin
+          try {
+            marketplaceAdminAddress = await publicClient.readContract({
+              address: marketplaceAddress,
+              abi: marketplaceAbi,
+              functionName: 'getSuperAdmin',
+            }) as Address;
+            
+            console.log("[DEBUG] Adresse du super admin de la marketplace récupérée:", marketplaceAdminAddress);
+            
+            if (!marketplaceAdminAddress || marketplaceAdminAddress === '0x0000000000000000000000000000000000000000') {
+              throw new Error("L'adresse du super admin de la marketplace est invalide ou non définie");
+            }
+            
+            // Stocker l'adresse de l'admin marketplace dans l'état
+            setAdminMarketplace(marketplaceAdminAddress);
+          } catch (error) {
+            console.error("Erreur lors de la récupération de l'adresse du super admin:", error);
+            setIsMarketplaceOwner(false);
+            setIsLoadingOwner(false);
+            return;
           }
-          
-          // Vérifier si le propriétaire est l'admin de la marketplace
-          const isMarketplaceAdmin = ownerAddress.toLowerCase() === marketplaceAdminAddress.toLowerCase();
-          setIsMarketplaceOwner(isMarketplaceAdmin);
-          
-          // Si le transfert est déjà complété
-          if (isMarketplaceAdmin) {
-            setTransferStep('completed');
-          }
-        } catch (error) {
-          console.error("Erreur lors de la récupération de l'adresse du super admin:", error);
-          setIsMarketplaceOwner(false);
+        }
+        
+        // Vérifier si le propriétaire est l'admin de la marketplace
+        const isMarketplaceAdmin = ownerAddress.toLowerCase() === marketplaceAdminAddress.toLowerCase();
+        setIsMarketplaceOwner(isMarketplaceAdmin);
+        
+        // Si le transfert est déjà complété
+        if (isMarketplaceAdmin) {
+          setTransferStep('completed');
         }
       }
       
@@ -668,6 +683,8 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
           try {
             await updateNftResourceStatusToListed(nftResource.id);
             setListingProcess(prev => ({...prev, listingComplete: true}));
+            // Notification de succès
+            toast.success('NFT mis en vente avec succès');
             router.refresh(); // Rafraîchir la page pour mettre à jour les données
           } catch (error) {
             console.error('Erreur lors de la mise à jour du statut:', error);
@@ -675,8 +692,6 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
         }
       });
       
-      // Notification de succès
-      toast.success('NFT mis en vente avec succès');
       
     } catch (error) {
       console.error('Erreur lors de la mise en vente:', error);
@@ -804,7 +819,19 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
                   className={styles.contractAddress}
                 />
               ) : (
-                <span>Non disponible</span>
+                <p className="text-sm text-muted-foreground">Non disponible</p>
+              )}
+            </div>
+            
+            {/* Affichage de l'admin de la marketplace */}
+            <div className={styles.detailItem}>
+              <span className={styles.detailLabel}>Admin de la marketplace :</span>
+              {adminMarketplace ? (
+                <BlockchainAddress address={adminMarketplace} network={item?.network?.toLowerCase() || 'sepolia'}
+                showExplorerLink={true}
+                className={styles.contractAddress}/>
+              ) : (
+                <p className="text-sm text-muted-foreground">Non disponible</p>
               )}
             </div>
           </div>

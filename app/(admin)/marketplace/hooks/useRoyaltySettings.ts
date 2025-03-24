@@ -205,7 +205,7 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
                 const updateResult = await updateNftResourceTxHash(Number(nftResource.id), hash)
 
                 if (updateResult.success) {
-                    toast.success('NFT minté en attente de confirmation...')
+                    toast.success('Tx hash mise à jour dans la database...')
                 } else {
                     toast.error(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
                 }
@@ -222,7 +222,7 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
             const updateResult = await updateNftResourceStatusToRoyaltySet(Number(nftResource.id))
 
             if (updateResult.success) {
-                toast.success('NFT minté en attente de confirmation...')
+                toast.success('Statut du NFT mis à jour dans la database à ROYALTYSET...')
             } else {
                 toast.error(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
             }

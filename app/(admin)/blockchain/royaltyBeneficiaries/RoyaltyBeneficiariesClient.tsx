@@ -236,7 +236,7 @@ export default function RoyaltyBeneficiariesClient({
                       </td>
                       <td className="hidden-mobile">
                         {smartContract ? (
-                          <span className="badge badge-neutral">
+                          <span className="info-badge">
                             {formatChainName(smartContract.network)}
                           </span>
                         ) : (

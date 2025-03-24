@@ -9,7 +9,7 @@ import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
 import { publicClient } from '@/lib/providers'
 import { marketplaceAbi } from '@/lib/contracts/MarketplaceAbi'
-import { getSmartContractAddress, updateItemStatusToListedByNftResourceId, updateNftResourceStatusToListed, updateNftResourceStatusToMinted, createMarketPlaceTransaction } from '@/app/actions/prisma/prismaActions'
+import { getSmartContractAddress, updateItemStatusToListedByNftResourceId, updateNftResourceStatusToListed, updateNftResourceStatusToMinted, createMarketPlaceTransaction, updateNftResourceOwner } from '@/app/actions/prisma/prismaActions'
 import { NetworkType } from '@prisma/client'
 
 interface ListingParams {
@@ -364,7 +364,16 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
             });
 
             // Attendre la confirmation
-            await publicClient.waitForTransactionReceipt({ hash: txHash });
+            const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+
+            // Vérifier si la transaction est réussie
+            if (receipt.status === 'success') {
+                // Mettre à jour le propriétaire du NFT
+                await updateNftResourceOwner(Number(tokenId), adminMarketplace);
+            }
+            else {
+                toast.error('Erreur dans la mise à jour du owner en database')
+            }
 
             setTransferSuccess(true);
             if (onSuccess) onSuccess();
