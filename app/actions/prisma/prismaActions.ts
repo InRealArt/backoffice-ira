@@ -356,7 +356,8 @@ export async function updateBackofficeUser(
 export async function getBackofficeUserByEmail(email: string) {
   try {
     const user = await prisma.backofficeUser.findUnique({
-      where: { email }
+      where: { email },
+      include: { artist: true }
     })
 
     return user

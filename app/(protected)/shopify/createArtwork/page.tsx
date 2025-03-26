@@ -4,9 +4,13 @@ import { useState, useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import ArtworkCreationForm from './ArtworkCreationForm'
 import styles from './createArtwork.module.scss'
+import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { getBackofficeUserByEmail } from '@/app/actions/prisma/prismaActions'
 
 export default function CreateArtworkPage() {
   const [isMobile, setIsMobile] = useState(false)
+  const [artistName, setArtistName] = useState('')
+  const { user } = useDynamicContext()
   
   useEffect(() => {
     const checkIfMobile = () => {
@@ -21,6 +25,26 @@ export default function CreateArtworkPage() {
     }
   }, [])
   
+  useEffect(() => {
+    const fetchArtistName = async () => {
+      if (user?.email) {
+        try {
+          const backofficeUser = await getBackofficeUserByEmail(user.email)
+          if (backofficeUser) {
+            // Utiliser firstName et lastName pour composer le nom complet
+            setArtistName(
+              `${backofficeUser.artist?.name || ''} ${backofficeUser.artist?.surname || ''}`.trim()
+            )
+          }
+        } catch (error) {
+          console.error('Erreur lors de la récupération du nom d\'artiste:', error)
+        }
+      }
+    }
+    
+    fetchArtistName()
+  }, [user])
+  
   return (
     <>
       <Toaster 
@@ -29,7 +53,7 @@ export default function CreateArtworkPage() {
       />
       
       <div className={styles.artworkCreationHeader}>
-        <h1>Créer une œuvre</h1>
+        <h1>Créer une œuvre dans la Collection de l'artiste <span className={styles.artistHighlight}>{artistName}</span></h1>
         <p className={styles.subtitle}>
           Ajoutez une nouvelle œuvre à votre collection Shopify
         </p>

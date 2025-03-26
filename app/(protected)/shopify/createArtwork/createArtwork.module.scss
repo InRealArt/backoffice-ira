@@ -39,6 +39,18 @@
   }
 }
 
+.artistHighlight {
+  background-color: #e0f0ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  
+  :global(.dark) & {
+    background-color: #193654;
+    color: #93c5fd;
+  }
+}
+
 // Ces styles sont spécifiques au contenu de la page et ne sont pas impactés
 .formContainer {
   max-width: 800px;
