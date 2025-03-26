@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { getShopifyUserById } from '@/app/actions/prisma/prismaActions'
+import { getBackofficeUserById } from '@/app/actions/prisma/prismaActions'
 import LoadingSpinner from '@/app/components/LoadingSpinner'
 import EditUserForm from './EditUserForm';
 
@@ -8,14 +8,14 @@ export default async function EditUserPage({
 }: { 
   params: any
 }) {
-  const userId = params?.id || '';
+  const userId = await params?.id || '';
   
   if (!userId) {
     return <div>ID utilisateur non valide</div>;
   }
   
   try {
-    const user = await getShopifyUserById(userId);
+    const user = await getBackofficeUserById(userId);
     
     if (!user) {
       return (

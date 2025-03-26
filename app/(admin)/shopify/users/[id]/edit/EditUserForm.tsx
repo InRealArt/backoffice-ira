@@ -6,13 +6,13 @@ import toast from 'react-hot-toast'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { updateShopifyUser } from '@/app/actions/prisma/prismaActions'
+import { updateBackofficeUser, getAllArtists } from '@/app/actions/prisma/prismaActions'
 import { 
   getShopifyCollectionByTitle,
   updateShopifyCollection,
   createShopifyCollection
 } from '@/app/actions/shopify/shopifyActions'
-import { BackofficeUser } from '@prisma/client'
+import { BackofficeUser, Artist } from '@prisma/client'
 import styles from './EditUserForm.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 
@@ -24,7 +24,17 @@ const formSchema = z.object({
   email: z.string().email('Format d\'email invalide'),
   role: z.string().nullable().optional(),
   isShopifyGranted: z.boolean().default(false),
-  collectionDescription: z.string().optional()
+  collectionDescription: z.string().optional(),
+  artistId: z.number().nullable().optional()
+}).refine((data) => {
+  // Si le rôle est 'artist', artistId est requis
+  if (data.role === 'artist') {
+    return data.artistId !== null && data.artistId !== undefined
+  }
+  return true
+}, {
+  message: 'Veuillez sélectionner un artiste',
+  path: ['artistId'] // Spécifie le champ concerné par l'erreur
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -42,6 +52,8 @@ export default function EditUserForm({ user }: EditUserFormProps) {
   const [initialDescription, setInitialDescription] = useState<string | null>(null)
   const [isLoadingCollection, setIsLoadingCollection] = useState(true)
   const [hasDescriptionChanged, setHasDescriptionChanged] = useState(false)
+  const [artists, setArtists] = useState<Artist[]>([])
+  const [isLoadingArtists, setIsLoadingArtists] = useState(true)
 
   // Déterminer si l'utilisateur est un administrateur
   const isAdmin = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'administrateur'
@@ -62,13 +74,39 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       role: user.role || null,
       // Pour les admins, on force toujours l'accès Shopify à true
       isShopifyGranted: isAdmin ? true : user.isShopifyGranted || false,
-      collectionDescription: ''
+      collectionDescription: '',
+      artistId: user.artistId || null
     }
   })
 
   // Surveiller la valeur de isShopifyGranted pour l'affichage conditionnel
   const isShopifyGranted = isAdmin ? true : watch('isShopifyGranted')
   const currentDescription = watch('collectionDescription')
+  const selectedRole = watch('role')
+
+  // Réinitialiser artistId quand le rôle change
+  useEffect(() => {
+    if (selectedRole !== 'artist') {
+      setValue('artistId', null)
+    }
+  }, [selectedRole, setValue])
+
+  // Charger la liste des artistes
+  useEffect(() => {
+    const fetchArtists = async () => {
+      try {
+        const artistsList = await getAllArtists()
+        setArtists(artistsList)
+      } catch (error) {
+        console.error('Erreur lors du chargement des artistes:', error)
+        toast.error('Erreur lors du chargement des artistes')
+      } finally {
+        setIsLoadingArtists(false)
+      }
+    }
+
+    fetchArtists()
+  }, [])
 
   // Observer les changements dans la description et comparer avec la valeur initiale
   useEffect(() => {
@@ -145,13 +183,14 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         role: data.role || null,
         // Pour les admins, on force toujours l'accès Shopify à true
         isShopifyGranted: isAdmin ? true : data.isShopifyGranted,
-        walletAddress: user.walletAddress || ''
+        walletAddress: user.walletAddress || '',
+        artistId: data.artistId || null
       }
 
       console.log('Payload à envoyer:', payload)
 
       // Mettre à jour l'utilisateur avec le payload complet
-      const userResult = await updateShopifyUser(payload)
+      const userResult = await updateBackofficeUser(payload)
 
       if (!userResult.success) {
         throw new Error(userResult.message)
@@ -299,6 +338,41 @@ export default function EditUserForm({ user }: EditUserFormProps) {
             <option value="galleryManager">Gestionnaire de galerie</option>
           </select>
         </div>
+
+        {/* Liste déroulante des artistes si le rôle est "artist" */}
+        {selectedRole === 'artist' && (
+          <div className={styles.formGroup}>
+            <label htmlFor="artistId" className={styles.formLabel}>
+              Artiste associé
+            </label>
+            {isLoadingArtists ? (
+              <div className={styles.loadingContainer}>
+                <LoadingSpinner message="Chargement des artistes..." />
+              </div>
+            ) : (
+              <>
+                <select
+                  id="artistId"
+                  {...register('artistId', {
+                    required: selectedRole === 'artist' ? 'Veuillez sélectionner un artiste' : false,
+                    valueAsNumber: true
+                  })}
+                  className={`${styles.formSelect} ${errors.artistId ? styles.formInputError : ''}`}
+                >
+                  <option value="">Sélectionnez un artiste</option>
+                  {artists.map((artist) => (
+                    <option key={artist.id} value={artist.id}>
+                      {artist.name} {artist.surname} ({artist.pseudo})
+                    </option>
+                  ))}
+                </select>
+                {errors.artistId && (
+                  <p className={styles.formError}>{errors.artistId.message}</p>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* Afficher la checkbox uniquement si l'utilisateur n'est pas un administrateur */}
         {!isAdmin && (

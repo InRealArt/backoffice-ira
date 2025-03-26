@@ -211,7 +211,7 @@ export async function checkUserExists(
 }
 
 
-export async function getShopifyUsers(): Promise<BackofficeUser[]> {
+export async function getBackofficeUsers(): Promise<BackofficeUser[]> {
   try {
     const users = await prisma.backofficeUser.findMany({
       orderBy: {
@@ -232,7 +232,7 @@ type UpdateShopifyUserResult = {
 }
 
 // Ajouter cette fonction pour récupérer un utilisateur par son ID
-export async function getShopifyUserById(id: string) {
+export async function getBackofficeUserById(id: string) {
   try {
     const user = await prisma.backofficeUser.findUnique({
       where: { id: parseInt(id) }
@@ -246,7 +246,7 @@ export async function getShopifyUserById(id: string) {
 }
 
 // Ajouter cette fonction pour mettre à jour un utilisateur
-export async function updateShopifyUser(
+export async function updateBackofficeUser(
   data: any
 ): Promise<UpdateShopifyUserResult> {
   try {
@@ -279,6 +279,17 @@ export async function updateShopifyUser(
       }
     }
 
+    // Si le rôle est "artist", vérifier que l'artistId est fourni
+    if (data.role === 'artist' && !data.artistId) {
+      return {
+        success: false,
+        message: 'Un artiste doit être sélectionné pour un utilisateur avec le rôle "artist"'
+      }
+    }
+
+    // Si le rôle n'est pas "artist", s'assurer que artistId est null
+    const artistId = data.role === 'artist' ? data.artistId : null
+    console.log('artistId === ', artistId);
     // Mettre à jour l'utilisateur
     await prisma.backofficeUser.update({
       where: { id: parseInt(data.id) },
@@ -289,6 +300,7 @@ export async function updateShopifyUser(
         role: data.role || null,
         walletAddress: data.walletAddress || '',
         isShopifyGranted: data.isShopifyGranted,
+        artistId: artistId
       }
     })
 
@@ -1509,5 +1521,34 @@ export async function updateNftResourceOwner(
       success: false,
       message: error instanceof Error ? error.message : 'Une erreur est survenue lors de la mise à jour du propriétaire'
     };
+  }
+}
+
+/**
+ * Récupère tous les artistes
+ */
+export async function getAllArtists() {
+  try {
+    const artists = await prisma.artist.findMany({
+      select: {
+        id: true,
+        name: true,
+        surname: true,
+        pseudo: true,
+        description: true,
+        publicKey: true,
+        imageUrl: true,
+        isGallery: true,
+        backgroundImage: true
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    })
+
+    return artists
+  } catch (error) {
+    console.error('Erreur lors de la récupération des artistes:', error)
+    return []
   }
 }

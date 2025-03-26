@@ -10,17 +10,18 @@ datasource db {
 }
 
 model Artist {
-  id              Int             @id @default(autoincrement())
+  id              Int              @id @default(autoincrement())
   name            String
   surname         String
-  pseudo          String          @unique
-  description     String          @unique
-  publicKey       String          @unique
-  imageUrl        String          @unique
+  pseudo          String           @unique
+  description     String           @unique
+  publicKey       String           @unique
+  imageUrl        String           @unique
   isGallery       Boolean?
   backgroundImage String?
   collections     NftCollection[]
   Profile         Profile[]
+  BackofficeUser  BackofficeUser[]
 
   @@schema("public")
 }
@@ -471,7 +472,7 @@ model BackofficeUser {
   id               Int                  @id @default(autoincrement())
   email            String?              @unique
   walletAddress    String               @unique
-  linkedWallets    Json                 @default("[]") // Tableau de wallets au format JSON
+  linkedWallets    Json                 @default("[]")
   lastLogin        DateTime             @db.Timestamp(6)
   userMetadata     Json
   role             BackofficeUserRoles?
@@ -479,10 +480,13 @@ model BackofficeUser {
   lastName         String?
   isShopifyGranted Boolean              @default(false)
   createdAt        DateTime             @default(now()) @db.Timestamp(6)
+  artistId         Int?
+  artist           Artist?              @relation(fields: [artistId], references: [id]) // Nouvelle relation
   items            Item[]
 
   @@index([email])
   @@index([walletAddress])
+  @@index([artistId]) // Nouvel index pour la clé étrangère
   @@schema("public")
 }
 
@@ -636,6 +640,8 @@ model Item {
   intellectualPropertyEndDate DateTime?
   priceBeforeTax              Int               @default(0)
   artworkSupport              String?
+  realViewCount               Int               @default(0)
+  fakeViewCount               Int               @default(0)
   creationDate                DateTime?
 
   @@index([idUser])

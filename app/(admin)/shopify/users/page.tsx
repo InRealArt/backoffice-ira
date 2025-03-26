@@ -1,8 +1,9 @@
-import { getShopifyUsers } from '@/app/actions/prisma/prismaActions'
-import ShopifyUsersClient from './ShopifyUsersClient'
+import { getBackofficeUsers } from '@/app/actions/prisma/prismaActions'
+import BackofficeUsersClient from './ShopifyUsersClient'
 
-export default async function ShopifyUsersPage() {
-  const users = await getShopifyUsers()
 
-  return <ShopifyUsersClient users={users} />
+export default async function BackofficeUsersPage() {
+  const users = await getBackofficeUsers()
+
+  return <BackofficeUsersClient users={users} />
 } 
