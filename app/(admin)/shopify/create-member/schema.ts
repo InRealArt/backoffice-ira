@@ -1,17 +1,19 @@
 import { z } from 'zod'
 
 export const memberSchema = z.object({
-    firstName: z.string()
-        .min(2, { message: 'Le prénom doit contenir au moins 2 caractères' })
-        .max(50, { message: 'Le prénom ne peut pas dépasser 50 caractères' }),
-    lastName: z.string()
-        .min(2, { message: 'Le nom doit contenir au moins 2 caractères' })
-        .max(50, { message: 'Le nom ne peut pas dépasser 50 caractères' }),
-    email: z.string()
-        .email({ message: 'Veuillez saisir une adresse email valide' }),
-    role: z.enum(['artist', 'galleryManager', 'admin'], {
-        errorMap: () => ({ message: 'Veuillez sélectionner un type valide' })
-    })
+    firstName: z.string().min(1, 'Le prénom est requis'),
+    lastName: z.string().min(1, 'Le nom est requis'),
+    email: z.string().email('Format d\'email invalide'),
+    role: z.enum(['artist', 'galleryManager', 'admin']),
+    artistId: z.number().nullable().optional()
+}).refine((data) => {
+    if (data.role === 'artist') {
+        return data.artistId !== null && data.artistId !== undefined
+    }
+    return true
+}, {
+    message: 'Veuillez sélectionner un artiste',
+    path: ['artistId']
 })
 
 export type MemberFormData = z.infer<typeof memberSchema> 

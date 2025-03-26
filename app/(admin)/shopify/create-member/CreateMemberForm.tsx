@@ -1,25 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { memberSchema, MemberFormData } from './schema'
-import { createMember, checkUserExists } from '@/app/actions/prisma/prismaActions'
+import { createMember, checkUserExists, getAllArtists, getArtistById } from '@/app/actions/prisma/prismaActions'
 import toast from 'react-hot-toast'
 import { createShopifyCollection } from '@/app/actions/shopify/shopifyActions'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { useRouter } from 'next/navigation'
+import { Artist } from '@prisma/client'
 
 export default function CreateMemberForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uniqueError, setUniqueError] = useState<string | null>(null)
+  const [artists, setArtists] = useState<Artist[]>([])
+  const [isLoadingArtists, setIsLoadingArtists] = useState(true)
   const router = useRouter()
   
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors }
   } = useForm<MemberFormData>({
     resolver: zodResolver(memberSchema),
@@ -27,9 +31,30 @@ export default function CreateMemberForm() {
       firstName: '',
       lastName: '',
       email: '',
-      role: 'artist'
+      role: 'artist',
+      artistId: null
     }
   })
+
+  // Surveiller le rôle sélectionné
+  const selectedRole = watch('role')
+
+  // Charger la liste des artistes
+  useEffect(() => {
+    const fetchArtists = async () => {
+      try {
+        const artistsList = await getAllArtists()
+        setArtists(artistsList)
+      } catch (error) {
+        console.error('Erreur lors du chargement des artistes:', error)
+        toast.error('Erreur lors du chargement des artistes')
+      } finally {
+        setIsLoadingArtists(false)
+      }
+    }
+
+    fetchArtists()
+  }, [])
   
   const onSubmit = async (data: MemberFormData) => {
     setIsSubmitting(true)
@@ -54,7 +79,16 @@ export default function CreateMemberForm() {
       
       if (result.success) {
         if (data.role === 'artist') {
-          const collectionName = `${data.firstName} ${data.lastName}`
+          // Récupérer les informations de l'artiste associé
+          const artist = await getArtistById(data.artistId as number)
+          
+          if (!artist) {
+            toast.error('Erreur : Artiste associé non trouvé')
+            setIsSubmitting(false)
+            return
+          }
+
+          const collectionName = `${artist.name} ${artist.surname}`
           const collectionResult = await createShopifyCollection(collectionName)
           
           if (collectionResult.success) {
@@ -176,6 +210,41 @@ export default function CreateMemberForm() {
                 <p className="form-error text-danger">{errors.role.message}</p>
               )}
             </div>
+
+            {/* Liste déroulante des artistes si le rôle est "artist" */}
+            {selectedRole === 'artist' && (
+              <div className="form-group">
+                <label htmlFor="artistId" className="form-label">
+                  Artiste associé
+                </label>
+                {isLoadingArtists ? (
+                  <div className="loading-container">
+                    <LoadingSpinner message="Chargement des artistes..." />
+                  </div>
+                ) : (
+                  <>
+                    <select
+                      id="artistId"
+                      {...register('artistId', {
+                        required: selectedRole === 'artist' ? 'Veuillez sélectionner un artiste' : false,
+                        valueAsNumber: true
+                      })}
+                      className={`form-select ${errors.artistId ? 'input-error' : ''}`}
+                    >
+                      <option value="">Sélectionnez un artiste</option>
+                      {artists.map((artist) => (
+                        <option key={artist.id} value={artist.id}>
+                          {artist.name} {artist.surname} ({artist.pseudo})
+                        </option>
+                      ))}
+                    </select>
+                    {errors.artistId && (
+                      <p className="form-error text-danger">{String(errors.artistId.message || '')}</p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
             
             <div className="form-actions mt-4 d-flex justify-content-between gap-md">
               <Button

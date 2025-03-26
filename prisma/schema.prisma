@@ -471,7 +471,7 @@ model Transaction {
 model BackofficeUser {
   id               Int                  @id @default(autoincrement())
   email            String?              @unique
-  walletAddress    String               @unique
+  walletAddress    String?               @unique
   linkedWallets    Json                 @default("[]")
   lastLogin        DateTime             @db.Timestamp(6)
   userMetadata     Json

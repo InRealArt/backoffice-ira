@@ -127,6 +127,28 @@ export async function createMember(data: MemberFormData): Promise<CreateMemberRe
       }
     }
 
+    // Si le rôle est "artist", vérifier que l'artistId est fourni et existe
+    if (validatedData.role === 'artist') {
+      if (!validatedData.artistId) {
+        return {
+          success: false,
+          message: 'Un artiste doit être sélectionné pour un utilisateur avec le rôle "artist"'
+        }
+      }
+
+      // Vérifier que l'artiste existe
+      const artist = await prisma.artist.findUnique({
+        where: { id: validatedData.artistId }
+      })
+
+      if (!artist) {
+        return {
+          success: false,
+          message: 'L\'artiste sélectionné n\'existe pas'
+        }
+      }
+    }
+
     // Créer l'utilisateur dans la base de données
     await prisma.backofficeUser.create({
       data: {
@@ -136,7 +158,8 @@ export async function createMember(data: MemberFormData): Promise<CreateMemberRe
         role: validatedData.role,
         walletAddress: '', // Valeur par défaut pour le champ obligatoire
         lastLogin: new Date(), // Date actuelle par défaut
-        userMetadata: {}
+        userMetadata: {},
+        artistId: validatedData.role === 'artist' ? validatedData.artistId : null
       }
     })
 
@@ -1550,5 +1573,32 @@ export async function getAllArtists() {
   } catch (error) {
     console.error('Erreur lors de la récupération des artistes:', error)
     return []
+  }
+}
+
+/**
+ * Récupère un artiste par son ID
+ */
+export async function getArtistById(id: number) {
+  try {
+    const artist = await prisma.artist.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        surname: true,
+        pseudo: true,
+        description: true,
+        publicKey: true,
+        imageUrl: true,
+        isGallery: true,
+        backgroundImage: true
+      }
+    })
+
+    return artist
+  } catch (error) {
+    console.error('Erreur lors de la récupération de l\'artiste:', error)
+    return null
   }
 }
