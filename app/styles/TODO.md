@@ -62,7 +62,7 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 
 - [x] blockchain/collections
 - [x] blockchain/smartContracts
-- [x] blockchain/artists
+- [x] dataAdministration/artists
 - [x] blockchain/royalties
 - [x] blockchain/royaltyBeneficiaries
 - [x] marketplace/nftsToMint
@@ -78,7 +78,7 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 ## Formulaires standardisés
 
 - [x] blockchain/collections/[id]/edit (EditCollectionForm) - sert de modèle pour les autres formulaires d'édition
-- [ ] blockchain/artists/[id]/edit
+- [ ] dataAdministration/artists/[id]/edit
 - [x] marketplace/nftsToMint/[id]/edit
 - [x] blockchain/smartContracts/[id]/EditSmartContractForm
 - [x] marketplace/royaltiesSettings/[id]/edit (avec conservation du SCSS pour les styles spécifiques)

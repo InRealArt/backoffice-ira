@@ -3,7 +3,8 @@ const protectedRoutes: Record<string, AccessLevel> = {
     // Routes admin
     "/shopify/create-member": "admin",
     "/shopify/users": "admin",
-    "/blockchain/artists": "admin",
+    "/dataAdministration/artists": "admin",
+    "/dataAdministration/itemCategories": "admin",
     "/blockchain/collections": "admin",
     "/blockchain/factories": "admin",
     "/blockchain/royaltyBeneficiaries": "admin",

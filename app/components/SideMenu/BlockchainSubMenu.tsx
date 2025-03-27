@@ -36,11 +36,6 @@ export default function BlockchainSubMenu({ isActive, isOpen, toggleSubmenu, onN
             onClick={() => onNavigate('/blockchain/collections', 'collections')}
           />
           <SideMenuItem 
-            label="Artistes" 
-            isSubmenuItem={true}
-            onClick={() => onNavigate('/blockchain/artists', 'artists')}
-          />
-          <SideMenuItem 
             label="Royalties" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/blockchain/royaltyBeneficiaries', 'royaltyBeneficiaries')}
@@ -59,11 +54,6 @@ export default function BlockchainSubMenu({ isActive, isOpen, toggleSubmenu, onN
             label="Collections" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/blockchain/collections', 'collections')}
-          />
-          <SideMenuItem 
-            label="Artistes" 
-            isSubmenuItem={true}
-            onClick={() => onNavigate('/blockchain/artists', 'artists')}
           />
           <SideMenuItem 
             label="Royalties" 

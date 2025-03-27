@@ -16,6 +16,7 @@ export function useSideMenuLogic() {
   const [showShopifySubmenu, setShowShopifySubmenu] = useState(false)
   const [showBlockchainSubmenu, setShowBlockchainSubmenu] = useState(false)
   const [showMarketplaceSubmenu, setShowMarketplaceSubmenu] = useState(false)
+  const [showDataAdministrationSubmenu, setShowDataAdministrationSubmenu] = useState(false)
   // État pour le menu plié/déplié
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false)
 
@@ -34,6 +35,7 @@ export function useSideMenuLogic() {
     if (menuToKeepOpen !== 'shopify') setShowShopifySubmenu(false)
     if (menuToKeepOpen !== 'blockchain') setShowBlockchainSubmenu(false)
     if (menuToKeepOpen !== 'marketplace') setShowMarketplaceSubmenu(false)
+    if (menuToKeepOpen !== 'dataAdministration') setShowDataAdministrationSubmenu(false)
   }, [])
 
   // Fonction pour basculer l'état du sous-menu Shopify
@@ -59,6 +61,15 @@ export function useSideMenuLogic() {
     setShowMarketplaceSubmenu(prev => {
       const newState = !prev
       if (newState) closeAllSubmenusExcept('marketplace')
+      return newState
+    })
+  }, [closeAllSubmenusExcept])
+
+  // Fonction pour basculer l'état du sous-menu Data Administration
+  const toggleDataAdministrationSubmenu = useCallback(() => {
+    setShowDataAdministrationSubmenu(prev => {
+      const newState = !prev
+      if (newState) closeAllSubmenusExcept('dataAdministration')
       return newState
     })
   }, [closeAllSubmenusExcept])
@@ -102,6 +113,9 @@ export function useSideMenuLogic() {
       } else if (pathname.includes('/marketplace')) {
         setActiveItem('adminMarketplace')
         setShowMarketplaceSubmenu(true)
+      } else if (pathname.includes('/dataAdministration')) {
+        setActiveItem('adminDataAdministration')
+        setShowDataAdministrationSubmenu(true)
       }
     }
   }, [pathname])
@@ -210,6 +224,8 @@ export function useSideMenuLogic() {
     toggleShopifySubmenu,
     toggleBlockchainSubmenu,
     toggleMarketplaceSubmenu,
-    toggleMenuCollapse
+    toggleMenuCollapse,
+    showDataAdministrationSubmenu,
+    toggleDataAdministrationSubmenu
   }
 }

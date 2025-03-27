@@ -25,8 +25,8 @@ export async function updateArtist(
             data
         })
 
-        revalidatePath(`/blockchain/artists`)
-        revalidatePath(`/blockchain/artists/${id}/edit`)
+        revalidatePath(`/dataAdministration/artists`)
+        revalidatePath(`/dataAdministration/artists/${id}/edit`)
 
         return { success: true }
     } catch (error: any) {

@@ -634,6 +634,8 @@ model Item {
   nftResource                 NftResource?      @relation(fields: [idNftResource], references: [id])
   idNftResource               Int?
   tags                        String[]          @default([])
+  categoryId                  Int?
+  category                    ItemCategory?     @relation(fields: [categoryId], references: [id])
   height                      Decimal?          @db.Decimal(10, 2)
   width                       Decimal?          @db.Decimal(10, 2)
   intellectualProperty        Boolean           @default(false)
@@ -646,6 +648,15 @@ model Item {
 
   @@index([idUser])
   @@index([idNftResource])
+  @@index([categoryId])
+  @@schema("public")
+}
+
+model ItemCategory {
+  id    Int    @id @default(autoincrement())
+  name  String
+  items Item[]
+
   @@schema("public")
 }
 

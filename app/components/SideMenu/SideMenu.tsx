@@ -6,6 +6,7 @@ import BlockchainSubMenu from './BlockchainSubMenu'
 import MenuSeparator from './MenuSeparator'
 import { useSideMenuLogic } from './useSideMenuLogic'
 import MarketplaceSubMenu from './MarketplaceSubMenu'
+import DataAdministrationSubMenu from './DataAdministrationSubMenu'
 
 export default function SideMenu() {
   const {
@@ -21,7 +22,9 @@ export default function SideMenu() {
     toggleShopifySubmenu,
     toggleBlockchainSubmenu,
     toggleMarketplaceSubmenu,
-    toggleMenuCollapse
+    toggleMenuCollapse,
+    showDataAdministrationSubmenu,
+    toggleDataAdministrationSubmenu
   } = useSideMenuLogic()
   
   if (!isLoggedIn) {
@@ -71,6 +74,13 @@ export default function SideMenu() {
         {isAdmin && (
           <>
             <MenuSeparator isCollapsed={isMenuCollapsed} />
+            <DataAdministrationSubMenu
+              isActive={activeItem === 'adminDataAdministration'}
+              isOpen={showDataAdministrationSubmenu}
+              toggleSubmenu={toggleDataAdministrationSubmenu}
+              onNavigate={handleNavigation}
+              isCollapsed={isMenuCollapsed}
+            />
             <ShopifySubMenu
               isActive={activeItem === 'adminShopify'}
               isOpen={showShopifySubmenu}
