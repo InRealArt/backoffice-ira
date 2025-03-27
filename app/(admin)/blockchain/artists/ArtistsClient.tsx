@@ -54,7 +54,7 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
           <h1 className="page-title">Artistes</h1>
         </div>
         <p className="page-subtitle">
-          Liste des artistes enregistrés dans le système
+          Liste des artistes ou galleries enregistrés dans le système
         </p>
       </div>
       

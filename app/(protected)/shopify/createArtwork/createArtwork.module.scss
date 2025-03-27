@@ -1,39 +1,39 @@
 .artworkCreationHeader {
   margin-bottom: 30px;
   padding-top: 10px; // Espace supplémentaire en haut
-  
+
   h1 {
     font-size: 24px;
     font-weight: 600;
     margin-bottom: 8px;
     color: #111827;
-    
+
     :global(.dark) & {
       color: #f3f4f6;
     }
-    
+
     @media (max-width: 768px) {
       font-size: 20px;
     }
   }
-  
+
   .subtitle {
     color: #6b7280;
     font-size: 15px;
-    
+
     :global(.dark) & {
       color: #9ca3af;
     }
-    
+
     @media (max-width: 768px) {
       font-size: 14px;
     }
   }
-  
+
   @media (max-width: 768px) {
     padding: 10px 0;
   }
-  
+
   @media (max-width: 480px) {
     margin-bottom: 20px;
   }
@@ -44,7 +44,7 @@
   padding: 2px 8px;
   border-radius: 4px;
   font-weight: 600;
-  
+
   :global(.dark) & {
     background-color: #193654;
     color: #93c5fd;
@@ -59,22 +59,26 @@
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 24px;
-  
+
   :global(.dark) & {
     background-color: #1f2937;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   }
-  
+
   @media (max-width: 768px) {
     padding: 20px;
   }
-  
+
   @media (max-width: 480px) {
     padding: 16px;
   }
 }
 
 // Les autres styles spécifiques au contenu restent inchangés
-.formSection, .formButtons, .button, .artworkForm, .formGroup {
+.formSection,
+.formButtons,
+.button,
+.artworkForm,
+.formGroup {
   // Conserver ces styles tels quels
-} 
+}

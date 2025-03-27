@@ -7,12 +7,12 @@ export const memberSchema = z.object({
     role: z.enum(['artist', 'galleryManager', 'admin']),
     artistId: z.number().nullable().optional()
 }).refine((data) => {
-    if (data.role === 'artist') {
+    if (data.role === 'artist' || data.role === 'galleryManager') {
         return data.artistId !== null && data.artistId !== undefined
     }
     return true
 }, {
-    message: 'Veuillez sélectionner un artiste',
+    message: 'Veuillez sélectionner un élément',
     path: ['artistId']
 })
 

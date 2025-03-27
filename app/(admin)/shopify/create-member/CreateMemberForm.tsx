@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { memberSchema, MemberFormData } from './schema'
-import { createMember, checkUserExists, getAllArtists, getArtistById } from '@/app/actions/prisma/prismaActions'
+import { createMember, checkUserExists, getAllArtists, getArtistById, getAllGalleries } from '@/app/actions/prisma/prismaActions'
 import toast from 'react-hot-toast'
 import { createShopifyCollection } from '@/app/actions/shopify/shopifyActions'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
@@ -16,7 +16,9 @@ export default function CreateMemberForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uniqueError, setUniqueError] = useState<string | null>(null)
   const [artists, setArtists] = useState<Artist[]>([])
+  const [galleries, setGalleries] = useState<Artist[]>([])
   const [isLoadingArtists, setIsLoadingArtists] = useState(true)
+  const [isLoadingGalleries, setIsLoadingGalleries] = useState(true)
   const router = useRouter()
   
   const {
@@ -56,6 +58,23 @@ export default function CreateMemberForm() {
     fetchArtists()
   }, [])
   
+  // Charger la liste des galeries
+  useEffect(() => {
+    const fetchGalleries = async () => {
+      try {
+        const galleriesList = await getAllGalleries()
+        setGalleries(galleriesList)
+      } catch (error) {
+        console.error('Erreur lors du chargement des galeries:', error)
+        toast.error('Erreur lors du chargement des galeries')
+      } finally {
+        setIsLoadingGalleries(false)
+      }
+    }
+
+    fetchGalleries()
+  }, [])
+  
   const onSubmit = async (data: MemberFormData) => {
     setIsSubmitting(true)
     setUniqueError(null)
@@ -78,7 +97,7 @@ export default function CreateMemberForm() {
       const result = await createMember(data)
       
       if (result.success) {
-        if (data.role === 'artist') {
+        if (data.role === 'artist' || (data.role === 'galleryManager')) {
           // Récupérer les informations de l'artiste associé
           const artist = await getArtistById(data.artistId as number)
           
@@ -235,6 +254,41 @@ export default function CreateMemberForm() {
                       {artists.map((artist) => (
                         <option key={artist.id} value={artist.id}>
                           {artist.name} {artist.surname} ({artist.pseudo})
+                        </option>
+                      ))}
+                    </select>
+                    {errors.artistId && (
+                      <p className="form-error text-danger">{String(errors.artistId.message || '')}</p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+            
+            {/* Liste déroulante des galeries si le rôle est "galleryManager" */}
+            {selectedRole === 'galleryManager' && (
+              <div className="form-group">
+                <label htmlFor="artistId" className="form-label">
+                  Galerie associée
+                </label>
+                {isLoadingGalleries ? (
+                  <div className="loading-container">
+                    <LoadingSpinner message="Chargement des galeries..." />
+                  </div>
+                ) : (
+                  <>
+                    <select
+                      id="artistId"
+                      {...register('artistId', {
+                        required: selectedRole === 'galleryManager' ? 'Veuillez sélectionner une galerie' : false,
+                        valueAsNumber: true
+                      })}
+                      className={`form-select ${errors.artistId ? 'input-error' : ''}`}
+                    >
+                      <option value="">Sélectionnez une galerie</option>
+                      {galleries.map((gallery) => (
+                        <option key={gallery.id} value={gallery.id}>
+                          {gallery.name} {gallery.surname} ({gallery.pseudo})
                         </option>
                       ))}
                     </select>

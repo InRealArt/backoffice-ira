@@ -1554,6 +1554,41 @@ export async function updateNftResourceOwner(
 export async function getAllArtists() {
   try {
     const artists = await prisma.artist.findMany({
+      where: {
+        isGallery: false
+      },
+      select: {
+        id: true,
+        name: true,
+        surname: true,
+        pseudo: true,
+        description: true,
+        publicKey: true,
+        imageUrl: true,
+        isGallery: true,
+        backgroundImage: true
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    })
+
+    return artists
+  } catch (error) {
+    console.error('Erreur lors de la récupération des artistes:', error)
+    return []
+  }
+}
+
+/**
+ * Récupère toutes les galleries
+ */
+export async function getAllGalleries() {
+  try {
+    const artists = await prisma.artist.findMany({
+      where: {
+        isGallery: true
+      },
       select: {
         id: true,
         name: true,
