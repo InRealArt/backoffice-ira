@@ -2,6 +2,7 @@
 
 import React from 'react'
 import SideMenuItem from './SideMenuItem'
+import { useIsAdmin } from '@/app/hooks/useIsAdmin'
 
 interface LandingSubMenuProps {
   isActive: boolean
@@ -12,6 +13,8 @@ interface LandingSubMenuProps {
 }
 
 export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavigate, isCollapsed = false }: LandingSubMenuProps) {
+  const { isAdmin } = useIsAdmin()
+  
   return (
     <>
       <SideMenuItem 
@@ -40,6 +43,13 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/translations', 'translations')}
           />
+          {isAdmin && (
+            <SideMenuItem 
+              label="FAQ" 
+              isSubmenuItem={true}
+              onClick={() => onNavigate('/landing/faq', 'faq')}
+            />
+          )}
         </ul>
       )}
       
@@ -60,6 +70,13 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/translations', 'translations')}
           />
+          {isAdmin && (
+            <SideMenuItem 
+              label="FAQ" 
+              isSubmenuItem={true}
+              onClick={() => onNavigate('/landing/faq', 'faq')}
+            />
+          )}
         </ul>
       )}
     </>

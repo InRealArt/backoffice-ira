@@ -262,6 +262,13 @@
   margin-top: $spacing-xs;
 }
 
+.form-help {
+  color: $color-text-secondary;
+  font-size: $font-size-xs;
+  margin-top: $spacing-xs;
+  line-height: 1.3;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;

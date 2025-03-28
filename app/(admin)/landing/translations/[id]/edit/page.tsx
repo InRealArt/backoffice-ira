@@ -67,6 +67,13 @@ async function getSchemaModels() {
         { name: 'twitterUrl', type: 'String' },
         { name: 'websiteUrl', type: 'String' }
       ]
+    },
+    {
+      name: 'Faq',
+      fields: [
+        { name: 'question', type: 'String' },
+        { name: 'answer', type: 'String' }
+      ]
     }
     // Ajoutez d'autres modèles du schéma 'landing' si nécessaire
   ]

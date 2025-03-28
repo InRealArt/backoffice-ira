@@ -5,6 +5,8 @@ const protectedRoutes: Record<string, AccessLevel> = {
     "/landing/languages/[id]/edit": "admin",
     "/landing/teams": "admin",
     "/landing/teams/[id]/edit": "admin",
+    "/landing/faq": "admin",
+    "/landing/faq/[id]/edit": "admin",
     "/shopify/create-member": "admin",
     "/shopify/users": "admin",
     "/dataAdministration/artists": "admin",
