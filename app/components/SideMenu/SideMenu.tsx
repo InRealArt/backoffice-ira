@@ -7,6 +7,7 @@ import MenuSeparator from './MenuSeparator'
 import { useSideMenuLogic } from './useSideMenuLogic'
 import MarketplaceSubMenu from './MarketplaceSubMenu'
 import DataAdministrationSubMenu from './DataAdministrationSubMenu'
+import LandingSubMenu from './LandingSubMenu'
 
 export default function SideMenu() {
   const {
@@ -24,7 +25,9 @@ export default function SideMenu() {
     toggleMarketplaceSubmenu,
     toggleMenuCollapse,
     showDataAdministrationSubmenu,
-    toggleDataAdministrationSubmenu
+    toggleDataAdministrationSubmenu,
+    showLandingSubmenu,
+    toggleLandingSubmenu
   } = useSideMenuLogic()
   
   if (!isLoggedIn) {
@@ -73,6 +76,14 @@ export default function SideMenu() {
         
         {isAdmin && (
           <>
+            <MenuSeparator isCollapsed={isMenuCollapsed} />
+            <LandingSubMenu
+              isActive={activeItem === 'adminLanding'}
+              isOpen={showLandingSubmenu}
+              toggleSubmenu={toggleLandingSubmenu}
+              onNavigate={handleNavigation}
+              isCollapsed={isMenuCollapsed}
+            />
             <MenuSeparator isCollapsed={isMenuCollapsed} />
             <DataAdministrationSubMenu
               isActive={activeItem === 'adminDataAdministration'}

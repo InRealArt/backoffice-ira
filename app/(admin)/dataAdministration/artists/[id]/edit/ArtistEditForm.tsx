@@ -71,7 +71,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
         
         // Rediriger après 1 seconde
         setTimeout(() => {
-          router.push('/blockchain/artists')
+          router.push('/dataAdministration/artists')
           router.refresh()
         }, 1000)
       } else {
@@ -86,7 +86,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   }
   
   const handleCancel = () => {
-    router.push('/blockchain/artists')
+    router.push('/dataAdministration/artists')
   }
   
   return (

@@ -6,7 +6,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["auth", "public"]
+  schemas  = ["auth", "public", "landing"]
 }
 
 model Artist {
@@ -732,4 +732,28 @@ model MarketPlaceTransaction {
 
   @@index([nftResourceId])
   @@schema("public")
+}
+
+
+/*******  SCHEMA LANDING *******/
+
+// Modèle Utilisateur
+model Team {
+    id        Int      @id @default(autoincrement())
+    firstName     String
+    lastName      String
+    email         String
+    role          String
+    intro         String?
+    description   String?
+    photoUrl1     String?
+    photoUrl2     String?
+    linkedinUrl   String?
+    instagramUrl  String?
+    facebookUrl   String?
+    githubUrl     String?
+    twitterUrl    String?
+    websiteUrl    String?
+
+    @@schema("landing")
 }

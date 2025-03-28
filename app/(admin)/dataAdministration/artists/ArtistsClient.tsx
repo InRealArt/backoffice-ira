@@ -35,7 +35,7 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
   
   const handleArtistClick = (artistId: number) => {
     setLoadingArtistId(artistId)
-    router.push(`/blockchain/artists/${artistId}/edit`)
+    router.push(`/dataAdministration/artists/${artistId}/edit`)
   }
   
   // Fonction pour obtenir le badge en fonction du type d'artiste

@@ -17,6 +17,7 @@ export function useSideMenuLogic() {
   const [showBlockchainSubmenu, setShowBlockchainSubmenu] = useState(false)
   const [showMarketplaceSubmenu, setShowMarketplaceSubmenu] = useState(false)
   const [showDataAdministrationSubmenu, setShowDataAdministrationSubmenu] = useState(false)
+  const [showLandingSubmenu, setShowLandingSubmenu] = useState(false)
   // État pour le menu plié/déplié
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false)
 
@@ -36,6 +37,7 @@ export function useSideMenuLogic() {
     if (menuToKeepOpen !== 'blockchain') setShowBlockchainSubmenu(false)
     if (menuToKeepOpen !== 'marketplace') setShowMarketplaceSubmenu(false)
     if (menuToKeepOpen !== 'dataAdministration') setShowDataAdministrationSubmenu(false)
+    if (menuToKeepOpen !== 'landing') setShowLandingSubmenu(false)
   }, [])
 
   // Fonction pour basculer l'état du sous-menu Shopify
@@ -70,6 +72,15 @@ export function useSideMenuLogic() {
     setShowDataAdministrationSubmenu(prev => {
       const newState = !prev
       if (newState) closeAllSubmenusExcept('dataAdministration')
+      return newState
+    })
+  }, [closeAllSubmenusExcept])
+
+  // Fonction pour basculer l'état du sous-menu Landing
+  const toggleLandingSubmenu = useCallback(() => {
+    setShowLandingSubmenu(prev => {
+      const newState = !prev
+      if (newState) closeAllSubmenusExcept('landing')
       return newState
     })
   }, [closeAllSubmenusExcept])
@@ -116,6 +127,9 @@ export function useSideMenuLogic() {
       } else if (pathname.includes('/dataAdministration')) {
         setActiveItem('adminDataAdministration')
         setShowDataAdministrationSubmenu(true)
+      } else if (pathname.includes('/landing')) {
+        setActiveItem('adminLanding')
+        setShowLandingSubmenu(true)
       }
     }
   }, [pathname])
@@ -219,13 +233,15 @@ export function useSideMenuLogic() {
     showShopifySubmenu,
     showBlockchainSubmenu,
     showMarketplaceSubmenu,
+    showDataAdministrationSubmenu,
+    showLandingSubmenu,
     isMenuCollapsed,
     handleNavigation,
     toggleShopifySubmenu,
     toggleBlockchainSubmenu,
     toggleMarketplaceSubmenu,
-    toggleMenuCollapse,
-    showDataAdministrationSubmenu,
-    toggleDataAdministrationSubmenu
+    toggleDataAdministrationSubmenu,
+    toggleLandingSubmenu,
+    toggleMenuCollapse
   }
 }
