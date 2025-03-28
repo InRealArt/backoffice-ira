@@ -68,10 +68,11 @@ export default function TeamClient({ teamMembers }: TeamClientProps) {
             <table className="data-table">
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>Nom</th>
                   <th>Rôle</th>
                   <th>Email</th>
-                  <th className={isMobile ? 'hidden-mobile' : ''}>LinkedIn</th>
+                  <th>Ordre</th>
                 </tr>
               </thead>
               <tbody>
@@ -83,6 +84,7 @@ export default function TeamClient({ teamMembers }: TeamClientProps) {
                       onClick={() => !loadingMemberId && handleMemberClick(member.id)}
                       className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingMemberId && !isLoading ? 'disabled-row' : ''}`}
                     >
+                      <td>{member.id}</td>
                       <td>
                         <div className="d-flex align-items-center gap-sm">
                           {isLoading && <LoadingSpinner size="small" message="" inline />}
@@ -105,21 +107,7 @@ export default function TeamClient({ teamMembers }: TeamClientProps) {
                       </td>
                       <td>{member.role}</td>
                       <td>{member.email}</td>
-                      <td className={isMobile ? 'hidden-mobile' : ''}>
-                        {member.linkedinUrl ? (
-                          <a 
-                            href={member.linkedinUrl} 
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="external-link"
-                          >
-                            Voir le profil
-                          </a>
-                        ) : (
-                          <span className="text-muted">Non renseigné</span>
-                        )}
-                      </td>
+                      <td>{member.order}</td>
                     </tr>
                   )
                 })}

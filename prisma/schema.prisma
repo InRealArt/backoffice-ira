@@ -771,6 +771,7 @@ model Team {
     lastName      String
     email         String
     role          String
+    order         Int?
     intro         String?
     description   String?
     photoUrl1     String?

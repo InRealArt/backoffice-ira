@@ -16,6 +16,7 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Le nom est requis'),
   email: z.string().email('Email invalide').min(1, 'L\'email est requis'),
   role: z.string().min(1, 'Le rôle est requis'),
+  order: z.number().nullable().optional(),
   intro: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   photoUrl1: z.string().url('URL d\'image invalide').nullable().optional(),
@@ -50,6 +51,7 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
       lastName: teamMember.lastName,
       email: teamMember.email,
       role: teamMember.role,
+      order: teamMember.order,
       intro: teamMember.intro || null,
       description: teamMember.description || null,
       photoUrl1: teamMember.photoUrl1 || null,
@@ -75,6 +77,7 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
         lastName: data.lastName,
         email: data.email,
         role: data.role,
+        order: data.order === undefined ? null : data.order,
         intro: data.intro === undefined ? null : data.intro,
         description: data.description === undefined ? null : data.description,
         photoUrl1: data.photoUrl1 === undefined ? null : data.photoUrl1,
@@ -153,6 +156,8 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
                     {...register('photoUrl1')}
                     className={`form-input ${errors.photoUrl1 ? 'input-error' : ''}`}
                     placeholder="https://example.com/image.jpg"
+                    style={{ width: '100%', fontSize: '0.65rem' }}
+                    title={photoUrl1 || ""}
                   />
                   {errors.photoUrl1 && (
                     <p className="form-error">{errors.photoUrl1.message}</p>
@@ -224,6 +229,20 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
             <h2 className="card-title">Description</h2>
           </div>
           <div className="card-content">
+            <div className="form-group">
+              <label htmlFor="order" className="form-label">Ordre d'affichage</label>
+              <input
+                id="order"
+                type="number"
+                {...register('order', { valueAsNumber: true })}
+                className={`form-input ${errors.order ? 'input-error' : ''}`}
+                placeholder="Ordre d'affichage (optionnel)"
+              />
+              {errors.order && (
+                <p className="form-error">{errors.order.message}</p>
+              )}
+            </div>
+            
             <div className="form-group">
               <label htmlFor="intro" className="form-label">Introduction courte</label>
               <input
