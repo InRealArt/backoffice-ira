@@ -35,6 +35,11 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/languages', 'languages')}
           />
+          <SideMenuItem 
+            label="Translations" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/translations', 'translations')}
+          />
         </ul>
       )}
       
@@ -49,6 +54,11 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             label="Languages" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/languages', 'languages')}
+          />
+          <SideMenuItem 
+            label="Translations" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/translations', 'translations')}
           />
         </ul>
       )}
