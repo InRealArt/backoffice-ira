@@ -737,6 +737,33 @@ model MarketPlaceTransaction {
 
 /*******  SCHEMA LANDING *******/
 
+// Définition des langues disponibles
+model Language {
+  id           Int           @id @default(autoincrement())
+  code         String        @unique // ex: fr, en, es
+  name         String        // ex: Français, English, Español
+  isDefault    Boolean       @default(false)
+  translations Translation[]
+
+  @@schema("landing")
+}
+
+// Table de traduction générique
+model Translation {
+  id         Int      @id @default(autoincrement())
+  entityType String   // Le type d'entité (ex: "Team")
+  entityId   Int      // L'ID de l'entité (ex: ID du membre de l'équipe)
+  field      String   // Le champ à traduire (ex: "intro", "description")
+  value      String   // La valeur traduite
+  languageId Int
+  language   Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+
+  @@unique([entityType, entityId, field, languageId])
+  @@index([entityType, entityId])
+  @@index([languageId])
+  @@schema("landing")
+}
+
 // Modèle Utilisateur
 model Team {
     id        Int      @id @default(autoincrement())

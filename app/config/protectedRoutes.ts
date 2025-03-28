@@ -1,21 +1,33 @@
 // Configuration des routes protégées avec leur niveau d'accès requis
 const protectedRoutes: Record<string, AccessLevel> = {
     // Routes admin
+    "/landing/languages": "admin",
+    "/landing/languages/[id]/edit": "admin",
+    "/landing/teams": "admin",
+    "/landing/teams/[id]/edit": "admin",
     "/shopify/create-member": "admin",
     "/shopify/users": "admin",
     "/dataAdministration/artists": "admin",
+    "/dataAdministration/artists/[id]/edit": "admin",
     "/dataAdministration/itemCategories": "admin",
+    "/dataAdministration/itemCategories/[id]/edit": "admin",
     "/blockchain/collections": "admin",
+    "/blockchain/collections/[id]/edit": "admin",
     "/blockchain/factories": "admin",
+    "/blockchain/factories/[id]/edit": "admin",
     "/blockchain/royaltyBeneficiaries": "admin",
+    "/blockchain/royaltyBeneficiaries/[id]/edit": "admin",
     "/marketplace/nftsToMint": "admin",
+    "/marketplace/nftsToMint/[id]/edit": "admin",
     "/marketplace/royaltiesSettings": "admin",
+    "/marketplace/royaltiesSettings/[id]/edit": "admin",
     "/marketplace/marketplaceListing": "admin",
+    "/marketplace/marketplaceListing/[id]/edit": "admin",
     // Routes artiste
     "/shopify/createArtwork": "artist",
     "/shopify/collection": "artist",
     "/shopify/artworks": "artist",
-
+    "/shopify/artworks/[id]/edit": "artist",
     // Routes nécessitant uniquement une connexion
     "/dashboard": "auth",
     "/profile": "auth",
