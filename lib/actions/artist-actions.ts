@@ -17,12 +17,33 @@ export async function getArtistById(id: number): Promise<Artist | null> {
 
 export async function updateArtist(
     id: number,
-    data: Omit<Artist, 'id'>
+    data: Omit<Artist, 'id'> & { artworkImages?: string | string[] }
 ): Promise<{ success: boolean; message?: string }> {
     try {
+        const { artworkImages, ...restData } = data
+
+        // Traiter les images d'artwork s'il y en a
+        let processedImages
+        if (artworkImages !== undefined) {
+            if (typeof artworkImages === 'string') {
+                try {
+                    processedImages = JSON.parse(artworkImages)
+                } catch (error) {
+                    console.error('Erreur lors du parsing de artworkImages:', error)
+                    processedImages = []
+                }
+            } else {
+                processedImages = artworkImages
+            }
+        }
+
+        // Mise à jour en une seule étape, y compris artworkImages
         await prisma.artist.update({
             where: { id },
-            data
+            data: {
+                ...restData,
+                ...(processedImages !== undefined && { artworkImages: processedImages })
+            }
         })
 
         revalidatePath(`/dataAdministration/artists`)

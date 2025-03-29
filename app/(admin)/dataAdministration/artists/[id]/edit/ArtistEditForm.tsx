@@ -9,13 +9,17 @@ import Image from 'next/image'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { X, Plus } from 'lucide-react'
 
 // Schéma de validation
 const formSchema = z.object({
   name: z.string().min(1, 'Le prénom est requis'),
   surname: z.string().min(1, 'Le nom est requis'),
   pseudo: z.string().min(1, 'Le pseudo est requis'),
+  intro: z.string().nullable().optional(),
   description: z.string().min(10, 'La description doit contenir au moins 10 caractères'),
+  artworkStyle: z.string().nullable().optional(),
+  artistsPage: z.boolean().default(false),
   publicKey: z.string().min(1, 'La clé publique est requise'),
   imageUrl: z.string().url('URL d\'image invalide'),
   isGallery: z.boolean().default(false),
@@ -24,13 +28,37 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
+// Extension du type Artist pour inclure artworkImages
+interface ArtistWithArtworkImages extends Artist {
+  artworkImages: string[]
+}
+
 interface ArtistEditFormProps {
-  artist: Artist
+  artist: Artist & { artworkImages?: string[] }
 }
 
 export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [artworkImages, setArtworkImages] = useState<string[]>(() => {
+    // Parse le champ artworkImages qui peut être une chaîne JSON ou un tableau
+    if (!artist.artworkImages) {
+      return [];
+    }
+    
+    if (typeof artist.artworkImages === 'string') {
+      try {
+        return JSON.parse(artist.artworkImages);
+      } catch (e) {
+        console.error("Erreur lors du parsing des images:", e);
+        return [];
+      }
+    }
+    
+    // Si c'est déjà un tableau (cast depuis any)
+    return artist.artworkImages as string[] || [];
+  })
+  const [newImageUrl, setNewImageUrl] = useState('')
 
   const {
     register,
@@ -43,7 +71,10 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
       name: artist.name,
       surname: artist.surname,
       pseudo: artist.pseudo,
+      intro: artist.intro || '',
       description: artist.description,
+      artworkStyle: artist.artworkStyle || '',
+      artistsPage: artist.artistsPage || false,
       publicKey: artist.publicKey,
       imageUrl: artist.imageUrl,
       isGallery: artist.isGallery || false,
@@ -53,18 +84,28 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
 
   const isGallery = watch('isGallery')
   const imageUrl = watch('imageUrl')
+  const artistsPage = watch('artistsPage')
   
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
     
     try {
-      // Transformer undefined en null pour backgroundImage
+      // Transformer undefined en null pour backgroundImage et intro
       const formattedData = {
         ...data,
-        backgroundImage: data.backgroundImage === undefined ? null : data.backgroundImage
+        intro: data.intro || null,
+        artworkStyle: data.artworkStyle || null,
+        backgroundImage: data.backgroundImage || null,
+        // Ne pas inclure artworkImages ici car ce n'est pas un champ standard du modèle Artist
       }
       
-      const result = await updateArtist(artist.id, formattedData)
+      // Passer directement le tableau d'images sans le convertir en chaîne JSON
+      const artistDataWithImages = {
+        ...formattedData,
+        artworkImages: artworkImages
+      }
+      
+      const result = await updateArtist(artist.id, artistDataWithImages)
       
       if (result.success) {
         toast.success('Artiste mis à jour avec succès')
@@ -88,7 +129,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const handleCancel = () => {
     router.push('/dataAdministration/artists')
   }
-  
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -150,6 +191,23 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                     </label>
                     <span className={isGallery ? 'text-primary' : 'text-muted'} style={{ fontWeight: isGallery ? 'bold' : 'normal' }}>Galerie</span>
                   </div>
+
+                  <div className="form-group">
+                    <div className="d-flex align-items-center gap-md" style={{ marginBottom: '20px' }}>
+                      <span className={!artistsPage ? 'text-primary' : 'text-muted'} style={{ fontWeight: !artistsPage ? 'bold' : 'normal' }}>Affiche Page artiste Landing désactivée</span>
+                      <label className="d-flex align-items-center" style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}>
+                        <input
+                          type="checkbox"
+                          {...register('artistsPage')}
+                          style={{ opacity: 0, width: 0, height: 0 }}
+                        />
+                        <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: artistsPage ? '#4f46e5' : '#ccc', borderRadius: '34px', transition: '0.4s' }}>
+                          <span style={{ position: 'absolute', content: '""', height: '22px', width: '22px', left: '4px', bottom: '4px', backgroundColor: 'white', borderRadius: '50%', transition: '0.4s', transform: artistsPage ? 'translateX(30px)' : 'translateX(0)' }}></span>
+                        </span>
+                      </label>
+                      <span className={artistsPage ? 'text-primary' : 'text-muted'} style={{ fontWeight: artistsPage ? 'bold' : 'normal' }}>Affiche Page artiste Landing activée</span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="d-flex gap-md">
@@ -199,6 +257,19 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
         <div className="form-card">
           <div className="card-content">
             <div className="form-group">
+              <label htmlFor="intro" className="form-label">Introduction</label>
+              <textarea
+                id="intro"
+                {...register('intro')}
+                className={`form-textarea ${errors.intro ? 'input-error' : ''}`}
+                rows={2}
+              />
+              {errors.intro && (
+                <p className="form-error">{errors.intro.message}</p>
+              )}
+            </div>
+
+            <div className="form-group">
               <label htmlFor="description" className="form-label">Description</label>
               <textarea
                 id="description"
@@ -208,6 +279,19 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
               />
               {errors.description && (
                 <p className="form-error">{errors.description.message}</p>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="artworkStyle" className="form-label">Style d'art</label>
+              <input
+                id="artworkStyle"
+                type="text"
+                {...register('artworkStyle')}
+                className={`form-input ${errors.artworkStyle ? 'input-error' : ''}`}
+              />
+              {errors.artworkStyle && (
+                <p className="form-error">{errors.artworkStyle.message}</p>
               )}
             </div>
             
@@ -237,6 +321,165 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
               />
               {errors.backgroundImage && (
                 <p className="form-error">{errors.backgroundImage.message}</p>
+              )}
+            </div>
+            
+            {/* GESTION DES IMAGES DANS LE FORMULAIRE AVEC ISOLATION DES ÉVÉNEMENTS */}
+            <div className="form-group">
+              <label className="form-label">Images des œuvres affichées sur la page &quot;artists&quot; de la Landing</label>
+              
+              <div style={{ 
+                display: 'flex', 
+                gap: '10px', 
+                marginBottom: '16px',
+                padding: '12px',
+                backgroundColor: '#fafafa',
+                borderRadius: '6px'
+              }}>
+                <input
+                  type="text"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    // Empêcher toute propagation d'événement clavier
+                    e.stopPropagation();
+                    
+                    if (e.key === 'Enter') {
+                      // Empêcher explicitement la soumission du formulaire
+                      e.preventDefault();
+                      
+                      if (newImageUrl && newImageUrl.trim() && newImageUrl.trim().toLowerCase().startsWith('http')) {
+                        setArtworkImages([...artworkImages, newImageUrl.trim()]);
+                        setNewImageUrl('');
+                      }
+                      
+                      // Assurer qu'aucun autre gestionnaire ne sera appelé
+                      return false;
+                    }
+                  }}
+                  placeholder="https://example.com/image.jpg"
+                  className="form-input"
+                  style={{ flex: 1 }}
+                />
+                
+                <div 
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    // Empêcher toute propagation d'événement vers le formulaire
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    if (newImageUrl && newImageUrl.trim() && newImageUrl.trim().toLowerCase().startsWith('http')) {
+                      setArtworkImages([...artworkImages, newImageUrl.trim()]);
+                      setNewImageUrl('');
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    // Empêcher toute propagation si cette div est activée par clavier
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      if (newImageUrl && newImageUrl.trim() && newImageUrl.trim().toLowerCase().startsWith('http')) {
+                        setArtworkImages([...artworkImages, newImageUrl.trim()]);
+                        setNewImageUrl('');
+                      }
+                    }
+                    
+                    return false;
+                  }}
+                  className="btn btn-primary btn-small"
+                  style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 16px',
+                    pointerEvents: 'auto',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Plus size={16} /> Ajouter
+                </div>
+              </div>
+              
+              <div style={{ 
+                maxHeight: '300px', 
+                overflowY: 'auto',
+                border: artworkImages.length ? '1px solid #eee' : 'none',
+                borderRadius: '4px'
+              }}>
+                {artworkImages.length === 0 ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#666', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                    Aucune image ajoutée
+                  </div>
+                ) : (
+                  <div>
+                    {artworkImages.map((url, index) => (
+                      <div 
+                        key={index}
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          padding: '12px', 
+                          borderBottom: index < artworkImages.length - 1 ? '1px solid #eee' : 'none',
+                          backgroundColor: index % 2 === 0 ? '#f9f9f9' : 'white'
+                        }}
+                      >
+                        <div style={{ 
+                          width: '40px', 
+                          height: '40px', 
+                          backgroundImage: `url(${url})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          borderRadius: '4px',
+                          marginRight: '12px',
+                          border: '1px solid #eee'
+                        }} />
+                        
+                        <div style={{ 
+                          flex: 1,
+                          fontSize: '14px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {url}
+                        </div>
+                        
+                        <div 
+                          onClick={(e) => {
+                            // Empêcher la propagation ou la soumission du formulaire
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            const newImages = [...artworkImages];
+                            newImages.splice(index, 1);
+                            setArtworkImages(newImages);
+                          }}
+                          className="btn btn-danger btn-small"
+                          style={{ 
+                            padding: '6px', 
+                            borderRadius: '4px', 
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <X size={16} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {artworkImages.length > 0 && (
+                <div style={{ marginTop: '8px', fontSize: '14px', color: '#666' }}>
+                  {artworkImages.length} {artworkImages.length === 1 ? 'image' : 'images'} dans la liste
+                </div>
               )}
             </div>
           </div>

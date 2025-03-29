@@ -14,7 +14,11 @@ model Artist {
   name            String
   surname         String
   pseudo          String           @unique
+  artworkImages   Json             @default("[]")
+  intro           String?
   description     String           @unique
+  artworkStyle    String?
+  artistsPage     Boolean?         @default(false)
   publicKey       String           @unique
   imageUrl        String           @unique
   isGallery       Boolean          @default(false)
@@ -734,14 +738,15 @@ model MarketPlaceTransaction {
   @@schema("public")
 }
 
-
-/*******  SCHEMA LANDING *******/
+/**
+ * *****  SCHEMA LANDING ******
+ */
 
 // Définition des langues disponibles
 model Language {
   id           Int           @id @default(autoincrement())
   code         String        @unique // ex: fr, en, es
-  name         String        // ex: Français, English, Español
+  name         String // ex: Français, English, Español
   isDefault    Boolean       @default(false)
   translations Translation[]
 
@@ -751,10 +756,10 @@ model Language {
 // Table de traduction générique
 model Translation {
   id         Int      @id @default(autoincrement())
-  entityType String   // Le type d'entité (ex: "Team")
-  entityId   Int      // L'ID de l'entité (ex: ID du membre de l'équipe)
-  field      String   // Le champ à traduire (ex: "intro", "description")
-  value      String   // La valeur traduite
+  entityType String // Le type d'entité (ex: "Team")
+  entityId   Int // L'ID de l'entité (ex: ID du membre de l'équipe)
+  field      String // Le champ à traduire (ex: "intro", "description")
+  value      String // La valeur traduite
   languageId Int
   language   Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
 
@@ -766,24 +771,24 @@ model Translation {
 
 // Modèle Utilisateur
 model Team {
-    id        Int      @id @default(autoincrement())
-    firstName     String
-    lastName      String
-    email         String
-    role          String
-    order         Int?
-    intro         String?
-    description   String?
-    photoUrl1     String?
-    photoUrl2     String?
-    linkedinUrl   String?
-    instagramUrl  String?
-    facebookUrl   String?
-    githubUrl     String?
-    twitterUrl    String?
-    websiteUrl    String?
+  id           Int     @id @default(autoincrement())
+  firstName    String
+  lastName     String
+  email        String
+  role         String
+  order        Int?
+  intro        String?
+  description  String?
+  photoUrl1    String?
+  photoUrl2    String?
+  linkedinUrl  String?
+  instagramUrl String?
+  facebookUrl  String?
+  githubUrl    String?
+  twitterUrl   String?
+  websiteUrl   String?
 
-    @@schema("landing")
+  @@schema("landing")
 }
 
 // Modèle FAQ
