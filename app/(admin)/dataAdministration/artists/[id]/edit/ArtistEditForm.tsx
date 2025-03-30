@@ -30,17 +30,17 @@ type FormValues = z.infer<typeof formSchema>
 
 // Extension du type Artist pour inclure artworkImages
 interface ArtistWithArtworkImages extends Artist {
-  artworkImages: string[]
+  artworkImages: {name: string, url: string}[]
 }
 
 interface ArtistEditFormProps {
-  artist: Artist & { artworkImages?: string[] }
+  artist: Artist & { artworkImages?: string[] | {name: string, url: string}[] }
 }
 
 export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [artworkImages, setArtworkImages] = useState<string[]>(() => {
+  const [artworkImages, setArtworkImages] = useState<{name: string, url: string}[]>(() => {
     // Parse le champ artworkImages qui peut être une chaîne JSON ou un tableau
     if (!artist.artworkImages) {
       return [];
@@ -48,7 +48,19 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
     
     if (typeof artist.artworkImages === 'string') {
       try {
-        return JSON.parse(artist.artworkImages);
+        const parsed = JSON.parse(artist.artworkImages);
+        // Conversion d'anciens formats (simples URLs) vers le nouveau format {name, url}
+        if (Array.isArray(parsed)) {
+          return parsed.map(item => {
+            if (typeof item === 'string') {
+              return { name: '', url: item };
+            } else if (typeof item === 'object' && item.url) {
+              return item;
+            }
+            return { name: '', url: '' };
+          });
+        }
+        return [];
       } catch (e) {
         console.error("Erreur lors du parsing des images:", e);
         return [];
@@ -56,9 +68,18 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
     }
     
     // Si c'est déjà un tableau (cast depuis any)
-    return artist.artworkImages as string[] || [];
+    const images = artist.artworkImages as any[];
+    return images.map(item => {
+      if (typeof item === 'string') {
+        return { name: '', url: item };
+      } else if (typeof item === 'object' && item.url) {
+        return item;
+      }
+      return { name: '', url: '' };
+    });
   })
   const [newImageUrl, setNewImageUrl] = useState('')
+  const [newImageName, setNewImageName] = useState('')
 
   const {
     register,
@@ -99,10 +120,11 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
         // Ne pas inclure artworkImages ici car ce n'est pas un champ standard du modèle Artist
       }
       
-      // Passer directement le tableau d'images sans le convertir en chaîne JSON
+      // Préparer les données d'artworkImages pour le format attendu par l'API
+      // On converti notre tableau d'objets en chaîne JSON pour le stockage en BDD
       const artistDataWithImages = {
         ...formattedData,
-        artworkImages: artworkImages
+        artworkImages: JSON.stringify(artworkImages)
       }
       
       const result = await updateArtist(artist.id, artistDataWithImages)
@@ -308,22 +330,6 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
               )}
             </div>
             
-            <div className="form-group">
-              <label htmlFor="backgroundImage" className="form-label">
-                Image d'arrière-plan (optionnel)
-              </label>
-              <input
-                id="backgroundImage"
-                type="text"
-                {...register('backgroundImage')}
-                className={`form-input ${errors.backgroundImage ? 'input-error' : ''}`}
-                placeholder="https://example.com/background.jpg"
-              />
-              {errors.backgroundImage && (
-                <p className="form-error">{errors.backgroundImage.message}</p>
-              )}
-            </div>
-            
             {/* GESTION DES IMAGES DANS LE FORMULAIRE AVEC ISOLATION DES ÉVÉNEMENTS */}
             <div className="form-group">
               <label className="form-label">Images des œuvres affichées sur la page &quot;artists&quot; de la Landing</label>
@@ -334,9 +340,33 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                 marginBottom: '16px',
                 padding: '12px',
                 backgroundColor: '#fafafa',
-                borderRadius: '6px'
+                borderRadius: '6px',
+                flexWrap: 'wrap'
               }}>
                 <input
+                  type="text"
+                  value={newImageName}
+                  onChange={(e) => setNewImageName(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const urlInput = document.getElementById('newImageUrl') as HTMLInputElement;
+                      if (urlInput) {
+                        urlInput.focus();
+                      }
+                      return false;
+                    }
+                  }}
+                  placeholder="Nom de l'image"
+                  className="form-input"
+                  style={{ flex: 1 }}
+                />
+
+                <input
+                  id="newImageUrl"
                   type="text"
                   value={newImageUrl}
                   onChange={(e) => setNewImageUrl(e.target.value)}
@@ -350,8 +380,9 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                       e.preventDefault();
                       
                       if (newImageUrl && newImageUrl.trim() && newImageUrl.trim().toLowerCase().startsWith('http')) {
-                        setArtworkImages([...artworkImages, newImageUrl.trim()]);
+                        setArtworkImages([...artworkImages, {name: newImageName.trim(), url: newImageUrl.trim()}]);
                         setNewImageUrl('');
+                        setNewImageName('');
                       }
                       
                       // Assurer qu'aucun autre gestionnaire ne sera appelé
@@ -360,7 +391,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                   }}
                   placeholder="https://example.com/image.jpg"
                   className="form-input"
-                  style={{ flex: 1 }}
+                  style={{ flex: 2 }}
                 />
                 
                 <div 
@@ -372,8 +403,9 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                     e.stopPropagation();
                     
                     if (newImageUrl && newImageUrl.trim() && newImageUrl.trim().toLowerCase().startsWith('http')) {
-                      setArtworkImages([...artworkImages, newImageUrl.trim()]);
+                      setArtworkImages([...artworkImages, {name: newImageName.trim(), url: newImageUrl.trim()}]);
                       setNewImageUrl('');
+                      setNewImageName('');
                     }
                   }}
                   onKeyDown={(e) => {
@@ -383,8 +415,9 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                     
                     if (e.key === 'Enter' || e.key === ' ') {
                       if (newImageUrl && newImageUrl.trim() && newImageUrl.trim().toLowerCase().startsWith('http')) {
-                        setArtworkImages([...artworkImages, newImageUrl.trim()]);
+                        setArtworkImages([...artworkImages, {name: newImageName.trim(), url: newImageUrl.trim()}]);
                         setNewImageUrl('');
+                        setNewImageName('');
                       }
                     }
                     
@@ -416,7 +449,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                   </div>
                 ) : (
                   <div>
-                    {artworkImages.map((url, index) => (
+                    {artworkImages.map((image, index) => (
                       <div 
                         key={index}
                         style={{ 
@@ -430,7 +463,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                         <div style={{ 
                           width: '40px', 
                           height: '40px', 
-                          backgroundImage: `url(${url})`,
+                          backgroundImage: `url(${image.url})`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
                           borderRadius: '4px',
@@ -438,14 +471,30 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                           border: '1px solid #eee'
                         }} />
                         
-                        <div style={{ 
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
                           flex: 1,
-                          fontSize: '14px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
+                          overflow: 'hidden'
                         }}>
-                          {url}
+                          <div style={{
+                            fontWeight: 'bold',
+                            fontSize: '14px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {image.name || '(Sans nom)'}
+                          </div>
+                          <div style={{ 
+                            fontSize: '12px',
+                            color: '#666',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {image.url}
+                          </div>
                         </div>
                         
                         <div 
