@@ -107,7 +107,14 @@ export async function deleteFaq(
  */
 export async function deleteDetailedFaqHeader(id: number) {
     try {
-        // Suppression en cascade (supprime également tous les DetailedFaqItem associés)
+        // Supprimer d'abord tous les DetailedFaqItems associés
+        await prisma.detailedFaqItem.deleteMany({
+            where: {
+                detailedFaqId: id,
+            },
+        })
+
+        // Puis supprimer le DetailedFaqHeader
         await prisma.detailedFaqHeader.delete({
             where: {
                 id,
@@ -211,5 +218,69 @@ export async function getDetailedFaqHeaders() {
     } catch (error) {
         console.error('Erreur lors de la récupération des FAQ détaillées:', error)
         return []
+    }
+}
+
+/**
+ * Crée un nouveau DetailedFaqItem associé à un DetailedFaqHeader
+ * @param data Données du DetailedFaqItem à créer
+ * @returns Objet contenant le statut de l'opération et un message éventuel
+ */
+export async function createDetailedFaqItem(data: {
+    headerId: number,
+    question: string,
+    answer: string
+}) {
+    try {
+        const newItem = await prisma.detailedFaqItem.create({
+            data: {
+                detailedFaqId: data.headerId,
+                question: data.question,
+                answer: data.answer
+            }
+        })
+
+        // Revalider le chemin pour que les changements soient visibles
+        revalidatePath('/landing/detailedFaq')
+        revalidatePath(`/landing/detailedFaq/${data.headerId}/edit`)
+
+        return {
+            success: true,
+            data: newItem
+        }
+    } catch (error) {
+        console.error('Erreur lors de la création du DetailedFaqItem:', error)
+        return {
+            success: false,
+            message: 'Une erreur est survenue lors de la création'
+        }
+    }
+}
+
+/**
+ * Supprime un DetailedFaqItem
+ * @param id ID du DetailedFaqItem à supprimer
+ * @returns Objet contenant le statut de l'opération et un message éventuel
+ */
+export async function deleteDetailedFaqItem(id: number) {
+    try {
+        await prisma.detailedFaqItem.delete({
+            where: {
+                id
+            }
+        })
+
+        // Revalider le chemin pour que les changements soient visibles
+        revalidatePath('/landing/detailedFaq')
+
+        return {
+            success: true
+        }
+    } catch (error) {
+        console.error('Erreur lors de la suppression du DetailedFaqItem:', error)
+        return {
+            success: false,
+            message: 'Une erreur est survenue lors de la suppression'
+        }
     }
 } 

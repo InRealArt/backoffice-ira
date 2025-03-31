@@ -36,7 +36,7 @@ export default function DetailedFaqClient({ faqHeaders }: DetailedFaqClientProps
   }
 
   const handleAddNewHeader = () => {
-    router.push(`/landing/detailedFaq/new`)
+    router.push(`/landing/detailedFaq/create`)
   }
 
   const handleDeleteClick = (e: React.MouseEvent, headerId: number) => {
@@ -52,6 +52,7 @@ export default function DetailedFaqClient({ faqHeaders }: DetailedFaqClientProps
     setDeletingHeaderId(headerToDelete)
     
     try {
+      console.log('headerToDelete :   ', headerToDelete)
       const result = await deleteDetailedFaqHeader(headerToDelete)
       
       if (result.success) {
@@ -224,7 +225,7 @@ export default function DetailedFaqClient({ faqHeaders }: DetailedFaqClientProps
             <button className="btn btn-secondary" onClick={handleDeleteCancel}>
               Annuler
             </button>
-            <button className="btn btn-danger" onClick={handleDeleteConfirm}>
+            <button className="btn btn-danger btn-medium" onClick={handleDeleteConfirm}>
               Confirmer la suppression
             </button>
           </div>
