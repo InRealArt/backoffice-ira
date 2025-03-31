@@ -334,8 +334,7 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
             </div>
           </div>
           
-          <div className="card-footer">
-            <div className="d-flex justify-content-between">
+          <div className="form-actions">
               <button
                 type="button"
                 onClick={handleCancel}
@@ -351,7 +350,6 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
               >
                 {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
               </button>
-            </div>
           </div>
         </div>
       </form>

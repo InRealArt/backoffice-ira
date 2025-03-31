@@ -121,9 +121,9 @@ export default function LanguageEditForm({ language }: LanguageEditFormProps) {
                   {...register('isDefault')}
                   className="form-checkbox-input"
                 />
-                <label htmlFor="isDefault" className="form-checkbox-label">
+                {/* <label htmlFor="isDefault" className="form-checkbox-label">
                   Définir comme langue par défaut
-                </label>
+                </label> */}
               </div>
               <p className="form-help">
                 Si cette option est cochée, cette langue sera utilisée comme langue par défaut et remplacera toute autre langue par défaut existante.

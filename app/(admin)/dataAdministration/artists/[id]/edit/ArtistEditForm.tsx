@@ -27,10 +27,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-// Extension du type Artist pour inclure artworkImages
-interface ArtistWithArtworkImages extends Artist {
-  artworkImages: {name: string, url: string}[]
-}
 
 interface ArtistEditFormProps {
   artist: Artist & { artworkImages?: string[] | {name: string, url: string}[] }
@@ -39,44 +35,6 @@ interface ArtistEditFormProps {
 export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [artworkImages, setArtworkImages] = useState<{name: string, url: string}[]>(() => {
-    // Parse le champ artworkImages qui peut être une chaîne JSON ou un tableau
-    if (!artist.artworkImages) {
-      return [];
-    }
-    
-    if (typeof artist.artworkImages === 'string') {
-      try {
-        const parsed = JSON.parse(artist.artworkImages);
-        // Conversion d'anciens formats (simples URLs) vers le nouveau format {name, url}
-        if (Array.isArray(parsed)) {
-          return parsed.map(item => {
-            if (typeof item === 'string') {
-              return { name: '', url: item };
-            } else if (typeof item === 'object' && item.url) {
-              return item;
-            }
-            return { name: '', url: '' };
-          });
-        }
-        return [];
-      } catch (e) {
-        console.error("Erreur lors du parsing des images:", e);
-        return [];
-      }
-    }
-    
-    // Si c'est déjà un tableau (cast depuis any)
-    const images = artist.artworkImages as any[];
-    return images.map(item => {
-      if (typeof item === 'string') {
-        return { name: '', url: item };
-      } else if (typeof item === 'object' && item.url) {
-        return item;
-      }
-      return { name: '', url: '' };
-    });
-  })
   const [newImageUrl, setNewImageUrl] = useState('')
   const [newImageName, setNewImageName] = useState('')
 
@@ -116,14 +74,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
         // Ne pas inclure artworkImages ici car ce n'est pas un champ standard du modèle Artist
       }
       
-      // Préparer les données d'artworkImages pour le format attendu par l'API
-      // On converti notre tableau d'objets en chaîne JSON pour le stockage en BDD
-      const artistDataWithImages = {
-        ...formattedData,
-        artworkImages: JSON.stringify(artworkImages)
-      }
-      
-      const result = await updateArtist(artist.id, artistDataWithImages)
+      const result = await updateArtist(artist.id, formattedData)
       
       if (result.success) {
         toast.success('Artiste mis à jour avec succès')
