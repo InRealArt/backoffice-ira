@@ -26,6 +26,7 @@ model Artist {
   collections     NftCollection[]
   Profile         Profile[]
   BackofficeUser  BackofficeUser[]
+  LandingArtist   LandingArtist[]
 
   @@schema("public")
 }
@@ -798,5 +799,20 @@ model Faq {
   answer   String
   order    Int?
 
+  @@schema("landing")
+}
+
+// Modèle LandingArtist
+model LandingArtist {
+  id            Int      @id @default(autoincrement())
+  intro         String?
+  artworkImages Json     @default("[]")
+  artworkStyle  String?
+  artistsPage   Boolean? @default(false)
+  imageUrl      String   @unique
+  artistId      Int
+  artist        Artist   @relation(fields: [artistId], references: [id])
+
+  @@index([artistId])
   @@schema("landing")
 }
