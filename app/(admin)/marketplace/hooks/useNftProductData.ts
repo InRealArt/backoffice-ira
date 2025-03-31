@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
+import { getShopifyProductById } from '@/lib/actions/shopify-actions'
 import {
     getAuthCertificateByItemId,
     getItemByShopifyId,
     getUserByItemId,
     getNftResourceByItemId,
     getActiveCollections
-} from '@/app/actions/prisma/prismaActions'
+} from '@/lib/actions/prisma-actions'
 
 type UserType = {
     email?: string

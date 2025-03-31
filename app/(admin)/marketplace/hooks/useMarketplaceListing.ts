@@ -9,7 +9,7 @@ import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
 import { publicClient } from '@/lib/providers'
 import { marketplaceAbi } from '@/lib/contracts/MarketplaceAbi'
-import { getSmartContractAddress, updateItemStatusToListedByNftResourceId, updateNftResourceStatusToListed, updateNftResourceStatusToMinted, createMarketPlaceTransaction, updateNftResourceOwner } from '@/app/actions/prisma/prismaActions'
+import { getSmartContractAddress, updateItemStatusToListedByNftResourceId, updateNftResourceStatusToListed, updateNftResourceStatusToMinted, createMarketPlaceTransaction, updateNftResourceOwner } from '@/lib/actions/prisma-actions'
 import { NetworkType } from '@prisma/client'
 
 interface ListingParams {

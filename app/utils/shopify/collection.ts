@@ -1,8 +1,8 @@
-import { getBackofficeUserByEmail } from '@/app/actions/prisma/prismaActions'
+import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import {
     getShopifyCollectionByTitle,
     getShopifyCollectionProducts
-} from '@/app/actions/shopify/shopifyActions'
+} from '@/lib/actions/shopify-actions'
 
 // Types pour les retours de la fonction
 export type CollectionProduct = {
@@ -93,5 +93,5 @@ function extractShopifyId(globalId: string): string {
     // Extraire la dernière partie après le dernier slash
     const parts = globalId.split('/')
     return parts[parts.length - 1]
-} 
+}
 

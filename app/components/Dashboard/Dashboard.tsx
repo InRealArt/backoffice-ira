@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import Button from '../Button/Button';
 import { DashboardCard } from './DashboardCard/DashboardCard'
-import { getPendingItemsCount, getUserMintedItemsCount, getUserListedItemsCount, getBackofficeUserByEmail } from '@/app/actions/prisma/prismaActions'
+import { getPendingItemsCount, getUserMintedItemsCount, getUserListedItemsCount, getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { useIsAdmin } from '@/app/hooks/useIsAdmin';
 
 export default function Dashboard() {

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { updateItemStatus } from '@/app/actions/prisma/prismaActions'
+import { updateItemStatus } from '@/lib/actions/prisma-actions'
 import toast from 'react-hot-toast'
 
 type ProductCardProps = {

@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { createAdminRestApiClient } from '@shopify/admin-api-client'
 import { revalidatePath } from 'next/cache'
-import { getItemById } from '../prisma/prismaActions';
+import { getItemById } from './prisma-actions';
 import { HeartIcon } from 'lucide-react';
 
 type CreateCollectionResult = {

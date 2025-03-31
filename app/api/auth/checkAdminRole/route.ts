@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { checkIsAdmin } from '@/app/actions/prisma/prismaActions'
+import { checkIsAdmin } from '@/lib/actions/prisma-actions'
 
 export async function POST(request: Request) {
     try {

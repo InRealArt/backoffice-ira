@@ -8,7 +8,7 @@ import {
     updateNftResourceTxHash,
     updateNftResourceStatusToMinted,
     updateNftResourceTokenId
-} from '@/app/actions/prisma/prismaActions'
+} from '@/lib/actions/prisma-actions'
 import { Address, Hash, PublicClient, WalletClient } from 'viem'
 
 // Type pour les paramètres de la fonction mintNFT

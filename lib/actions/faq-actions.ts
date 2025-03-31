@@ -97,4 +97,119 @@ export async function deleteFaq(
             message: 'Une erreur est survenue lors de la suppression.'
         }
     }
+}
+
+
+/**
+ * Supprime un DetailedFaqHeader et tous ses DetailedFaqItem associés
+ * @param id ID du DetailedFaqHeader à supprimer
+ * @returns Objet contenant le statut de l'opération et un message éventuel
+ */
+export async function deleteDetailedFaqHeader(id: number) {
+    try {
+        // Suppression en cascade (supprime également tous les DetailedFaqItem associés)
+        await prisma.detailedFaqHeader.delete({
+            where: {
+                id,
+            },
+        })
+
+        // Revalider le chemin pour que les changements soient visibles
+        revalidatePath('/landing/detailedFaq')
+
+        return {
+            success: true,
+        }
+    } catch (error) {
+        console.error('Erreur lors de la suppression du DetailedFaqHeader:', error)
+        return {
+            success: false,
+            message: 'Une erreur est survenue lors de la suppression',
+        }
+    }
+}
+
+/**
+ * Crée un nouveau DetailedFaqHeader
+ * @param name Nom du DetailedFaqHeader
+ * @returns Objet contenant le statut de l'opération et un message éventuel
+ */
+export async function createDetailedFaqHeader(name: string) {
+    try {
+        const newHeader = await prisma.detailedFaqHeader.create({
+            data: {
+                name,
+            },
+        })
+
+        // Revalider le chemin pour que les changements soient visibles
+        revalidatePath('/landing/detailedFaq')
+
+        return {
+            success: true,
+            data: newHeader,
+        }
+    } catch (error) {
+        console.error('Erreur lors de la création du DetailedFaqHeader:', error)
+        return {
+            success: false,
+            message: 'Une erreur est survenue lors de la création',
+        }
+    }
+}
+
+/**
+ * Met à jour un DetailedFaqHeader existant
+ * @param id ID du DetailedFaqHeader à mettre à jour
+ * @param name Nouveau nom du DetailedFaqHeader
+ * @returns Objet contenant le statut de l'opération et un message éventuel
+ */
+export async function updateDetailedFaqHeader(id: number, name: string) {
+    try {
+        const updatedHeader = await prisma.detailedFaqHeader.update({
+            where: {
+                id,
+            },
+            data: {
+                name,
+            },
+        })
+
+        // Revalider le chemin pour que les changements soient visibles
+        revalidatePath('/landing/detailedFaq')
+        revalidatePath(`/landing/detailedFaq/${id}/edit`)
+
+        return {
+            success: true,
+            data: updatedHeader,
+        }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du DetailedFaqHeader:', error)
+        return {
+            success: false,
+            message: 'Une erreur est survenue lors de la mise à jour',
+        }
+    }
+}
+
+/**
+ * Récupère tous les DetailedFaqHeader avec leurs DetailedFaqItem associés
+ * @returns Liste des DetailedFaqHeader avec leurs faqItems
+ */
+export async function getDetailedFaqHeaders() {
+    try {
+        const faqHeaders = await prisma.detailedFaqHeader.findMany({
+            orderBy: {
+                id: 'asc',
+            },
+            include: {
+                faqItems: true,
+            },
+        })
+
+        return faqHeaders
+    } catch (error) {
+        console.error('Erreur lors de la récupération des FAQ détaillées:', error)
+        return []
+    }
 } 

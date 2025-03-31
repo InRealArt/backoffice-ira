@@ -6,12 +6,12 @@ import toast from 'react-hot-toast'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { updateBackofficeUser, getAllArtists } from '@/app/actions/prisma/prismaActions'
+import { updateBackofficeUser, getAllArtists } from '@/lib/actions/prisma-actions'
 import { 
   getShopifyCollectionByTitle,
   updateShopifyCollection,
   createShopifyCollection
-} from '@/app/actions/shopify/shopifyActions'
+} from '@/lib/actions/shopify-actions'
 import { BackofficeUser, Artist } from '@prisma/client'
 import styles from './EditUserForm.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'

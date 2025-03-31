@@ -1,4 +1,4 @@
-import { getBackofficeUsers } from '@/app/actions/prisma/prismaActions'
+import { getBackofficeUsers } from '@/lib/actions/prisma-actions'
 import BackofficeUsersClient from './ShopifyUsersClient'
 
 

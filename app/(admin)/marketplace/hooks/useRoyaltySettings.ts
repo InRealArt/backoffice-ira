@@ -9,7 +9,7 @@ import { CONTRACT_ADDRESSES, ContractName } from '@/constants/contracts'
 import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { artistRoyaltiesAbi } from '@/lib/contracts/ArtistRoyaltiesAbi'
 import { InRealArtSmartContractConstants, InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
-import { createRoyaltyBeneficiary, updateNftResourceStatusToRoyaltySet, updateNftResourceTxHash } from '@/app/actions/prisma/prismaActions'
+import { createRoyaltyBeneficiary, updateNftResourceStatusToRoyaltySet, updateNftResourceTxHash } from '@/lib/actions/prisma-actions'
 import { publicClient } from '@/lib/providers'
 
 interface RoyaltyParams {
@@ -158,7 +158,7 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
             // Vérifier si la transaction est réussie
             if (receipt.status === 'success') {
                 toast.dismiss(waitingBlockchainConfirmationToast)
-                setSuccess(true)    
+                setSuccess(true)
                 toast.success('Royalties configurées avec succès!')
                 //Update Status to ROYALTYSET
                 await updateNftResourceStatus(nftResource)
@@ -200,19 +200,19 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
     }
 
     const updateNftResourceTransactionHash = async (hash: string, nftResource: { id: string | number }) => {
-            try {
-                // Mettre à jour le txHash dans la base de données
-                const updateResult = await updateNftResourceTxHash(Number(nftResource.id), hash)
+        try {
+            // Mettre à jour le txHash dans la base de données
+            const updateResult = await updateNftResourceTxHash(Number(nftResource.id), hash)
 
-                if (updateResult.success) {
-                    toast.success('Tx hash mise à jour dans la database...')
-                } else {
-                    toast.error(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
-                }
-            } catch (updateError) {
-                console.error('Erreur lors de la mise à jour du txHash:', updateError)
-                toast.error('NFT minté, mais erreur lors de la mise à jour des informations')
+            if (updateResult.success) {
+                toast.success('Tx hash mise à jour dans la database...')
+            } else {
+                toast.error(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
             }
+        } catch (updateError) {
+            console.error('Erreur lors de la mise à jour du txHash:', updateError)
+            toast.error('NFT minté, mais erreur lors de la mise à jour des informations')
+        }
 
     }
 
@@ -246,7 +246,7 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
         }
     }
 
-return {
+    return {
         configureRoyalties,
         checkRoyaltyRole,
         isLoading,

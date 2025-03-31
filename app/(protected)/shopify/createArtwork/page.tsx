@@ -5,7 +5,7 @@ import { Toaster } from 'react-hot-toast'
 import ArtworkCreationForm from './ArtworkCreationForm'
 import styles from './createArtwork.module.scss'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
-import { getBackofficeUserByEmail } from '@/app/actions/prisma/prismaActions'
+import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 
 export default function CreateArtworkPage() {
   const [isMobile, setIsMobile] = useState(false)

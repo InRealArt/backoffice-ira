@@ -1,7 +1,7 @@
 'use client'
 
 import { useDynamicContext, useDynamicEvents, useUserWallets } from '@dynamic-labs/sdk-react-core'
-import { updateLinkedWallets } from '@/app/actions/auth/updateLinkedWallets'
+import { updateLinkedWallets } from '@/lib/actions/dynamic-actions'
 import toast from 'react-hot-toast'
 import { useEffect } from 'react'
 

@@ -6,7 +6,7 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import ProductCard from '@/app/components/ProductCard/ProductCard'
 import { fetchItemsData, ItemData } from '@/app/utils/items/itemsData'
 import styles from './collection.module.scss'
-import { getBackofficeUserByEmail } from '@/app/actions/prisma/prismaActions'
+import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { BackofficeUser } from '@prisma/client'
 
 export default function CollectionPage() {

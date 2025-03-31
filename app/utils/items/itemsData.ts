@@ -1,8 +1,8 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { getBackofficeUserByEmail } from '@/app/actions/prisma/prismaActions'
-import { getShopifyProductById } from '@/app/actions/shopify/shopifyActions'
+import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
+import { getShopifyProductById } from '@/lib/actions/shopify-actions'
 
 export type ItemData = {
     id: number
@@ -72,7 +72,7 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
                     creationDate: item.creationDate,
                     artworkSupport: item.artworkSupport
                 }
-                
+
             })
         )
 

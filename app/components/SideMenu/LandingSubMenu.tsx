@@ -52,6 +52,13 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
           )}
           {isAdmin && (
             <SideMenuItem
+              label="FAQ Détaillées"
+              isSubmenuItem={true}
+              onClick={() => onNavigate('/landing/detailedFaq', 'detailedFaq')}
+            />
+          )}
+          {isAdmin && (
+            <SideMenuItem
               label="Page artistes"
               isSubmenuItem={true}
               onClick={() => onNavigate('/landing/landingArtists', 'landingArtists')}
@@ -82,6 +89,13 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
               label="FAQ"
               isSubmenuItem={true}
               onClick={() => onNavigate('/landing/faq', 'faq')}
+            />
+          )}
+          {isAdmin && (
+            <SideMenuItem
+              label="FAQ Détaillées"
+              isSubmenuItem={true}
+              onClick={() => onNavigate('/landing/detailedFaq', 'detailedFaq')}
             />
           )}
           {isAdmin && (

@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { getBackofficeUserById } from '@/app/actions/prisma/prismaActions'
+import { getBackofficeUserById } from '@/lib/actions/prisma-actions'
 import LoadingSpinner from '@/app/components/LoadingSpinner'
 import EditUserForm from './EditUserForm';
 

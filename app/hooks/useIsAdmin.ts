@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core'
-import { checkIsAdmin } from '@/app/actions/prisma/prismaActions'
+import { checkIsAdmin } from '@/lib/actions/prisma-actions'
 
 interface UseIsAdminResult {
     isAdmin: boolean
