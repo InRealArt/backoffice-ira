@@ -23,6 +23,7 @@ const presaleArtworkSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
   artistId: z.string().min(1, "Veuillez sélectionner un artiste"),
   imageUrl: z.string().min(1, "L'URL de l'image est requise").url("L'URL doit être valide"),
+  description: z.string().optional(),
   price: z.string().min(1, "Le prix est requis")
     .refine(
       (val) => !isNaN(parseFloat(val.replace(',', '.'))),
@@ -95,6 +96,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
       artistId: '',
       price: '',
       imageUrl: '',
+      description: '',
       order: '0'
     }
   })
@@ -126,6 +128,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
             setValue('artistId', presaleArtwork.artistId.toString())
             setValue('price', presaleArtwork.price.toString())
             setValue('imageUrl', presaleArtwork.imageUrl)
+            setValue('description', presaleArtwork.description || '')
             setValue('order', presaleArtwork.order?.toString() || '0')
             setImagePreview(presaleArtwork.imageUrl)
             
@@ -200,6 +203,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
           artistId: parseInt(data.artistId),
           price: formattedPrice,
           imageUrl: data.imageUrl,
+          description: data.description,
           order: formattedOrder,
           mockupUrls: JSON.stringify(mockupUrls)
         })
@@ -216,6 +220,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
           artistId: parseInt(data.artistId),
           price: formattedPrice,
           imageUrl: data.imageUrl,
+          description: data.description,
           order: formattedOrder,
           mockupUrls: JSON.stringify(mockupUrls)
         })
@@ -301,6 +306,21 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
             />
             {errors.name && (
               <p className="form-error">{errors.name.message}</p>
+            )}
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="description" className="form-label">Description</label>
+            <textarea
+              id="description"
+              {...register('description')}
+              className={`form-input ${errors.description ? 'input-error' : ''}`}
+              placeholder="Description de l'œuvre..."
+              rows={3}
+              disabled={isSubmitting}
+            />
+            {errors.description && (
+              <p className="form-error">{errors.description.message}</p>
             )}
           </div>
           
