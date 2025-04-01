@@ -1,0 +1,9 @@
+{
+    "aiVerbosity": "concise",
+    "linting": "eslint",
+    "formatting": "prettier",
+    "performance": {
+      "memory": "high",
+      "optimizeForLargeFiles": true
+    }
+  }

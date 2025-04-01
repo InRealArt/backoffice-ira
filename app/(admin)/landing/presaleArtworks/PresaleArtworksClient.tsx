@@ -29,6 +29,7 @@ function ImageThumbnail({ url }: { url: string }) {
 interface PresaleArtwork {
   id: number
   name: string
+  order: number
   price: number
   artistId: number
   artist: Artist
@@ -129,6 +130,7 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
               <thead>
                 <tr>
                   <th>Image</th>
+                  <th>Ordre</th>
                   <th>Nom</th>
                   <th>Artiste</th>
                   <th>Prix</th>
@@ -149,6 +151,9 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
                     >
                       <td className="w-8">
                         <ImageThumbnail url={artwork.imageUrl} />
+                      </td>
+                      <td>
+                        {artwork.order}
                       </td>
                       <td>
                         <div className="d-flex align-items-center gap-sm">

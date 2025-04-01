@@ -865,9 +865,12 @@ model DetailedGlossaryItem {
 model PresaleArtwork {
   id       Int    @id @default(autoincrement())
   name     String
-  artistId Int
-  price    Int
-  imageUrl      String   @unique
+  description String?
+  order     Int?
+  artistId  Int
+  price     Int
+  imageUrl    String   @unique
+  mockupUrls  Json     @default("[]")
   artist   Artist @relation(fields: [artistId], references: [id])
 
   @@index([artistId])

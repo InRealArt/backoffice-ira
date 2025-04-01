@@ -52,6 +52,8 @@ export async function createPresaleArtwork(data: {
     artistId: number
     price: number
     imageUrl: string
+    order?: number
+    mockupUrls?: string
 }) {
     try {
         const presaleArtwork = await prisma.presaleArtwork.create({
@@ -59,7 +61,9 @@ export async function createPresaleArtwork(data: {
                 name: data.name,
                 artistId: data.artistId,
                 price: data.price,
-                imageUrl: data.imageUrl
+                imageUrl: data.imageUrl,
+                order: data.order || null,
+                mockupUrls: data.mockupUrls || "[]"
             },
             include: {
                 artist: true
@@ -88,6 +92,8 @@ export async function updatePresaleArtwork(id: number, data: {
     artistId?: number
     price?: number
     imageUrl?: string
+    order?: number
+    mockupUrls?: string
 }) {
     try {
         const presaleArtwork = await prisma.presaleArtwork.update({
