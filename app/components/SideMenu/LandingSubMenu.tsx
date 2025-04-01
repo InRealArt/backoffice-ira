@@ -43,27 +43,26 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/translations', 'translations')}
           />
-          {isAdmin && (
-            <SideMenuItem
-              label="FAQ"
-              isSubmenuItem={true}
-              onClick={() => onNavigate('/landing/faq', 'faq')}
-            />
-          )}
-          {isAdmin && (
-            <SideMenuItem
-              label="FAQ Détaillées"
-              isSubmenuItem={true}
-              onClick={() => onNavigate('/landing/detailedFaq', 'detailedFaq')}
-            />
-          )}
-          {isAdmin && (
-            <SideMenuItem
-              label="Page artistes"
-              isSubmenuItem={true}
-              onClick={() => onNavigate('/landing/landingArtists', 'landingArtists')}
-            />
-          )}
+          <SideMenuItem
+            label="FAQ"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/faq', 'faq')}
+          />
+          <SideMenuItem
+            label="FAQ détaillée"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/detailedFaq', 'detailedFaq')}
+          />
+          <SideMenuItem
+            label="Glossaire détaillé"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/detailedGlossary', 'detailedGlossary')}
+          />
+          <SideMenuItem
+            label="Page artistes"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/landingArtists', 'landingArtists')}
+          />
         </ul>
       )}
 
@@ -84,27 +83,26 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/translations', 'translations')}
           />
-          {isAdmin && (
-            <SideMenuItem
-              label="FAQ"
-              isSubmenuItem={true}
-              onClick={() => onNavigate('/landing/faq', 'faq')}
-            />
-          )}
-          {isAdmin && (
-            <SideMenuItem
-              label="FAQ Détaillées"
-              isSubmenuItem={true}
-              onClick={() => onNavigate('/landing/detailedFaq', 'detailedFaq')}
-            />
-          )}
-          {isAdmin && (
-            <SideMenuItem
-              label="Page artistes"
-              isSubmenuItem={true}
-              onClick={() => onNavigate('/landing/landingArtists', 'landingArtists')}
-            />
-          )}
+          <SideMenuItem
+            label="FAQ"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/faq', 'faq')}
+          />
+          <SideMenuItem
+            label="FAQ Détaillées"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/detailedFaq', 'detailedFaq')}
+          />
+          <SideMenuItem
+            label="Glossaire détaillé"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/detailedGlossary', 'detailedGlossary')}
+          />
+          <SideMenuItem
+            label="Page artistes"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/landingArtists', 'landingArtists')}
+          />
         </ul>
       )}
     </>

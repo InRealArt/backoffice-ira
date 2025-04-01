@@ -834,3 +834,24 @@ model DetailedFaqItem {
   @@index([detailedFaqId])
   @@schema("landing")
 }
+
+// Modèle pour l'en-tête de FAQ détaillée
+model DetailedGlossaryHeader {
+  id       Int               @id @default(autoincrement())
+  name     String
+  glossaryItems DetailedGlossaryItem[]
+
+  @@schema("landing")
+}
+
+// Modèle pour les éléments de FAQ détaillée
+model DetailedGlossaryItem {
+  id            Int               @id @default(autoincrement())
+  question      String
+  answer        String
+  detailedGlossaryId Int
+  header        DetailedGlossaryHeader @relation(fields: [detailedGlossaryId], references: [id])
+
+  @@index([detailedGlossaryId])
+  @@schema("landing")
+}
