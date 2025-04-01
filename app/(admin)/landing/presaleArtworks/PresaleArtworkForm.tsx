@@ -7,9 +7,15 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'react-hot-toast'
 import Image from 'next/image'
-import { X, Plus } from 'lucide-react'
+import { X, Plus, AlertCircle } from 'lucide-react'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { createPresaleArtwork, updatePresaleArtwork, getPresaleArtworkById } from '@/lib/actions/presale-artwork-actions'
+import { 
+  createPresaleArtwork, 
+  updatePresaleArtwork, 
+  getPresaleArtworkById,
+  getMaxPresaleArtworkOrder,
+  getPresaleArtworkByOrder
+} from '@/lib/actions/presale-artwork-actions'
 import { getAllArtists } from '@/lib/actions/prisma-actions'
 
 // Schéma de validation
@@ -71,6 +77,10 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
   const [mockupUrls, setMockupUrls] = useState<{name: string, url: string}[]>([])
   const [newMockupUrl, setNewMockupUrl] = useState('')
   const [newMockupName, setNewMockupName] = useState('')
+  const [nextOrder, setNextOrder] = useState<number>(0)
+  const [orderExists, setOrderExists] = useState<boolean>(true)
+  const [orderValue, setOrderValue] = useState<string>('0')
+  const [isCheckingOrder, setIsCheckingOrder] = useState<boolean>(false)
   
   const {
     register,
@@ -159,6 +169,24 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
     fetchPresaleArtwork()
   }, [mode, presaleArtworkId, setValue, router])
   
+  // Charger l'ordre maximum pour le mode création
+  useEffect(() => {
+    const loadMaxOrder = async () => {
+      if (mode === 'create') {
+        try {
+          const maxOrder = await getMaxPresaleArtworkOrder()
+          const newOrder = maxOrder + 1
+          setNextOrder(newOrder)
+          setValue('order', newOrder.toString())
+        } catch (error) {
+          console.error('Erreur lors de la récupération de l\'ordre maximum:', error)
+        }
+      }
+    }
+    
+    loadMaxOrder()
+  }, [mode, setValue])
+  
   const onSubmit = async (data: PresaleArtworkFormValues) => {
     setIsSubmitting(true)
     
@@ -228,6 +256,31 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
     setMockupUrls(updatedMockups)
   }
   
+  // Vérifier si l'ordre existe lorsqu'il est modifié en mode édition
+  const handleOrderChange = async (value: string) => {
+    if (mode === 'edit' && presaleArtworkId) {
+      setOrderValue(value)
+      
+      if (value && !isNaN(parseInt(value))) {
+        setIsCheckingOrder(true)
+        const targetOrder = parseInt(value)
+        
+        try {
+          const artwork = await getPresaleArtworkByOrder(targetOrder)
+          // L'ordre existe si on trouve une œuvre différente avec cet ordre
+          setOrderExists(artwork !== null && artwork.id !== presaleArtworkId)
+        } catch (error) {
+          console.error('Erreur lors de la vérification de l\'ordre:', error)
+          setOrderExists(false)
+        } finally {
+          setIsCheckingOrder(false)
+        }
+      } else {
+        setOrderExists(false)
+      }
+    }
+  }
+  
   if (isLoading) {
     return <LoadingSpinner message="Chargement des données..." />
   }
@@ -273,22 +326,50 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
           
           <div className="form-group">
             <label htmlFor="order" className="form-label">Ordre d'affichage</label>
-            <input
-              id="order"
-              type="number"
-              min="0"
-              step="1"
-              {...register('order')}
-              className={`form-input ${errors.order ? 'input-error' : ''}`}
-              placeholder="0"
-              disabled={isSubmitting}
-            />
-            {errors.order && (
-              <p className="form-error">{errors.order.message}</p>
+            {mode === 'create' ? (
+              // En mode création, l'ordre est en lecture seule
+              <input
+                id="order"
+                type="number"
+                value={nextOrder}
+                className="form-input bg-gray-100"
+                disabled={true}
+              />
+            ) : (
+              // En mode édition, l'ordre peut être modifié s'il existe
+              <div>
+                <div className="relative">
+                  <input
+                    id="order"
+                    type="number"
+                    min="0"
+                    step="1"
+                    {...register('order', {
+                      onChange: (e) => handleOrderChange(e.target.value)
+                    })}
+                    className={`form-input ${!orderExists && orderValue ? 'input-warning' : ''} ${errors.order ? 'input-error' : ''}`}
+                    placeholder="0"
+                    disabled={isSubmitting || isCheckingOrder}
+                  />
+                  {isCheckingOrder && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <LoadingSpinner size="small" message="" inline />
+                    </div>
+                  )}
+                </div>
+                {!orderExists && orderValue && (
+                  <div className="flex items-center mt-1 text-amber-600">
+                    <AlertCircle size={14} className="mr-1" />
+                    <p className="text-xs">
+                      L'ordre {orderValue} n'existe pas. Seuls les échanges avec des ordres existants sont possibles.
+                    </p>
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  La modification de l'ordre échangera la position avec une autre œuvre déjà existante.
+                </p>
+              </div>
             )}
-            <p className="text-xs text-gray-500 mt-1">
-              Plus le nombre est petit, plus l'œuvre apparaîtra en haut de la liste. 0 = affichage par défaut.
-            </p>
           </div>
           
           <div className="form-group">
