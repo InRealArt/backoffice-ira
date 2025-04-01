@@ -9,6 +9,11 @@ export interface LandingArtistData {
     imageUrl: string
     artworkImages?: string
     artistId?: number
+    websiteUrl?: string | null
+    facebookUrl?: string | null
+    instagramUrl?: string | null
+    twitterUrl?: string | null
+    linkedinUrl?: string | null
 }
 
 /**
@@ -54,6 +59,11 @@ export async function createLandingArtist(data: LandingArtistData) {
                 artistsPage: data.artistsPage,
                 imageUrl: data.imageUrl,
                 artworkImages: data.artworkImages || '[]',
+                websiteUrl: data.websiteUrl,
+                facebookUrl: data.facebookUrl,
+                instagramUrl: data.instagramUrl,
+                twitterUrl: data.twitterUrl,
+                linkedinUrl: data.linkedinUrl,
             },
         })
 
@@ -84,6 +94,11 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 artistsPage: data.artistsPage,
                 imageUrl: data.imageUrl,
                 artworkImages: data.artworkImages,
+                websiteUrl: data.websiteUrl,
+                facebookUrl: data.facebookUrl,
+                instagramUrl: data.instagramUrl,
+                twitterUrl: data.twitterUrl,
+                linkedinUrl: data.linkedinUrl,
             },
         })
 

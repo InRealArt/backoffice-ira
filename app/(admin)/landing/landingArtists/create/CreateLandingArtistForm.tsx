@@ -16,6 +16,26 @@ const formSchema = z.object({
   artworkStyle: z.string().nullable().optional(),
   artistsPage: z.boolean().default(false),
   imageUrl: z.string().url('URL d\'image invalide'),
+  websiteUrl: z.string().refine(
+    val => val === '' || /^https?:\/\//.test(val),
+    { message: 'URL invalide' }
+  ).optional().transform(val => val === '' ? null : val),
+  facebookUrl: z.string().refine(
+    val => val === '' || /^https?:\/\//.test(val),
+    { message: 'URL Facebook invalide' }
+  ).optional().transform(val => val === '' ? null : val),
+  instagramUrl: z.string().refine(
+    val => val === '' || /^https?:\/\//.test(val),
+    { message: 'URL Instagram invalide' }
+  ).optional().transform(val => val === '' ? null : val),
+  twitterUrl: z.string().refine(
+    val => val === '' || /^https?:\/\//.test(val),
+    { message: 'URL Twitter invalide' }
+  ).optional().transform(val => val === '' ? null : val),
+  linkedinUrl: z.string().refine(
+    val => val === '' || /^https?:\/\//.test(val),
+    { message: 'URL LinkedIn invalide' }
+  ).optional().transform(val => val === '' ? null : val),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -54,6 +74,11 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
       artworkStyle: '',
       artistsPage: false,
       imageUrl: '',
+      websiteUrl: '',
+      facebookUrl: '',
+      instagramUrl: '',
+      twitterUrl: '',
+      linkedinUrl: '',
     }
   })
 
@@ -84,6 +109,11 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
         artworkStyle: data.artworkStyle || null,
         artistsPage: data.artistsPage,
         imageUrl: data.imageUrl,
+        websiteUrl: data.websiteUrl || null,
+        facebookUrl: data.facebookUrl || null, 
+        instagramUrl: data.instagramUrl || null,
+        twitterUrl: data.twitterUrl || null,
+        linkedinUrl: data.linkedinUrl || null,
         artworkImages: JSON.stringify(artworkImages)
       }
       
@@ -316,6 +346,85 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
                             </div>
                           ))}
                         </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-section mt-lg">
+                  <h2 className="section-title">Liens de réseaux sociaux</h2>
+                  <p className="section-subtitle">Ajoutez les liens vers les réseaux sociaux et site web de l'artiste</p>
+                  
+                  <div className="form-group mt-md">
+                    <label htmlFor="websiteUrl" className="form-label">Site web</label>
+                    <input
+                      id="websiteUrl"
+                      type="text"
+                      {...register('websiteUrl')}
+                      className={`form-input ${errors.websiteUrl ? 'input-error' : ''}`}
+                      placeholder="https://site-web-artiste.com"
+                    />
+                    {errors.websiteUrl && (
+                      <p className="form-error">{errors.websiteUrl.message}</p>
+                    )}
+                  </div>
+                  
+                  <div className="d-flex gap-md mt-md">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="facebookUrl" className="form-label">Facebook</label>
+                      <input
+                        id="facebookUrl"
+                        type="text"
+                        {...register('facebookUrl')}
+                        className={`form-input ${errors.facebookUrl ? 'input-error' : ''}`}
+                        placeholder="https://facebook.com/username"
+                      />
+                      {errors.facebookUrl && (
+                        <p className="form-error">{errors.facebookUrl.message}</p>
+                      )}
+                    </div>
+                    
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="instagramUrl" className="form-label">Instagram</label>
+                      <input
+                        id="instagramUrl"
+                        type="text"
+                        {...register('instagramUrl')}
+                        className={`form-input ${errors.instagramUrl ? 'input-error' : ''}`}
+                        placeholder="https://instagram.com/username"
+                      />
+                      {errors.instagramUrl && (
+                        <p className="form-error">{errors.instagramUrl.message}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="d-flex gap-md mt-md">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="twitterUrl" className="form-label">Twitter</label>
+                      <input
+                        id="twitterUrl"
+                        type="text"
+                        {...register('twitterUrl')}
+                        className={`form-input ${errors.twitterUrl ? 'input-error' : ''}`}
+                        placeholder="https://twitter.com/username"
+                      />
+                      {errors.twitterUrl && (
+                        <p className="form-error">{errors.twitterUrl.message}</p>
+                      )}
+                    </div>
+                    
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="linkedinUrl" className="form-label">LinkedIn</label>
+                      <input
+                        id="linkedinUrl"
+                        type="text"
+                        {...register('linkedinUrl')}
+                        className={`form-input ${errors.linkedinUrl ? 'input-error' : ''}`}
+                        placeholder="https://linkedin.com/in/username"
+                      />
+                      {errors.linkedinUrl && (
+                        <p className="form-error">{errors.linkedinUrl.message}</p>
                       )}
                     </div>
                   </div>
