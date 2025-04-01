@@ -29,11 +29,6 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
       {isOpen && !isCollapsed && (
         <ul className="submenu">
           <SideMenuItem
-            label="Team"
-            isSubmenuItem={true}
-            onClick={() => onNavigate('/landing/team', 'team')}
-          />
-          <SideMenuItem
             label="Languages"
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/languages', 'languages')}
@@ -42,6 +37,11 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             label="Translations"
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/translations', 'translations')}
+          />
+          <SideMenuItem
+            label="Team"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/team', 'team')}
           />
           <SideMenuItem
             label="FAQ"
@@ -63,16 +63,16 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/landingArtists', 'landingArtists')}
           />
+          <SideMenuItem
+            label="Œuvres en prévente"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/presaleArtworks', 'presaleArtworks')}
+          />
         </ul>
       )}
 
       {isOpen && isCollapsed && (
         <ul className="submenu visible">
-          <SideMenuItem
-            label="Team"
-            isSubmenuItem={true}
-            onClick={() => onNavigate('/landing/team', 'team')}
-          />
           <SideMenuItem
             label="Languages"
             isSubmenuItem={true}
@@ -82,6 +82,11 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             label="Translations"
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/translations', 'translations')}
+          />
+          <SideMenuItem
+            label="Team"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/team', 'team')}
           />
           <SideMenuItem
             label="FAQ"
@@ -102,6 +107,11 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             label="Page artistes"
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/landingArtists', 'landingArtists')}
+          />
+          <SideMenuItem
+            label="Œuvres en prévente"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/presaleArtworks', 'presaleArtworks')}
           />
         </ul>
       )}

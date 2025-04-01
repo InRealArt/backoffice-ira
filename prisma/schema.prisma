@@ -867,6 +867,7 @@ model PresaleArtwork {
   name     String
   artistId Int
   price    Int
+  imageUrl      String   @unique
   artist   Artist @relation(fields: [artistId], references: [id])
 
   @@index([artistId])
