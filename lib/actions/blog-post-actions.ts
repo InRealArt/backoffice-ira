@@ -9,15 +9,18 @@ import { BlogPost } from '@prisma/client'
  */
 export async function getAllBlogPosts() {
     try {
+        // Si la table n'existe pas encore ou est vide, findMany() retournera un tableau vide au lieu de null
         const blogPosts = await prisma.blogPost.findMany({
             orderBy: {
                 createdAt: 'desc'
             }
-        })
+        }) || []
 
-        return blogPosts
+        // S'assurer que nous retournons toujours un tableau
+        return Array.isArray(blogPosts) ? blogPosts : []
     } catch (error) {
         console.error('Erreur lors de la récupération des articles de blog:', error)
+        // Toujours retourner un tableau vide en cas d'erreur pour éviter les erreurs "null payload"
         return []
     }
 }
@@ -43,19 +46,39 @@ export async function getBlogPostById(id: number) {
  */
 export async function createBlogPost(data: {
     title: string
-    text: string
-    imageUrl: string
-    readingTime: number
+    text?: string
+    imageUrl?: string
+    imageAlt?: string
+    imageWidth?: number
+    imageHeight?: number
+    readingTime?: number
     tags?: string
+    metaDescription?: string
+    metaKeywords?: string
+    slug?: string
+    auteur?: string
+    relatedArticles?: string
 }) {
     try {
         const blogPost = await prisma.blogPost.create({
             data: {
                 title: data.title,
-                text: data.text,
-                imageUrl: data.imageUrl,
-                readingTime: data.readingTime,
-                tags: data.tags || "[]"
+                slug: data.slug || `article-${Date.now()}`,
+                metaDescription: data.metaDescription || data.title,
+                metaKeywords: data.metaKeywords ? data.metaKeywords.split(',').map(k => k.trim()) : [],
+                author: data.auteur || 'Anonyme',
+                datePublished: new Date(),
+                featuredImageUrl: data.imageUrl || '',
+                featuredImageAlt: data.imageAlt || '',
+                featuredImageWidth: data.imageWidth || 0,
+                featuredImageHeight: data.imageHeight || 0,
+                introduction: '',
+                content: data.text || '',
+                tags: data.tags ? JSON.parse(data.tags) : [],
+                estimatedReadTime: data.readingTime || 1,
+                isPublished: false,
+                isFeatured: false,
+                relatedArticles: data.relatedArticles ? JSON.parse(data.relatedArticles) : []
             }
         })
 
@@ -80,13 +103,40 @@ export async function updateBlogPost(id: number, data: {
     title?: string
     text?: string
     imageUrl?: string
+    imageAlt?: string
+    imageWidth?: number
+    imageHeight?: number
     readingTime?: number
     tags?: string
+    metaDescription?: string
+    slug?: string
+    auteur?: string
+    relatedArticles?: string
 }) {
     try {
+        const updateData: any = {}
+
+        if (data.title) updateData.title = data.title
+        if (data.slug) updateData.slug = data.slug
+        if (data.text) updateData.content = data.text
+        if (data.imageUrl) updateData.featuredImageUrl = data.imageUrl
+        if (data.imageAlt) updateData.featuredImageAlt = data.imageAlt
+        if (data.imageWidth) updateData.featuredImageWidth = data.imageWidth
+        if (data.imageHeight) updateData.featuredImageHeight = data.imageHeight
+        if (data.readingTime) updateData.estimatedReadTime = data.readingTime
+        if (data.metaDescription) updateData.metaDescription = data.metaDescription
+        if (data.auteur) updateData.author = data.auteur
+
+        // Pour les champs de type JSON ou tableau
+        if (data.tags) updateData.tags = JSON.parse(data.tags)
+        if (data.relatedArticles) updateData.relatedArticles = JSON.parse(data.relatedArticles)
+
+        // Mise à jour de la date de modification
+        updateData.dateModified = new Date()
+
         const blogPost = await prisma.blogPost.update({
             where: { id },
-            data
+            data: updateData
         })
 
         revalidatePath('/landing/blog')

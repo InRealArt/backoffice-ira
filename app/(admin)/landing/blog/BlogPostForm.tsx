@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { BlogPost } from '@prisma/client'
+import type { BlogPost as PrismaBlogPost } from '@prisma/client'
 import { createBlogPost, updateBlogPost } from '@/lib/actions/blog-post-actions'
 import RichTextEditor from '@/app/components/Forms/RichTextEditor'
 import { TagInput } from '@/app/components/Tag/TagInput'
@@ -15,6 +15,19 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
 import { SEOModalGenerator } from '@/app/components/SEOGenerator'
 import { ArticleContent } from '@/app/components/SEOGenerator'
+
+// Étendre le type BlogPost pour inclure les champs manquants
+interface BlogPostWithAdditionalFields extends Omit<PrismaBlogPost, 'tags' | 'metaKeywords' | 'relatedArticles'> {
+  imageWidth: number | null
+  imageHeight: number | null
+  auteur: string | null
+  text: string
+  imageUrl: string
+  imageAlt: string
+  tags: string // stocké comme JSON string
+  relatedArticles: string // stocké comme JSON string
+  metaKeywords: string // stocké comme JSON string
+}
 
 // Fonction pour analyser le HTML et extraire un objet ArticleContent
 /**
@@ -280,26 +293,39 @@ const blogPostSchema = z.object({
   metaDescription: z.string()
     .min(120, 'La meta description doit faire au moins 120 caractères')
     .max(160, 'La meta description ne doit pas dépasser 160 caractères'),
+  metaKeywords: z.string()
+    .min(1, 'Les mots-clés meta sont requis'),
+  auteur: z.string()
+    .min(1, 'Le nom de l\'auteur est requis'),
   text: z.string().min(1, 'Le contenu de l\'article est requis'),
-  imageUrl: z.string().min(1, 'Une image est requise'),
+  featuredImageUrl: z.string().min(1, 'Une image à la une est requise'),
+  featuredImageAlt: z.string().min(1, 'Le texte alternatif de l\'image est requis'),
+  featuredImageWidth: z.number().min(1, 'La largeur de l\'image est requise'),
+  featuredImageHeight: z.number().min(1, 'La hauteur de l\'image est requise'),
   tags: z.array(z.string())
     .min(2, 'Ajoutez au moins 2 tags pour le référencement'),
-  imageAlt: z.string().min(1, 'Le texte alternatif de l\'image est requis')
+  relatedArticles: z.array(z.object({
+    id: z.string(),
+    title: z.string()
+  })).optional()
 })
 
 type BlogPostFormData = z.infer<typeof blogPostSchema>
 
 interface BlogPostFormProps {
-  blogPost?: BlogPost | null
+  blogPost?: BlogPostWithAdditionalFields | null
   isEditMode?: boolean
 }
 
 export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [imageUrl, setImageUrl] = useState<string>(blogPost?.imageUrl || '')
+  const [featuredImageUrl, setFeaturedImageUrl] = useState<string>(blogPost?.imageUrl || '')
   const [imagePreview, setImagePreview] = useState<string>(blogPost?.imageUrl || '')
-  const [tags, setTags] = useState<string[]>(blogPost?.tags ? JSON.parse(blogPost.tags as string) : [])
+  const [tags, setTags] = useState<string[]>(blogPost?.tags ? JSON.parse(blogPost.tags) : [])
+  const [relatedArticles, setRelatedArticles] = useState<Array<{ id: string, title: string }>>(
+    blogPost?.relatedArticles ? JSON.parse(blogPost.relatedArticles) : []
+  )
   const [seoScore, setSeoScore] = useState<SEOValidation>({
     isValid: false,
     score: 0,
@@ -326,11 +352,16 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
     defaultValues: {
       title: blogPost?.title || '',
       text: blogPost?.text || '',
-      imageUrl: blogPost?.imageUrl || '',
-      tags: blogPost?.tags ? JSON.parse(blogPost.tags as string) : [],
+      featuredImageUrl: blogPost?.imageUrl || '',
+      featuredImageAlt: blogPost?.imageAlt || '',
+      featuredImageWidth: blogPost?.imageWidth ? Number(blogPost.imageWidth) : 0,
+      featuredImageHeight: blogPost?.imageHeight ? Number(blogPost.imageHeight) : 0,
+      tags: blogPost?.tags ? JSON.parse(blogPost.tags) : [],
       metaDescription: blogPost?.metaDescription || '',
+      metaKeywords: blogPost?.metaKeywords || '',
       slug: blogPost?.slug || '',
-      imageAlt: blogPost?.imageAlt || ''
+      auteur: blogPost?.auteur || '',
+      relatedArticles: blogPost?.relatedArticles ? JSON.parse(blogPost.relatedArticles) : []
     }
   })
 
@@ -362,10 +393,10 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
 
   // Surveiller les changements d'URL d'image
   useEffect(() => {
-    if (imageUrl) {
-      setValue('imageUrl', imageUrl)
+    if (featuredImageUrl) {
+      setValue('featuredImageUrl', featuredImageUrl)
     }
-  }, [imageUrl, setValue])
+  }, [featuredImageUrl, setValue])
 
   // Surveiller les changements de tags
   useEffect(() => {
@@ -410,7 +441,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
     checks.headings = (h2Count + h3Count) >= 2
     
     // Vérification des images
-    checks.images = (content?.match(/<img/gi) || []).length >= 1 && !!watch('imageUrl')
+    checks.images = (content?.match(/<img/gi) || []).length >= 1 && !!watch('featuredImageUrl')
     
     // Vérification des liens
     checks.links = (content?.match(/<a\s+(?:[^>]*?\s+)?href/gi) || []).length >= 2
@@ -450,8 +481,8 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
     const currentContent = watch('text').trim()
     const currentTitle = watch('title').trim()
     const currentTags = watch('tags') || []
-    const currentImageUrl = watch('imageUrl').trim()
-    const currentImageAlt = watch('imageAlt').trim()
+    const currentImageUrl = watch('featuredImageUrl').trim()
+    const currentImageAlt = watch('featuredImageAlt').trim()
     
     if (typeof window !== 'undefined') {
       const parsedContent = parseHTMLToArticleContent(
@@ -476,8 +507,8 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
       const currentContent = watch('text').trim()
       const currentTitle = watch('title').trim()
       const currentTags = watch('tags') || []
-      const currentImageUrl = watch('imageUrl').trim()
-      const currentImageAlt = watch('imageAlt').trim()
+      const currentImageUrl = watch('featuredImageUrl').trim()
+      const currentImageAlt = watch('featuredImageAlt').trim()
       
       if (typeof window !== 'undefined') {
         const parsedContent = parseHTMLToArticleContent(
@@ -495,7 +526,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
   // Surveiller les changements dans le contenu pour mettre à jour les données SEO
   useEffect(() => {
     const subscription = watch((value, { name }) => {
-      if (['text', 'title', 'tags', 'imageUrl', 'imageAlt'].includes(name as string)) {
+      if (['text', 'title', 'tags', 'featuredImageUrl', 'featuredImageAlt'].includes(name as string)) {
         debouncedPrepareContentForSEO()
       }
     })
@@ -516,6 +547,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
     
     try {
       const tagsJson = JSON.stringify(data.tags)
+      const relatedArticlesJson = JSON.stringify(data.relatedArticles || [])
       const readingTime = Math.ceil(data.text.length / 1500) // Calcul automatique du temps de lecture
       
       if (isEditMode && blogPost) {
@@ -523,12 +555,17 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
         const result = await updateBlogPost(blogPost.id, {
           title: data.title,
           text: data.text,
-          imageUrl: data.imageUrl,
+          imageUrl: data.featuredImageUrl,
+          imageAlt: data.featuredImageAlt,
+          imageWidth: data.featuredImageWidth,
+          imageHeight: data.featuredImageHeight,
           readingTime,
           tags: tagsJson,
           metaDescription: data.metaDescription,
+          metaKeywords: data.metaKeywords,
           slug: data.slug,
-          imageAlt: data.imageAlt
+          auteur: data.auteur,
+          relatedArticles: relatedArticlesJson
         } as any)
         
         if (result.success) {
@@ -542,12 +579,17 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
         const result = await createBlogPost({
           title: data.title,
           text: data.text,
-          imageUrl: data.imageUrl,
+          imageUrl: data.featuredImageUrl,
+          imageAlt: data.featuredImageAlt,
+          imageWidth: data.featuredImageWidth,
+          imageHeight: data.featuredImageHeight,
           readingTime,
           tags: tagsJson,
           metaDescription: data.metaDescription,
+          metaKeywords: data.metaKeywords,
           slug: data.slug,
-          imageAlt: data.imageAlt
+          auteur: data.auteur,
+          relatedArticles: relatedArticlesJson
         } as any)
         
         if (result.success) {
@@ -570,7 +612,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
   }
 
   const handleImageUpload = (url: string) => {
-    setImageUrl(url)
+    setFeaturedImageUrl(url)
   }
 
   const handleTagsChange = (newTags: string[]) => {
@@ -630,6 +672,21 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
             </div>
             
             <div className="form-group">
+              <label htmlFor="auteur" className="form-label">
+                Auteur <span className="text-danger">*</span>
+              </label>
+              <input
+                id="auteur"
+                type="text"
+                className={`form-input ${errors.auteur ? 'input-error' : ''}`}
+                {...register('auteur')}
+              />
+              {errors.auteur && (
+                <p className="error-message">{errors.auteur.message}</p>
+              )}
+            </div>
+            
+            <div className="form-group">
               <label htmlFor="metaDescription" className="form-label">
                 Meta Description <span className="text-danger">*</span>
               </label>
@@ -649,18 +706,37 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
             </div>
             
             <div className="form-group">
+              <label htmlFor="metaKeywords" className="form-label">
+                Meta Keywords <span className="text-danger">*</span>
+              </label>
+              <input
+                id="metaKeywords"
+                type="text"
+                className={`form-input ${errors.metaKeywords ? 'input-error' : ''}`}
+                {...register('metaKeywords')}
+                placeholder="mot-clé1, mot-clé2, mot-clé3"
+              />
+              {errors.metaKeywords && (
+                <p className="error-message">{errors.metaKeywords.message}</p>
+              )}
+              <div className="text-xs text-gray-500 mt-1">
+                Séparez les mots-clés par des virgules (important pour le SEO)
+              </div>
+            </div>
+            
+            <div className="form-group">
               <label className="form-label">
-                Tags (mots-clés) <span className="text-danger">*</span>
+                Tags <span className="text-danger">*</span>
               </label>
               <TagInput 
                 value={tags}
                 onChange={setTags}
-                placeholder="Ajouter des mots-clés SEO..."
+                placeholder="Ajouter des tags..."
                 maxTags={10}
                 className="form-input"
               />
               <div className="text-xs text-gray-500 mt-1">
-                Minimum 2 mots-clés pour optimiser le SEO
+                Minimum 2 tags pour faciliter la navigation
               </div>
               {errors.tags && (
                 <p className="error-message">{errors.tags.message}</p>
@@ -669,19 +745,19 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
             
             <div className="form-group">
               <label className="form-label">
-                Image principale <span className="text-danger">*</span>
+                Image à la une <span className="text-danger">*</span>
               </label>
               <input
                 type="url"
-                {...register('imageUrl', {
+                {...register('featuredImageUrl', {
                   onChange: (e) => setImagePreview(e.target.value)
                 })}
-                className={`form-input ${errors.imageUrl ? 'input-error' : ''}`}
+                className={`form-input ${errors.featuredImageUrl ? 'input-error' : ''}`}
                 placeholder="https://example.com/image.jpg"
                 disabled={isSubmitting}
               />
-              {errors.imageUrl && (
-                <p className="error-message">Une image est requise</p>
+              {errors.featuredImageUrl && (
+                <p className="error-message">Une image à la une est requise</p>
               )}
               {imagePreview && (
                 <div className="mt-1">
@@ -691,19 +767,67 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
             </div>
             
             <div className="form-group">
-              <label htmlFor="imageAlt" className="form-label">
+              <label htmlFor="featuredImageAlt" className="form-label">
                 Texte alternatif d'image <span className="text-danger">*</span>
               </label>
               <input
-                id="imageAlt"
+                id="featuredImageAlt"
                 type="text"
-                className={`form-input ${errors.imageAlt ? 'input-error' : ''}`}
-                placeholder="Description de l'image (important pour le SEO)"
-                {...register('imageAlt')}
+                className={`form-input ${errors.featuredImageAlt ? 'input-error' : ''}`}
+                placeholder="Description de l'image (important pour le SEO et l'accessibilité)"
+                {...register('featuredImageAlt')}
               />
-              {errors.imageAlt && (
-                <p className="error-message">{errors.imageAlt.message}</p>
+              {errors.featuredImageAlt && (
+                <p className="error-message">{errors.featuredImageAlt.message}</p>
               )}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="form-group">
+                <label htmlFor="featuredImageWidth" className="form-label">
+                  Largeur de l'image <span className="text-danger">*</span>
+                </label>
+                <input
+                  id="featuredImageWidth"
+                  type="number"
+                  className={`form-input ${errors.featuredImageWidth ? 'input-error' : ''}`}
+                  placeholder="Largeur en pixels"
+                  {...register('featuredImageWidth', { valueAsNumber: true })}
+                />
+                {errors.featuredImageWidth && (
+                  <p className="error-message">{errors.featuredImageWidth.message}</p>
+                )}
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="featuredImageHeight" className="form-label">
+                  Hauteur de l'image <span className="text-danger">*</span>
+                </label>
+                <input
+                  id="featuredImageHeight"
+                  type="number"
+                  className={`form-input ${errors.featuredImageHeight ? 'input-error' : ''}`}
+                  placeholder="Hauteur en pixels"
+                  {...register('featuredImageHeight', { valueAsNumber: true })}
+                />
+                {errors.featuredImageHeight && (
+                  <p className="error-message">{errors.featuredImageHeight.message}</p>
+                )}
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label">
+                Articles liés
+              </label>
+              <div className="border rounded-md p-3 bg-gray-50">
+                <p className="text-sm text-gray-600 mb-2">
+                  Fonctionnalité à implémenter : Sélecteur d'articles liés
+                </p>
+                <div className="text-xs text-gray-500">
+                  Cette fonctionnalité permettra de choisir des articles liés dans une liste
+                </div>
+              </div>
             </div>
             
             <div className="form-group">
@@ -724,8 +848,8 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
                       title: watch('title')?.trim() || '',
                       tags: (watch('tags') || []).map(tag => typeof tag === 'string' ? tag.trim() : tag),
                       mainImage: {
-                        url: watch('imageUrl')?.trim() || '',
-                        alt: watch('imageAlt')?.trim() || ''
+                        url: watch('featuredImageUrl')?.trim() || '',
+                        alt: watch('featuredImageAlt')?.trim() || ''
                       }
                     }}
                   />
