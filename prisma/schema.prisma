@@ -885,6 +885,9 @@ model BlogPost {
   imageUrl    String
   title       String
   text        String
+  imageAlt        String?  
+  slug            String?  
+  metaDescription String?
   viewsCount  Int      @default(0)
 
   @@schema("landing")
