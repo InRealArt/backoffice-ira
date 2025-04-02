@@ -879,16 +879,48 @@ model PresaleArtwork {
 
 model BlogPost {
   id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now())
-  readingTime Int
-  tags        Json     @default("[]")
-  imageUrl    String
-  title       String
-  text        String
-  imageAlt        String?  
-  slug            String?  
-  metaDescription String?
+
+  slug           String   @unique
+  title          String
+  metaDescription String
+  metaKeywords   String[] // Tableau de mots-clés
+  canonicalUrl   String?
+  
+  // Auteur (relation ou embedded)
+  author       String
+  
+  // Dates
+  datePublished  DateTime
+  dateModified   DateTime @updatedAt
+  
+  // Images
+  featuredImageUrl String
+  featuredImageAlt String
+  featuredImageWidth Int
+  featuredImageHeight Int
+  
+  // Contenu
+  introduction   String   @db.Text
+  content        String   @db.Text
+  
+  // SEO et catégorisation
+  tags           String[]
+  estimatedReadTime Int?
+  
+  // Statut
+  isPublished    Boolean  @default(false)
+  isFeatured     Boolean  @default(false)
+  
+  // Relations
+  relatedArticles String[]
+  
+  // SEO avancé
+  structuredData String?  @db.Text
+  openGraphData  Json?
+  twitterData    Json?
+  
   viewsCount  Int      @default(0)
+  createdAt   DateTime @default(now())
 
   @@schema("landing")
 }

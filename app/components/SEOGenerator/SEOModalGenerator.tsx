@@ -184,6 +184,31 @@ export default function SEOModalGenerator({
     }
   }, [activeTab]);
   
+  // Debugging pour les mots-clés
+  useEffect(() => {
+    console.log('SEOModalGenerator - initialData:', initialData);
+    
+    // Vérification approfondie des tags
+    if (initialData?.tags) {
+      console.log('Type des tags:', typeof initialData.tags);
+      console.log('Est un Array?', Array.isArray(initialData.tags));
+      console.log('Longueur brute:', initialData.tags.length);
+      
+      if (Array.isArray(initialData.tags)) {
+        console.log('Contenu du tableau tags:');
+        initialData.tags.forEach((tag, index) => {
+          console.log(`[${index}] Type: ${typeof tag}, Valeur: "${tag}", Vide?: ${!tag}`);
+        });
+        
+        const validTags = initialData.tags.filter(Boolean).map(tag => typeof tag === 'string' ? tag.trim() : tag).filter(tag => tag && String(tag).length > 0);
+        console.log('Tags valides après filtrage:', validTags);
+        console.log('Nombre de tags valides:', validTags.length);
+      }
+    } else {
+      console.log('Aucun tag trouvé dans initialData');
+    }
+  }, [initialData]);
+  
   return (
     <>
       <button 
@@ -291,33 +316,72 @@ export default function SEOModalGenerator({
                 </div>
                 
                 <div className="grid gap-2">
-                  <div className={`flex items-center ${generatedHtml.length > 0 && generatedHtml.includes('<h1') ? 'text-green-600' : 'text-red-600'}`}>
-                    <span className="mr-2">{generatedHtml.length > 0 && generatedHtml.includes('<h1') ? '✓' : '×'}</span>
+                  <div className={`flex items-center ${generatedHtml && /<h1[^>]*>[^<\s]+.*?<\/h1>/i.test(generatedHtml) ? styles.itemSuccess : styles.itemError}`}>
+                    <span className="mr-2">{generatedHtml && /<h1[^>]*>[^<\s]+.*?<\/h1>/i.test(generatedHtml) ? <span className={styles.textSuccess}>✓</span> : <span className={styles.textError}>×</span>}</span>
                     <span>Titre principal</span>
                   </div>
                   
-                  <div className={`flex items-center ${currentWordCount >= 300 ? 'text-green-600' : 'text-red-600'}`}>
-                    <span className="mr-2">{currentWordCount >= 300 ? '✓' : '×'}</span>
-                    <span>Longueur du contenu ({currentWordCount} mots, min. 300)</span>
+                  <div className={`flex items-center ${currentWordCount >= 300 ? styles.itemSuccess : styles.itemError}`}>
+                    <span className="mr-2">{currentWordCount >= 300 ? <span className={styles.textSuccess}>✓</span> : <span className={styles.textError}>×</span>}</span>
+                    <span>Longueur du contenu principal ({currentWordCount} mots, min. 300)</span>
                   </div>
                   
-                  <div className={`flex items-center ${generatedHtml.includes('<h2') || generatedHtml.includes('<h3') ? 'text-green-600' : 'text-red-600'}`}>
-                    <span className="mr-2">{generatedHtml.includes('<h2') || generatedHtml.includes('<h3') ? '✓' : '×'}</span>
+                  <div className={`flex items-center ${generatedHtml.includes('<h2') || generatedHtml.includes('<h3') ? styles.itemSuccess : styles.itemError}`}>
+                    <span className="mr-2">{generatedHtml.includes('<h2') || generatedHtml.includes('<h3') ? <span className={styles.textSuccess}>✓</span> : <span className={styles.textError}>×</span>}</span>
                     <span>Structure des titres (H2, H3)</span>
                   </div>
                   
-                  <div className={`flex items-center ${initialData?.tags && initialData.tags.length >= 2 ? 'text-green-600' : 'text-red-600'}`}>
-                    <span className="mr-2">{initialData?.tags && initialData.tags.length >= 2 ? '✓' : '×'}</span>
-                    <span>Présence des mots-clés</span>
-                  </div>
+                  {(() => {
+                    // Vérification robuste des tags
+                    const hasTags = initialData?.tags !== undefined;
+                    
+                    // Conversion des tags en tableau si ce n'est pas déjà le cas
+                    let tagArray: any[] = [];
+                    if (hasTags) {
+                      if (Array.isArray(initialData?.tags)) {
+                        tagArray = initialData.tags;
+                      } else if (typeof initialData?.tags === 'string') {
+                        // Si c'est une chaîne JSON, essayer de la parser
+                        try {
+                          const parsed = JSON.parse(initialData.tags);
+                          tagArray = Array.isArray(parsed) ? parsed : [parsed];
+                        } catch (e) {
+                          // Si ce n'est pas du JSON valide, c'est un simple tag
+                          tagArray = [initialData.tags];
+                        }
+                      } else {
+                        // Autre type, convertir en tableau
+                        tagArray = [initialData?.tags].filter(Boolean);
+                      }
+                    }
+                    
+                    // Filtrer pour n'avoir que des tags valides
+                    const validTags = tagArray
+                      .filter(Boolean)
+                      .map(tag => typeof tag === 'string' ? tag.trim() : String(tag))
+                      .filter(tag => tag && tag.length > 0);
+                    
+                    const hasEnoughTags = validTags.length >= 2;
+                    
+                    console.log('Calcul final - tagArray:', tagArray);
+                    console.log('Calcul final - validTags:', validTags);
+                    console.log('Calcul final - hasEnoughTags:', hasEnoughTags);
+                    
+                    return (
+                      <div className={`flex items-center ${hasEnoughTags ? styles.itemSuccess : styles.itemError}`}>
+                        <span className="mr-2">{hasEnoughTags ? <span className={styles.textSuccess}>✓</span> : <span className={styles.textError}>×</span>}</span>
+                        <span>Présence des mots-clés ({validTags.length}/2 minimum)</span>
+                      </div>
+                    );
+                  })()}
                   
-                  <div className={`flex items-center ${generatedHtml.includes('<a ') && (generatedHtml.match(/<a /g) || []).length >= 2 ? 'text-green-600' : 'text-red-600'}`}>
-                    <span className="mr-2">{generatedHtml.includes('<a ') && (generatedHtml.match(/<a /g) || []).length >= 2 ? '✓' : '×'}</span>
+                  <div className={`flex items-center ${generatedHtml.includes('<a href') && (generatedHtml.match(/<a [^>]*href/gi) || []).length >= 2 ? styles.itemSuccess : styles.itemError}`}>
+                    <span className="mr-2">{generatedHtml.includes('<a href') && (generatedHtml.match(/<a [^>]*href/gi) || []).length >= 2 ? <span className={styles.textSuccess}>✓</span> : <span className={styles.textError}>×</span>}</span>
                     <span>Liens (au moins 2 liens recommandés)</span>
                   </div>
                   
-                  <div className={`flex items-center ${generatedHtml.includes('<img ') ? 'text-green-600' : 'text-red-600'}`}>
-                    <span className="mr-2">{generatedHtml.includes('<img ') ? '✓' : '×'}</span>
+                  <div className={`flex items-center ${generatedHtml.includes('<img ') ? styles.itemSuccess : styles.itemError}`}>
+                    <span className="mr-2">{generatedHtml.includes('<img ') ? <span className={styles.textSuccess}>✓</span> : <span className={styles.textError}>×</span>}</span>
                     <span>Images avec texte alternatif</span>
                   </div>
                 </div>

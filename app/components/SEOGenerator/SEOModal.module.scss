@@ -38,6 +38,24 @@
   }
 }
 
+// Styles spécifiques pour les indicateurs de réussite/échec SEO
+.textSuccess {
+  color: #16a34a; // équivalent à text-green-600
+}
+
+.textError {
+  color: #dc2626; // équivalent à text-red-600
+}
+
+// Styles pour le texte de l'indicateur
+.itemSuccess {
+  color: #16a34a;
+}
+
+.itemError {
+  color: #dc2626;
+}
+
 // Styles spécifiques pour les tabs dans la modale
 .tabsContainer {
   display: flex;

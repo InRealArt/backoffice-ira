@@ -466,22 +466,28 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
   
   // Mettre à jour le compteur de mots
   useEffect(() => {
-    // Calculer le nombre de mots
-    const allText = [
-      article.title,
+    // Calculer le nombre de mots du contenu uniquement (sans le titre)
+    const contentText = [
       article.introduction,
       ...article.sections.flatMap(section => [
-        section.title,
         section.content,
         ...section.subsections.flatMap(subsection => [
-          subsection.title,
-          subsection.content
+          subsection.content,
+          // Inclure le texte des citations et listes mais pas les attributs alt des images
+          ...(subsection.elements || []).flatMap(element => {
+            if (element.type === 'quote') {
+              return [element.text || '']
+            } else if (element.type === 'unorderedList' || element.type === 'orderedList') {
+              return element.items || []
+            }
+            return []
+          })
         ])
       ]),
       article.conclusion
     ].join(' ')
     
-    const wordCount = allText.split(/\s+/).filter(Boolean).length
+    const wordCount = contentText.split(/\s+/).filter(Boolean).length
     setCurrentWordCount(wordCount)
   }, [article])
   
@@ -668,20 +674,43 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
       count + section.subsections.length, 0)
     const headingsValid = (h2Count + h3Count) >= 2
     
-    // Vérification des liens (approximation)
-    const introLinks = (article.introduction.match(/<a\s+(?:[^>]*?\s+)?href/gi) || []).length
+    // Vérification des liens (avec une regex améliorée pour détecter les href)
+    const introLinks = (article.introduction.match(/<a [^>]*href/gi) || []).length
     const sectionLinks = article.sections.reduce((count, section) => {
-      const sectionLinks = (section.content.match(/<a\s+(?:[^>]*?\s+)?href/gi) || []).length
+      const sectionLinks = (section.content.match(/<a [^>]*href/gi) || []).length
       const subsectionLinks = section.subsections.reduce((subCount, subsection) => {
-        return subCount + (subsection.content.match(/<a\s+(?:[^>]*?\s+)?href/gi) || []).length
+        return subCount + (subsection.content.match(/<a [^>]*href/gi) || []).length
       }, 0)
       return count + sectionLinks + subsectionLinks
     }, 0)
-    const conclusionLinks = (article.conclusion.match(/<a\s+(?:[^>]*?\s+)?href/gi) || []).length
+    const conclusionLinks = (article.conclusion.match(/<a [^>]*href/gi) || []).length
     const linksValid = (introLinks + sectionLinks + conclusionLinks) >= 2
     
-    // Vérification des mots-clés
-    const keywordsValid = article.tags.length >= 2
+    // Vérification des mots-clés avec traitement amélioré
+    console.log('Type de article.tags:', typeof article.tags);
+    console.log('article.tags est un Array?', Array.isArray(article.tags));
+
+    // Conversion des tags en tableau valide
+    let tagArray: any[] = article.tags || [];
+    if (!Array.isArray(tagArray) && typeof tagArray === 'string') {
+      try {
+        const parsed = JSON.parse(tagArray);
+        tagArray = Array.isArray(parsed) ? parsed : [parsed];
+      } catch (e) {
+        tagArray = [tagArray];
+      }
+    }
+
+    // Filtrer les tags valides
+    const validTags = tagArray
+      .filter(Boolean)
+      .map(tag => typeof tag === 'string' ? tag.trim() : String(tag))
+      .filter(tag => tag && tag.length > 0);
+    
+    console.log('SEOContentGenerator - tagArray:', tagArray);
+    console.log('validTags après traitement:', validTags);
+    const keywordsValid = validTags.length >= 2
+    console.log('keywordsValid:', keywordsValid);
     
     // Calcul du score SEO
     const checks = {
@@ -708,6 +737,8 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
   
   // Mettre à jour l'analyse SEO quand l'article change
   useEffect(() => {
+    console.log('Article complet:', JSON.stringify(article, null, 2));
+    console.log('Tags bruts:', article.tags);
     analyzeSEO()
   }, [article, analyzeSEO])
   
@@ -748,7 +779,7 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
         
         <div className={`flex items-center ${seoScore.checks.keywords ? 'text-green-600' : 'text-red-600'}`}>
           <span className="mr-2">{seoScore.checks.keywords ? '✓' : '×'}</span>
-          <span>Présence des mots-clés dans le contenu</span>
+          <span>Mots-clés ({article.tags.filter(Boolean).length}/2 minimum)</span>
         </div>
         
         <div className={`flex items-center ${seoScore.checks.links ? 'text-green-600' : 'text-red-600'}`}>
@@ -877,7 +908,7 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Texte alternatif de l'image</label>
+                  <label className="block text-sm font-medium mb-1">Texte alternatif de l'image (y mettre le mot-clé principal)</label>
                   <input 
                     type="text"
                     className="form-input w-full"
@@ -1402,7 +1433,7 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
                 className="form-textarea w-full"
                 value={article.conclusion} 
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setArticle(prev => ({ ...prev, conclusion: e.target.value }))}
-                placeholder="Résumez les points clés et ajoutez un appel à l'action (100-200 mots)" 
+                placeholder="Résumez les points clés et ajoutez un CTA - appel à l'action  (100-200 mots)" 
                 rows={3}
               />
               <p className="text-xs text-gray-500 mt-1">
