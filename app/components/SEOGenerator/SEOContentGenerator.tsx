@@ -88,6 +88,65 @@ const applyFormatting = (
   }
 }
 
+// Fonction utilitaire pour transformer du texte en liste
+const applyListFormatting = (
+  element: HTMLTextAreaElement,
+  listType: 'ul' | 'ol',
+  setValue: (val: string) => void
+) => {
+  const start = element.selectionStart
+  const end = element.selectionEnd
+  const currentValue = element.value
+  
+  if (start === end) {
+    // Pas de sélection, insérer une liste vide avec un item
+    const listStart = listType === 'ul' ? '<ul>' : '<ol>'
+    const listEnd = listType === 'ul' ? '</ul>' : '</ol>'
+    const newValue = 
+      currentValue.substring(0, start) + 
+      `${listStart}\n  <li></li>\n${listEnd}` + 
+      currentValue.substring(end)
+    
+    setValue(newValue)
+    
+    // Placer le curseur à l'intérieur de la balise li
+    setTimeout(() => {
+      element.focus()
+      const cursorPos = start + listStart.length + 7
+      element.selectionStart = cursorPos
+      element.selectionEnd = cursorPos
+    }, 0)
+  } else {
+    // Transformer chaque ligne en élément de liste
+    const selectedText = currentValue.substring(start, end)
+    const lines = selectedText.split('\n')
+    const listItems = lines
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => `  <li>${line}</li>`)
+      .join('\n')
+    
+    const listStart = listType === 'ul' ? '<ul>' : '<ol>'
+    const listEnd = listType === 'ul' ? '</ul>' : '</ol>'
+    
+    const formattedList = `${listStart}\n${listItems}\n${listEnd}`
+    
+    const newValue = 
+      currentValue.substring(0, start) + 
+      formattedList + 
+      currentValue.substring(end)
+    
+    setValue(newValue)
+    
+    // Restaurer la sélection en incluant les balises de liste
+    setTimeout(() => {
+      element.focus()
+      element.selectionStart = start
+      element.selectionEnd = start + formattedList.length
+    }, 0)
+  }
+}
+
 // Composant pour les boutons de formatage
 const FormattingToolbar = ({ 
   textareaElement,
@@ -107,61 +166,101 @@ const FormattingToolbar = ({
     }
   }
   
+  const handleListFormat = (listType: 'ul' | 'ol') => {
+    if (textareaElement) {
+      applyListFormatting(
+        textareaElement,
+        listType,
+        onFormatting
+      )
+    }
+  }
+  
+  // Interface pour les éléments de la barre d'outils
+  interface ToolbarButton {
+    id: string
+    icon: React.ReactNode
+    title: string
+    description: string
+    action: () => void
+  }
+  
+  // Définition des boutons de formatage
+  const toolbarButtons: ToolbarButton[] = [
+    {
+      id: 'paragraph',
+      icon: <AlignLeft size={16} />,
+      title: '',
+      description: 'Paragraphe <p>',
+      action: () => handleFormat('<p>', '</p>')
+    },
+    {
+      id: 'bold',
+      icon: <Bold size={16} />,
+      title: '',
+      description: 'Texte en gras <strong>',
+      action: () => handleFormat('<strong>', '</strong>')
+    },
+    {
+      id: 'italic',
+      icon: <Italic size={16} />,
+      title: '',
+      description: 'Texte en italique <em>',
+      action: () => handleFormat('<em>', '</em>')
+    },
+    {
+      id: 'link',
+      icon: <Link size={16} />,
+      title: 'Lien',
+      description: 'Insérer un lien hypertexte <a>',
+      action: () => handleFormat('<a href="#">', '</a>')
+    },
+    {
+      id: 'unorderedList',
+      icon: <List size={16} />,
+      title: 'Liste à puces',
+      description: '<ul><li>',
+      action: () => handleListFormat('ul')
+    }
+  ]
+  
   return (
     <div className="flex flex-col mb-1 py-1 px-2 bg-gray-50 border rounded-md">
-      <div className="text-xs text-gray-500 mb-1">Formatage:</div>
       <div className="grid grid-flow-col auto-cols-max gap-2">
-        <button
-          type="button"
-          className="p-1 hover:bg-gray-200 rounded tooltip-parent inline-block"
-          onClick={() => handleFormat('<p>', '</p>')}
-          title="Paragraphe"
-        >
-          <AlignLeft size={16} />
-        </button>
-        <button
-          type="button"
-          className="p-1 hover:bg-gray-200 rounded font-bold tooltip-parent inline-block"
-          onClick={() => handleFormat('<strong>', '</strong>')}
-          title="Gras"
-        >
-          <Bold size={16} />
-        </button>
-        <button
-          type="button"
-          className="p-1 hover:bg-gray-200 rounded italic tooltip-parent inline-block"
-          onClick={() => handleFormat('<em>', '</em>')}
-          title="Italique"
-        >
-          <Italic size={16} />
-        </button>
-        <button
-          type="button"
-          className="p-1 hover:bg-gray-200 rounded text-blue-500 tooltip-parent inline-block"
-          onClick={() => handleFormat('<a href="#">', '</a>')}
-          title="Lien"
-        >
-          <Link size={16} />
-        </button>
+        {toolbarButtons.map(button => (
+          <button
+            key={button.id}
+            type="button"
+            className="p-1 hover:bg-gray-200 rounded tooltip-parent inline-block"
+            onClick={button.action}
+            data-title={button.title}
+            data-description={button.description}
+          >
+            {button.icon}
+          </button>
+        ))}
       </div>
       <style jsx>{`
         .tooltip-parent {
           position: relative;
         }
         .tooltip-parent:hover::after {
-          content: attr(title);
+          content: attr(data-title) " - " attr(data-description);
           position: absolute;
           bottom: 100%;
           left: 50%;
           transform: translateX(-50%);
-          background-color: #333;
+          background-color: #334155;
           color: white;
-          padding: 2px 6px;
+          padding: 4px 8px;
           border-radius: 4px;
           font-size: 12px;
           white-space: nowrap;
           margin-bottom: 5px;
           z-index: 100;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+          min-width: 150px;
+          text-align: center;
         }
         .tooltip-parent:hover::before {
           content: '';
@@ -169,9 +268,9 @@ const FormattingToolbar = ({
           bottom: 100%;
           left: 50%;
           transform: translateX(-50%);
-          border-width: 4px;
+          border-width: 5px;
           border-style: solid;
-          border-color: #333 transparent transparent transparent;
+          border-color: #334155 transparent transparent transparent;
           margin-bottom: -3px;
           z-index: 100;
         }
@@ -282,8 +381,8 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
     // Fermer le header
     html += `</header>\n\n`;
     
-    // Introduction - préserver le HTML formaté
-    html += `<div class="introduction" data-section="intro">\n  <p>${preserveHtml(articleData.introduction)}</p>\n</div>\n\n`;
+    // Introduction - permettre à l'utilisateur de formater lui-même avec des balises <p>
+    html += `<div class="introduction" data-section="intro">\n  ${preserveHtml(articleData.introduction)}\n</div>\n\n`;
     
     // Sections
     articleData.sections.forEach((section, idx) => {
@@ -675,9 +774,9 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
           
           {/* Introduction */}
           <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-            <h3 className="text-blue-700 font-medium text-sm uppercase tracking-wider mb-3">Introduction</h3>
+            <h3 className="text-blue-700 font-medium text-sm uppercase tracking-wider mb-3">Introduction (avec mot-clé principal)</h3>
             <div>
-              <label className="block text-sm font-medium mb-1">Introduction (avec mot-clé principal)</label>
+              {/* <label className="block text-sm font-medium mb-1">Introduction </label> */}
               <FormattingToolbar 
                 textareaElement={sectionTextareas.current[INTRO_ID] || null}
                 onFormatting={(newValue) => setArticle(prev => ({ ...prev, introduction: newValue }))}
@@ -1172,7 +1271,7 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
           <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
             <h3 className="text-blue-700 font-medium text-sm uppercase tracking-wider mb-3">Conclusion</h3>
             <div>
-              <label className="block text-sm font-medium mb-1">Conclusion</label>
+              {/* <label className="block text-sm font-medium mb-1">Conclusion</label> */}
               <FormattingToolbar 
                 textareaElement={sectionTextareas.current[CONCLUSION_ID] || null}
                 onFormatting={(newValue) => setArticle(prev => ({ ...prev, conclusion: newValue }))}
