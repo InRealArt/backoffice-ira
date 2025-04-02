@@ -5,8 +5,11 @@ import { useState, useEffect } from 'react'
 import { 
   PlusCircle, Trash2, ImageIcon, ListOrdered, 
   List, Quote, SaveIcon, Eye, Code, ArrowDown, ArrowUp,
-  Bold, Italic, Link, AlignLeft
+  Bold, Italic, Link, AlignLeft, BarChart2
 } from 'lucide-react'
+
+// Import du SEOScoreIndicator du formulaire principal
+import BlogPostForm from '@/app/(admin)/landing/blog/BlogPostForm'
 
 // Types pour le contenu de l'article
 export interface ArticleContent {
@@ -328,6 +331,20 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
   const [activeTab, setActiveTab] = useState('editor')
   const [currentWordCount, setCurrentWordCount] = useState(0)
   const [previewHtml, setPreviewHtml] = useState('')
+  const [seoScore, setSeoScore] = useState({
+    isValid: false,
+    score: 0,
+    checks: {
+      title: false,
+      metaDescription: false,
+      content: false,
+      images: false,
+      headings: false,
+      keywords: false,
+      links: false,
+      wordCount: 0
+    }
+  })
   
   // Utiliser une référence pour suivre les changements sans déclencher de re-rendus
   const htmlOutputRef = useRef(previewHtml)
@@ -472,15 +489,17 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
   useEffect(() => {
     const generatedHtml = generateHtml(article)
     
-    // Mettre à jour seulement si le HTML a changé
-    if (generatedHtml !== htmlOutputRef.current) {
+    // Mettre à jour seulement si le HTML a changé significativement
+    if (generatedHtml !== htmlOutputRef.current && 
+        (htmlOutputRef.current === null || 
+         Math.abs(generatedHtml.length - htmlOutputRef.current.length) > 2)) {
+      
       htmlOutputRef.current = generatedHtml
       setPreviewHtml(generatedHtml)
-      // Utiliser un timeout pour éviter les boucles de mise à jour
-      const timer = setTimeout(() => {
-        onChange(generatedHtml, currentWordCount)
-      }, 0)
-      return () => clearTimeout(timer)
+      
+      // Au lieu d'utiliser un setTimeout, appelons le onChange directement
+      // mais uniquement si le contenu a réellement changé de façon significative
+      onChange(generatedHtml, currentWordCount)
     }
   }, [article, generateHtml, onChange, currentWordCount])
   
@@ -629,44 +648,144 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
     }))
   }
   
-  // Obtenir des recommandations SEO
-  const getSeoRecommendations = () => {
-    const recommendations = []
+  // Analyser le SEO du contenu
+  const analyzeSEO = useCallback(() => {
+    // Vérification du titre
+    const titleValid = article.title.length >= 40 && article.title.length <= 60
     
-    // Vérifier la longueur du titre
-    if (article.title.length < 40 || article.title.length > 60) {
-      recommendations.push(`Le titre devrait être entre 40 et 60 caractères (actuellement ${article.title.length})`)
+    // Vérification de la meta description (on suppose qu'elle est définie ailleurs)
+    const metaDescriptionValid = true // Par défaut, pas de vérification
+    
+    // Vérification du contenu (nombre de mots)
+    const contentValid = currentWordCount >= 300
+    
+    // Vérification des images
+    const imagesValid = Boolean(article.mainImage.url && article.mainImage.alt)
+    
+    // Vérification des sous-titres
+    const h2Count = article.sections.length
+    const h3Count = article.sections.reduce((count, section) => 
+      count + section.subsections.length, 0)
+    const headingsValid = (h2Count + h3Count) >= 2
+    
+    // Vérification des liens (approximation)
+    const introLinks = (article.introduction.match(/<a\s+(?:[^>]*?\s+)?href/gi) || []).length
+    const sectionLinks = article.sections.reduce((count, section) => {
+      const sectionLinks = (section.content.match(/<a\s+(?:[^>]*?\s+)?href/gi) || []).length
+      const subsectionLinks = section.subsections.reduce((subCount, subsection) => {
+        return subCount + (subsection.content.match(/<a\s+(?:[^>]*?\s+)?href/gi) || []).length
+      }, 0)
+      return count + sectionLinks + subsectionLinks
+    }, 0)
+    const conclusionLinks = (article.conclusion.match(/<a\s+(?:[^>]*?\s+)?href/gi) || []).length
+    const linksValid = (introLinks + sectionLinks + conclusionLinks) >= 2
+    
+    // Vérification des mots-clés
+    const keywordsValid = article.tags.length >= 2
+    
+    // Calcul du score SEO
+    const checks = {
+      title: titleValid,
+      metaDescription: metaDescriptionValid,
+      content: contentValid,
+      images: imagesValid,
+      headings: headingsValid,
+      keywords: keywordsValid,
+      links: linksValid,
+      wordCount: currentWordCount
     }
     
-    // Vérifier l'image principale
-    if (!article.mainImage.url) {
-      recommendations.push('Ajoutez une image principale avec texte alternatif')
-    } else if (!article.mainImage.alt) {
-      recommendations.push('Ajoutez un texte alternatif pour l\'image principale')
-    }
+    const checkValues = Object.values(checks).filter(val => typeof val === 'boolean')
+    const passedChecks = checkValues.filter(Boolean).length
+    const score = Math.round((passedChecks / checkValues.length) * 100)
     
-    // Vérifier l'introduction
-    if (article.introduction.length < 100) {
-      recommendations.push("L'introduction devrait faire au moins 100 caractères")
-    }
-    
-    // Vérifier le nombre de sections
-    if (article.sections.length < 2) {
-      recommendations.push('Ajoutez au moins 2 sections (H2) à votre article')
-    }
-    
-    // Vérifier la longueur totale
-    if (currentWordCount < 300) {
-      recommendations.push(`L'article est trop court (${currentWordCount} mots). Visez au moins 300 mots`)
-    }
-    
-    // Vérifier les tags
-    if (article.tags.length < 2) {
-      recommendations.push('Ajoutez au moins 2 tags pour améliorer le référencement')
-    }
-    
-    return recommendations
-  }
+    setSeoScore({
+      isValid: score >= 70,
+      score,
+      checks
+    })
+  }, [article, currentWordCount])
+  
+  // Mettre à jour l'analyse SEO quand l'article change
+  useEffect(() => {
+    analyzeSEO()
+  }, [article, analyzeSEO])
+  
+  // Composant pour l'analyse SEO - réplication du SEOScoreIndicator du BlogPostForm
+  const SEOAnalyzer = () => (
+    <div className="bg-white p-4 border rounded-lg">
+      <h3 className="text-lg font-semibold mb-3">Score SEO : {seoScore.score}%</h3>
+      <div className="w-full h-2 bg-gray-200 rounded-full mb-4">
+        <div 
+          className={`h-2 rounded-full ${
+            seoScore.score < 50 ? 'bg-red-500' : 
+            seoScore.score < 70 ? 'bg-yellow-500' : 'bg-green-500'
+          }`}
+          style={{ width: `${seoScore.score}%` }}
+        ></div>
+      </div>
+      
+      <div className="grid gap-2">
+        <div className={`flex items-center ${seoScore.checks.title ? 'text-green-600' : 'text-red-600'}`}>
+          <span className="mr-2">{seoScore.checks.title ? '✓' : '×'}</span>
+          <span>Titre SEO ({article.title.length}/60 caractères)</span>
+        </div>
+        
+        <div className={`flex items-center ${seoScore.checks.metaDescription ? 'text-green-600' : 'text-red-600'}`}>
+          <span className="mr-2">{seoScore.checks.metaDescription ? '✓' : '×'}</span>
+          <span>Meta description (sera validée lors de l'intégration)</span>
+        </div>
+        
+        <div className={`flex items-center ${seoScore.checks.content ? 'text-green-600' : 'text-red-600'}`}>
+          <span className="mr-2">{seoScore.checks.content ? '✓' : '×'}</span>
+          <span>Longueur du contenu ({seoScore.checks.wordCount} mots, min. 300)</span>
+        </div>
+        
+        <div className={`flex items-center ${seoScore.checks.headings ? 'text-green-600' : 'text-red-600'}`}>
+          <span className="mr-2">{seoScore.checks.headings ? '✓' : '×'}</span>
+          <span>Structure des titres (H2, H3)</span>
+        </div>
+        
+        <div className={`flex items-center ${seoScore.checks.keywords ? 'text-green-600' : 'text-red-600'}`}>
+          <span className="mr-2">{seoScore.checks.keywords ? '✓' : '×'}</span>
+          <span>Présence des mots-clés dans le contenu</span>
+        </div>
+        
+        <div className={`flex items-center ${seoScore.checks.links ? 'text-green-600' : 'text-red-600'}`}>
+          <span className="mr-2">{seoScore.checks.links ? '✓' : '×'}</span>
+          <span>Liens (au moins 2 liens recommandés)</span>
+        </div>
+        
+        <div className={`flex items-center ${seoScore.checks.images ? 'text-green-600' : 'text-red-600'}`}>
+          <span className="mr-2">{seoScore.checks.images ? '✓' : '×'}</span>
+          <span>Images avec texte alternatif</span>
+        </div>
+      </div>
+      
+      <div className="mt-4 text-sm bg-blue-50 p-3 rounded border border-blue-200">
+        <div className="font-semibold mb-1">Schema Markup généré :</div>
+        <div className="text-xs overflow-x-auto">
+          <pre>
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              "headline": article.title,
+              "image": article.mainImage.url,
+              "description": "À remplir dans le formulaire principal",
+              "keywords": article.tags.join(', '),
+              "wordCount": currentWordCount,
+              "datePublished": new Date().toISOString().split('T')[0],
+              "dateModified": new Date().toISOString().split('T')[0],
+              "author": {
+                "@type": "Person",
+                "name": "Auteur"
+              }
+            }, null, 2)}
+          </pre>
+        </div>
+      </div>
+    </div>
+  )
   
   const [isApplying, setIsApplying] = useState(false)
   
@@ -715,10 +834,12 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
               HTML
             </button>
             <button 
-              className={`tab-trigger ${activeTab === 'seo' ? 'active' : ''}`} 
-              onClick={() => setActiveTab('seo')}
+              className={`tab-trigger ${activeTab === 'analyzer' ? 'active' : ''} `} 
+              onClick={() => setActiveTab('analyzer')}
+              data-tab="analyzer"
             >
-              Analyse SEO
+              
+              <span>Analyse SEO</span>
             </button>
           </div>
         )}
@@ -1105,7 +1226,7 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
                                                                   elements: (sub.elements || []).map(el => 
                                                                     el.id === element.id 
                                                                       ? { ...el, items: newItems } 
-                                                                      : el
+                                                                    : el
                                                                   ) 
                                                                 } 
                                                               : sub
@@ -1367,33 +1488,8 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
               </button>
             </div>
             
-            <div className={`tab-content ${activeTab === 'seo' ? 'block' : 'hidden'}`}>
-              <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="text-blue-800 font-medium mb-2">Informations SEO</h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2">
-                      <span className="font-medium">Nombre de mots:</span> {currentWordCount} 
-                      <span className={`text-xs rounded-full px-2 py-0.5 ${
-                        currentWordCount < 300 
-                          ? 'bg-red-100 text-red-800' 
-                          : currentWordCount < 600 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : 'bg-green-100 text-green-800'
-                      }`}>
-                        {currentWordCount < 300 
-                          ? 'Trop court' 
-                          : currentWordCount < 600 
-                            ? 'Acceptable' 
-                            : 'Bon'}
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="font-medium">Titre principal</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
+            <div className={`tab-content ${activeTab === 'analyzer' ? 'block' : 'hidden'}`}>
+              <SEOAnalyzer />
             </div>
           </>
         )}
@@ -1426,6 +1522,8 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
           display: flex;
           border-bottom: 1px solid #e2e8f0;
           margin-bottom: 1rem;
+          flex-wrap: wrap;
+          gap: 0.25rem;
         }
         
         .tab-trigger {
@@ -1456,6 +1554,18 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
           width: 100%;
           height: 2px;
           background-color: #3b82f6;
+        }
+        
+        /* Style spécial pour l'onglet Analyse SEO lorsqu'il est actif */
+        .tab-trigger[data-tab="analyzer"].active {
+          background-color: #dbeafe;
+          border-color: #2563eb;
+          color: #1e40af;
+        }
+        
+        .tab-trigger[data-tab="analyzer"].active::after {
+          background-color: #2563eb;
+          height: 3px;
         }
         
         .btn {

@@ -429,6 +429,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
     const passedChecks = checkValues.filter(Boolean).length
     const score = Math.round((passedChecks / checkValues.length) * 100)
     
+    // Le score SEO est maintenant accessible dans la modale de l'assistant SEO plutôt qu'affiché directement ici
     setSeoScore({
       isValid: score >= 70,
       score,
@@ -578,82 +579,6 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
 
   const title = isEditMode ? 'Modifier l\'article de blog' : 'Créer un nouvel article de blog'
   const submitButtonText = isEditMode ? 'Mettre à jour' : 'Créer'
-  
-  // Composant pour afficher le score SEO
-  const SEOScoreIndicator = () => (
-    <div className="bg-white p-4 border rounded-lg mt-4">
-      <h3 className="text-lg font-semibold mb-3">Score SEO : {seoScore.score}%</h3>
-      <div className="w-full h-2 bg-gray-200 rounded-full mb-4">
-        <div 
-          className={`h-2 rounded-full ${
-            seoScore.score < 50 ? 'bg-red-500' : 
-            seoScore.score < 70 ? 'bg-yellow-500' : 'bg-green-500'
-          }`}
-          style={{ width: `${seoScore.score}%` }}
-        ></div>
-      </div>
-      
-      <div className="grid gap-2">
-        <div className={`flex items-center ${seoScore.checks.title ? 'text-green-600' : 'text-red-600'}`}>
-          <span className="mr-2">{seoScore.checks.title ? '✓' : '×'}</span>
-          <span>Titre SEO ({watch('title')?.length || 0}/60 caractères)</span>
-        </div>
-        
-        <div className={`flex items-center ${seoScore.checks.metaDescription ? 'text-green-600' : 'text-red-600'}`}>
-          <span className="mr-2">{seoScore.checks.metaDescription ? '✓' : '×'}</span>
-          <span>Meta description ({watch('metaDescription')?.length || 0}/160 caractères)</span>
-        </div>
-        
-        <div className={`flex items-center ${seoScore.checks.content ? 'text-green-600' : 'text-red-600'}`}>
-          <span className="mr-2">{seoScore.checks.content ? '✓' : '×'}</span>
-          <span>Longueur du contenu ({seoScore.checks.wordCount} mots, min. 300)</span>
-        </div>
-        
-        <div className={`flex items-center ${seoScore.checks.headings ? 'text-green-600' : 'text-red-600'}`}>
-          <span className="mr-2">{seoScore.checks.headings ? '✓' : '×'}</span>
-          <span>Structure des titres (H2, H3)</span>
-        </div>
-        
-        <div className={`flex items-center ${seoScore.checks.keywords ? 'text-green-600' : 'text-red-600'}`}>
-          <span className="mr-2">{seoScore.checks.keywords ? '✓' : '×'}</span>
-          <span>Présence des mots-clés dans le contenu</span>
-        </div>
-        
-        <div className={`flex items-center ${seoScore.checks.links ? 'text-green-600' : 'text-red-600'}`}>
-          <span className="mr-2">{seoScore.checks.links ? '✓' : '×'}</span>
-          <span>Liens (au moins 2 liens recommandés)</span>
-        </div>
-        
-        <div className={`flex items-center ${seoScore.checks.images ? 'text-green-600' : 'text-red-600'}`}>
-          <span className="mr-2">{seoScore.checks.images ? '✓' : '×'}</span>
-          <span>Images avec texte alternatif</span>
-        </div>
-      </div>
-      
-      <div className="mt-4 text-sm bg-blue-50 p-3 rounded border border-blue-200">
-        <div className="font-semibold mb-1">Schema Markup généré :</div>
-        <div className="text-xs overflow-x-auto">
-          <pre>
-            {JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "BlogPosting",
-              "headline": watch('title'),
-              "image": watch('imageUrl'),
-              "description": watch('metaDescription'),
-              "keywords": watch('tags')?.join(', '),
-              "wordCount": seoScore.checks.wordCount,
-              "datePublished": new Date().toISOString().split('T')[0],
-              "dateModified": new Date().toISOString().split('T')[0],
-              "author": {
-                "@type": "Person",
-                "name": "Auteur"
-              }
-            }, null, 2)}
-          </pre>
-        </div>
-      </div>
-    </div>
-  )
   
   return (
     <div className="page-container">
@@ -817,22 +742,14 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
                     Analyser le contenu
                   </button>
                 </div>
+                <div className="text-xs text-blue-600 mt-1 italic">
+                  L'analyse SEO complète est disponible dans l'onglet "Analyse SEO" de l'assistant SEO.
+                </div>
               </div>
               {errors.text && (
                 <p className="error-message">{errors.text.message}</p>
               )}
-              <div className="text-xs text-gray-500 mt-1">
-                Conseils SEO:
-                <ul className="list-disc pl-5 mt-1">
-                  <li>Ajoutez au moins 2 sous-titres (H2, H3)</li>
-                  <li>Incluez au moins 2 liens internes ou externes</li>
-                  <li>Utilisez vos mots-clés dans le premier paragraphe</li>
-                  <li>Visez au moins 300 mots pour le contenu complet</li>
-                </ul>
-              </div>
             </div>
-            
-            <SEOScoreIndicator />
           </div>
           
           <div className="form-actions">

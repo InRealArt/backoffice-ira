@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react'
-import { Code, ClipboardCheck, UserCheck } from 'lucide-react'
+import { Code, ClipboardCheck, UserCheck, BarChart2 } from 'lucide-react'
 import Modal from '../Common/Modal'
 import SEOContentGenerator, { ArticleContent } from './SEOContentGenerator'
 import styles from './SEOModal.module.scss'
@@ -76,31 +76,14 @@ const formatHTMLWithIndent = (html: string): string => {
 }
 
 interface SEOModalGeneratorProps {
-  onContentGenerated?: (html: string) => void
+  onContentGenerated: (html: string) => void
   initialData?: Partial<ArticleContent>
 }
 
-// PreviewContent component avec React.memo pour éviter les rendus inutiles
-const PreviewContent = memo(({ html }: { html: string }) => {
-  if (!html) {
-    return (
-      <div className="flex flex-col items-center justify-center h-80 text-gray-400">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-          <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-        <p className="mt-4 text-center">
-          Créez du contenu dans l'onglet Éditeur pour visualiser l'aperçu ici
-        </p>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
-  );
+// Rendu memoïsé du contenu d'aperçu pour éviter les rendus inutiles
+const PreviewContent = memo(function PreviewContent({ html }: { html: string }) {
+  return <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: html }} />;
 });
-
 PreviewContent.displayName = 'PreviewContent';
 
 export default function SEOModalGenerator({ 
@@ -120,49 +103,51 @@ export default function SEOModalGenerator({
   const handleClose = () => setIsOpen(false)
   
   const handleContentChange = useCallback((html: string, wordCount?: number) => {
-    // S'assurer que le HTML est trimmé avant d'être formaté
-    const trimmedHtml = html.trim()
-    
-    // Appliquer le formatage HTML dès qu'un nouveau contenu est généré
-    const formattedHtml = formatHTMLWithIndent(trimmedHtml)
-    
-    // S'assurer que le HTML généré est à jour immédiatement
-    setGeneratedHtml(prevHtml => {
-      // Vérifier si le HTML a réellement changé pour éviter des rendus inutiles
-      if (prevHtml !== formattedHtml) {
-        return formattedHtml;
+    // Mise à jour du HTML
+    if (html.trim() !== generatedHtml.trim()) {
+      // Formater le HTML pour une meilleure lisibilité
+      const formattedHtml = html.trim()
+      
+      // S'assurer que le HTML généré est à jour immédiatement
+      setGeneratedHtml(formattedHtml)
+      
+      // Mettre à jour le callback parent si fourni
+      // Nous l'appelons seulement si le HTML a significativement changé
+      // pour éviter les boucles de rendu infinies
+      if (onContentGenerated && Math.abs(formattedHtml.length - generatedHtml.length) > 2) {
+        onContentGenerated(formattedHtml)
       }
-      return prevHtml;
-    });
-    
-    if (wordCount !== undefined) {
-      setCurrentWordCount(wordCount);
     }
-  }, []);
+    
+    // Mise à jour du compteur de mots
+    if (wordCount !== undefined) {
+      setCurrentWordCount(wordCount)
+    }
+  }, [generatedHtml, onContentGenerated])
   
   const handleCopyHtml = useCallback(() => {
     // S'assurer que le HTML est propre avant de le formater
     const trimmedHtml = generatedHtml.trim()
     
     // Formater le HTML avant de le copier
-    const formattedHtml = formatHTMLWithIndent(trimmedHtml)
-    
-    navigator.clipboard.writeText(formattedHtml)
+    navigator.clipboard.writeText(trimmedHtml)
       .then(() => {
         setIsCopied(true)
         
-        // Réinitialiser l'état de copie après 2 secondes
+        // Annuler le timer précédent si existant
         if (copyTimerRef.current) {
           clearTimeout(copyTimerRef.current)
         }
         
+        // Réinitialiser après 2 secondes
         copyTimerRef.current = setTimeout(() => {
           setIsCopied(false)
+          copyTimerRef.current = null
         }, 2000)
         
+        // Si un callback est fourni, l'appeler avec le HTML
         if (onContentGenerated) {
-          // Passer le HTML formaté au callback
-          onContentGenerated(formattedHtml)
+          onContentGenerated(trimmedHtml)
         }
       })
       .catch(err => console.error('Erreur lors de la copie: ', err))
@@ -204,7 +189,7 @@ export default function SEOModalGenerator({
       <button 
         onClick={handleOpen}
         type="button"
-        className="btn btn-primary flex items-center gap-2"
+        className="btn btn-primary flex items-center gap-2 btn-medium"
       >
         <Code size={20} />
         Assistant SEO
@@ -217,26 +202,33 @@ export default function SEOModalGenerator({
       >
         <div className={styles.seoModalContainer}>
           <div className={styles.tabsList}>
-            <button 
+            <button
               className={`${styles.tabTrigger} ${activeTab === 'editor' ? styles.active : ''}`} 
               onClick={() => handleTabChange('editor')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 inline-block"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
               Éditeur SEO
             </button>
-            <button 
+            <button
               className={`${styles.tabTrigger} ${activeTab === 'preview' ? styles.active : ''}`} 
               onClick={() => handleTabChange('preview')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 inline-block"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               Aperçu
             </button>
-            <button 
+            <button
               className={`${styles.tabTrigger} ${activeTab === 'html' ? styles.active : ''}`} 
               onClick={() => handleTabChange('html')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 inline-block"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
               HTML
+            </button>
+            <button
+              className={`${styles.tabTrigger} ${activeTab === 'analyzer' ? styles.active : ''}`} 
+              onClick={() => handleTabChange('analyzer')}
+            >
+              <BarChart2 size={16} className="mr-2" />
+              Analyse SEO
             </button>
           </div>
           
@@ -283,6 +275,89 @@ export default function SEOModalGenerator({
                   </p>
                 </div>
               )}
+            </div>
+            
+            <div className={styles.tabContent} style={{ display: activeTab === 'analyzer' ? 'block' : 'none' }}>
+              <div className="p-6 border rounded-lg shadow-sm bg-white overflow-auto" style={{ minHeight: '400px' }}>
+                <h3 className="text-lg font-semibold mb-3">Score SEO : {currentWordCount < 300 ? 40 : currentWordCount < 600 ? 70 : 90}%</h3>
+                <div className="w-full h-2 bg-gray-200 rounded-full mb-4">
+                  <div 
+                    className={`h-2 rounded-full ${
+                      currentWordCount < 300 ? 'bg-red-500' : 
+                      currentWordCount < 600 ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}
+                    style={{ width: `${currentWordCount < 300 ? 40 : currentWordCount < 600 ? 70 : 90}%` }}
+                  ></div>
+                </div>
+                
+                <div className="grid gap-2">
+                  <div className={`flex items-center ${generatedHtml.length > 0 && generatedHtml.includes('<h1') ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className="mr-2">{generatedHtml.length > 0 && generatedHtml.includes('<h1') ? '✓' : '×'}</span>
+                    <span>Titre principal</span>
+                  </div>
+                  
+                  <div className={`flex items-center ${currentWordCount >= 300 ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className="mr-2">{currentWordCount >= 300 ? '✓' : '×'}</span>
+                    <span>Longueur du contenu ({currentWordCount} mots, min. 300)</span>
+                  </div>
+                  
+                  <div className={`flex items-center ${generatedHtml.includes('<h2') || generatedHtml.includes('<h3') ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className="mr-2">{generatedHtml.includes('<h2') || generatedHtml.includes('<h3') ? '✓' : '×'}</span>
+                    <span>Structure des titres (H2, H3)</span>
+                  </div>
+                  
+                  <div className={`flex items-center ${initialData?.tags && initialData.tags.length >= 2 ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className="mr-2">{initialData?.tags && initialData.tags.length >= 2 ? '✓' : '×'}</span>
+                    <span>Présence des mots-clés</span>
+                  </div>
+                  
+                  <div className={`flex items-center ${generatedHtml.includes('<a ') && (generatedHtml.match(/<a /g) || []).length >= 2 ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className="mr-2">{generatedHtml.includes('<a ') && (generatedHtml.match(/<a /g) || []).length >= 2 ? '✓' : '×'}</span>
+                    <span>Liens (au moins 2 liens recommandés)</span>
+                  </div>
+                  
+                  <div className={`flex items-center ${generatedHtml.includes('<img ') ? 'text-green-600' : 'text-red-600'}`}>
+                    <span className="mr-2">{generatedHtml.includes('<img ') ? '✓' : '×'}</span>
+                    <span>Images avec texte alternatif</span>
+                  </div>
+                </div>
+                
+                <div className="mt-4 text-sm bg-blue-50 p-3 rounded border border-blue-200">
+                  <div className="font-semibold mb-1">Schema Markup généré :</div>
+                  <div className="text-xs overflow-x-auto">
+                    <pre>
+                      {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "BlogPosting",
+                        "headline": initialData?.title || "Titre de l'article",
+                        "image": initialData?.mainImage?.url || "",
+                        "keywords": initialData?.tags?.join(', ') || "",
+                        "wordCount": currentWordCount,
+                        "datePublished": new Date().toISOString().split('T')[0],
+                        "dateModified": new Date().toISOString().split('T')[0],
+                        "author": {
+                          "@type": "Person",
+                          "name": "Auteur"
+                        }
+                      }, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+                
+                {/* Conseils SEO */}
+                <div className="mt-4 border-t border-gray-200 pt-4">
+                  <h4 className="font-medium text-blue-800 mb-2">Conseils SEO :</h4>
+                  <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+                    <li>Ajoutez au moins 2 sous-titres (H2, H3) pour structurer votre contenu</li>
+                    <li>Incluez au moins 2 liens internes ou externes pour améliorer le référencement</li>
+                    <li>Utilisez vos mots-clés dans le premier paragraphe pour le positionnement</li>
+                    <li>Visez au moins 300 mots pour le contenu complet (idéalement 600+)</li>
+                    <li>Assurez-vous que toutes les images ont un texte alternatif descriptif</li>
+                    <li>Incluez vos mots-clés dans les titres et sous-titres</li>
+                    <li>Rédigez un meta description entre 120 et 160 caractères incluant vos mots-clés</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
           
