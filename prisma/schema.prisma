@@ -863,16 +863,29 @@ model DetailedGlossaryItem {
 }
 
 model PresaleArtwork {
-  id       Int    @id @default(autoincrement())
-  name     String
+  id          Int     @id @default(autoincrement())
+  name        String
   description String?
-  order     Int?
-  artistId  Int
-  price     Int
-  imageUrl    String   @unique
-  mockupUrls  Json     @default("[]")
-  artist   Artist @relation(fields: [artistId], references: [id])
+  order       Int?
+  artistId    Int
+  price       Int
+  imageUrl    String  @unique
+  mockupUrls  Json    @default("[]")
+  artist      Artist  @relation(fields: [artistId], references: [id])
 
   @@index([artistId])
+  @@schema("landing")
+}
+
+model BlogPost {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  readingTime Int
+  tags        Json     @default("[]")
+  imageUrl    String
+  title       String
+  text        String
+  viewsCount  Int      @default(0)
+
   @@schema("landing")
 }
