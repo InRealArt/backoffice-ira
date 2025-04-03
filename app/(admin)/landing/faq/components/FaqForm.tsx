@@ -7,6 +7,7 @@ import { createFaq, updateFaq } from '@/lib/actions/faq-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { toast } from 'react-hot-toast'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
+import TranslationField from '@/app/components/TranslationField'
 
 interface FaqFormProps {
   mode: 'create' | 'edit'
@@ -152,10 +153,13 @@ export default function FaqForm({ mode, faq }: FaqFormProps) {
       <form onSubmit={handleSubmit} className="form-container">
         <div className="form-card">
           <div className="card-content">
-            <div className="form-group">
-              <label htmlFor="question" className="form-label">
-                Question <span className="text-danger">*</span>
-              </label>
+            <TranslationField
+              entityType="Faq"
+              entityId={mode === 'edit' ? faq?.id || null : null}
+              field="question"
+              label={<>Question <span className="text-danger">*</span></>}
+              errorMessage={errors.question}
+            >
               <input
                 id="question"
                 name="question"
@@ -166,15 +170,16 @@ export default function FaqForm({ mode, faq }: FaqFormProps) {
                 disabled={isFormDisabled}
                 placeholder="Saisissez la question"
               />
-              {errors.question && (
-                <p className="form-error">{errors.question}</p>
-              )}
-            </div>
+            </TranslationField>
             
-            <div className="form-group mt-4">
-              <label htmlFor="answer" className="form-label">
-                Réponse <span className="text-danger">*</span>
-              </label>
+            <TranslationField
+              entityType="Faq"
+              entityId={mode === 'edit' ? faq?.id || null : null}
+              field="answer"
+              label={<>Réponse <span className="text-danger">*</span></>}
+              errorMessage={errors.answer}
+              className="mt-4"
+            >
               <textarea
                 id="answer"
                 name="answer"
@@ -185,13 +190,11 @@ export default function FaqForm({ mode, faq }: FaqFormProps) {
                 rows={5}
                 placeholder="Saisissez la réponse"
               />
-              {errors.answer && (
-                <p className="form-error">{errors.answer}</p>
-              )}
               <p className="form-help">
                 Vous pouvez utiliser du texte enrichi pour la mise en forme de la réponse.
               </p>
-            </div>
+            </TranslationField>
+            
             <div className="form-group mt-4">
               <label htmlFor="order" className="form-label">
                 Ordre

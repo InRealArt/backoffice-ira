@@ -7,7 +7,7 @@ interface TranslationFieldProps {
   entityType: string
   entityId: number | null
   field: string
-  label: string
+  label: React.ReactNode
   languageCode?: string
   children: React.ReactNode
   className?: string

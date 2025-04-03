@@ -14,7 +14,8 @@ import {
 } from '@/lib/actions/glossary-actions'
 import { DetailedGlossaryHeader, DetailedGlossaryItem } from '@prisma/client'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
-
+import TranslationField from '@/app/components/TranslationField'
+import TranslationIcon from '@/app/components/TranslationIcon'
 // Interface pour les données incluant glossaryItems
 interface DetailedGlossaryHeaderWithItems extends DetailedGlossaryHeader {
   glossaryItems: DetailedGlossaryItem[]
@@ -227,8 +228,13 @@ export default function DetailedGlossaryEditForm({ glossaryHeader }: DetailedGlo
             
             {isEditingHeader ? (
               <form onSubmit={handleSubmitHeader(onSubmitHeader)} className="mt-md">
-                <div className="form-group">
-                  <label htmlFor="name" className="form-label">Nom de la section</label>
+                <TranslationField
+                  entityType="DetailedGlossaryHeader"
+                  entityId={glossaryHeader.id}
+                  field="name"
+                  label="Nom de la section"
+                  errorMessage={headerErrors.name?.message}
+                >
                   <input
                     id="name"
                     type="text"
@@ -236,10 +242,7 @@ export default function DetailedGlossaryEditForm({ glossaryHeader }: DetailedGlo
                     className={`form-input ${headerErrors.name ? 'input-error' : ''}`}
                     placeholder="Nom de la section"
                   />
-                  {headerErrors.name && (
-                    <p className="form-error">{headerErrors.name.message}</p>
-                  )}
-                </div>
+                </TranslationField>
                 
                 <div className="d-flex gap-md mt-md">
                   <button
@@ -263,7 +266,16 @@ export default function DetailedGlossaryEditForm({ glossaryHeader }: DetailedGlo
               <div className="info-display mt-md">
                 <div className="info-item">
                   <span className="info-label"><b>Nom de la section : </b></span>
-                  <span className="info-value">{glossaryHeader.name}</span>
+                  <span className="info-value">
+                    {glossaryHeader.name}
+                    <TranslationIcon 
+                      entityType="DetailedGlossaryHeader" 
+                      entityId={glossaryHeader.id} 
+                      field="name" 
+                      languageCode="en"
+                      className="ml-sm"
+                    />
+                  </span>
                 </div>
                 <div className="info-item">
                   <span className="info-label"><b>Nombre de questions : </b></span>
@@ -295,11 +307,16 @@ export default function DetailedGlossaryEditForm({ glossaryHeader }: DetailedGlo
               padding: '16px', 
               marginTop: '16px' 
             }}>
-              <div className="form-group mt-sm">
-                <label htmlFor="question" className="form-label d-flex align-items-center">
+              <TranslationField
+                entityType="DetailedGlossaryItem"
+                entityId={null}
+                field="question"
+                label={<div className="d-flex align-items-center">
                   <span style={{ color: '#6366f1', marginRight: '8px' }}>Q:</span>
                   Question
-                </label>
+                </div>}
+                className="mt-sm"
+              >
                 <input
                   id="question"
                   type="text"
@@ -309,13 +326,18 @@ export default function DetailedGlossaryEditForm({ glossaryHeader }: DetailedGlo
                   placeholder="Ex: Comment acheter un NFT?"
                   style={{ borderColor: '#d1d5db' }}
                 />
-              </div>
+              </TranslationField>
               
-              <div className="form-group mt-md">
-                <label htmlFor="answer" className="form-label d-flex align-items-center">
+              <TranslationField
+                entityType="DetailedGlossaryItem"
+                entityId={null}
+                field="answer"
+                label={<div className="d-flex align-items-center">
                   <span style={{ color: '#6366f1', marginRight: '8px' }}>R:</span>
                   Réponse
-                </label>
+                </div>}
+                className="mt-md"
+              >
                 <textarea
                   id="answer"
                   value={newAnswer}
@@ -325,7 +347,7 @@ export default function DetailedGlossaryEditForm({ glossaryHeader }: DetailedGlo
                   placeholder="Réponse détaillée à la question..."
                   style={{ borderColor: '#d1d5db' }}
                 />
-              </div>
+              </TranslationField>
               
               <div className="d-flex justify-content-end mt-md">
                 <button
@@ -380,6 +402,13 @@ export default function DetailedGlossaryEditForm({ glossaryHeader }: DetailedGlo
                       }}>
                         <span style={{ marginRight: '8px', color: '#6366f1' }}>{index + 1}.</span>
                         {item.question}
+                        <TranslationIcon
+                          entityType="DetailedGlossaryItem" 
+                          entityId={item.id} 
+                          field="question" 
+                          languageCode="en"
+                          className="ml-sm"
+                        />
                       </h4>
                       <button
                         type="button"
@@ -414,10 +443,20 @@ export default function DetailedGlossaryEditForm({ glossaryHeader }: DetailedGlo
                         color: '#4b5563',
                         lineHeight: '1.5',
                         marginTop: '4px',
-                        whiteSpace: 'pre-line'
+                        whiteSpace: 'pre-line',
+                        position: 'relative'
                       }}
                     >
                       {item.answer}
+                      <div style={{ position: 'absolute', top: '4px', right: '4px' }}>
+                        <TranslationIcon 
+                          entityType="DetailedGlossaryItem" 
+                          entityId={item.id} 
+                          field="answer" 
+                          languageCode="en"
+                          className="ml-sm"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
