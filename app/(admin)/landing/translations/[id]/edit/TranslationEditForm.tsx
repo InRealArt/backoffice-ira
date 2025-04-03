@@ -71,13 +71,23 @@ export default function TranslationEditForm({ translation, languages, models }: 
       const model = models.find(m => m.name === watchEntityType)
       if (model) {
         setAvailableFields(model.fields)
+        
+        // Réinitialiser le champ si le champ actuel n'est pas disponible dans le nouveau modèle
+        const currentField = watch('field')
+        const fieldExists = model.fields.some(f => f.name === currentField)
+        
+        if (!fieldExists) {
+          setValue('field', '')
+        }
       } else {
         setAvailableFields([])
+        setValue('field', '')
       }
     } else {
       setAvailableFields([])
+      setValue('field', '')
     }
-  }, [watchEntityType, models])
+  }, [watchEntityType, models, setValue, watch])
   
   // Initialiser les champs disponibles au chargement du composant
   useEffect(() => {
@@ -91,6 +101,19 @@ export default function TranslationEditForm({ translation, languages, models }: 
     setIsSubmitting(true)
     
     try {
+      // S'assurer que le champ existe bien dans les champs disponibles
+      const model = models.find(m => m.name === data.entityType)
+      const isFieldValid = model?.fields.some(f => f.name === data.field)
+      
+      if (!isFieldValid) {
+        toast.error('Le champ sélectionné n\'est pas valide pour ce type d\'entité')
+        setIsSubmitting(false)
+        return
+      }
+      
+      // Afficher les données avant envoi pour débogage
+      console.log('Données à envoyer:', data)
+      
       const result = await updateTranslation(translation.id, data)
       
       if (result.success) {
@@ -167,9 +190,12 @@ export default function TranslationEditForm({ translation, languages, models }: 
               <label htmlFor="field" className="form-label">Champ</label>
               <select
                 id="field"
-                {...register('field')}
                 className={`form-select ${errors.field ? 'input-error' : ''}`}
                 disabled={availableFields.length === 0}
+                value={watch('field')}
+                onChange={(e) => {
+                  setValue('field', e.target.value, { shouldValidate: true })
+                }}
               >
                 <option value="">Sélectionnez un champ</option>
                 {availableFields.map((field) => (
