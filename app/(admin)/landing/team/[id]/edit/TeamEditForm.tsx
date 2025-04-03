@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Team } from '@prisma/client'
 import { updateTeamMember } from '@/lib/actions/team-actions'
+import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { toast } from 'react-hot-toast'
 import Image from 'next/image'
 import { z } from 'zod'
@@ -94,6 +95,18 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
       
       if (result.success) {
         toast.success('Membre d\'équipe mis à jour avec succès')
+        
+        // Gestion des traductions pour le rôle et la description
+        try {
+          // Utiliser la fonction générique pour gérer les traductions
+          await handleEntityTranslations('Team', teamMember.id, {
+            role: data.role || null,
+            description: data.description || null
+          })
+        } catch (translationError) {
+          console.error('Erreur lors de la gestion des traductions:', translationError)
+          // On ne bloque pas la mise à jour du membre en cas d'erreur de traduction
+        }
         
         // Rediriger après 1 seconde
         setTimeout(() => {

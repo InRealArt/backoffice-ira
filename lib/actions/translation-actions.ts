@@ -19,6 +19,96 @@ type ActionResult = {
     translation?: any
 }
 
+// Type pour les champs à traduire
+type FieldsToTranslate = {
+    [key: string]: string | null
+}
+
+/**
+ * Gère les traductions pour une entité spécifique sur plusieurs langues
+ * @param entityType - Le type d'entité (ex: "Team", "Faq", etc.)
+ * @param entityId - L'ID de l'entité
+ * @param fields - Objet contenant les champs à traduire avec leurs valeurs
+ * @returns Un objet indiquant le succès ou l'échec de l'opération
+ */
+export async function handleEntityTranslations(
+    entityType: string,
+    entityId: number,
+    fields: FieldsToTranslate
+): Promise<{ success: boolean; message?: string }> {
+    try {
+        // Récupérer les langues FR et EN
+        const frLanguage = await prisma.language.findFirst({
+            where: { code: 'fr' }
+        })
+
+        const enLanguage = await prisma.language.findFirst({
+            where: { code: 'en' }
+        })
+
+        // Traiter chaque champ à traduire
+        for (const [field, value] of Object.entries(fields)) {
+            // Ignorer les champs avec valeur null ou undefined
+            if (value === null || value === undefined) continue
+
+            // CAS LANGUAGE FR
+            if (frLanguage) {
+                // Rechercher s'il existe une traduction
+                const existingTranslationFR = await prisma.translation.findFirst({
+                    where: {
+                        entityType,
+                        entityId,
+                        field,
+                        languageId: frLanguage.id
+                    }
+                })
+
+                // Si la traduction existe, la mettre à jour
+                if (existingTranslationFR) {
+                    await prisma.translation.update({
+                        where: { id: existingTranslationFR.id },
+                        data: { value }
+                    })
+                }
+            }
+
+            // CAS LANGUAGE EN
+            if (enLanguage) {
+                // Rechercher s'il existe une traduction
+                const existingTranslationEN = await prisma.translation.findFirst({
+                    where: {
+                        entityType,
+                        entityId,
+                        field,
+                        languageId: enLanguage.id
+                    }
+                })
+
+                // Si la traduction n'existe pas, la créer
+                if (!existingTranslationEN) {
+                    await prisma.translation.create({
+                        data: {
+                            entityType,
+                            entityId,
+                            field,
+                            value,
+                            languageId: enLanguage.id
+                        }
+                    })
+                }
+            }
+        }
+
+        // Invalider le cache pour la page des traductions
+        revalidatePath('/landing/translations')
+
+        return { success: true }
+    } catch (error) {
+        console.error('Erreur lors de la gestion des traductions:', error)
+        return { success: false, message: 'Erreur lors de la gestion des traductions' }
+    }
+}
+
 // Créer une nouvelle traduction
 export async function createTranslation(data: TranslationData): Promise<ActionResult> {
     try {
