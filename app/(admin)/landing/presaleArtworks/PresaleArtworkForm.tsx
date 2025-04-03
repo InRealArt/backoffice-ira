@@ -17,6 +17,8 @@ import {
   getPresaleArtworkByOrder
 } from '@/lib/actions/presale-artwork-actions'
 import { getAllArtists } from '@/lib/actions/prisma-actions'
+import { handleEntityTranslations } from '@/lib/actions/translation-actions'
+import TranslationField from '@/app/components/TranslationField'
 
 // Schéma de validation
 const presaleArtworkSchema = z.object({
@@ -210,6 +212,20 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
         
         if (result.success) {
           toast.success('Œuvre en prévente créée avec succès')
+          
+          // Gestion des traductions pour name et description
+          try {
+            if (result.presaleArtwork?.id) {
+              await handleEntityTranslations('PresaleArtwork', result.presaleArtwork.id, {
+                name: data.name,
+                description: data.description || null
+              })
+            }
+          } catch (translationError) {
+            console.error('Erreur lors de la gestion des traductions:', translationError)
+            // On ne bloque pas la création en cas d'erreur de traduction
+          }
+          
           router.push('/landing/presaleArtworks')
         } else {
           toast.error(result.message || 'Erreur lors de la création de l\'œuvre en prévente')
@@ -227,6 +243,18 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
         
         if (result.success) {
           toast.success('Œuvre en prévente mise à jour avec succès')
+          
+          // Gestion des traductions pour name et description
+          try {
+            await handleEntityTranslations('PresaleArtwork', presaleArtworkId, {
+              name: data.name,
+              description: data.description || null
+            })
+          } catch (translationError) {
+            console.error('Erreur lors de la gestion des traductions:', translationError)
+            // On ne bloque pas la mise à jour en cas d'erreur de traduction
+          }
+          
           router.push('/landing/presaleArtworks')
         } else {
           toast.error(result.message || 'Erreur lors de la mise à jour de l\'œuvre en prévente')
@@ -294,8 +322,13 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
     <form onSubmit={handleSubmit(onSubmit)} className="form-container">
       <div className="form-card">
         <div className="card-content">
-          <div className="form-group">
-            <label htmlFor="name" className="form-label">Nom de l'œuvre <span className="text-danger">*</span></label>
+          <TranslationField
+            entityType="PresaleArtwork"
+            entityId={mode === 'edit' ? presaleArtworkId || null : null}
+            field="name"
+            label={<>Nom de l'œuvre <span className="text-danger">*</span></>}
+            errorMessage={errors.name?.message}
+          >
             <input
               id="name"
               type="text"
@@ -304,13 +337,15 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
               placeholder="Ex: La Joconde, Les Tournesols..."
               disabled={isSubmitting}
             />
-            {errors.name && (
-              <p className="form-error">{errors.name.message}</p>
-            )}
-          </div>
+          </TranslationField>
           
-          <div className="form-group">
-            <label htmlFor="description" className="form-label">Description</label>
+          <TranslationField
+            entityType="PresaleArtwork"
+            entityId={mode === 'edit' ? presaleArtworkId || null : null}
+            field="description"
+            label="Description"
+            errorMessage={errors.description?.message}
+          >
             <textarea
               id="description"
               {...register('description')}
@@ -319,10 +354,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
               rows={3}
               disabled={isSubmitting}
             />
-            {errors.description && (
-              <p className="form-error">{errors.description.message}</p>
-            )}
-          </div>
+          </TranslationField>
           
           <div className="form-group">
             <label htmlFor="artistId" className="form-label">Artiste <span className="text-danger">*</span></label>
