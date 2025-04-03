@@ -98,8 +98,9 @@ export async function handleEntityTranslations(
                     }
                 })
                 console.log('existingTranslationEN', existingTranslationEN)
-                // Si la traduction n'existe pas, la créer
+
                 if (!existingTranslationEN) {
+                    // Si la traduction n'existe pas, la créer
                     console.log('Create new EN translation')
                     await prisma.translation.create({
                         data: {
@@ -109,6 +110,13 @@ export async function handleEntityTranslations(
                             value: value || '',
                             languageId: enLanguage.id
                         }
+                    })
+                } else if (existingTranslationEN.value === '') {
+                    // Si la traduction existe mais que sa valeur est vide, la mettre à jour
+                    console.log('Update empty EN translation')
+                    await prisma.translation.update({
+                        where: { id: existingTranslationEN.id },
+                        data: { value: value || '' }
                     })
                 }
             }
