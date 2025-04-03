@@ -25,7 +25,7 @@ export default function FaqClient({ faqs }: FaqClientProps) {
   }
 
   const handleAddNewFaq = () => {
-    router.push(`/landing/faq/new`)
+    router.push(`/landing/faq/create`)
   }
 
   const handleDeleteClick = (e: React.MouseEvent, faqId: number) => {

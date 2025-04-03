@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Faq } from '@prisma/client'
 import { createFaq, updateFaq } from '@/lib/actions/faq-actions'
+import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { toast } from 'react-hot-toast'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 
@@ -79,6 +80,20 @@ export default function FaqForm({ mode, faq }: FaqFormProps) {
           
           if (result.success) {
             toast.success('FAQ créée avec succès')
+            
+            // Gestion des traductions pour les champs question et answer
+            try {
+              if (result.faq && result.faq.id) {
+                await handleEntityTranslations('Faq', result.faq.id, {
+                  question: formData.question,
+                  answer: formData.answer
+                })
+              }
+            } catch (translationError) {
+              console.error('Erreur lors de la gestion des traductions:', translationError)
+              // On ne bloque pas la création en cas d'erreur de traduction
+            }
+            
             router.push('/landing/faq')
           } else {
             toast.error(result.message || 'Une erreur est survenue lors de la création')
@@ -89,6 +104,18 @@ export default function FaqForm({ mode, faq }: FaqFormProps) {
           
           if (result.success) {
             toast.success('FAQ mise à jour avec succès')
+            
+            // Gestion des traductions pour les champs question et answer
+            try {
+              await handleEntityTranslations('Faq', faq.id, {
+                question: formData.question,
+                answer: formData.answer
+              })
+            } catch (translationError) {
+              console.error('Erreur lors de la gestion des traductions:', translationError)
+              // On ne bloque pas la mise à jour en cas d'erreur de traduction
+            }
+            
             router.push('/landing/faq')
           } else {
             toast.error(result.message || 'Une erreur est survenue lors de la mise à jour')
