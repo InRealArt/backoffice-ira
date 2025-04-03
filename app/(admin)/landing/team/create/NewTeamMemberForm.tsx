@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createTeamMember } from '@/lib/actions/team-actions'
+import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { toast } from 'react-hot-toast'
 import Image from 'next/image'
 import { z } from 'zod'
@@ -70,6 +71,7 @@ export default function NewTeamMemberForm() {
         lastName: data.lastName,
         email: data.email,
         role: data.role,
+        order: 0,
         intro: data.intro === undefined ? null : data.intro,
         description: data.description === undefined ? null : data.description,
         photoUrl1: data.photoUrl1 === undefined ? null : data.photoUrl1,
@@ -84,8 +86,20 @@ export default function NewTeamMemberForm() {
       
       const result = await createTeamMember(formattedData)
       
-      if (result.success) {
+      if (result.success && result.id) {
         toast.success('Membre d\'équipe créé avec succès')
+        
+        // Gestion des traductions pour le rôle et la description
+        try {
+          // Utiliser la fonction générique pour gérer les traductions
+          await handleEntityTranslations('Team', result.id, {
+            role: data.role || null,
+            description: data.description || null
+          })
+        } catch (translationError) {
+          console.error('Erreur lors de la gestion des traductions:', translationError)
+          // On ne bloque pas la création du membre en cas d'erreur de traduction
+        }
         
         // Rediriger après 1 seconde
         setTimeout(() => {

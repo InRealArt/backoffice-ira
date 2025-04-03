@@ -38,7 +38,7 @@ export default function TeamClient({ teamMembers }: TeamClientProps) {
   }
 
   const handleCreateMember = () => {
-    router.push('/landing/team/new')
+    router.push('/landing/team/create')
   }
   
   return (

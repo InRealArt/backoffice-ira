@@ -49,7 +49,7 @@ export async function handleEntityTranslations(
         // Traiter chaque champ à traduire
         for (const [field, value] of Object.entries(fields)) {
             // Ignorer les champs avec valeur null ou undefined
-            if (value === null || value === undefined) continue
+            // if (value === null || value === undefined) continue
 
             // CAS LANGUAGE FR
             if (frLanguage) {
@@ -62,12 +62,26 @@ export async function handleEntityTranslations(
                         languageId: frLanguage.id
                     }
                 })
+                console.log('existingTranslationFR', existingTranslationFR)
 
-                // Si la traduction existe, la mettre à jour
                 if (existingTranslationFR) {
+                    // Si la traduction existe, la mettre à jour
+                    console.log('Update existingTranslationFR')
                     await prisma.translation.update({
                         where: { id: existingTranslationFR.id },
-                        data: { value }
+                        data: { value: value || '' }
+                    })
+                } else {
+                    // Si la traduction n'existe pas, la créer
+                    console.log('Create new FR translation')
+                    await prisma.translation.create({
+                        data: {
+                            entityType,
+                            entityId,
+                            field,
+                            value: value || '',
+                            languageId: frLanguage.id
+                        }
                     })
                 }
             }
@@ -83,15 +97,16 @@ export async function handleEntityTranslations(
                         languageId: enLanguage.id
                     }
                 })
-
+                console.log('existingTranslationEN', existingTranslationEN)
                 // Si la traduction n'existe pas, la créer
                 if (!existingTranslationEN) {
+                    console.log('Create new EN translation')
                     await prisma.translation.create({
                         data: {
                             entityType,
                             entityId,
                             field,
-                            value,
+                            value: value || '',
                             languageId: enLanguage.id
                         }
                     })
