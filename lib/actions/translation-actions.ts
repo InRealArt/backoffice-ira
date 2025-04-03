@@ -282,4 +282,52 @@ export async function deleteTranslation(id: number): Promise<ActionResult> {
         console.error('Erreur lors de la suppression de la traduction:', error)
         return { success: false, message: 'Erreur serveur' }
     }
+}
+
+/**
+ * Récupère une traduction spécifique par type d'entité, ID d'entité, champ et langue
+ * @param entityType - Le type d'entité (ex: "Team", "Faq", etc.)
+ * @param entityId - L'ID de l'entité
+ * @param field - Le nom du champ à traduire
+ * @param languageCode - Le code de la langue (ex: "en", "fr")
+ * @returns Un objet contenant la traduction ou une erreur
+ */
+export async function getTranslation(
+    entityType: string,
+    entityId: number,
+    field: string,
+    languageCode: string
+): Promise<ActionResult> {
+    try {
+        // Récupérer la langue par son code
+        const language = await prisma.language.findFirst({
+            where: { code: languageCode }
+        })
+
+        if (!language) {
+            return { success: false, message: `Langue ${languageCode} non trouvée` }
+        }
+
+        // Rechercher la traduction
+        const translation = await prisma.translation.findFirst({
+            where: {
+                entityType,
+                entityId,
+                field,
+                languageId: language.id
+            }
+        })
+
+        if (!translation) {
+            return {
+                success: false,
+                message: `Aucune traduction trouvée pour ${entityType} #${entityId}.${field} en ${languageCode}`
+            }
+        }
+
+        return { success: true, translation }
+    } catch (error) {
+        console.error('Erreur lors de la récupération de la traduction:', error)
+        return { success: false, message: 'Erreur serveur' }
+    }
 } 

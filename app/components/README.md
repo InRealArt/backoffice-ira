@@ -93,3 +93,91 @@ export default function MyListComponent() {
   );
 }
 ```
+
+# Composants de Traduction
+
+Ce dossier contient des composants réutilisables pour gérer les traductions dans l'application.
+
+## TranslationIcon
+
+Un composant qui affiche une icône de traduction à côté d'un champ de formulaire, avec un lien vers la page de traduction correspondante.
+
+### Props
+
+- `entityType` (string, obligatoire) : Le type d'entité (ex: "Team", "Faq", etc.)
+- `entityId` (number, obligatoire) : L'ID de l'entité
+- `field` (string, obligatoire) : Le nom du champ à traduire
+- `languageCode` (string, optionnel, défaut = "en") : Le code de la langue cible
+- `className` (string, optionnel) : Classes CSS supplémentaires
+
+### Exemple d'utilisation
+
+```jsx
+import TranslationIcon from "@/app/components/TranslationIcon";
+
+// Dans votre composant
+<label htmlFor="title" className="form-label">
+  Titre
+  <TranslationIcon entityType="BlogPost" entityId={blogPost.id} field="title" />
+</label>;
+```
+
+## TranslationField
+
+Un composant qui enveloppe un champ de formulaire et ajoute automatiquement l'icône de traduction.
+
+### Props
+
+- `entityType` (string, obligatoire) : Le type d'entité (ex: "Team", "Faq", etc.)
+- `entityId` (number | null, obligatoire) : L'ID de l'entité (peut être null si nouvelle entité)
+- `field` (string, obligatoire) : Le nom du champ à traduire
+- `label` (string, obligatoire) : Le libellé du champ
+- `languageCode` (string, optionnel, défaut = "en") : Le code de la langue cible
+- `children` (ReactNode, obligatoire) : Le contenu du champ (input, textarea, etc.)
+- `className` (string, optionnel) : Classes CSS supplémentaires
+- `errorMessage` (string, optionnel) : Message d'erreur à afficher
+
+### Exemple d'utilisation
+
+```jsx
+import TranslationField from "@/app/components/TranslationField";
+
+// Dans votre composant
+<TranslationField
+  entityType="BlogPost"
+  entityId={blogPost.id}
+  field="content"
+  label="Contenu"
+  errorMessage={errors.content?.message}
+>
+  <textarea
+    id="content"
+    {...register("content")}
+    className={`form-textarea ${errors.content ? "input-error" : ""}`}
+    rows={5}
+  />
+</TranslationField>;
+```
+
+## Utilisation avec d'autres formulaires
+
+Pour intégrer ces composants dans d'autres formulaires, suivez les étapes suivantes :
+
+1. Importez `TranslationField` dans votre composant de formulaire
+2. Remplacez vos groupes de formulaire avec le composant `TranslationField`
+3. Assurez-vous que la fonction `handleEntityTranslations` est appelée lors de la soumission du formulaire pour gérer les traductions
+
+Exemple :
+
+```jsx
+// Dans la fonction de soumission
+onSubmit = async (data) => {
+  // Traitement normal du formulaire...
+
+  // Puis gestion des traductions
+  await handleEntityTranslations("EntityType", entityId, {
+    field1: data.field1 || null,
+    field2: data.field2 || null,
+  });
+};
+```

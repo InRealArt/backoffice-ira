@@ -10,6 +10,7 @@ import Image from 'next/image'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import TranslationField from '@/app/components/TranslationField'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -206,8 +207,13 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
                   </div>
                 </div>
                 
-                <div className="form-group">
-                  <label htmlFor="role" className="form-label">Rôle / Poste</label>
+                <TranslationField
+                  entityType="Team"
+                  entityId={teamMember.id}
+                  field="role"
+                  label="Rôle / Poste"
+                  errorMessage={errors.role?.message}
+                >
                   <input
                     id="role"
                     type="text"
@@ -215,10 +221,7 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
                     className={`form-input ${errors.role ? 'input-error' : ''}`}
                     placeholder="Ex: CEO, CTO, Designer..."
                   />
-                  {errors.role && (
-                    <p className="form-error">{errors.role.message}</p>
-                  )}
-                </div>
+                </TranslationField>
                 
                 <div className="form-group">
                   <label htmlFor="email" className="form-label">Email</label>
@@ -270,8 +273,13 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
               )}
             </div>
             
-            <div className="form-group">
-              <label htmlFor="description" className="form-label">Description complète</label>
+            <TranslationField
+              entityType="Team"
+              entityId={teamMember.id}
+              field="description"
+              label="Description complète"
+              errorMessage={errors.description?.message}
+            >
               <textarea
                 id="description"
                 {...register('description')}
@@ -279,10 +287,7 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
                 rows={5}
                 placeholder="Bio ou description complète du membre"
               />
-              {errors.description && (
-                <p className="form-error">{errors.description.message}</p>
-              )}
-            </div>
+            </TranslationField>
           </div>
         </div>
         
