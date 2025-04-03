@@ -102,6 +102,7 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
           // Utiliser la fonction générique pour gérer les traductions
           await handleEntityTranslations('Team', teamMember.id, {
             role: data.role || null,
+            intro: data.intro || null,
             description: data.description || null
           })
         } catch (translationError) {
@@ -259,8 +260,13 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
               )}
             </div>
             
-            <div className="form-group">
-              <label htmlFor="intro" className="form-label">Introduction courte</label>
+            <TranslationField
+              entityType="Team"
+              entityId={teamMember.id}
+              field="intro"
+              label="Introduction courte"
+              errorMessage={errors.intro?.message}
+            >
               <input
                 id="intro"
                 type="text"
@@ -268,10 +274,7 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
                 className={`form-input ${errors.intro ? 'input-error' : ''}`}
                 placeholder="Une courte phrase qui apparaît sous le nom"
               />
-              {errors.intro && (
-                <p className="form-error">{errors.intro.message}</p>
-              )}
-            </div>
+            </TranslationField>
             
             <TranslationField
               entityType="Team"
