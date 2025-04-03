@@ -803,6 +803,7 @@ model Faq {
 // Modèle LandingArtist
 model LandingArtist {
   id            Int      @id @default(autoincrement())
+  slug          String   @unique
   intro         String?
   description   String?
   artworkImages Json     @default("[]")

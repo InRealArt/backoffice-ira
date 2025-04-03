@@ -15,6 +15,7 @@ export interface LandingArtistData {
     instagramUrl?: string | null
     twitterUrl?: string | null
     linkedinUrl?: string | null
+    slug?: string
 }
 
 /**
@@ -66,6 +67,7 @@ export async function createLandingArtist(data: LandingArtistData) {
                 instagramUrl: data.instagramUrl,
                 twitterUrl: data.twitterUrl,
                 linkedinUrl: data.linkedinUrl,
+                slug: data.slug!,
             },
         })
 
@@ -102,6 +104,7 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 instagramUrl: data.instagramUrl,
                 twitterUrl: data.twitterUrl,
                 linkedinUrl: data.linkedinUrl,
+                slug: data.slug,
             },
         })
 
@@ -177,14 +180,15 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
         instagramUrl: string | null;
         twitterUrl: string | null;
         linkedinUrl: string | null;
+        slug: string;
     };
 }> {
     try {
         // Vérification des données requises
-        if (!formData.artistId || !formData.imageUrl) {
+        if (!formData.artistId || !formData.imageUrl || !formData.slug) {
             return {
                 success: false,
-                message: 'ID de l\'artiste et URL de l\'image requis'
+                message: 'ID de l\'artiste, URL de l\'image et slug sont requis'
             }
         }
 

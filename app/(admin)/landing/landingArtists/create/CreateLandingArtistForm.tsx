@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { z } from 'zod'
@@ -10,6 +10,7 @@ import { X, Plus } from 'lucide-react'
 import { createLandingArtistAction } from '@/lib/actions/landing-artist-actions'
 import TranslationField from '@/app/components/TranslationField'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
+import { generateSlug } from '@/lib/utils'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -39,9 +40,25 @@ const formSchema = z.object({
     val => val === '' || /^https?:\/\//.test(val),
     { message: 'URL LinkedIn invalide' }
   ).optional().transform(val => val === '' ? null : val),
+  slug: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
+
+// Fonction pour normaliser une chaîne (supprimer accents et mettre en minuscules)
+// const normalizeString = (str: string) => {
+//   return str
+//     .normalize('NFD')
+//     .replace(/[\u0300-\u036f]/g, '')
+//     .toLowerCase()
+//     .replace(/[^a-z0-9]+/g, '-')
+//     .replace(/^-|-$/g, '')
+// }
+
+// Fonction pour générer un slug à partir du prénom et nom
+// const generateSlug = (name: string, surname: string) => {
+//   return `${normalizeString(name)}-${normalizeString(surname)}`
+// }
 
 interface Artist {
   id: number
@@ -62,6 +79,7 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
   const [newImageUrl, setNewImageUrl] = useState('')
   const [newImageName, setNewImageName] = useState('')
   const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
+  const [slug, setSlug] = useState('')
 
   const {
     register,
@@ -83,6 +101,7 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
       instagramUrl: '',
       twitterUrl: '',
       linkedinUrl: '',
+      slug: '',
     }
   })
 
@@ -99,6 +118,16 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
     if (artist && !imageUrl) {
       // Pré-remplir l'URL de l'image avec celle de l'artiste si aucune URL n'est encore définie
       setValue('imageUrl', artist.imageUrl)
+    }
+    
+    // Générer et mettre à jour le slug
+    if (artist) {
+      const generatedSlug = generateSlug(artist.name, artist.surname)
+      setSlug(generatedSlug)
+      setValue('slug', generatedSlug)
+    } else {
+      setSlug('')
+      setValue('slug', '')
     }
   }
   
@@ -119,7 +148,8 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
         instagramUrl: data.instagramUrl || null,
         twitterUrl: data.twitterUrl || null,
         linkedinUrl: data.linkedinUrl || null,
-        artworkImages: JSON.stringify(artworkImages)
+        artworkImages: JSON.stringify(artworkImages),
+        slug: data.slug
       }
       
       // Appel à la server action pour créer l'artiste
@@ -215,6 +245,19 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
             
             {selectedArtist && (
               <>
+                <div className="form-group mt-md">
+                  <label htmlFor="slug" className="form-label">Slug</label>
+                  <input
+                    id="slug"
+                    type="text"
+                    value={slug}
+                    readOnly
+                    className="form-input"
+                    style={{ backgroundColor: '#f9f9f9' }}
+                  />
+                  <p className="form-hint">Généré automatiquement à partir du nom de l'artiste</p>
+                </div>
+                
                 <div className="d-flex gap-lg mt-lg">
                   <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
                     {imageUrl ? (

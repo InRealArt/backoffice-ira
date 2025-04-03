@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import Image from 'next/image'
@@ -11,6 +11,7 @@ import { X, Plus } from 'lucide-react'
 import { updateLandingArtistAction } from '@/lib/actions/landing-artist-actions'
 import TranslationField from '@/app/components/TranslationField'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
+import { generateSlug } from '@/lib/utils'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -39,6 +40,7 @@ const formSchema = z.object({
     val => val === '' || /^https?:\/\//.test(val),
     { message: 'URL LinkedIn invalide' }
   ).optional().transform(val => val === '' ? null : val),
+  slug: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -112,11 +114,19 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
   })
   const [newImageUrl, setNewImageUrl] = useState('')
   const [newImageName, setNewImageName] = useState('')
+  const [slug, setSlug] = useState('')
+  
+  useEffect(() => {
+    // Générer le slug à partir des informations de l'artiste
+    const generatedSlug = generateSlug(landingArtist.artist.name, landingArtist.artist.surname)
+    setSlug(generatedSlug)
+  }, [landingArtist.artist.name, landingArtist.artist.surname])
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors }
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -131,6 +141,7 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
       instagramUrl: landingArtist.instagramUrl || '',
       twitterUrl: landingArtist.twitterUrl || '',
       linkedinUrl: landingArtist.linkedinUrl || '',
+      slug: '', // Sera défini via useEffect
     }
   })
 
@@ -229,6 +240,19 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
       <form onSubmit={handleSubmit(onSubmit)} className="form-container">
         <div className="form-card">
           <div className="card-content">
+            <div className="form-group mb-lg">
+              <label htmlFor="slug" className="form-label">Slug</label>
+              <input
+                id="slug"
+                type="text"
+                value={slug}
+                readOnly
+                className="form-input"
+                style={{ backgroundColor: '#f9f9f9' }}
+              />
+              <p className="form-hint">Généré automatiquement à partir du nom de l'artiste</p>
+            </div>
+            
             <div className="d-flex gap-lg">
               <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
                 {imageUrl ? (
