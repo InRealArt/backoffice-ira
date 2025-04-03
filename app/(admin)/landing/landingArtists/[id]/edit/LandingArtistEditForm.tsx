@@ -65,6 +65,7 @@ interface LandingArtistWithArtist {
     surname: string
     pseudo: string
   }
+  slug?: string
 }
 
 interface LandingArtistEditFormProps {
@@ -116,12 +117,6 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
   const [newImageName, setNewImageName] = useState('')
   const [slug, setSlug] = useState('')
   
-  useEffect(() => {
-    // Générer le slug à partir des informations de l'artiste
-    const generatedSlug = generateSlug(landingArtist.artist.name, landingArtist.artist.surname)
-    setSlug(generatedSlug)
-  }, [landingArtist.artist.name, landingArtist.artist.surname])
-
   const {
     register,
     handleSubmit,
@@ -141,13 +136,20 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
       instagramUrl: landingArtist.instagramUrl || '',
       twitterUrl: landingArtist.twitterUrl || '',
       linkedinUrl: landingArtist.linkedinUrl || '',
-      slug: '', // Sera défini via useEffect
+      slug: landingArtist.slug || '',
     }
   })
 
   const imageUrl = watch('imageUrl')
   const artistsPage = watch('artistsPage')
   
+  useEffect(() => {
+    // Générer le slug à partir des informations de l'artiste
+    const generatedSlug = generateSlug(landingArtist.artist.name, landingArtist.artist.surname)
+    setSlug(generatedSlug)
+    setValue('slug', generatedSlug)
+  }, [landingArtist.artist.name, landingArtist.artist.surname, setValue])
+
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
     
@@ -163,6 +165,7 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
         instagramUrl: data.instagramUrl || null,
         twitterUrl: data.twitterUrl || null,
         linkedinUrl: data.linkedinUrl || null,
+        slug: data.slug || slug,
       }
       
       // Préparer les données d'artworkImages pour le format attendu par l'API

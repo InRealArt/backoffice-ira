@@ -246,6 +246,7 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
         instagramUrl: string | null;
         twitterUrl: string | null;
         linkedinUrl: string | null;
+        slug: string;
     };
 }> {
     try {
@@ -264,6 +265,11 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
                 success: false,
                 message: 'Artiste non trouvé'
             }
+        }
+
+        // Si le slug n'est pas fourni, conserver celui existant
+        if (!formData.slug) {
+            formData.slug = existingLandingArtist.slug
         }
 
         // Mettre à jour l'artiste
