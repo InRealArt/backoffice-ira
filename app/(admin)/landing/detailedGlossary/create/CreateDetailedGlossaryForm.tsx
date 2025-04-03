@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createDetailedGlossaryHeader } from '@/lib/actions/glossary-actions'
+import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 
 // Schéma de validation pour le formulaire principal
 const formSchema = z.object({
@@ -39,6 +40,16 @@ export default function CreateDetailedGlossaryForm() {
       const result = await createDetailedGlossaryHeader(data.name)
       
       if (result.success && result.data) {
+        // Gestion des traductions pour le champ name
+        try {
+          await handleEntityTranslations('DetailedGlossaryHeader', result.data.id, {
+            name: data.name
+          })
+        } catch (translationError) {
+          console.error('Erreur lors de la gestion des traductions:', translationError)
+          // On ne bloque pas la création en cas d'erreur de traduction
+        }
+        
         toast.success('Section de Glossaire créée avec succès')
         
         // Rediriger vers la page d'édition

@@ -12,6 +12,7 @@ import {
   createDetailedFaqItem, 
   deleteDetailedFaqItem 
 } from '@/lib/actions/faq-actions'
+import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { DetailedFaqHeader, DetailedFaqItem } from '@prisma/client'
 
 // Interface pour les données incluant faqItems
@@ -79,6 +80,16 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
       const result = await updateDetailedFaqHeader(faqHeader.id, data.name)
       
       if (result.success) {
+        // Gestion des traductions pour le champ name
+        try {
+          await handleEntityTranslations('DetailedFaqHeader', faqHeader.id, {
+            name: data.name
+          })
+        } catch (translationError) {
+          console.error('Erreur lors de la gestion des traductions:', translationError)
+          // On ne bloque pas la mise à jour en cas d'erreur de traduction
+        }
+        
         toast.success('Section mise à jour avec succès')
         setIsEditingHeader(false)
         router.refresh()
@@ -133,6 +144,19 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
       })
       
       if (result.success) {
+        // Gestion des traductions pour les champs question et answer
+        try {
+          if (result.data && result.data.id) {
+            await handleEntityTranslations('DetailedFaqItem', result.data.id, {
+              question: newQuestion,
+              answer: newAnswer
+            })
+          }
+        } catch (translationError) {
+          console.error('Erreur lors de la gestion des traductions:', translationError)
+          // On ne bloque pas l'ajout en cas d'erreur de traduction
+        }
+        
         setNewQuestion('')
         setNewAnswer('')
         toast.success('Question ajoutée avec succès')

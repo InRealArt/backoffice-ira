@@ -16,6 +16,32 @@ export async function getSchemaModels() {
                 { name: 'question', type: 'String' },
                 { name: 'answer', type: 'String' }
             ]
+        },
+        {
+            name: 'DetailedFaqHeader',
+            fields: [
+                { name: 'name', type: 'String' }
+            ]
+        },
+        {
+            name: 'DetailedFaqItem',
+            fields: [
+                { name: 'question', type: 'String' },
+                { name: 'answer', type: 'String' }
+            ]
+        },
+        {
+            name: 'DetailedGlossaryHeader',
+            fields: [
+                { name: 'name', type: 'String' }
+            ]
+        },
+        {
+            name: 'DetailedGlossaryItem',
+            fields: [
+                { name: 'question', type: 'String' },
+                { name: 'answer', type: 'String' }
+            ]
         }
         // Ajoutez d'autres modèles du schéma 'landing' si nécessaire
     ]

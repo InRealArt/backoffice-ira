@@ -13,6 +13,7 @@ import {
   deleteDetailedGlossaryItem 
 } from '@/lib/actions/glossary-actions'
 import { DetailedGlossaryHeader, DetailedGlossaryItem } from '@prisma/client'
+import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 
 // Interface pour les données incluant glossaryItems
 interface DetailedGlossaryHeaderWithItems extends DetailedGlossaryHeader {
@@ -78,6 +79,16 @@ export default function DetailedGlossaryEditForm({ glossaryHeader }: DetailedGlo
     try {
       const result = await updateDetailedGlossaryHeader(glossaryHeader.id, data.name)
       
+      // Gestion des traductions pour le champ name
+      try {
+        await handleEntityTranslations('DetailedGlossaryHeader', glossaryHeader.id, {
+          name: data.name
+        })
+      } catch (translationError) {
+        console.error('Erreur lors de la gestion des traductions:', translationError)
+        // On ne bloque pas la mise à jour en cas d'erreur de traduction
+      }
+      
       if (result.success) {
         toast.success('Section mise à jour avec succès')
         setIsEditingHeader(false)
@@ -133,6 +144,19 @@ export default function DetailedGlossaryEditForm({ glossaryHeader }: DetailedGlo
       })
       
       if (result.success) {
+        // Gestion des traductions pour les champs question et answer
+        try {
+          if (result.data && result.data.id) {
+            await handleEntityTranslations('DetailedGlossaryItem', result.data.id, {
+              question: newQuestion,
+              answer: newAnswer
+            })
+          }
+        } catch (translationError) {
+          console.error('Erreur lors de la gestion des traductions:', translationError)
+          // On ne bloque pas l'ajout en cas d'erreur de traduction
+        }
+        
         setNewQuestion('')
         setNewAnswer('')
         toast.success('Question ajoutée avec succès')

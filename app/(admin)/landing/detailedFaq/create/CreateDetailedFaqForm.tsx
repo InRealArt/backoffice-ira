@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createDetailedFaqHeader } from '@/lib/actions/faq-actions'
+import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 
 // Schéma de validation pour le formulaire principal
 const formSchema = z.object({
@@ -39,6 +40,16 @@ export default function CreateDetailedFaqForm() {
       const result = await createDetailedFaqHeader(data.name)
       
       if (result.success && result.data) {
+        // Gestion des traductions pour le champ name
+        try {
+          await handleEntityTranslations('DetailedFaqHeader', result.data.id, {
+            name: data.name
+          })
+        } catch (translationError) {
+          console.error('Erreur lors de la gestion des traductions:', translationError)
+          // On ne bloque pas la création en cas d'erreur de traduction
+        }
+        
         toast.success('Section de FAQ créée avec succès')
         
         // Rediriger vers la page d'édition
