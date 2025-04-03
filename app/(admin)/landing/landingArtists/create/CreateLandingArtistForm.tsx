@@ -8,11 +8,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { X, Plus } from 'lucide-react'
 import { createLandingArtistAction } from '@/lib/actions/landing-artist-actions'
+import TranslationField from '@/app/components/TranslationField'
+import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 
 // Schéma de validation
 const formSchema = z.object({
   artistId: z.string().min(1, 'Veuillez sélectionner un artiste'),
   intro: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
   artworkStyle: z.string().nullable().optional(),
   artistsPage: z.boolean().default(false),
   imageUrl: z.string().url('URL d\'image invalide'),
@@ -71,6 +74,7 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
     defaultValues: {
       artistId: '',
       intro: '',
+      description: '',
       artworkStyle: '',
       artistsPage: false,
       imageUrl: '',
@@ -106,6 +110,7 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
       const formattedData = {
         artistId: parseInt(data.artistId),
         intro: data.intro || null,
+        description: data.description || null,
         artworkStyle: data.artworkStyle || null,
         artistsPage: data.artistsPage,
         imageUrl: data.imageUrl,
@@ -122,6 +127,20 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
       
       if (result.success) {
         toast.success('Artiste ajouté avec succès')
+        
+        // Gestion des traductions pour intro et description
+        try {
+          if (result.landingArtist?.id) {
+            await handleEntityTranslations('LandingArtist', result.landingArtist.id, {
+              intro: data.intro || null,
+              description: data.description || null,
+              artworkStyle: data.artworkStyle || null
+            })
+          }
+        } catch (translationError) {
+          console.error('Erreur lors de la gestion des traductions:', translationError)
+          // On ne bloque pas la création en cas d'erreur de traduction
+        }
         
         // Rediriger après 1 seconde
         setTimeout(() => {
@@ -244,8 +263,13 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
                       </div>
                     </div>
                     
-                    <div className="form-group">
-                      <label htmlFor="intro" className="form-label">Introduction</label>
+                    <TranslationField
+                      entityType="LandingArtist"
+                      entityId={null}
+                      field="intro"
+                      label="Introduction"
+                      errorMessage={errors.intro?.message}
+                    >
                       <textarea
                         id="intro"
                         {...register('intro')}
@@ -253,13 +277,31 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
                         rows={3}
                         placeholder="Courte introduction de l'artiste qui sera affichée sur la page d'accueil"
                       />
-                      {errors.intro && (
-                        <p className="form-error">{errors.intro.message}</p>
-                      )}
-                    </div>
+                    </TranslationField>
                     
-                    <div className="form-group">
-                      <label htmlFor="artworkStyle" className="form-label">Style artistique</label>
+                    <TranslationField
+                      entityType="LandingArtist"
+                      entityId={null}
+                      field="description"
+                      label="Description"
+                      errorMessage={errors.description?.message}
+                    >
+                      <textarea
+                        id="description"
+                        {...register('description')}
+                        className={`form-textarea ${errors.description ? 'input-error' : ''}`}
+                        rows={5}
+                        placeholder="Description complète de l'artiste"
+                      />
+                    </TranslationField>
+                    
+                    <TranslationField
+                      entityType="LandingArtist"
+                      entityId={null}
+                      field="artworkStyle"
+                      label="Style artistique"
+                      errorMessage={errors.artworkStyle?.message}
+                    >
                       <input
                         id="artworkStyle"
                         type="text"
@@ -267,10 +309,7 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
                         className={`form-input ${errors.artworkStyle ? 'input-error' : ''}`}
                         placeholder="Style artistique (ex: Peinture contemporaine, Photographie, etc.)"
                       />
-                      {errors.artworkStyle && (
-                        <p className="form-error">{errors.artworkStyle.message}</p>
-                      )}
-                    </div>
+                    </TranslationField>
                   </div>
                 </div>
                 

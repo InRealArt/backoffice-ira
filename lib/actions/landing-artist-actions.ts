@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 
 export interface LandingArtistData {
     intro?: string | null
+    description?: string | null
     artworkStyle?: string | null
     artistsPage?: boolean | null
     imageUrl: string
@@ -55,6 +56,7 @@ export async function createLandingArtist(data: LandingArtistData) {
             data: {
                 artistId: data.artistId!,
                 intro: data.intro,
+                description: data.description,
                 artworkStyle: data.artworkStyle,
                 artistsPage: data.artistsPage,
                 imageUrl: data.imageUrl,
@@ -90,6 +92,7 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
             },
             data: {
                 intro: data.intro,
+                description: data.description,
                 artworkStyle: data.artworkStyle,
                 artistsPage: data.artistsPage,
                 imageUrl: data.imageUrl,
@@ -157,8 +160,25 @@ export async function checkArtistInLanding(artistId: number) {
 /**
  * Crée un nouvel artiste sur la landing page (Server Action)
  */
-
-export async function createLandingArtistAction(formData: LandingArtistData) {
+export async function createLandingArtistAction(formData: LandingArtistData): Promise<{
+    success: boolean;
+    message?: string;
+    landingArtist?: {
+        id: number;
+        artistId: number;
+        intro: string | null;
+        description: string | null;
+        artworkStyle: string | null;
+        artistsPage: boolean | null;
+        imageUrl: string;
+        artworkImages: string;
+        websiteUrl: string | null;
+        facebookUrl: string | null;
+        instagramUrl: string | null;
+        twitterUrl: string | null;
+        linkedinUrl: string | null;
+    };
+}> {
     try {
         // Vérification des données requises
         if (!formData.artistId || !formData.imageUrl) {
@@ -205,8 +225,25 @@ export async function createLandingArtistAction(formData: LandingArtistData) {
 /**
  * Met à jour un artiste de la landing page (Server Action)
  */
-
-export async function updateLandingArtistAction(id: number, formData: LandingArtistData) {
+export async function updateLandingArtistAction(id: number, formData: LandingArtistData): Promise<{
+    success: boolean;
+    message?: string;
+    landingArtist?: {
+        id: number;
+        artistId: number;
+        intro: string | null;
+        description: string | null;
+        artworkStyle: string | null;
+        artistsPage: boolean | null;
+        imageUrl: string;
+        artworkImages: string;
+        websiteUrl: string | null;
+        facebookUrl: string | null;
+        instagramUrl: string | null;
+        twitterUrl: string | null;
+        linkedinUrl: string | null;
+    };
+}> {
     try {
         // Vérification des données requises
         if (!formData.imageUrl) {

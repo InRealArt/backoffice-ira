@@ -42,6 +42,21 @@ export async function getSchemaModels() {
                 { name: 'question', type: 'String' },
                 { name: 'answer', type: 'String' }
             ]
+        },
+        {
+            name: 'PresaleArtwork',
+            fields: [
+                { name: 'name', type: 'String' },
+                { name: 'description', type: 'String' }
+            ]
+        },
+        {
+            name: 'LandingArtist',
+            fields: [
+                { name: 'intro', type: 'String' },
+                { name: 'description', type: 'String' },
+                { name: 'artworkStyle', type: 'String' },
+            ]
         }
         // Ajoutez d'autres modèles du schéma 'landing' si nécessaire
     ]

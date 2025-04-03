@@ -804,6 +804,7 @@ model Faq {
 model LandingArtist {
   id            Int      @id @default(autoincrement())
   intro         String?
+  description   String?
   artworkImages Json     @default("[]")
   artworkStyle  String?
   artistsPage   Boolean? @default(false)
