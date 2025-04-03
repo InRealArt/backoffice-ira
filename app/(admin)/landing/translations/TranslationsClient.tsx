@@ -7,6 +7,7 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { toast } from 'react-hot-toast'
 import Modal from '@/app/components/Common/Modal'
 import { deleteTranslation } from '@/lib/actions/translation-actions'
+import { Filters, FilterItem } from '@/app/components/Common'
 
 interface TranslationWithLanguage extends Translation {
   language: {
@@ -26,6 +27,8 @@ export default function TranslationsClient({ translations }: TranslationsClientP
   const [deletingTranslationId, setDeletingTranslationId] = useState<number | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [translationToDelete, setTranslationToDelete] = useState<number | null>(null)
+  const [selectedEntityType, setSelectedEntityType] = useState<string>('')
+  const [selectedLanguageId, setSelectedLanguageId] = useState<number | null>(null)
 
   const handleTranslationClick = (translationId: number) => {
     setLoadingTranslationId(translationId)
@@ -71,6 +74,21 @@ export default function TranslationsClient({ translations }: TranslationsClientP
     setTranslationToDelete(null)
   }
   
+  // Extraire les types d'entités uniques pour les filtres
+  const uniqueEntityTypes = Array.from(new Set(translations.map(t => t.entityType)))
+  
+  // Extraire les langues uniques pour les filtres
+  const uniqueLanguages = Array.from(
+    new Map(translations.map(t => [t.languageId, t.language])).values()
+  )
+  
+  // Filtrer les traductions en fonction des filtres sélectionnés
+  const filteredTranslations = translations.filter(translation => {
+    const matchesEntityType = selectedEntityType ? translation.entityType === selectedEntityType : true
+    const matchesLanguage = selectedLanguageId ? translation.languageId === selectedLanguageId : true
+    return matchesEntityType && matchesLanguage
+  })
+  
   return (
     <div className="page-container">
       <div className="page-header">
@@ -88,8 +106,37 @@ export default function TranslationsClient({ translations }: TranslationsClientP
         </p>
       </div>
       
+      <Filters>
+        <FilterItem
+          id="entityTypeFilter"
+          label="Filtrer par type d'entité:"
+          value={selectedEntityType}
+          onChange={(value) => setSelectedEntityType(value)}
+          options={[
+            { value: '', label: 'Tous les types d\'entité' },
+            ...uniqueEntityTypes.map(type => ({
+              value: type,
+              label: type
+            }))
+          ]}
+        />
+        <FilterItem
+          id="languageFilter"
+          label="Filtrer par langue:"
+          value={selectedLanguageId ? selectedLanguageId.toString() : ''}
+          onChange={(value) => setSelectedLanguageId(value ? parseInt(value) : null)}
+          options={[
+            { value: '', label: 'Toutes les langues' },
+            ...uniqueLanguages.map(language => ({
+              value: language.id.toString(),
+              label: `${language.name} (${language.code})`
+            }))
+          ]}
+        />
+      </Filters>
+      
       <div className="page-content">
-        {translations.length === 0 ? (
+        {filteredTranslations.length === 0 ? (
           <div className="empty-state">
             <p>Aucune traduction trouvée</p>
             <button 
@@ -112,7 +159,7 @@ export default function TranslationsClient({ translations }: TranslationsClientP
                 </tr>
               </thead>
               <tbody>
-                {translations.map((translation) => {
+                {filteredTranslations.map((translation) => {
                   const isLoading = loadingTranslationId === translation.id
                   const isDeleting = deletingTranslationId === translation.id
                   const isDisabled = loadingTranslationId !== null || deletingTranslationId !== null

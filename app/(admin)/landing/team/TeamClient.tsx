@@ -10,10 +10,13 @@ interface TeamClientProps {
   teamMembers: Team[]
 }
 
+type SortDirection = 'asc' | 'desc'
+
 export default function TeamClient({ teamMembers }: TeamClientProps) {
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const [loadingMemberId, setLoadingMemberId] = useState<number | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -40,6 +43,22 @@ export default function TeamClient({ teamMembers }: TeamClientProps) {
   const handleCreateMember = () => {
     router.push('/landing/team/create')
   }
+  
+  const toggleSortDirection = () => {
+    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+  }
+  
+  // Trier les membres de l'équipe selon le champ 'order'
+  const sortedTeamMembers = [...teamMembers].sort((a, b) => {
+    const orderA = a.order ?? 0
+    const orderB = b.order ?? 0
+    
+    if (sortDirection === 'asc') {
+      return orderA - orderB
+    } else {
+      return orderB - orderA
+    }
+  })
   
   return (
     <div className="page-container">
@@ -72,11 +91,18 @@ export default function TeamClient({ teamMembers }: TeamClientProps) {
                   <th>Nom</th>
                   <th>Rôle</th>
                   <th>Email</th>
-                  <th>Ordre</th>
+                  <th className="sortable-column" onClick={toggleSortDirection}>
+                    <div className="d-flex align-items-center gap-xs">
+                      Ordre
+                      <span className="sort-icon">
+                        {sortDirection === 'asc' ? '▲' : '▼'}
+                      </span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {teamMembers.map((member) => {
+                {sortedTeamMembers.map((member) => {
                   const isLoading = loadingMemberId === member.id
                   return (
                     <tr 
