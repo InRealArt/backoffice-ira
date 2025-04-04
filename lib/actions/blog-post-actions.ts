@@ -74,11 +74,27 @@ export async function createBlogPost(data: {
                 featuredImageHeight: data.imageHeight || 0,
                 introduction: '',
                 content: data.text || '',
-                tags: data.tags ? JSON.parse(data.tags) : [],
+                tags: (() => {
+                    if (!data.tags) return [];
+                    try {
+                        return JSON.parse(data.tags);
+                    } catch (e) {
+                        // Si le parsing échoue, essayons de traiter comme une chaîne séparée par des virgules
+                        return data.tags.split(',').map(k => k.trim()).filter(Boolean);
+                    }
+                })(),
                 estimatedReadTime: data.readingTime || 1,
                 isPublished: false,
                 isFeatured: false,
-                relatedArticles: data.relatedArticles ? JSON.parse(data.relatedArticles) : []
+                relatedArticles: (() => {
+                    if (!data.relatedArticles) return [];
+                    try {
+                        return JSON.parse(data.relatedArticles);
+                    } catch (e) {
+                        console.error('Erreur lors du parsing des articles liés:', e);
+                        return [];
+                    }
+                })()
             }
         })
 
@@ -128,8 +144,22 @@ export async function updateBlogPost(id: number, data: {
         if (data.auteur) updateData.author = data.auteur
 
         // Pour les champs de type JSON ou tableau
-        if (data.tags) updateData.tags = JSON.parse(data.tags)
-        if (data.relatedArticles) updateData.relatedArticles = JSON.parse(data.relatedArticles)
+        if (data.tags) {
+            try {
+                updateData.tags = JSON.parse(data.tags);
+            } catch (e) {
+                // Si le parsing échoue, essayons de traiter comme une chaîne séparée par des virgules
+                updateData.tags = data.tags.split(',').map(k => k.trim()).filter(Boolean);
+            }
+        }
+        if (data.relatedArticles) {
+            try {
+                updateData.relatedArticles = JSON.parse(data.relatedArticles);
+            } catch (e) {
+                console.error('Erreur lors du parsing des articles liés:', e);
+                updateData.relatedArticles = [];
+            }
+        }
 
         // Mise à jour de la date de modification
         updateData.dateModified = new Date()

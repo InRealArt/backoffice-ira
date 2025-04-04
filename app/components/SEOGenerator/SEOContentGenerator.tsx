@@ -697,7 +697,14 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
         const parsed = JSON.parse(tagArray);
         tagArray = Array.isArray(parsed) ? parsed : [parsed];
       } catch (e) {
-        tagArray = [tagArray];
+        // Si ce n'est pas du JSON valide, c'est soit un simple tag ou une liste séparée par des virgules
+        const tagsStr = String(tagArray);
+        // Vérifions si c'est une liste séparée par des virgules
+        if (tagsStr.includes(',')) {
+          tagArray = tagsStr.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        } else {
+          tagArray = [tagsStr];
+        }
       }
     }
 

@@ -279,7 +279,28 @@ export default function SEOModalGenerator({
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="text-sm font-medium text-gray-700">Code HTML formaté</h3>
                     <button 
-                      onClick={() => navigator.clipboard.writeText(generatedHtml)}
+                      onClick={() => {
+                        const htmlContent = generatedHtml.trim();
+                        navigator.clipboard.writeText(htmlContent);
+                        
+                        // Appliquer le contenu au textarea via le callback
+                        if (onContentGenerated) {
+                          onContentGenerated(htmlContent);
+                        }
+                        
+                        // Afficher une notification visuelle de copie réussie
+                        const button = document.activeElement;
+                        if (button && button instanceof HTMLElement) {
+                          const originalText = button.textContent;
+                          button.textContent = 'Copié ✓';
+                          button.classList.add('bg-green-200', 'text-green-800');
+                          
+                          setTimeout(() => {
+                            button.textContent = originalText;
+                            button.classList.remove('bg-green-200', 'text-green-800');
+                          }, 2000);
+                        }
+                      }}
                       className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded transition-colors"
                     >
                       Copier
@@ -346,8 +367,14 @@ export default function SEOModalGenerator({
                           const parsed = JSON.parse(initialData.tags);
                           tagArray = Array.isArray(parsed) ? parsed : [parsed];
                         } catch (e) {
-                          // Si ce n'est pas du JSON valide, c'est un simple tag
-                          tagArray = [initialData.tags];
+                          // Si ce n'est pas du JSON valide, c'est soit un simple tag ou une liste séparée par des virgules
+                          const tagsStr = String(initialData.tags);
+                          // Vérifions si c'est une liste séparée par des virgules
+                          if (tagsStr.includes(',')) {
+                            tagArray = tagsStr.split(',').map(t => t.trim()).filter(t => t.length > 0);
+                          } else {
+                            tagArray = [tagsStr];
+                          }
                         }
                       } else {
                         // Autre type, convertir en tableau

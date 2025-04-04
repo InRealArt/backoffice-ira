@@ -15,6 +15,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
 import { SEOModalGenerator } from '@/app/components/SEOGenerator'
 import { ArticleContent } from '@/app/components/SEOGenerator'
+import Modal from '@/app/components/Common/Modal'
+import { HelpCircle } from 'lucide-react'
 
 // Étendre le type BlogPost pour inclure les champs manquants
 interface BlogPostWithAdditionalFields extends Omit<PrismaBlogPost, 'tags' | 'metaKeywords' | 'relatedArticles'> {
@@ -317,15 +319,217 @@ interface BlogPostFormProps {
   isEditMode?: boolean
 }
 
+// Exemple de code HTML SEO idéal à afficher dans la modale
+const SAMPLE_HTML_SEO = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Découvrez comment les Real World Assets (RWA) transforment le marché de l'art contemporain en 2024. Tokenisation, fractionnement et blockchain : une nouvelle ère pour collectionneurs et artistes.">
+  <meta name="keywords" content="RWA, art contemporain, tokenisation, blockchain, NFT, art numérique, investissement artistique">
+  <title>RWA dans l'Art Contemporain : Révolution Numérique des Actifs Artistiques</title>
+  
+  <!-- Schema.org markup pour Article -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "RWA dans l'Art Contemporain : Révolution Numérique des Actifs Artistiques",
+    "description": "Découvrez comment les Real World Assets (RWA) transforment le marché de l'art contemporain en 2024. Tokenisation, fractionnement et blockchain : une nouvelle ère pour collectionneurs et artistes.",
+    "image": "https://exemple.com/images/rwa-art-contemporain.jpg",
+    "author": {
+      "@type": "Person",
+      "name": "Nom de l'Auteur"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Votre Galerie d'Art",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://exemple.com/logo.png"
+      }
+    },
+    "datePublished": "2024-03-25",
+    "dateModified": "2024-03-25"
+  }
+  </script>
+</head>
+<body>
+
+<article>
+  <header>
+    <h1>RWA dans l'Art Contemporain : Révolution Numérique des Actifs Artistiques</h1>
+    <p class="meta">Publié le <time datetime="2024-03-25">25 mars 2024</time> | Temps de lecture : 5 minutes</p>
+    <img src="https://exemple.com/images/rwa-art-contemporain.jpg" alt="Tokenisation d'œuvres d'art contemporain via la technologie RWA" width="800" height="500">
+  </header>
+
+  <section>
+    <p>L'intersection entre les <strong>Real World Assets (RWA)</strong> et l'art contemporain représente aujourd'hui l'une des évolutions les plus fascinantes du marché artistique. Cette fusion technologique permet désormais de tokeniser des œuvres physiques sur la blockchain, créant ainsi un pont inédit entre l'art traditionnel et l'univers numérique.</p>
+  </section>
+
+  <section>
+    <h2>Qu'est-ce que la Tokenisation d'Art via RWA ?</h2>
+    <p>La tokenisation d'œuvres d'art transforme des actifs physiques en actifs numériques vérifiables sur blockchain. Concrètement, une peinture ou sculpture peut être représentée par des tokens numériques, chacun représentant une fraction de propriété de l'œuvre originale.</p>
+    
+    <p>Cette technologie offre plusieurs avantages révolutionnaires :</p>
+    
+    <ul>
+      <li><strong>Fractionnement de propriété</strong> : Des œuvres valant plusieurs millions peuvent être détenues collectivement</li>
+      <li><strong>Liquidité accrue</strong> : L'art devient négociable sur des plateformes numériques 24/7</li>
+      <li><strong>Traçabilité absolue</strong> : L'historique de propriété est immuablement enregistré</li>
+      <li><strong>Accessibilité démocratisée</strong> : L'investissement artistique s'ouvre à tous les budgets</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Les Plateformes Pionnières de RWA Artistique</h2>
+    <p>Plusieurs plateformes innovantes ont émergé pour faciliter cette convergence entre art et blockchain :</p>
+    
+    <h3>Masterworks</h3>
+    <p>Masterworks a révolutionné l'investissement artistique en permettant l'achat de fractions d'œuvres de maîtres comme Banksy ou Basquiat à partir de quelques centaines d'euros seulement. <a href="https://www.masterworks.com" target="_blank" rel="noopener">Leur plateforme</a> enregistre déjà plus de 500 000 utilisateurs.</p>
+    
+    <h3>La Place</h3>
+    <p>Développée en France, La Place propose une approche hybride intégrant galerie physique et plateforme de tokenisation. Leur exposition récente "Fragments d'Art" a attiré plus de 3 000 visiteurs en présentant simultanément œuvres physiques et leurs équivalents tokenisés.</p>
+  </section>
+
+  <section>
+    <h2>Impact sur le Marché de l'Art Contemporain</h2>
+    <p>L'intégration des RWA dans l'écosystème artistique transforme profondément plusieurs aspects du marché :</p>
+    
+    <ol>
+      <li><strong>Valorisation des œuvres</strong> : Les artistes peuvent bénéficier de royalties automatiques à chaque revente grâce aux smart contracts</li>
+      <li><strong>Nouvelles formes de mécénat</strong> : Des communautés peuvent collectionner collectivement</li>
+      <li><strong>Internationalisation facilitée</strong> : Les barrières géographiques s'effacent pour les collectionneurs</li>
+    </ol>
+    
+    <p>Une étude récente de Deloitte révèle que 64% des gestionnaires de patrimoine considèrent désormais l'art tokenisé comme un élément important des portefeuilles d'investissement alternatifs.</p>
+  </section>
+
+  <section>
+    <h2>Défis et Perspectives d'Avenir</h2>
+    <p>Malgré son potentiel révolutionnaire, l'intersection RWA-art fait face à plusieurs défis :</p>
+    
+    <ul>
+      <li>Cadres réglementaires encore en développement</li>
+      <li>Éducation des collectionneurs traditionnels</li>
+      <li>Questions de conservation des œuvres physiques</li>
+      <li>Évolution des standards de certification</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Conclusion</h2>
+    <p>La tokenisation des œuvres d'art via RWA représente bien plus qu'une innovation technologique passagère. Elle constitue une transformation fondamentale de l'écosystème artistique, redéfinissant les notions de propriété, d'accessibilité et de valorisation. Pour les artistes comme pour les collectionneurs, cette révolution ouvre des perspectives inédites, démocratisant l'accès à un marché historiquement élitiste tout en créant de nouvelles opportunités de création et d'investissement.</p>
+    
+    <p>Que vous soyez artiste, collectionneur ou simple amateur d'art, les RWA redessinent les contours de votre relation avec l'art contemporain, annonçant une ère de démocratisation et d'innovation sans précédent dans l'histoire de l'art.</p>
+  </section>
+
+  <footer>
+    <div class="tags">
+      <span>Tags :</span>
+      <a href="/tags/rwa" rel="tag">RWA</a>,
+      <a href="/tags/art-contemporain" rel="tag">Art Contemporain</a>,
+      <a href="/tags/blockchain" rel="tag">Blockchain</a>,
+      <a href="/tags/tokenisation" rel="tag">Tokenisation</a>,
+      <a href="/tags/investissement-artistique" rel="tag">Investissement Artistique</a>
+    </div>
+    
+    <div class="cta">
+      <h3>Vous souhaitez en savoir plus sur la tokenisation de l'art ?</h3>
+      <p>Inscrivez-vous à notre newsletter mensuelle pour recevoir les dernières actualités sur l'art et la technologie.</p>
+      <a href="/newsletter" class="button">S'inscrire à la newsletter</a>
+    </div>
+    
+    <div class="related-posts">
+      <h3>Articles associés</h3>
+      <ul>
+        <li><a href="/blog/nft-vs-rwa-differences">NFT vs RWA : Quelles différences pour les collectionneurs d'art ?</a></li>
+        <li><a href="/blog/investir-art-blockchain">Comment investir dans l'art via la blockchain en 2024</a></li>
+        <li><a href="/blog/artistes-contemporains-tokenisation">5 artistes contemporains qui embrassent la tokenisation</a></li>
+      </ul>
+    </div>
+  </footer>
+</article>
+
+</body>
+</html>`
+
+// Composant pour le modal affichant le code HTML SEO
+function SEOExampleModal() {
+  const [isOpen, setIsOpen] = useState(false)
+  
+  const handleOpen = () => setIsOpen(true)
+  const handleClose = () => setIsOpen(false)
+  
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(SAMPLE_HTML_SEO)
+    toast.success('Code HTML copié dans le presse-papier')
+  }
+  
+  return (
+    <>
+      <button 
+        onClick={handleOpen}
+        type="button"
+        className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm mt-1"
+        title="Voir un exemple de structure HTML optimisée pour le SEO"
+      >
+        <HelpCircle size={16} className="mr-1" />
+        Voir un exemple de structure HTML idéale pour le SEO
+      </button>
+      
+      <Modal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title="Exemple de structure HTML optimisée pour le SEO"
+      >
+        <div className="p-4">
+          <p className="mb-4 text-sm text-gray-600">
+            Voici un exemple de structure HTML idéale pour un article de blog optimisé pour le référencement :
+          </p>
+          
+          <div className="bg-gray-100 p-4 rounded-md overflow-auto max-h-[70vh]">
+            <pre className="text-xs whitespace-pre-wrap">{SAMPLE_HTML_SEO}</pre>
+          </div>
+          
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={handleCopyCode}
+              className="btn btn-primary btn-small"
+            >
+              Copier le code
+            </button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  )
+}
+
 export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [featuredImageUrl, setFeaturedImageUrl] = useState<string>(blogPost?.imageUrl || '')
   const [imagePreview, setImagePreview] = useState<string>(blogPost?.imageUrl || '')
-  const [tags, setTags] = useState<string[]>(blogPost?.tags ? JSON.parse(blogPost.tags) : [])
-  const [relatedArticles, setRelatedArticles] = useState<Array<{ id: string, title: string }>>(
-    blogPost?.relatedArticles ? JSON.parse(blogPost.relatedArticles) : []
-  )
+  const [tags, setTags] = useState<string[]>(() => {
+    if (!blogPost?.tags) return [];
+    try {
+      return JSON.parse(blogPost?.tags || '[]');
+    } catch (e) {
+      // Si le parsing échoue, essayons de traiter comme une chaîne séparée par des virgules
+      return (blogPost?.tags || '').split(',').map(tag => tag.trim()).filter(Boolean);
+    }
+  });
+  const [relatedArticles, setRelatedArticles] = useState<Array<{ id: string, title: string }>>(() => {
+    if (!blogPost?.relatedArticles) return [];
+    try {
+      return JSON.parse(blogPost?.relatedArticles || '[]');
+    } catch (e) {
+      console.error('Erreur lors du parsing des articles liés:', e);
+      return [];
+    }
+  });
   const [seoScore, setSeoScore] = useState<SEOValidation>({
     isValid: false,
     score: 0,
@@ -356,12 +560,28 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
       featuredImageAlt: blogPost?.imageAlt || '',
       featuredImageWidth: blogPost?.imageWidth ? Number(blogPost.imageWidth) : 0,
       featuredImageHeight: blogPost?.imageHeight ? Number(blogPost.imageHeight) : 0,
-      tags: blogPost?.tags ? JSON.parse(blogPost.tags) : [],
+      tags: (() => {
+        if (!blogPost?.tags) return [];
+        try {
+          return JSON.parse(blogPost?.tags || '[]');
+        } catch (e) {
+          // Si le parsing échoue, essayons de traiter comme une chaîne séparée par des virgules
+          return (blogPost?.tags || '').split(',').map(tag => tag.trim()).filter(Boolean);
+        }
+      })(),
       metaDescription: blogPost?.metaDescription || '',
       metaKeywords: blogPost?.metaKeywords || '',
       slug: blogPost?.slug || '',
       auteur: blogPost?.auteur || '',
-      relatedArticles: blogPost?.relatedArticles ? JSON.parse(blogPost.relatedArticles) : []
+      relatedArticles: (() => {
+        if (!blogPost?.relatedArticles) return [];
+        try {
+          return JSON.parse(blogPost?.relatedArticles || '[]');
+        } catch (e) {
+          console.error('Erreur lors du parsing des articles liés:', e);
+          return [];
+        }
+      })()
     }
   })
 
@@ -629,6 +849,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
         <p className="page-subtitle">
           {isEditMode ? 'Modifiez les informations de l\'article' : 'Créez un nouvel article de blog'}
         </p>
+        <SEOExampleModal />
       </div>
       
       <div className="page-content">
@@ -648,7 +869,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
               <div className="text-xs text-gray-500 mt-1">
                 {watch('title')?.length || 0}/60 caractères
               </div>
-              {errors.title && (
+              {errors.title?.message && (
                 <p className="error-message">{errors.title.message}</p>
               )}
             </div>
@@ -663,7 +884,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
                 className={`form-input ${errors.slug ? 'input-error' : ''}`}
                 {...register('slug')}
               />
-              {errors.slug && (
+              {errors.slug?.message && (
                 <p className="error-message">{errors.slug.message}</p>
               )}
               <div className="text-xs text-gray-500 mt-1">
@@ -681,7 +902,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
                 className={`form-input ${errors.auteur ? 'input-error' : ''}`}
                 {...register('auteur')}
               />
-              {errors.auteur && (
+              {errors.auteur?.message && (
                 <p className="error-message">{errors.auteur.message}</p>
               )}
             </div>
@@ -700,7 +921,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
               <div className="text-xs text-gray-500 mt-1">
                 {watch('metaDescription')?.length || 0}/160 caractères (idéal: 120-160)
               </div>
-              {errors.metaDescription && (
+              {errors.metaDescription?.message && (
                 <p className="error-message">{errors.metaDescription.message}</p>
               )}
             </div>
