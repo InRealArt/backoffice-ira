@@ -8,7 +8,7 @@ export const metadata = {
   description: 'Modifier les informations du smart contract',
 }
 
-type ParamsType = { id: string }
+type ParamsType = Promise<{ id: string }>
 
 export default async function EditSmartContractPage({
   params,

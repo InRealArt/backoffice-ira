@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { getTeamMemberById } from '@/lib/actions/team-actions'
 import TeamEditForm from './TeamEditForm'
 
-export default async function EditTeamMemberPage({ params }: { params: { id: string } }) {
+export default async function EditTeamMemberPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const memberId = parseInt(id)
 

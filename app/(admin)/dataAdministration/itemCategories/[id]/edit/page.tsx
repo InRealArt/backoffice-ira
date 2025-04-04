@@ -2,8 +2,9 @@ import { notFound } from 'next/navigation'
 import { getItemCategoryById } from '@/lib/actions/item-category-actions'
 import ItemCategoryEditForm from './ItemCategoryEditForm'
 
-export default async function EditItemCategoryPage({ params }: { params: { id: string } }) {
-  const { id } = params
+export default async function EditItemCategoryPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  const { id } = resolvedParams
   const categoryId = parseInt(id)
   
   if (isNaN(categoryId)) {

@@ -20,7 +20,7 @@ import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
 import Image from 'next/image'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 
-type ParamsType = { id: string }
+type ParamsType = Promise<{ id: string }>
 
 export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   const router = useRouter()
@@ -50,7 +50,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   const [isCheckingMinter, setIsCheckingMinter] = useState<boolean>(false)
   const { data: walletClient } = useWalletClient()
 
-  const unwrappedParams = React.use(params as any) as ParamsType
+  const unwrappedParams = React.use(params)
   const id = unwrappedParams.id
   const { mintNFT, isLoading: isMinting, error: mintingError, success: mintingSuccess } = useNftMinting()
   

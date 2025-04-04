@@ -1232,6 +1232,8 @@ export async function isCertificateUriUnique(uri: string) {
  * @param nftResourceId - L'ID de la ressource NFT associée
  * @param wallet - L'adresse du portefeuille du bénéficiaire
  * @param percentage - Le pourcentage de royalties (0-100)
+ * @param totalPercentage - Le pourcentage total de royalties (0-100)
+ * @param txHash - Le hash de la transaction
  * @returns Un objet indiquant le succès ou l'échec de l'opération
  */
 export async function createRoyaltyBeneficiary(
@@ -1566,14 +1568,19 @@ export async function getAllArtists() {
         publicKey: true,
         imageUrl: true,
         isGallery: true,
-        backgroundImage: true
+        backgroundImage: true,
+        artworkStyle: true
       },
       orderBy: {
         name: 'asc'
       }
     })
 
-    return artists
+    // Garantir que artworkStyle est défini, même si null
+    return artists.map(artist => ({
+      ...artist,
+      artworkStyle: artist.artworkStyle || null
+    }))
   } catch (error) {
     console.error('Erreur lors de la récupération des artistes:', error)
     return []
@@ -1598,14 +1605,19 @@ export async function getAllGalleries() {
         publicKey: true,
         imageUrl: true,
         isGallery: true,
-        backgroundImage: true
+        backgroundImage: true,
+        artworkStyle: true
       },
       orderBy: {
         name: 'asc'
       }
     })
 
-    return artists
+    // Garantir que artworkStyle est défini, même si null
+    return artists.map(artist => ({
+      ...artist,
+      artworkStyle: artist.artworkStyle || null
+    }))
   } catch (error) {
     console.error('Erreur lors de la récupération des artistes:', error)
     return []
@@ -1628,11 +1640,19 @@ export async function getArtistById(id: number) {
         publicKey: true,
         imageUrl: true,
         isGallery: true,
-        backgroundImage: true
+        backgroundImage: true,
+        artworkStyle: true
       }
     })
 
-    return artist
+    if (artist) {
+      return {
+        ...artist,
+        artworkStyle: artist.artworkStyle || null
+      }
+    }
+
+    return null
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'artiste:', error)
     return null

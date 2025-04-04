@@ -3,12 +3,9 @@ import { getBackofficeUserById } from '@/lib/actions/prisma-actions'
 import LoadingSpinner from '@/app/components/LoadingSpinner'
 import EditUserForm from './EditUserForm';
 
-export default async function EditUserPage({ 
-  params 
-}: { 
-  params: any
-}) {
-  const userId = await params?.id || '';
+export default async function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const userId = resolvedParams.id || '';
   
   if (!userId) {
     return <div>ID utilisateur non valide</div>;

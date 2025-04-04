@@ -42,7 +42,7 @@ import { getShopifyProductById } from '@/lib/actions/shopify-actions'
 import { getTokenOwner } from '@/lib/blockchain/utils'
 import { marketplaceAbi } from '@/lib/contracts/MarketplaceAbi'
 
-type ParamsType = { id: string }
+type ParamsType = Promise<{ id: string }>
 
 export default function MarketplaceListingPage({ params }: { params: ParamsType }) {
   const router = useRouter()
@@ -108,7 +108,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
 
   const [adminMarketplace, setAdminMarketplace] = useState<Address | null>(null);
 
-  const unwrappedParams = React.use(params as any) as ParamsType
+  const unwrappedParams = React.use(params)
   const id = unwrappedParams.id
 
   // États pour les champs du formulaire

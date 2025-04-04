@@ -26,7 +26,7 @@ import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
 import { NetworkType } from '@prisma/client'
 import { getBlockExplorerUrl } from '@/lib/blockchain/explorerUtils'
 
-type ParamsType = { id: string }
+type ParamsType = Promise<{ id: string }>
 
 export default function ViewRoyaltysettingPage({ params }: { params: ParamsType }) {
   const router = useRouter()
@@ -56,7 +56,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
   const [isCheckingRole, setIsCheckingRole] = useState<boolean>(false)
   const { configureRoyalties, isLoading: isConfiguring, error: configureError, success: configureSuccess } = useRoyaltySettings()
 
-  const unwrappedParams = React.use(params as any) as ParamsType
+  const unwrappedParams = React.use(params)
   const id = unwrappedParams.id
   
   const [royalties, setRoyalties] = useState<Array<{address: string, percentage: string}>>([

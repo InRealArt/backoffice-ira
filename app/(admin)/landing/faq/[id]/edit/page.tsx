@@ -3,12 +3,13 @@ import { getFaqById } from '@/lib/actions/faq-actions'
 import FaqForm from '../../components/FaqForm'
 
 interface EditFaqPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export async function generateMetadata({ params }: EditFaqPageProps) {
+  const resolvedParams = await params
   return {
     title: 'Modifier une FAQ | Administration',
     description: 'Modifiez une question fréquemment posée',
@@ -16,7 +17,8 @@ export async function generateMetadata({ params }: EditFaqPageProps) {
 }
 
 export default async function EditFaqPage({ params }: EditFaqPageProps) {
-  const faqId = parseInt(params.id, 10)
+  const resolvedParams = await params
+  const faqId = parseInt(resolvedParams.id, 10)
   
   if (isNaN(faqId)) {
     notFound()

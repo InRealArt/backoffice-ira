@@ -10,7 +10,8 @@ import { getAuthCertificateByItemId, getItemByShopifyId } from '@/lib/actions/pr
 import toast, { Toaster } from 'react-hot-toast'
 import styles from './editArtwork.module.scss'
 
-export default function EditArtworkPage({ params }: { params: { id: string } }) {
+export default async function EditArtworkPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
   const router = useRouter()
   const { user } = useDynamicContext()
   const [isLoading, setIsLoading] = useState(true)
@@ -36,9 +37,9 @@ export default function EditArtworkPage({ params }: { params: { id: string } }) 
     const fetchProduct = async () => {
       try {
         // Extraire l'ID numérique si l'ID est au format GID
-        const productId = params.id.includes('gid://shopify/Product/') 
-          ? params.id.split('/').pop() 
-          : params.id
+        const productId = resolvedParams.id.includes('gid://shopify/Product/') 
+          ? resolvedParams.id.split('/').pop() 
+          : resolvedParams.id
           
         const result = await getShopifyProductById(productId as string)
         
@@ -86,7 +87,7 @@ export default function EditArtworkPage({ params }: { params: { id: string } }) 
     return () => {
       isMounted = false
     }
-  }, [params.id, user?.email])
+  }, [resolvedParams.id, user?.email])
 
   // Fonction pour ouvrir le certificat dans un nouvel onglet
   const viewCertificate = () => {

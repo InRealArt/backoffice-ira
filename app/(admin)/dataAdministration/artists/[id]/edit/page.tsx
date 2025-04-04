@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getArtistById } from '@/lib/actions/artist-actions'
 import ArtistEditForm from './ArtistEditForm'
-export default async function EditArtistPage({ params }: { params: { id: string } }) {
+export default async function EditArtistPage({ params }: { params: Promise<{ id: string }> }) {
 
   const { id } = await params
   const artistId = parseInt(id)

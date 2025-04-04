@@ -8,13 +8,14 @@ export const metadata = {
 }
 
 interface EditPresaleArtworkPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function EditPresaleArtworkPage({ params }: EditPresaleArtworkPageProps) {
-  const presaleArtworkId = parseInt(params.id, 10)
+  const resolvedParams = await params
+  const presaleArtworkId = parseInt(resolvedParams.id, 10)
   
   if (isNaN(presaleArtworkId)) {
     notFound()

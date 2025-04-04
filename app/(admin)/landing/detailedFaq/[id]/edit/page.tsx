@@ -7,9 +7,10 @@ export const metadata = {
   description: 'Modifier une FAQ détaillée et ses questions',
 }
 
-export default async function EditDetailedFaqPage({ params }: { params: { id: string } }) {
+export default async function EditDetailedFaqPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
   // Récupérer l'ID depuis les paramètres
-  const id = parseInt(params.id)
+  const id = parseInt(resolvedParams.id)
 
   if (isNaN(id)) {
     return notFound()

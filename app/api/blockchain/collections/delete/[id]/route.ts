@@ -5,11 +5,11 @@ import { BackofficeUserRoles } from '@prisma/client'
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     // Récupérer le token depuis les en-têtes de la requête
     const authToken = request.headers.get('Authorization')?.replace('Bearer ', '')
-    
+
     if (!authToken) {
         return NextResponse.json(
             { message: 'Non authentifié. Veuillez vous connecter.' },
@@ -18,13 +18,13 @@ export async function DELETE(
     }
     else {
         // Décoder le JWT pour extraire les informations
-        const {user, message} = await decodeJwtToken(authToken)
+        const { user, message } = await decodeJwtToken(authToken)
         if (!user || typeof user !== 'object') {
             return NextResponse.json(
                 { message: 'Token invalide ou expiré' },
                 { status: 401 }
             )
-        }   
+        }
         console.log('User authentifié:', user)
         if (user.role !== BackofficeUserRoles.admin) {
             return NextResponse.json(
@@ -35,8 +35,11 @@ export async function DELETE(
     }
 
     try {
+        // Récupérer les paramètres depuis la Promise
+        const resolvedParams = await params
+
         // Vérifier si l'ID est valide
-        const id = parseInt(params.id)
+        const id = parseInt(resolvedParams.id)
         if (isNaN(id)) {
             return NextResponse.json(
                 { message: 'ID de collection invalide' },

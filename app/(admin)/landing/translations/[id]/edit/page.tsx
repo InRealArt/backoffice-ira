@@ -8,7 +8,7 @@ export const metadata = {
   description: 'Modifier les informations d\'une traduction existante'
 }
 
-export default async function EditTranslationPage({ params }: { params: { id: string } }) {
+export default async function EditTranslationPage({ params }: { params: Promise<{ id: string }> }) {
   const awaitedParams = await params
   
   if (!awaitedParams.id || isNaN(parseInt(awaitedParams.id))) {

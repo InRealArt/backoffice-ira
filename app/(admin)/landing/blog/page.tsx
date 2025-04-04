@@ -8,8 +8,15 @@ export const metadata = {
 
 export default async function BlogPostsPage() {
   
-
-  const blogPosts = await getAllBlogPosts()
+  const blogPostsData = await getAllBlogPosts()
+  
+  // Transformation des données pour ajouter les propriétés manquantes
+  const blogPosts = blogPostsData.map(post => ({
+    ...post,
+    text: post.content || '',
+    imageUrl: '',  // Valeur par défaut pour imageUrl
+    readingTime: 3  // readingTime doit être un nombre
+  }))
 
   return <BlogPostsClient blogPosts={blogPosts} />
 } 

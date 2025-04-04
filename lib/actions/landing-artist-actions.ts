@@ -71,7 +71,16 @@ export async function createLandingArtist(data: LandingArtistData) {
             },
         })
 
-        return { success: true, landingArtist: newLandingArtist }
+        // Assurer que artworkImages est toujours un string
+        return {
+            success: true,
+            landingArtist: {
+                ...newLandingArtist,
+                artworkImages: newLandingArtist.artworkImages ?
+                    String(newLandingArtist.artworkImages) :
+                    '[]'
+            }
+        }
     } catch (error: any) {
         console.error('Erreur lors de la création de l\'artiste landing:', error)
         return {
@@ -98,7 +107,7 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 artworkStyle: data.artworkStyle,
                 artistsPage: data.artistsPage,
                 imageUrl: data.imageUrl,
-                artworkImages: data.artworkImages,
+                artworkImages: data.artworkImages || '[]',
                 websiteUrl: data.websiteUrl,
                 facebookUrl: data.facebookUrl,
                 instagramUrl: data.instagramUrl,
@@ -108,7 +117,16 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
             },
         })
 
-        return { success: true, landingArtist: updatedLandingArtist }
+        // Assurer que artworkImages est toujours un string
+        return {
+            success: true,
+            landingArtist: {
+                ...updatedLandingArtist,
+                artworkImages: updatedLandingArtist.artworkImages ?
+                    String(updatedLandingArtist.artworkImages) :
+                    '[]'
+            }
+        }
     } catch (error: any) {
         console.error('Erreur lors de la mise à jour de l\'artiste landing:', error)
         return {

@@ -9,9 +9,9 @@ export const metadata = {
 }
 
 interface EditCollectionPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function EditCollectionPage({ params }: EditCollectionPageProps) {

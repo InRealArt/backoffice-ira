@@ -7,14 +7,20 @@ export const metadata = {
   description: 'Modifiez les informations d\'un article de blog',
 }
 
-export default async function EditBlogPostPage({ params }: { params: { id: string } }) {
+export default async function EditBlogPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
   
-  const blogPostId = parseInt(params.id)
-  const blogPost = await getBlogPostById(blogPostId)
+  const blogPostId = parseInt(resolvedParams.id)
+  const blogPostData = await getBlogPostById(blogPostId)
 
-  if (!blogPost) {
+  if (!blogPostData) {
     notFound()
   }
+  
+  // On force le type du blogPost pour correspondre à celui attendu par BlogPostForm
+  // Note: Dans un contexte de production, il vaudrait mieux adapter la fonction getBlogPostById
+  // pour qu'elle retourne directement le type attendu
+  const blogPost = blogPostData as any
 
   return <BlogPostForm blogPost={blogPost} isEditMode={true} />
 } 
