@@ -6,6 +6,7 @@ import { Artist } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import Image from 'next/image'
+import Link from 'next/link'
 
 interface ArtistsClientProps {
   artists: Artist[]
@@ -15,6 +16,7 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const [loadingArtistId, setLoadingArtistId] = useState<number | null>(null)
+  const [isRedirecting, setIsRedirecting] = useState(false)
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -37,6 +39,21 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
     setLoadingArtistId(artistId)
     router.push(`/dataAdministration/artists/${artistId}/edit`)
   }
+
+  const handleCreateClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    setIsRedirecting(true)
+    
+    try {
+      console.log('Redirection vers la page de création d\'artiste...')
+      router.push('/dataAdministration/artists/create')
+    } catch (error) {
+      console.error('Erreur lors de la redirection:', error)
+      setIsRedirecting(false)
+    }
+  }
   
   // Fonction pour obtenir le badge en fonction du type d'artiste
   const getArtistTypeBadge = (isGallery: boolean | null) => {
@@ -51,7 +68,29 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
     <div className="page-container">
       <div className="page-header">
         <div className="header-top-section">
-          <h1 className="page-title">Artistes</h1>
+          <h1 className="page-title">Artistess</h1>
+          {/* Option 1: Utiliser un bouton avec click handler */}
+          <button
+            onClick={handleCreateClick}
+            className="btn btn-primary btn-medium"
+            disabled={isRedirecting}
+          >
+            {isRedirecting ? (
+              <>
+                <LoadingSpinner size="small" message="" inline />
+                Redirection...
+              </>
+            ) : (
+              '+ Créer un artiste'
+            )}
+          </button>
+          
+          {/* Option 2: Utiliser un Link direct */}
+          {/*
+          <Link href="/dataAdministration/artists/create" className="btn btn-primary btn-medium">
+            + Créer un artiste
+          </Link>
+          */}
         </div>
         <p className="page-subtitle">
           Liste des artistes ou galleries enregistrés dans le système
