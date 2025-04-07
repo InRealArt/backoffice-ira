@@ -396,13 +396,13 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
                   </div>
                 </div>
                 
-                <div className="image-list mt-md">
+                <div className="image-list mt-md" style={{ overflow: 'auto', maxWidth: '100%' }}>
                   {artworkImages.length === 0 ? (
                     <p className="text-muted">Aucune image ajoutée</p>
                   ) : (
-                    <div className="d-flex flex-wrap gap-md">
+                    <div className="d-flex gap-md" style={{ flexWrap: 'nowrap', paddingBottom: '10px' }}>
                       {artworkImages.map((image, index) => (
-                        <div key={index} className="image-item" style={{ position: 'relative', width: '150px' }}>
+                        <div key={index} className="image-item" style={{ position: 'relative', width: '150px', flexShrink: 0 }}>
                           <div style={{ position: 'relative', width: '150px', height: '150px', borderRadius: '8px', overflow: 'hidden' }}>
                             <Image
                               src={image.url}
