@@ -68,7 +68,7 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
     <div className="page-container">
       <div className="page-header">
         <div className="header-top-section">
-          <h1 className="page-title">Artistess</h1>
+          <h1 className="page-title">Artistes</h1>
           {/* Option 1: Utiliser un bouton avec click handler */}
           <button
             onClick={handleCreateClick}
