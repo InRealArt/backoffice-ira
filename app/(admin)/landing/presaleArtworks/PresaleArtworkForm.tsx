@@ -26,15 +26,7 @@ const presaleArtworkSchema = z.object({
   artistId: z.string().min(1, "Veuillez sélectionner un artiste"),
   imageUrl: z.string().min(1, "L'URL de l'image est requise").url("L'URL doit être valide"),
   description: z.string().optional(),
-  price: z.string().min(1, "Le prix est requis")
-    .refine(
-      (val) => !isNaN(parseFloat(val.replace(',', '.'))),
-      { message: "Le prix doit être un nombre valide" }
-    )
-    .refine(
-      (val) => parseFloat(val.replace(',', '.')) > 0,
-      { message: "Le prix doit être supérieur à 0" }
-    ),
+  price: z.string().optional(),
   order: z.string().default('')
 })
 
@@ -128,7 +120,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
           if (presaleArtwork) {
             setValue('name', presaleArtwork.name)
             setValue('artistId', presaleArtwork.artistId.toString())
-            setValue('price', presaleArtwork.price.toString())
+            setValue('price', presaleArtwork.price?.toString() || '')
             setValue('imageUrl', presaleArtwork.imageUrl)
             setValue('description', presaleArtwork.description || '')
             setValue('order', presaleArtwork.order?.toString() || '0')
@@ -196,7 +188,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
     setIsSubmitting(true)
     
     try {
-      const formattedPrice = parseFloat(data.price.replace(',', '.'))
+      const formattedPrice = data.price && data.price.trim() !== '' ? parseFloat(data.price.replace(',', '.')) : null
       const formattedOrder = data.order && data.order.trim() !== '' ? parseInt(data.order) : undefined
       
       if (mode === 'create') {
@@ -425,7 +417,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
           </div>
           
           <div className="form-group">
-            <label htmlFor="price" className="form-label">Prix (€) <span className="text-danger">*</span></label>
+            <label htmlFor="price" className="form-label">Prix (€)</label>
             <input
               id="price"
               type="text"

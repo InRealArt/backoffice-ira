@@ -31,7 +31,7 @@ interface PresaleArtwork {
   id: number
   name: string
   order: number
-  price: number
+  price: number | null
   artistId: number
   artist: Artist
   imageUrl: string
@@ -94,7 +94,8 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
   }
   
   // Formater le prix en euros
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | null) => {
+    if (price === null) return 'Non défini'
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(price)
   }
   

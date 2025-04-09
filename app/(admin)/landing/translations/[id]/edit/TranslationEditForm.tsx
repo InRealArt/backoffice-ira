@@ -28,7 +28,7 @@ const formSchema = z.object({
   entityType: z.string().min(1, 'Le type d\'entité est requis'),
   entityId: z.coerce.number().int().positive('L\'ID de l\'entité doit être un nombre positif'),
   field: z.string().min(1, 'Le champ est requis'),
-  value: z.string().min(1, 'La valeur est requise'),
+  value: z.string(),
   languageId: z.coerce.number().int().positive('La langue est requise')
 })
 

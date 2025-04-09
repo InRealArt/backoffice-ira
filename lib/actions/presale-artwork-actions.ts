@@ -108,7 +108,7 @@ export async function swapPresaleArtworkOrder(id1: number, order1: number, id2: 
 export async function createPresaleArtwork(data: {
     name: string
     artistId: number
-    price: number
+    price: number | undefined | null
     imageUrl: string
     description?: string
     order?: number
@@ -158,7 +158,7 @@ export async function createPresaleArtwork(data: {
 export async function updatePresaleArtwork(id: number, data: {
     name?: string
     artistId?: number
-    price?: number
+    price?: number | null
     imageUrl?: string
     description?: string
     order?: number

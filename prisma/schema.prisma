@@ -871,7 +871,7 @@ model PresaleArtwork {
   description String?
   order       Int?
   artistId    Int
-  price       Int
+  price       Int?
   imageUrl    String  @unique
   mockupUrls  Json    @default("[]")
   artist      Artist  @relation(fields: [artistId], references: [id])
