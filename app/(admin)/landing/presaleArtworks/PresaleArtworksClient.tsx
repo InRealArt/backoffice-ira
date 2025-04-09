@@ -8,6 +8,7 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { toast } from 'react-hot-toast'
 import Modal from '@/app/components/Common/Modal'
 import { deletePresaleArtwork } from '@/lib/actions/presale-artwork-actions'
+import { Filters, FilterItem } from '@/app/components/Common'
 
 function ImageThumbnail({ url }: { url: string }) {
   return (
@@ -46,6 +47,7 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
   const [deletingArtworkId, setDeletingArtworkId] = useState<number | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [artworkToDelete, setArtworkToDelete] = useState<number | null>(null)
+  const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null)
 
   const handleArtworkClick = (artworkId: number) => {
     setLoadingArtworkId(artworkId)
@@ -96,6 +98,21 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(price)
   }
   
+  // Obtenir la liste unique des artistes à partir des œuvres
+  const artists = Array.from(
+    new Map(
+      presaleArtworks.map(artwork => [
+        artwork.artistId,
+        artwork.artist
+      ])
+    ).values()
+  )
+  
+  // Filtrer les œuvres en fonction de l'artiste sélectionné
+  const filteredArtworks = selectedArtistId
+    ? presaleArtworks.filter(artwork => artwork.artistId === selectedArtistId)
+    : presaleArtworks
+  
   return (
     <div className="page-container">
       <div className="page-header">
@@ -113,8 +130,24 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
         </p>
       </div>
       
+      <Filters>
+        <FilterItem
+          id="artistFilter"
+          label="Filtrer par artiste:"
+          value={selectedArtistId ? selectedArtistId.toString() : ''}
+          onChange={(value) => setSelectedArtistId(value ? parseInt(value) : null)}
+          options={[
+            { value: '', label: 'Tous les artistes' },
+            ...artists.map(artist => ({
+              value: artist.id.toString(),
+              label: `${artist.name} ${artist.surname}`
+            }))
+          ]}
+        />
+      </Filters>
+      
       <div className="page-content">
-        {presaleArtworks.length === 0 ? (
+        {filteredArtworks.length === 0 ? (
           <div className="empty-state">
             <p>Aucune œuvre en prévente trouvée</p>
             <button 
@@ -138,7 +171,7 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
                 </tr>
               </thead>
               <tbody>
-                {presaleArtworks.map((artwork) => {
+                {filteredArtworks.map((artwork) => {
                   const isLoading = loadingArtworkId === artwork.id
                   const isDeleting = deletingArtworkId === artwork.id
                   const isDisabled = loadingArtworkId !== null || deletingArtworkId !== null
