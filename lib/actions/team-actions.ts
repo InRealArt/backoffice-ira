@@ -17,11 +17,12 @@ export async function getTeamMemberById(id: number): Promise<Team | null> {
 
 export async function getAllTeamMembers(): Promise<Team[]> {
     try {
-        return await prisma.team.findMany({
+        const teamMembers = await prisma.team.findMany({
             orderBy: {
-                lastName: 'asc'
+                order: 'asc'
             }
         })
+        return teamMembers
     } catch (error) {
         console.error('Erreur lors de la récupération des membres d\'équipe:', error)
         return []
