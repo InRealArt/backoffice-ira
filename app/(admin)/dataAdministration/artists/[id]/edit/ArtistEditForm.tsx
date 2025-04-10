@@ -18,7 +18,6 @@ const formSchema = z.object({
   pseudo: z.string().min(1, 'Le pseudo est requis'),
   description: z.string().min(10, 'La description doit contenir au moins 10 caractères'),
   artworkStyle: z.string().nullable().optional(),
-  artistsPage: z.boolean().default(false),
   publicKey: z.string().min(1, 'La clé publique est requise'),
   imageUrl: z.string().url('URL d\'image invalide'),
   isGallery: z.boolean().default(false),
@@ -60,7 +59,6 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
 
   const isGallery = watch('isGallery')
   const imageUrl = watch('imageUrl')
-  const artistsPage = watch('artistsPage')
   
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)

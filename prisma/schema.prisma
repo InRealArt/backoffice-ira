@@ -759,7 +759,7 @@ model Translation {
   entityType String // Le type d'entité (ex: "Team")
   entityId   Int // L'ID de l'entité (ex: ID du membre de l'équipe)
   field      String // Le champ à traduire (ex: "intro", "description")
-  value      String // La valeur traduite
+  value      String?
   languageId Int
   language   Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
 
