@@ -48,6 +48,8 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [artworkToDelete, setArtworkToDelete] = useState<number | null>(null)
   const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null)
+  const [sortField, setSortField] = useState<'order' | null>('order')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
   const handleArtworkClick = (artworkId: number) => {
     setLoadingArtworkId(artworkId)
@@ -109,10 +111,30 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
     ).values()
   )
   
+  // Fonction pour gérer le tri
+  const handleSort = (field: 'order') => {
+    if (sortField === field) {
+      // Si on clique sur la même colonne, on inverse la direction
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      // Sinon, on trie par le nouveau champ en ordre ascendant
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+  
   // Filtrer les œuvres en fonction de l'artiste sélectionné
   const filteredArtworks = selectedArtistId
     ? presaleArtworks.filter(artwork => artwork.artistId === selectedArtistId)
     : presaleArtworks
+  
+  // Trier les œuvres
+  const sortedArtworks = [...filteredArtworks].sort((a, b) => {
+    if (sortField === 'order') {
+      return sortDirection === 'asc' ? a.order - b.order : b.order - a.order
+    }
+    return 0
+  })
   
   return (
     <div className="page-container">
@@ -164,7 +186,14 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
               <thead>
                 <tr>
                   <th>Image</th>
-                  <th>Ordre</th>
+                  <th 
+                    className="cursor-pointer select-none"
+                    onClick={() => handleSort('order')}
+                  >
+                    Ordre {sortField === 'order' && (
+                      <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </th>
                   <th>Nom</th>
                   <th>Artiste</th>
                   <th>Prix</th>
@@ -172,7 +201,7 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
                 </tr>
               </thead>
               <tbody>
-                {filteredArtworks.map((artwork) => {
+                {sortedArtworks.map((artwork) => {
                   const isLoading = loadingArtworkId === artwork.id
                   const isDeleting = deletingArtworkId === artwork.id
                   const isDisabled = loadingArtworkId !== null || deletingArtworkId !== null
