@@ -57,7 +57,7 @@ export default function TranslationEditForm({ translation, languages, models }: 
       entityType: translation.entityType,
       entityId: translation.entityId,
       field: translation.field,
-      value: translation.value,
+      value: translation.value ?? '',
       languageId: translation.languageId
     }
   })
