@@ -1588,6 +1588,40 @@ export async function getAllArtists() {
 }
 
 /**
+ * Récupère tous les artistes
+ */
+export async function getAllArtistsAndGalleries() {
+  try {
+    const artists = await prisma.artist.findMany({
+      select: {
+        id: true,
+        name: true,
+        surname: true,
+        pseudo: true,
+        description: true,
+        publicKey: true,
+        imageUrl: true,
+        isGallery: true,
+        backgroundImage: true,
+        artworkStyle: true
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    })
+
+    // Garantir que artworkStyle est défini, même si null
+    return artists.map(artist => ({
+      ...artist,
+      artworkStyle: artist.artworkStyle || null
+    }))
+  } catch (error) {
+    console.error('Erreur lors de la récupération des artistes:', error)
+    return []
+  }
+}
+
+/**
  * Récupère toutes les galleries
  */
 export async function getAllGalleries() {

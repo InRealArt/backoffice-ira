@@ -16,7 +16,7 @@ import {
   getMaxPresaleArtworkOrder,
   getPresaleArtworkByOrder
 } from '@/lib/actions/presale-artwork-actions'
-import { getAllArtists } from '@/lib/actions/prisma-actions'
+import { getAllArtistsAndGalleries } from '@/lib/actions/prisma-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import TranslationField from '@/app/components/TranslationField'
 
@@ -99,7 +99,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
   useEffect(() => {
     const fetchArtists = async () => {
       try {
-        const artistsData = await getAllArtists()
+        const artistsData = await getAllArtistsAndGalleries()
         setArtists(artistsData)
       } catch (error) {
         console.error('Erreur lors de la récupération des artistes:', error)
