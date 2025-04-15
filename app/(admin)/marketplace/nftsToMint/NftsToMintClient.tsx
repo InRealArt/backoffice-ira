@@ -42,13 +42,8 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const [loadingItemId, setLoadingItemId] = useState<number | null>(null)
-  const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all')
-  const [smartContractFilter, setSmartContractFilter] = useState('all')
-  const [searchTerm, setSearchTerm] = useState('')
-  
-  // Ajout du filtre pour les collections
-  const [collectionFilter, setCollectionFilter] = useState('all')
-  
+  const [userFilter, setUserFilter] = useState('all')
+
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
     const checkIfMobile = () => {
@@ -69,45 +64,25 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
   // Vérifier que products n'est pas undefined avant de filtrer
   const safeProducts = Array.isArray(products) ? products : []
   
-  // Filtrer les produits par statut, smart contract et terme de recherche
+  // Créer une liste unique des utilisateurs pour le filtre
+  const userOptions = [
+    { value: 'all', label: 'Tous les créateurs' },
+    ...safeProducts
+      .filter(product => product.user)
+      .map(product => ({
+        value: String(product.idUser),
+        label: product.user 
+          ? `${product.user.firstName || ''} ${product.user.lastName || ''}`.trim() || `ID: ${product.idUser}`
+          : `ID: ${product.idUser}`
+      }))
+      .filter((option, index, self) => 
+        index === self.findIndex(t => t.value === option.value)
+      )
+  ]
+  
+  // Filtrer les produits par utilisateur
   const filteredProducts = safeProducts.filter(product => {
-    // Filtre par statut
-    const matchesStatus = statusFilter === 'all' || product.status === statusFilter
-    
-    // Filtre par smart contract
-    let matchesSmartContract = true
-    if (smartContractFilter !== 'all') {
-      // Vérifier si l'adresse de la factory correspond à celle sélectionnée
-      const factoryAddress = product.nftResource?.collection?.smartContract?.factoryAddress
-      matchesSmartContract = factoryAddress === smartContractFilter
-    }
-    
-    // Filtre par collection
-    let matchesCollection = true
-    if (collectionFilter !== 'all') {
-      const collectionName = product.nftResource?.collection?.name
-      matchesCollection = collectionName === collectionFilter
-    }
-    
-    // Filtre par recherche
-    let matchesSearch = true
-    if (searchTerm.trim() !== '') {
-      const searchLower = searchTerm.toLowerCase().trim()
-      
-      // Recherche dans les champs pertinents
-      const userName = `${product.user?.firstName || ''} ${product.user?.lastName || ''}`.toLowerCase()
-      const userEmail = (product.user?.email || '').toLowerCase()
-      const nftName = (product.nftResource?.name || '').toLowerCase()
-      const idShopify = product.idShopify.toString()
-      
-      matchesSearch = 
-        userName.includes(searchLower) || 
-        userEmail.includes(searchLower) || 
-        nftName.includes(searchLower) ||
-        idShopify.includes(searchLower)
-    }
-    
-    return matchesStatus && matchesSmartContract && matchesCollection && matchesSearch
+    return userFilter === 'all' || String(product.idUser) === userFilter
   })
   
   const handleItemClick = (itemId: number) => {
@@ -128,63 +103,11 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
       
       <Filters>
         <FilterItem
-          id="status-filter" 
-          label="Filtrer par statut:"
-          value={statusFilter}
-          onChange={(value) => setStatusFilter(value as ItemStatus | 'all')}
-          options={[
-            { value: 'all', label: 'Tous les statuts' },
-            { value: 'pending', label: 'En attente' },
-            { value: 'listed', label: 'Listé' }
-          ]}
-        />
-          
-        <FilterItem
-          id="smartcontract-filter"
-          label="Smart Contract:"
-          value={smartContractFilter}
-          onChange={(value) => setSmartContractFilter(value)}
-          options={[
-            { value: 'all', label: 'Tous' },
-            ...safeProducts
-              .filter(product => {
-                const factoryAddress = product.nftResource?.collection?.smartContract?.factoryAddress
-                return !!factoryAddress
-              })
-              .map(product => {
-                const factoryAddress = product.nftResource?.collection?.smartContract?.factoryAddress || ''
-                const isActive = product.nftResource?.collection?.smartContract?.active || false
-                return {
-                  value: factoryAddress,
-                  label: `${isActive ? '🟢 ' : '🔴 '} ${truncateAddress(factoryAddress)}`
-                }
-              })
-              .filter((option, index, self) => 
-                index === self.findIndex(t => t.value === option.value)
-              )
-          ]}
-        />
-        
-        <FilterItem
-          id="collection-filter"
-          label="Collection NFT:"
-          value={collectionFilter}
-          onChange={(value) => setCollectionFilter(value)}
-          options={[
-            { value: 'all', label: 'Toutes les collections' },
-            ...safeProducts
-              .filter(product => {
-                const collectionName = product.nftResource?.collection?.name
-                return !!collectionName
-              })
-              .map(product => ({
-                value: product.nftResource?.collection?.name || '',
-                label: product.nftResource?.collection?.name || 'Sans nom'
-              }))
-              .filter((option, index, self) => 
-                index === self.findIndex(t => t.value === option.value)
-              )
-          ]}
+          id="user-filter"
+          label="Filtrer par créateur:"
+          value={userFilter}
+          onChange={(value) => setUserFilter(value)}
+          options={userOptions}
         />
       </Filters>
       
@@ -200,7 +123,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                 <tr>
                   <th>ID</th>
                   <th>ID Shopify</th>
-                  <th className="hidden-mobile">Utilisateur</th>
+                  <th className="hidden-mobile">Créateur du produit</th>
                   <th>Statut</th>
                   <th className="hidden-mobile">NFT associé</th>
                   <th className="hidden-mobile">Statut NFT</th>
@@ -236,7 +159,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                       <td>{String(product.idShopify)}</td>
                       <td className="hidden-mobile">
                         {product.user ? 
-                          `${product.user.firstName || ''} ${product.user.lastName || ''} ${product.user.email ? `(${product.user.email})` : ''}`.trim() : 
+                          `${product.user.firstName || ''} ${product.user.lastName || ''}`.trim() || `ID: ${product.idUser}` : 
                           `ID: ${product.idUser}`
                         }
                       </td>

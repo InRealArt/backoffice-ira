@@ -1,6 +1,11 @@
 import { prisma } from '@/lib/prisma'
 import NftsToMintClient from './NftsToMintClient'
 
+// Force la route à être dynamique
+export const dynamic = 'force-dynamic'
+// Désactive le cache de la route
+export const revalidate = 0
+
 export const metadata = {
   title: 'Demandes de listing produits | Marketplace',
   description: 'Gérez les demandes de listing de produits dans le marketplace',
@@ -10,22 +15,22 @@ export default async function NftsToMintPage() {
   try {
     // Récupération des items avec les relations user et nftResource
     const productsRaw = await prisma.item.findMany({
-      // where: {
-      //   OR: [
-      //     {
-      //       nftResource: {
-      //         status: {
-      //           not: {
-      //             in: ['MINED', 'LISTED', 'SOLD']
-      //           }
-      //         }
-      //       }
-      //     },
-      //     {
-      //       nftResource: null
-      //     }
-      //   ]
-      // },
+      where: {
+        OR: [
+          {
+            nftResource: {
+              status: {
+                not: {
+                  in: ['MINED', 'LISTED', 'ROYALTYSET', 'SOLD']
+                }
+              }
+            }
+          },
+          {
+            nftResource: null
+          }
+        ]
+      },
       orderBy: {
         id: 'desc',
       },
