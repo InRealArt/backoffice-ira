@@ -352,6 +352,23 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     setNumPages(numPages)
   }
   
+  const handleResetForm = () => {
+    reset()
+    setPreviewImages([])
+    setPreviewCertificate(null)
+    setTags([])
+    setSecondaryImages([])
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+    if (certificateInputRef.current) {
+      certificateInputRef.current.value = ''
+    }
+    if (secondaryImagesInputRef.current) {
+      secondaryImagesInputRef.current.value = ''
+    }
+  }
+  
   const onSubmit = async (data: ArtworkFormData) => {
     setIsSubmitting(true)
     
@@ -436,19 +453,69 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           formData.append('tags', tags.join(','))
         }
         
-        // TODO: Uploader les images vers Firebase Storage
-        // 1. Récupérer l'artiste associé à l'utilisateur
-        // 2. Vérifier/créer le répertoire "Prénom Nom" de l'artiste
-        // 3. Créer le répertoire avec le slug de l'item
-        // 4. Uploader les images dans ce répertoire
-        // 5. Récupérer les URLs des images
+        // Upload des images vers Firebase Storage
+        let mainImageUrl = '';
+        let secondaryImageUrls: string[] = [];
 
-        // Simuler l'upload vers Firebase Storage (à implémenter réellement plus tard)
-        console.log('💡 À implémenter: Upload des images vers Firebase Storage')
-        console.log(`- Créer le dossier avec le nom de l'artiste s'il n'existe pas`)
-        console.log(`- Créer le sous-dossier avec le slug "${slug}"`)
-        console.log(`- Uploader les images dans ce répertoire`)
-        console.log(`- Stocker les URLs dans mainImageUrl et images[]`)
+        try {
+          // Récupérer les informations de l'artiste pour le stockage hiérarchique
+          const artistName = backofficeUser ? `${backofficeUser.firstName} ${backofficeUser.lastName}`.trim() : 'unknown';
+          const artistFolder = artistName;
+          const itemSlug = slug || normalizeString(data.title);
+
+          if (data.images && data.images instanceof FileList && data.images.length > 0) {
+            const mainImage = data.images[0];
+            const secondaryImagesArray: File[] = [];
+            
+            // Si nous avons des images secondaires au format File, les ajouter
+            if (data.images.length > 1) {
+              for (let i = 1; i < data.images.length; i++) {
+                secondaryImagesArray.push(data.images[i]);
+              }
+            }
+            
+            // Importer dynamiquement les modules Firebase pour éviter les erreurs côté serveur
+            const { getAuth, signInAnonymously } = await import('firebase/auth');
+            const { app } = await import('@/lib/firebase/config');
+            const { uploadArtworkImages } = await import('@/lib/firebase/storage');
+
+            // S'authentifier avec Firebase en utilisant l'authentification anonyme
+            // C'est la méthode la plus simple quand vos utilisateurs sont déjà authentifiés dans votre backoffice
+            const auth = getAuth(app);
+            try {
+              console.log('Tentative d\'authentification anonyme Firebase...');
+              const userCredential = await signInAnonymously(auth);
+              console.log('Authentification Firebase réussie, UID:', userCredential.user.uid);
+              
+              // Une fois authentifié, uploader les images
+              const uploadResult = await uploadArtworkImages(
+                mainImage,
+                secondaryImagesArray,
+                {
+                  artistFolder,
+                  itemSlug
+                }
+              );
+              
+              // Récupérer les URLs des images
+              mainImageUrl = uploadResult.mainImageUrl;
+              secondaryImageUrls = uploadResult.secondaryImageUrls;
+              
+              console.log(`Image principale uploadée: ${mainImageUrl}`);
+              console.log(`Images secondaires uploadées: ${secondaryImageUrls.length}`);
+            } catch (authError) {
+              console.error('Erreur lors de l\'authentification Firebase:', authError);
+              toast.error('Erreur lors de l\'authentification Firebase');
+              throw authError;
+            }
+          } else {
+            console.warn('Aucune image sélectionnée pour l\'upload');
+          }
+        } catch (uploadError) {
+          console.error("Erreur d'upload détaillée:", uploadError);
+          toast.error("Erreur lors de l'upload des images. Veuillez contacter l'administrateur.");
+          throw uploadError;
+        }
         
         // Ajouter les images
         if (data.images && data.images instanceof FileList && data.images.length > 0) {
@@ -472,12 +539,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
 
         if (result.success) {
           try {
-            // Préparer le tableau d'images secondaires (pour la démo)
-            const secondaryImagesArray = secondaryImages.map((url, index) => ({
-              url,
-              order: index + 1
-            }))
-            
+            // Créer l'enregistrement de l'œuvre
             const newItem = await createItemRecord(
               backofficeUser.id, 
               'created',
@@ -498,35 +560,53 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
                 metaDescription: data.metaDescription,
                 description: data.description || '',
                 slug: slug || normalizeString(data.title)
-                // Les propriétés imageUrl et images qui causent des erreurs ont été retirées temporairement
-                // Une fois le schéma de la table mis à jour, on pourra les ajouter
-                // imageUrl: previewImages[0] || null,
-                // images: secondaryImagesArray
               }
             )
             
             // Si la création de l'item a réussi et que nous avons un certificat
-            if (newItem && newItem.item.id && data.certificate && data.certificate instanceof FileList && data.certificate.length > 0) {
-              const certificateFile = data.certificate[0];
-              const arrayBuffer = await certificateFile.arrayBuffer();
-              const buffer = new Uint8Array(arrayBuffer)
-              await saveAuthCertificate(newItem.item.id, buffer)
+            if (newItem && newItem.item && newItem.item.id) {
+              // Si nous avons un certificat, le sauvegarder
+              if (data.certificate && data.certificate instanceof FileList && data.certificate.length > 0) {
+                const certificateFile = data.certificate[0];
+                const arrayBuffer = await certificateFile.arrayBuffer();
+                const buffer = new Uint8Array(arrayBuffer);
+                await saveAuthCertificate(newItem.item.id, buffer);
+              }
+              
+              // Si nous avons des URLs d'images Firebase, les logger pour implémentation future
+              if (mainImageUrl || secondaryImageUrls.length > 0) {
+                console.log(`Item créé avec succès. ID: ${newItem.item.id}`);
+                console.log(`URL de l'image principale: ${mainImageUrl}`);
+                console.log(`Nombre d'images secondaires: ${secondaryImageUrls.length}`);
+                
+                // TODO: Une fois le schéma de la base de données mis à jour pour prendre en charge le stockage 
+                // des URLs d'images, décommenter le code ci-dessous pour utiliser la fonction saveItemImages
+                /*
+                try {
+                  const { saveItemImages } = await import('@/lib/actions/prisma-actions');
+                  await saveItemImages(newItem.item.id, mainImageUrl, secondaryImageUrls);
+                  console.log('URLs des images sauvegardées dans la base de données');
+                } catch (imageError) {
+                  console.error('Erreur lors de la sauvegarde des URLs des images:', imageError);
+                  // Ne pas bloquer le flux principal si la sauvegarde des images échoue
+                }
+                */
+              }
             }
             
             // Enregistrer le slug dans les logs pour utilisation future
-            console.log(`Œuvre "${data.title}" créée avec succès. Slug généré: ${slug}`)
-            console.log(`Images secondaires: ${secondaryImagesArray.length}`)
+            console.log(`Œuvre "${data.title}" créée avec succès. Slug généré: ${slug}`);
             
-            toast.success(`L'œuvre "${data.title}" a été créée avec succès!`)
+            toast.success(`L'œuvre "${data.title}" a été créée avec succès!`);
             
             if (onSuccess) {
-              onSuccess()
+              onSuccess();
             } else {
-              handleResetForm()
+              handleResetForm();
             }
           } catch (itemError) {
-            console.error('Erreur lors de la création de l\'item:', itemError)
-            toast.error('Erreur lors de la création de l\'item')
+            console.error('Erreur lors de la création de l\'item:', itemError);
+            toast.error('Erreur lors de la création de l\'item');
           }
         }
       }
@@ -535,23 +615,6 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       toast.error(error.message || 'Une erreur est survenue')
     } finally {
       setIsSubmitting(false)
-    }
-  }
-  
-  const handleResetForm = () => {
-    reset()
-    setPreviewImages([])
-    setPreviewCertificate(null)
-    setTags([])
-    setSecondaryImages([])
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-    if (certificateInputRef.current) {
-      certificateInputRef.current.value = ''
-    }
-    if (secondaryImagesInputRef.current) {
-      secondaryImagesInputRef.current.value = ''
     }
   }
   

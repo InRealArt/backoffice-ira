@@ -1775,3 +1775,65 @@ export async function updateItemRecord(
     }
   }
 }
+
+/**
+ * Sauvegarde les URLs des images pour un item
+ * Note: Cette fonction est à implémenter une fois que le schéma de la base 
+ * de données aura été mis à jour pour prendre en charge les images
+ */
+export async function saveItemImages(
+  itemId: number,
+  mainImageUrl: string,
+  secondaryImageUrls: string[] = []
+) {
+  try {
+    // TODO: Mettre à jour le schéma Prisma pour ajouter un champ imageUrl dans la table Item
+    // et créer une table ItemImage avec une relation one-to-many avec Item
+    console.log('saveItemImages appelé avec itemId:', itemId);
+    console.log('Image principale:', mainImageUrl);
+    console.log('Images secondaires:', secondaryImageUrls.length);
+
+    // Une fois le schéma mis à jour, décommenter et adapter ce code:
+    /*
+    // Mettre à jour l'item avec l'URL de l'image principale
+    const updatedItem = await prisma.item.update({
+      where: { id: itemId },
+      data: { imageUrl: mainImageUrl }
+    });
+    
+    // Si nous avons des images secondaires, les ajouter dans la table ItemImage
+    if (secondaryImageUrls.length > 0) {
+      // Créer les entrées pour les images secondaires
+      const secondaryImagesData = secondaryImageUrls.map((url, index) => ({
+        itemId: itemId,
+        url: url,
+        order: index + 1
+      }));
+      
+      // Utiliser createMany pour insérer toutes les images en une seule requête
+      await prisma.itemImage.createMany({
+        data: secondaryImagesData
+      });
+    }
+    
+    return {
+      success: true,
+      message: `Images sauvegardées pour l'item #${itemId}`,
+      data: {
+        mainImageUrl,
+        secondaryImagesCount: secondaryImageUrls.length
+      }
+    };
+    */
+
+    // En attendant la mise à jour du schéma, retourner un message de succès factice
+    return {
+      success: true,
+      message: 'La sauvegarde des images sera disponible après la mise à jour du schéma de la base de données',
+      pending: true
+    };
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde des images:', error);
+    throw new Error(`Échec de la sauvegarde des images: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+  }
+}
