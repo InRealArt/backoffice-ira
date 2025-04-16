@@ -389,6 +389,51 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           // Mettre à jour l'œuvre existante
           setIsSubmitting(true)
           
+          // Upload des images vers Firebase si de nouvelles images ont été sélectionnées
+          let mainImageUrl = '';
+          if (data.images && data.images instanceof FileList && data.images.length > 0) {
+            try {
+              // Récupérer les informations de l'artiste pour le stockage hiérarchique
+              const artistName = backofficeUser ? `${backofficeUser.firstName} ${backofficeUser.lastName}`.trim() : 'unknown';
+              const artistFolder = artistName;
+              const itemSlug = slug || normalizeString(data.title);
+              
+              const mainImage = data.images[0];
+              
+              // Importer dynamiquement les modules Firebase
+              const { getAuth, signInAnonymously } = await import('firebase/auth');
+              const { app } = await import('@/lib/firebase/config');
+              const { uploadImageToFirebase } = await import('@/lib/firebase/storage');
+              
+              // S'authentifier avec Firebase
+              const auth = getAuth(app);
+              const userCredential = await signInAnonymously(auth);
+              console.log('Authentification Firebase réussie, UID:', userCredential.user.uid);
+              
+              // Uploader l'image principale
+              mainImageUrl = await uploadImageToFirebase(mainImage, {
+                artistFolder,
+                itemSlug,
+                isMain: true
+              });
+              
+              console.log(`Image principale uploadée: ${mainImageUrl}`);
+              
+              try {
+                // Sauvegarder l'URL de l'image directement
+                const { saveItemImages } = await import('@/lib/actions/prisma-actions');
+                await saveItemImages(initialData.id as number, mainImageUrl, []);
+                console.log('URL de l\'image sauvegardée dans la base de données');
+              } catch (imageError) {
+                console.error('Erreur lors de la sauvegarde de l\'URL de l\'image:', imageError);
+                // Ne pas bloquer le flux principal si la sauvegarde de l'image échoue
+              }
+            } catch (uploadError) {
+              console.error('Erreur lors de l\'upload de l\'image:', uploadError);
+              toast.error('Erreur lors de l\'upload de l\'image');
+            }
+          }
+          
           const result = await updateItemRecord(
             initialData.id,
             {
@@ -407,7 +452,8 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
               metaDescription: data.metaDescription,
               description: data.description || '',
               slug: slug || normalizeString(data.title),
-              tags: tags
+              tags: tags,
+              mainImageUrl: mainImageUrl || null
             }
           )
           
@@ -559,7 +605,8 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
                 metaTitle: data.metaTitle,
                 metaDescription: data.metaDescription,
                 description: data.description || '',
-                slug: slug || normalizeString(data.title)
+                slug: slug || normalizeString(data.title),
+                mainImageUrl: mainImageUrl || null
               }
             )
             
@@ -579,9 +626,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
                 console.log(`URL de l'image principale: ${mainImageUrl}`);
                 console.log(`Nombre d'images secondaires: ${secondaryImageUrls.length}`);
                 
-                // TODO: Une fois le schéma de la base de données mis à jour pour prendre en charge le stockage 
-                // des URLs d'images, décommenter le code ci-dessous pour utiliser la fonction saveItemImages
-                /*
+                // Sauvegarder les URLs des images dans la base de données
                 try {
                   const { saveItemImages } = await import('@/lib/actions/prisma-actions');
                   await saveItemImages(newItem.item.id, mainImageUrl, secondaryImageUrls);
@@ -590,7 +635,6 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
                   console.error('Erreur lors de la sauvegarde des URLs des images:', imageError);
                   // Ne pas bloquer le flux principal si la sauvegarde des images échoue
                 }
-                */
               }
             }
             

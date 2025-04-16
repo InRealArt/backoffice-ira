@@ -35,10 +35,24 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
             }
         }
 
-        // Récupérer tous les items de l'utilisateur
+        // Récupérer tous les items de l'utilisateur avec les champs nécessaires
         const items = await prisma.item.findMany({
             where: {
                 idUser: user.id
+            },
+            select: {
+                id: true,
+                name: true,
+                status: true,
+                tags: true,
+                height: true,
+                width: true,
+                creationYear: true,
+                artworkSupport: true,
+                mainImageUrl: true, // Sélectionner explicitement mainImageUrl
+                description: true,
+                metaTitle: true,
+                metaDescription: true
             },
             orderBy: {
                 id: 'desc'
@@ -57,12 +71,18 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
             items.map(async (item) => {
                 // Récupérer les infos supplémentaires depuis Shopify
                 const shopifyProduct = await getShopifyProductById(item.id.toString())
+
+                // Utiliser mainImageUrl du modèle Item s'il est disponible
+                // Sinon, utiliser l'image de Shopify ou une image par défaut
+                console.log('Item avec ID', item.id, 'a mainImageUrl:', item.mainImageUrl);
+                const imageUrl = item.mainImageUrl || shopifyProduct?.product?.imageUrl || '/img/Logo_InRealArt.svg'
+
                 return {
                     id: item.id,
                     status: item.status,
-                    title: shopifyProduct?.product?.title || 'Sans titre',
+                    title: item.name || shopifyProduct?.product?.title || 'Sans titre',
                     price: shopifyProduct?.product?.price || '0.00',
-                    imageUrl: shopifyProduct?.product?.imageUrl || '/images/no-image.jpg',
+                    imageUrl: imageUrl,
                     tags: item.tags,
                     height: item.height?.toString() || undefined,
                     width: item.width?.toString() || undefined,

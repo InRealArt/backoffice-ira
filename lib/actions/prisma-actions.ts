@@ -388,7 +388,8 @@ export async function createItemRecord(
     metaTitle?: string,
     metaDescription?: string,
     description?: string,
-    slug?: string
+    slug?: string,
+    mainImageUrl?: string | null
   }
 ) {
   try {
@@ -417,7 +418,8 @@ export async function createItemRecord(
         metaTitle: additionalData?.metaTitle || '',
         metaDescription: additionalData?.metaDescription || '',
         description: additionalData?.description || '',
-        slug: additionalData?.slug || ''
+        slug: additionalData?.slug || '',
+        mainImageUrl: additionalData?.mainImageUrl || null
       },
       include: {
         user: true
@@ -1716,7 +1718,8 @@ export async function updateItemRecord(
     metaDescription?: string,
     description?: string,
     slug?: string,
-    tags?: string[]
+    tags?: string[],
+    mainImageUrl?: string | null
   }
 ): Promise<{ success: boolean, message?: string, item?: any }> {
   try {
@@ -1752,6 +1755,7 @@ export async function updateItemRecord(
     if (data?.description !== undefined) updateData.description = data.description
     if (data?.slug !== undefined) updateData.slug = data.slug
     if (data?.tags) updateData.tags = data.tags
+    if (data?.mainImageUrl !== undefined) updateData.mainImageUrl = data.mainImageUrl
 
     // Mettre à jour l'item
     const updatedItem = await prisma.item.update({
@@ -1787,35 +1791,16 @@ export async function saveItemImages(
   secondaryImageUrls: string[] = []
 ) {
   try {
-    // TODO: Mettre à jour le schéma Prisma pour ajouter un champ imageUrl dans la table Item
-    // et créer une table ItemImage avec une relation one-to-many avec Item
-    console.log('saveItemImages appelé avec itemId:', itemId);
-    console.log('Image principale:', mainImageUrl);
-    console.log('Images secondaires:', secondaryImageUrls.length);
-
-    // Une fois le schéma mis à jour, décommenter et adapter ce code:
-    /*
     // Mettre à jour l'item avec l'URL de l'image principale
     const updatedItem = await prisma.item.update({
       where: { id: itemId },
-      data: { imageUrl: mainImageUrl }
+      data: {
+        mainImageUrl: mainImageUrl,
+        // Si nous avons des images secondaires, les stocker dans le tableau images
+        ...(secondaryImageUrls.length > 0 ? { images: secondaryImageUrls } : {})
+      }
     });
-    
-    // Si nous avons des images secondaires, les ajouter dans la table ItemImage
-    if (secondaryImageUrls.length > 0) {
-      // Créer les entrées pour les images secondaires
-      const secondaryImagesData = secondaryImageUrls.map((url, index) => ({
-        itemId: itemId,
-        url: url,
-        order: index + 1
-      }));
-      
-      // Utiliser createMany pour insérer toutes les images en une seule requête
-      await prisma.itemImage.createMany({
-        data: secondaryImagesData
-      });
-    }
-    
+
     return {
       success: true,
       message: `Images sauvegardées pour l'item #${itemId}`,
@@ -1823,14 +1808,6 @@ export async function saveItemImages(
         mainImageUrl,
         secondaryImagesCount: secondaryImageUrls.length
       }
-    };
-    */
-
-    // En attendant la mise à jour du schéma, retourner un message de succès factice
-    return {
-      success: true,
-      message: 'La sauvegarde des images sera disponible après la mise à jour du schéma de la base de données',
-      pending: true
     };
   } catch (error) {
     console.error('Erreur lors de la sauvegarde des images:', error);
