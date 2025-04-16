@@ -93,7 +93,7 @@ export default function CollectionPage() {
                   price={item.price || '0.00'}
                   currency="EUR"
                   imageUrl={item.imageUrl || '/images/no-image.jpg'}
-                  idShopify={item.idShopify.toString()}
+                  idShopify={item.id.toString()}
                   userId={userDB?.id}
                   status={item.status}
                   tags={item.tags}

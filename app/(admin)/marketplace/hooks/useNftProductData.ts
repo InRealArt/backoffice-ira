@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { getShopifyProductById } from '@/lib/actions/shopify-actions'
 import {
     getAuthCertificateByItemId,
-    getItemByShopifyId,
+    getItemById,
     getUserByItemId,
     getNftResourceByItemId,
     getActiveCollections
@@ -88,13 +88,11 @@ export function useNftProductData(
                     if (result.success && result.product) {
                         setProduct(result.product)
 
-                        // Convertir result.product.id en nombre
-                        const shopifyProductId = typeof result.product.id === 'string'
-                            ? BigInt(result.product.id.replace('gid://shopify/Product/', ''))
-                            : BigInt(result.product.id)
+                        // Utiliser directement l'ID de produit comme ID d'item
+                        const itemId = parseInt(productId as string)
 
-                        // Rechercher l'Item associé 
-                        const itemResult = await getItemByShopifyId(shopifyProductId)
+                        // Rechercher l'Item associé directement par son ID
+                        const itemResult = await getItemById(itemId)
 
                         if (itemResult?.id) {
                             setItem(itemResult)

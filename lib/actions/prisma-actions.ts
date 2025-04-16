@@ -371,17 +371,21 @@ export async function getBackofficeUserByEmail(email: string) {
 
 export async function createItemRecord(
   userId: number,
-  productId: string,
   status: string,
   tags: string[] = [],
   additionalData?: {
+    name?: string,
     height?: number,
     width?: number,
     intellectualProperty?: boolean,
     intellectualPropertyEndDate?: Date | null,
-    creationDate?: Date | null,
-    priceBeforeTax?: number,
-    artworkSupport?: string | null
+    creationYear?: number | null,
+    priceNftBeforeTax?: number,
+    pricePhysicalBeforeTax?: number,
+    priceNftPlusPhysicalBeforeTax?: number,
+    artworkSupport?: string | null,
+    metaTitle?: string,
+    metaDescription?: string
   }
 ) {
   try {
@@ -393,16 +397,21 @@ export async function createItemRecord(
     const newItem = await prisma.item.create({
       data: {
         idUser: userId,
-        idShopify: BigInt(productId),
         status: status as ItemStatus,
+        name: additionalData?.name || 'Sans titre', // Utiliser le titre de l'œuvre ou 'Sans titre' par défaut
         tags: processedTags, // Utiliser directement le tableau traité
         height: additionalData?.height ? new Decimal(additionalData.height) : null,
         width: additionalData?.width ? new Decimal(additionalData.width) : null,
         intellectualProperty: additionalData?.intellectualProperty || false,
         intellectualPropertyEndDate: additionalData?.intellectualPropertyEndDate || null,
-        creationDate: additionalData?.creationDate || null,
-        priceBeforeTax: additionalData?.priceBeforeTax || 0,
-        artworkSupport: additionalData?.artworkSupport || null
+        creationYear: additionalData?.creationYear || null,
+        // Stockage des différents prix
+        pricePhysicalBeforeTax: additionalData?.pricePhysicalBeforeTax || 0,
+        priceNftBeforeTax: additionalData?.priceNftBeforeTax || 0,
+        priceNftPlusPhysicalBeforeTax: additionalData?.priceNftPlusPhysicalBeforeTax || 0,
+        artworkSupport: additionalData?.artworkSupport || null,
+        metaTitle: additionalData?.metaTitle || '',
+        metaDescription: additionalData?.metaDescription || ''
       },
       include: {
         user: true
@@ -468,7 +477,6 @@ export async function checkItemStatus({
   try {
     const item = await prisma.item.findFirst({
       where: {
-        idShopify: idProductShopify,
         idUser: idUser
       },
       select: {
@@ -543,18 +551,6 @@ export async function getAuthCertificateByItemId(itemId: number) {
   }
 }
 
-export async function getItemByShopifyId(shopifyId: bigint) {
-  try {
-    const item = await prisma.item.findFirst({
-      where: { idShopify: shopifyId }
-    })
-    return serializeData(item)
-  } catch (error) {
-    console.error('Erreur lors de la récupération de l\'item:', error)
-    return null
-  }
-}
-
 // Fonction pour récupérer l'utilisateur associé à un item
 export async function getUserByItemId(itemId: number) {
   try {
@@ -583,7 +579,7 @@ export async function getItemById(itemId: number) {
     })
 
     if (item) {
-      console.log('Item trouvé - ID en base de données:', item.id, 'ID Shopify:', item.idShopify.toString())
+      console.log('Item trouvé - ID en base de données:', item.id)
     } else {
       console.log('Aucun item trouvé avec cet ID')
     }

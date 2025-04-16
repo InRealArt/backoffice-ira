@@ -14,7 +14,6 @@ interface Item {
   id: number
   status: ItemStatus
   idUser: number
-  idShopify: bigint
   idNftResource: number | null
   user?: {
     email: string | null
@@ -156,7 +155,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                           </span>
                         </div>
                       </td>
-                      <td>{String(product.idShopify)}</td>
+                      <td>{product.id}</td>
                       <td className="hidden-mobile">
                         {product.user ? 
                           `${product.user.firstName || ''} ${product.user.lastName || ''}`.trim() || `ID: ${product.idUser}` : 

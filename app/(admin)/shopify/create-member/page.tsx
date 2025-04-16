@@ -30,10 +30,10 @@ export default function CreateMemberPage() {
       <div className="page-container">
         <div className="page-header">
           <div className="header-top-section">
-            <h1 className="page-title">Créer un membre Shopify</h1>
+            <h1 className="page-title">Créer un utilisateur Backoffice</h1>
           </div>
           <p className="page-subtitle">
-            Ajoutez un nouvel artiste ou galleriste à votre boutique Shopify
+            Ajoutez un nouvel utilisateur Backoffice
           </p>
         </div>
         

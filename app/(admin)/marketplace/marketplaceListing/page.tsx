@@ -63,7 +63,9 @@ export default async function MarketplaceListingPage() {
       ...item,
       height: item.height ? Number(item.height) : null,
       width: item.width ? Number(item.width) : null,
-      priceBeforeTax: item.priceBeforeTax ? Number(item.priceBeforeTax) : null,
+      priceNftBeforeTax: item.priceNftBeforeTax ? Number(item.priceNftBeforeTax) : null,
+      pricePhysicalBeforeTax: item.pricePhysicalBeforeTax ? Number(item.pricePhysicalBeforeTax) : null,
+      priceNftPlusPhysicalBeforeTax: item.priceNftPlusPhysicalBeforeTax ? Number(item.priceNftPlusPhysicalBeforeTax) : null,
     }))
 
     return <MarketplaceListingClient royaltysetItems={serializedItems as any} smartContracts={smartContracts} />

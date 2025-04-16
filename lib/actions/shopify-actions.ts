@@ -464,18 +464,15 @@ export async function getShopifyProductById(itemId: string) {
       }
     }
 
-    // Récupérer d'abord l'item pour obtenir l'ID Shopify
+    // Récupérer l'item pour vérifier qu'il existe
     const item = await getItemById(parseInt(itemId))
 
-    if (!item || !item.idShopify) {
+    if (!item) {
       return {
         success: false,
-        message: 'Item non trouvé ou sans ID Shopify associé'
+        message: 'Item non trouvé'
       }
     }
-
-    // Convertir le BigInt en string pour l'API Shopify
-    const shopifyId = item.idShopify.toString()
 
     // Initialisation du client Shopify Admin API
     const client = createAdminRestApiClient({
@@ -483,6 +480,9 @@ export async function getShopifyProductById(itemId: string) {
       apiVersion: '2025-01',
       accessToken: process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN || '',
     })
+
+    // Utiliser l'ID de l'item comme identifiant pour Shopify (si la convention est maintenue)
+    const shopifyId = itemId
 
     // Récupérer le produit
     const response = await client.get(`products/${shopifyId}`)
@@ -539,41 +539,54 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
   try {
     const title = formData.get('title') as string
     const description = formData.get('description') as string
-    const price = formData.get('price') as string
-    const artist = formData.get('artist') as string
     const medium = formData.get('medium') as string
     const height = formData.get('height') as string || ''
     const width = formData.get('width') as string || ''
     const year = formData.get('year') as string || ''
+    const creationYear = formData.get('creationYear') as string || ''
     const edition = formData.get('edition') as string || ''
     const tagsString = formData.get('tags') as string || ''
     const tags = tagsString ? tagsString.split(',').map(tag => tag.trim()) : []
     const userEmail = formData.get('userEmail') as string
-    console.log('userEmail === ', userEmail)
     const weight = formData.get('weight') as string || ''
+
+    // Récupérer les options de prix
+    const hasPhysicalOnly = formData.get('hasPhysicalOnly') === 'true'
+    const hasNftOnly = formData.get('hasNftOnly') === 'true'
+    const hasNftPlusPhysical = formData.get('hasNftPlusPhysical') === 'true'
+
+    const pricePhysicalBeforeTax = hasPhysicalOnly ? formData.get('pricePhysicalBeforeTax') as string : ''
+    const priceNftBeforeTax = hasNftOnly ? formData.get('priceNftBeforeTax') as string : ''
+    const priceNftPlusPhysicalBeforeTax = hasNftPlusPhysical ? formData.get('priceNftPlusPhysicalBeforeTax') as string : ''
 
     // Récupérer le certificat d'authenticité
     const certificate = formData.get('certificate') as File
 
     // Validation des champs obligatoires
-    if (!title || !description || !price || !artist || !medium) {
+    if (!title || !description) {
       console.log('title', title)
       console.log('description', description)
-      console.log('price', price)
-      console.log('artist', artist)
-      console.log('medium', medium)
       return {
         success: false,
         message: 'Veuillez remplir tous les champs obligatoires'
       }
     }
 
-    // Validation du prix
-    const priceValue = parseFloat(price.replace(',', '.'))
-    if (isNaN(priceValue) || priceValue <= 0) {
+    // Vérifier qu'au moins une option de prix est sélectionnée
+    if (!hasPhysicalOnly && !hasNftOnly && !hasNftPlusPhysical) {
       return {
         success: false,
-        message: 'Le prix doit être un nombre positif'
+        message: 'Veuillez sélectionner au moins une option de prix'
+      }
+    }
+
+    // Vérifier que toutes les options sélectionnées ont un prix valide
+    if ((hasPhysicalOnly && (!pricePhysicalBeforeTax || isNaN(parseFloat(pricePhysicalBeforeTax)))) ||
+      (hasNftOnly && (!priceNftBeforeTax || isNaN(parseFloat(priceNftBeforeTax)))) ||
+      (hasNftPlusPhysical && (!priceNftPlusPhysicalBeforeTax || isNaN(parseFloat(priceNftPlusPhysicalBeforeTax))))) {
+      return {
+        success: false,
+        message: 'Veuillez spécifier un prix valide pour chaque option sélectionnée'
       }
     }
 
@@ -602,12 +615,6 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
     // Construire les métadonnées pour l'œuvre
     const metafields = [
       {
-        key: 'artist',
-        value: artist,
-        type: 'single_line_text_field',
-        namespace: 'artwork',
-      },
-      {
         key: 'medium',
         value: medium,
         type: 'single_line_text_field',
@@ -625,6 +632,15 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
       metafields.push({
         key: 'year',
         value: year,
+        type: 'single_line_text_field',
+        namespace: 'artwork',
+      })
+    }
+
+    if (creationYear) {
+      metafields.push({
+        key: 'creationYear',
+        value: creationYear,
         type: 'single_line_text_field',
         namespace: 'artwork',
       })
@@ -651,28 +667,66 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
       })
     }
 
-    // Créer le produit sur Shopify avec information de poids
+    // Préparer les variantes du produit en fonction des options sélectionnées
+    const variants = []
+
+    if (hasPhysicalOnly) {
+      variants.push({
+        option1: 'Physical art only',
+        price: parseFloat(pricePhysicalBeforeTax).toString(),
+        inventory_management: 'shopify',
+        inventory_quantity: 1,
+        inventory_policy: 'deny',
+        requires_shipping: true,
+        weight: weightValue,
+        weight_unit: 'kg',
+      })
+    }
+
+    if (hasNftOnly) {
+      variants.push({
+        option1: 'NFT only',
+        price: parseFloat(priceNftBeforeTax).toString(),
+        inventory_management: 'shopify',
+        inventory_quantity: 1,
+        inventory_policy: 'deny',
+        requires_shipping: false, // Les NFT ne nécessitent pas d'expédition
+        weight: 0,
+        weight_unit: 'kg',
+      })
+    }
+
+    if (hasNftPlusPhysical) {
+      variants.push({
+        option1: 'NFT + Physical art',
+        price: parseFloat(priceNftPlusPhysicalBeforeTax).toString(),
+        inventory_management: 'shopify',
+        inventory_quantity: 1,
+        inventory_policy: 'deny',
+        requires_shipping: true,
+        weight: weightValue,
+        weight_unit: 'kg',
+      })
+    }
+
+    // Créer le produit sur Shopify avec les variantes
     const productResponse = await client.post('products', {
       data: {
         product: {
           title,
           body_html: description,
-          vendor: artist,
+          vendor: 'In Real Art', // Utiliser le nom de la plateforme au lieu de l'artiste
           product_type: 'Artwork',
           tags: tags,
           status: 'active',
           images: imageUrls,
-          variants: [
+          options: [
             {
-              price: priceValue.toString(),
-              inventory_management: 'shopify',
-              inventory_quantity: 1,
-              inventory_policy: 'deny',
-              requires_shipping: true,
-              weight: weightValue,
-              weight_unit: 'kg', // Spécifier l'unité de poids en kilogrammes
+              name: 'Format', // Le nom de l'option qui définit les variantes
+              values: variants.map(v => v.option1) // Les valeurs possibles pour cette option
             }
           ],
+          variants: variants,
           metafields
         }
       }

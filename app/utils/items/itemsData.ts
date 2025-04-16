@@ -6,7 +6,6 @@ import { getShopifyProductById } from '@/lib/actions/shopify-actions'
 
 export type ItemData = {
     id: number
-    idShopify: bigint
     status: string
     title?: string
     price?: string
@@ -14,7 +13,7 @@ export type ItemData = {
     tags: string[]
     height?: string
     width?: string
-    creationDate?: Date | null
+    creationYear?: number | null
     artworkSupport?: string | null
 }
 
@@ -56,12 +55,10 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
         // Enrichir les items avec les données Shopify
         const enrichedItems = await Promise.all(
             items.map(async (item) => {
-                //console.log('ITEM', item.idShopify.toString())
                 // Récupérer les infos supplémentaires depuis Shopify
                 const shopifyProduct = await getShopifyProductById(item.id.toString())
                 return {
                     id: item.id,
-                    idShopify: item.idShopify,
                     status: item.status,
                     title: shopifyProduct?.product?.title || 'Sans titre',
                     price: shopifyProduct?.product?.price || '0.00',
@@ -69,16 +66,15 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
                     tags: item.tags,
                     height: item.height?.toString() || undefined,
                     width: item.width?.toString() || undefined,
-                    creationDate: item.creationDate,
+                    creationYear: item.creationYear,
                     artworkSupport: item.artworkSupport
                 }
-
             })
         )
 
         return {
             success: true,
-            data: enrichedItems
+            data: enrichedItems as ItemData[]
         }
     } catch (error) {
         console.error('Erreur lors de la récupération des items:', error)

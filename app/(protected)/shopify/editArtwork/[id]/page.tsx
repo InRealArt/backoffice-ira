@@ -4,26 +4,22 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import Button from '@/app/components/Button/Button'
-import { getShopifyProductById, updateShopifyProduct } from '@/lib/actions/shopify-actions'
-import { getAuthCertificateByItemId, getItemByShopifyId } from '@/lib/actions/prisma-actions'
+import ArtworkForm from '@/app/(protected)/shopify/components/ArtworkForm'
+import { getAuthCertificateByItemId, getItemById } from '@/lib/actions/prisma-actions'
 import toast, { Toaster } from 'react-hot-toast'
+import { use } from 'react'
 import styles from './editArtwork.module.scss'
+import { normalizeString } from '@/lib/utils'
 
-export default async function EditArtworkPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = await params
+export default function EditArtworkPage({ params }: { params: Promise<{ id: string }> }) {
+  // Utiliser React.use pour extraire les paramètres de la promesse
+  const resolvedParams = use(params)
   const router = useRouter()
   const { user } = useDynamicContext()
   const [isLoading, setIsLoading] = useState(true)
-  const [product, setProduct] = useState<any>(null)
+  const [item, setItem] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [certificate, setCertificate] = useState<any>(null)
-  
-  // États du formulaire
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [price, setPrice] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (!user?.email) {
@@ -34,47 +30,44 @@ export default async function EditArtworkPage({ params }: { params: Promise<{ id
 
     let isMounted = true
     
-    const fetchProduct = async () => {
+    const fetchItem = async () => {
       try {
-        // Extraire l'ID numérique si l'ID est au format GID
-        const productId = resolvedParams.id.includes('gid://shopify/Product/') 
-          ? resolvedParams.id.split('/').pop() 
-          : resolvedParams.id
+        const itemId = parseInt(resolvedParams.id)
+        
+        if (isNaN(itemId)) {
+          throw new Error('ID d\'item invalide')
+        }
           
-        const result = await getShopifyProductById(productId as string)
+        // Récupérer l'item par son ID
+        const itemData = await getItemById(itemId)
         
         if (isMounted) {
-          if (result.success && result.product) {
-            setProduct(result.product)
-            // Initialiser les champs du formulaire
-            setTitle(result.product.title || '')
-            setDescription(result.product.description || '')
-            setPrice(result.product.price || '0')
+          if (itemData) {
+            setItem(itemData)
             
-            // Convertir result.product.id en nombre
-            const shopifyProductId = typeof result.product.id === 'string' 
-              ? BigInt(result.product.id.replace('gid://shopify/Product/', ''))
-              : BigInt(result.product.id)
-
-            // Rechercher l'Item associé 
-            const item = await getItemByShopifyId(shopifyProductId)
-            if (item?.id) {
-              try {
-                const certificateResult = await getAuthCertificateByItemId(item.id)
-                if (certificateResult && certificateResult.id) {
-                  setCertificate(certificateResult)
-                }
-              } catch (certError) {
-                console.error('Erreur lors de la récupération du certificat:', certError)
+            // Vérifier les valeurs reçues
+            console.log('Item chargé pour l\'édition:', {
+              id: itemData.id,
+              name: itemData.name, // Titre de l'oeuvre
+              description: itemData.description // Description de l'oeuvre
+            })
+            
+            try {
+              // Rechercher le certificat d'authenticité associé
+              const certificateResult = await getAuthCertificateByItemId(itemData.id)
+              if (certificateResult && certificateResult.id) {
+                setCertificate(certificateResult)
               }
+            } catch (certError) {
+              console.error('Erreur lors de la récupération du certificat:', certError)
             }
           } else {
-            setError(result.message || 'Impossible de charger ce produit')
+            setError('Œuvre introuvable')
           }
           setIsLoading(false)
         }
       } catch (error: any) {
-        console.error('Erreur lors du chargement du produit:', error)
+        console.error('Erreur lors du chargement de l\'œuvre:', error)
         if (isMounted) {
           setError(error.message || 'Une erreur est survenue')
           setIsLoading(false)
@@ -82,53 +75,15 @@ export default async function EditArtworkPage({ params }: { params: Promise<{ id
       }
     }
 
-    fetchProduct()
+    fetchItem()
     
     return () => {
       isMounted = false
     }
   }, [resolvedParams.id, user?.email])
 
-  // Fonction pour ouvrir le certificat dans un nouvel onglet
-  const viewCertificate = () => {
-    if (certificate && certificate.fileUrl) {
-      window.open(certificate.fileUrl, '_blank')
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    
-    try {
-      if (!product || !product.id) {
-        throw new Error('ID du produit Shopify non disponible')
-      }
-      
-      const shopifyProductId = typeof product.id === 'string' 
-        ? product.id.replace('gid://shopify/Product/', '')
-        : product.id.toString()
-        
-      const result = await updateShopifyProduct(shopifyProductId, {
-        title,
-        description,
-        price: parseFloat(price)
-      })
-      
-      if (result.success) {
-        toast.success('Œuvre mise à jour avec succès')
-        setTimeout(() => {
-          router.push('/shopify/collection')
-        }, 1500)
-      } else {
-        toast.error(result.message || 'Erreur lors de la mise à jour')
-      }
-    } catch (error: any) {
-      console.error('Erreur lors de la mise à jour:', error)
-      toast.error(error.message || 'Une erreur est survenue')
-    } finally {
-      setIsSubmitting(false)
-    }
+  const handleSuccess = () => {
+    router.push('/shopify/collection')
   }
 
   return (
@@ -141,88 +96,37 @@ export default async function EditArtworkPage({ params }: { params: Promise<{ id
         ) : error ? (
           <div className={styles.error}>{error}</div>
         ) : (
-          <form onSubmit={handleSubmit} className={styles.form}>
-            {product?.imageUrl && (
-              <div className={styles.imagePreview}>
-                <img src={product.imageUrl} alt={product.title} />
-              </div>
-            )}
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="title" className={styles.label}>Titre</label>
-              <input
-                id="title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                className={styles.input}
-              />
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="description" className={styles.label}>Description</label>
-              <textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={5}
-                className={styles.textarea}
-              />
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="price" className={styles.label}>Prix (€)</label>
-              <input
-                id="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                required
-                className={styles.input}
-              />
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Certificat d'authenticité</label>
-              <div className={styles.certificateContainer}>
-                {certificate ? (
-                  <div className={styles.certificateInfo}>
-                    <p>Un certificat d'authenticité est disponible pour cette œuvre</p>
-                    <Button 
-                      type="button" 
-                      variant="secondary"
-                      onClick={viewCertificate}
-                    >
-                      Voir le certificat
-                    </Button>
-                  </div>
-                ) : (
-                  <p className={styles.noCertificate}>Aucun certificat d'authenticité disponible</p>
-                )}
-              </div>
-            </div>
-            
-            <div className={styles.buttonGroup}>
-              <Button 
-                type="button" 
-                variant="secondary"
-                onClick={() => router.back()}
-                disabled={isSubmitting}
-              >
-                Annuler
-              </Button>
-              <Button 
-                type="submit" 
-                variant="primary"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Enregistrement...' : 'Enregistrer les modifications'}
-              </Button>
-            </div>
-          </form>
+          <ArtworkForm 
+            mode="edit" 
+            initialData={{
+              id: item.id,
+              title: item.name,
+              description: item.description,
+              price: item.price,
+              metaTitle: item.metaTitle,
+              metaDescription: item.metaDescription,
+              medium: item.artworkSupport,
+              width: item.width?.toString(),
+              height: item.height?.toString(),
+              weight: item.weight?.toString(),
+              year: item.year?.toString(),
+              creationYear: item.creationYear?.toString(),
+              intellectualProperty: item.intellectualProperty,
+              intellectualPropertyEndDate: item.intellectualPropertyEndDate 
+                ? new Date(item.intellectualPropertyEndDate).toISOString().split('T')[0] 
+                : undefined,
+              edition: item.edition,
+              imageUrl: item.imageUrl,
+              hasPhysicalOnly: item.pricePhysicalBeforeTax > 0,
+              hasNftOnly: item.priceNftBeforeTax > 0,
+              hasNftPlusPhysical: item.priceNftPlusPhysicalBeforeTax > 0,
+              pricePhysicalBeforeTax: item.pricePhysicalBeforeTax?.toString(),
+              priceNftBeforeTax: item.priceNftBeforeTax?.toString(),
+              priceNftPlusPhysicalBeforeTax: item.priceNftPlusPhysicalBeforeTax?.toString(),
+              slug: item.name ? normalizeString(item.name) : ''
+            }}
+            onSuccess={handleSuccess}
+          />
         )}
       </div>
     </>

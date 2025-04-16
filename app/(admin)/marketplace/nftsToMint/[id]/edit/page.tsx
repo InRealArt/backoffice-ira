@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { getShopifyProductById } from '@/lib/actions/shopify-actions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, isCertificateUriUnique, getItemById } from '@/lib/actions/prisma-actions'
+import { getAuthCertificateByItemId, getUserByItemId, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, isCertificateUriUnique, getItemById } from '@/lib/actions/prisma-actions'
 import React from 'react'
 import { z } from 'zod'
 import { toast } from 'react-hot-toast'
@@ -99,13 +99,15 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
           if (result.success && result.product) {
             setProduct(result.product)
             
-            // Convertir result.product.id en nombre
-            const shopifyProductId = typeof result.product.id === 'string' 
-              ? BigInt(result.product.id.replace('gid://shopify/Product/', ''))
-              : BigInt(result.product.id)
-
-            // Rechercher l'Item associé 
-            const itemResult = await getItemByShopifyId(shopifyProductId)
+            // Utiliser directement l'ID du produit comme ID d'item
+            const productId = id.includes('gid://shopify/Product/') 
+              ? id.split('/').pop() 
+              : id
+            
+            const itemId = parseInt(productId as string)
+            
+            // Rechercher l'Item associé directement par son ID
+            const itemResult = await getItemById(itemId)
             if (itemResult?.id) {
               setItem(itemResult)
               try {

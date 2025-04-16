@@ -15,7 +15,7 @@ export default function ShopifySubMenu({ isActive, isOpen, toggleSubmenu, onNavi
   return (
     <>
       <SideMenuItem 
-        label="Shopify Admin" 
+        label="Backoffice Admin" 
         isActive={isActive}
         hasSubmenu={true}
         isSubmenuOpen={isOpen}
@@ -29,11 +29,6 @@ export default function ShopifySubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             label="Gestion des Membres" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/shopify/users', 'shopifyUsers')}
-          />
-          <SideMenuItem 
-            label="Créer un Membre" 
-            isSubmenuItem={true}
-            onClick={() => onNavigate('/shopify/create-member', 'createMember')}
           />
         </ul>
       )}

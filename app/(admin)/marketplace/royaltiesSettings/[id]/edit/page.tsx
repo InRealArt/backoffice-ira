@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
-import { getShopifyProductById } from '@/lib/actions/shopify-actions'
-import { getAuthCertificateByItemId, getItemByShopifyId, getUserByItemId, getNftResourceByItemId, getActiveCollections, getSmartContractAddress } from '@/lib/actions/prisma-actions'
+import { getItemById, getUserByItemId, getNftResourceByItemId, getActiveCollections, getSmartContractAddress, getAuthCertificateByItemId } from '@/lib/actions/prisma-actions'
 import styles from './royaltySettings.module.scss'
 import React from 'react'
 import { z } from 'zod'
@@ -26,7 +25,9 @@ import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
 import { NetworkType } from '@prisma/client'
 import { getBlockExplorerUrl } from '@/lib/blockchain/explorerUtils'
 
-type ParamsType = Promise<{ id: string }>
+type ParamsType = {
+  id: string
+}
 
 export default function ViewRoyaltysettingPage({ params }: { params: ParamsType }) {
   const router = useRouter()
@@ -56,9 +57,6 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
   const [isCheckingRole, setIsCheckingRole] = useState<boolean>(false)
   const { configureRoyalties, isLoading: isConfiguring, error: configureError, success: configureSuccess } = useRoyaltySettings()
 
-  const unwrappedParams = React.use(params)
-  const id = unwrappedParams.id
-  
   const [royalties, setRoyalties] = useState<Array<{address: string, percentage: string}>>([
     { address: '', percentage: '' }
   ])
@@ -132,59 +130,63 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     
     const fetchProduct = async () => {
       try {
-        const productId = id.includes('gid://shopify/Product/') 
-          ? id.split('/').pop() 
-          : id
+        const itemId = parseInt(params.id)
+        if (isNaN(itemId)) {
+          throw new Error('ID d\'item invalide')
+        }
         
-        const result = await getShopifyProductById(productId as string)
+        const itemResult = await getItemById(itemId)
+        
         if (isMounted) {
-          if (result.success && result.product) {
-            setProduct(result.product)
+          if (itemResult?.id) {
+            setItem(itemResult)
             
-            const shopifyProductId = typeof result.product.id === 'string' 
-              ? BigInt(result.product.id.replace('gid://shopify/Product/', ''))
-              : BigInt(result.product.id)
-
-            const itemResult = await getItemByShopifyId(shopifyProductId)
-            if (itemResult?.id) {
-              setItem(itemResult)
-              try {
-                const certificateResult = await getAuthCertificateByItemId(itemResult.id)
-                if (certificateResult && certificateResult.id) {
-                  setCertificate(certificateResult)
-                }
-                
-                const ownerResult = await getUserByItemId(itemResult.id)
-                if (ownerResult) {
-                  setProductOwner(ownerResult)
-                }
-                
-                console.log('itemResult : ', itemResult)
-                const nftResourceResult = await getNftResourceByItemId(itemResult.id)
-                console.log('nftResourceResult : ', nftResourceResult)
-                fetchCollections()
-                if (nftResourceResult) {
-                  setNftResource(nftResourceResult)
-                  if (nftResourceResult.status === 'UPLOADIPFS') {
-                    setFormData(prevData => ({
-                      ...prevData,
-                      name: nftResourceResult.name || '',
-                      description: nftResourceResult.description || '',
-                      collection: nftResourceResult.collectionId?.toString() || ''
-                    }))
-                  }
-                }
-              } catch (certError) {
-                console.error('Erreur lors de la récupération des données:', certError)
+            // Préparer un objet produit simplifié avec les données de l'item
+            setProduct({
+              id: itemResult.id,
+              title: itemResult.title || 'Sans titre',
+              description: itemResult.description || '',
+              price: itemResult.price?.toString() || '0.00',
+              currency: 'EUR',
+              imageUrl: itemResult.imageUrl || null
+            })
+            
+            try {
+              const certificateResult = await getAuthCertificateByItemId(itemResult.id)
+              if (certificateResult && certificateResult.id) {
+                setCertificate(certificateResult)
               }
+              
+              const ownerResult = await getUserByItemId(itemResult.id)
+              if (ownerResult) {
+                setProductOwner(ownerResult)
+              }
+              
+              console.log('itemResult : ', itemResult)
+              const nftResourceResult = await getNftResourceByItemId(itemResult.id)
+              console.log('nftResourceResult : ', nftResourceResult)
+              fetchCollections()
+              if (nftResourceResult) {
+                setNftResource(nftResourceResult)
+                if (nftResourceResult.status === 'UPLOADIPFS') {
+                  setFormData(prevData => ({
+                    ...prevData,
+                    name: nftResourceResult.name || '',
+                    description: nftResourceResult.description || '',
+                    collection: nftResourceResult.collectionId?.toString() || ''
+                  }))
+                }
+              }
+            } catch (certError) {
+              console.error('Erreur lors de la récupération des données:', certError)
             }
           } else {
-            setError(result.message || 'Impossible de charger ce produit')
+            setError('Item non trouvé')
           }
           setIsLoading(false)
         }
       } catch (error: any) {
-        console.error('Erreur lors du chargement du produit:', error)
+        console.error('Erreur lors du chargement de l\'item:', error)
         if (isMounted) {
           setError(error.message || 'Une erreur est survenue')
           setIsLoading(false)
@@ -197,13 +199,13 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     return () => {
       isMounted = false
     }
-  }, [id, user?.email])
+  }, [params.id, user?.email])
 
   useEffect(() => {
     if (showUploadIpfsForm) {
       fetchCollections()
     }
-  }, [id, showUploadIpfsForm])
+  }, [params.id, showUploadIpfsForm])
 
   const checkUserRoyaltyRole = async (address: string) => {
     const network = getNetwork()

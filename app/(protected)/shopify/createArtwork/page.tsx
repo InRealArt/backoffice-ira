@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
-import ArtworkCreationForm from './ArtworkCreationForm'
+import ArtworkForm from '../components/ArtworkForm'
 import styles from './createArtwork.module.scss'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
+import { useRouter } from 'next/navigation'
 
 export default function CreateArtworkPage() {
   const [isMobile, setIsMobile] = useState(false)
   const [artistName, setArtistName] = useState('')
   const { user } = useDynamicContext()
+  const router = useRouter()
   
   useEffect(() => {
     const checkIfMobile = () => {
@@ -45,6 +47,10 @@ export default function CreateArtworkPage() {
     fetchArtistName()
   }, [user])
   
+  const handleSuccess = () => {
+    router.push('/shopify/collection')
+  }
+  
   return (
     <>
       <Toaster 
@@ -55,11 +61,11 @@ export default function CreateArtworkPage() {
       <div className={styles.artworkCreationHeader}>
         <h1>Créer une œuvre dans la Collection de l'artiste <span className={styles.artistHighlight}>{artistName}</span></h1>
         <p className={styles.subtitle}>
-          Ajoutez une nouvelle œuvre à votre collection Shopify
+          Ajoutez une nouvelle œuvre à votre collection
         </p>
       </div>
       
-      <ArtworkCreationForm />
+      <ArtworkForm mode="create" onSuccess={handleSuccess} />
     </>
   )
 } 

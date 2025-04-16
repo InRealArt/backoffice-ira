@@ -4,10 +4,10 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas  = ["auth", "public", "landing"]
+  schemas   = ["auth", "public", "landing"]
 }
 
 model Artist {
@@ -629,26 +629,35 @@ enum CollectionStatus {
 }
 
 model Item {
-  id                          Int               @id @default(autoincrement())
-  status                      ItemStatus        @default(created)
-  idUser                      Int
-  idShopify                   BigInt
-  user                        BackofficeUser    @relation(fields: [idUser], references: [id])
-  authCertificate             AuthCertificate[]
-  nftResource                 NftResource?      @relation(fields: [idNftResource], references: [id])
-  idNftResource               Int?
-  tags                        String[]          @default([])
-  categoryId                  Int?
-  category                    ItemCategory?     @relation(fields: [categoryId], references: [id])
-  height                      Decimal?          @db.Decimal(10, 2)
-  width                       Decimal?          @db.Decimal(10, 2)
-  intellectualProperty        Boolean           @default(false)
-  intellectualPropertyEndDate DateTime?
-  priceBeforeTax              Int               @default(0)
-  artworkSupport              String?
-  realViewCount               Int               @default(0)
-  fakeViewCount               Int               @default(0)
-  creationDate                DateTime?
+  id                            Int               @id @default(autoincrement())
+  name                          String
+  description                   String
+  status                        ItemStatus        @default(created)
+  idUser                        Int
+  user                          BackofficeUser    @relation(fields: [idUser], references: [id])
+  authCertificate               AuthCertificate[]
+  nftResource                   NftResource?      @relation(fields: [idNftResource], references: [id])
+  idNftResource                 Int?
+  tags                          String[]          @default([])
+  categoryId                    Int?
+  category                      ItemCategory?     @relation(fields: [categoryId], references: [id])
+  height                        Decimal?          @db.Decimal(10, 2)
+  width                         Decimal?          @db.Decimal(10, 2)
+  weight                        Decimal?          @db.Decimal(10, 2)
+  intellectualProperty          Boolean           @default(false)
+  intellectualPropertyEndDate   DateTime?
+  priceNftBeforeTax             Int?              @default(0)
+  pricePhysicalBeforeTax        Int?              @default(0)
+  priceNftPlusPhysicalBeforeTax Int?              @default(0)
+  artworkSupport                String?
+  realViewCount                 Int               @default(0)
+  fakeViewCount                 Int               @default(0)
+  creationYear                  Int?
+  slug                          String?           @unique
+  metaDescription               String
+  metaTitle                     String
+  mainImageUrl                  String?
+  images                        String[]          @default([])
 
   @@index([idUser])
   @@index([idNftResource])
@@ -881,49 +890,49 @@ model PresaleArtwork {
 }
 
 model BlogPost {
-  id          Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  slug           String   @unique
-  title          String
+  slug            String   @unique
+  title           String
   metaDescription String
-  metaKeywords   String[] // Tableau de mots-clés
-  canonicalUrl   String?
-  
+  metaKeywords    String[] // Tableau de mots-clés
+  canonicalUrl    String?
+
   // Auteur (relation ou embedded)
-  author       String
-  
+  author String
+
   // Dates
-  datePublished  DateTime
-  dateModified   DateTime @updatedAt
-  
+  datePublished DateTime
+  dateModified  DateTime @updatedAt
+
   // Images
-  featuredImageUrl String
-  featuredImageAlt String
-  featuredImageWidth Int
+  featuredImageUrl    String
+  featuredImageAlt    String
+  featuredImageWidth  Int
   featuredImageHeight Int
-  
+
   // Contenu
-  introduction   String   @db.Text
-  content        String   @db.Text
-  
+  introduction String @db.Text
+  content      String @db.Text
+
   // SEO et catégorisation
-  tags           String[]
+  tags              String[]
   estimatedReadTime Int?
-  
+
   // Statut
-  isPublished    Boolean  @default(false)
-  isFeatured     Boolean  @default(false)
-  
+  isPublished Boolean @default(false)
+  isFeatured  Boolean @default(false)
+
   // Relations
   relatedArticles String[]
-  
+
   // SEO avancé
-  structuredData String?  @db.Text
+  structuredData String? @db.Text
   openGraphData  Json?
   twitterData    Json?
-  
-  viewsCount  Int      @default(0)
-  createdAt   DateTime @default(now())
+
+  viewsCount Int      @default(0)
+  createdAt  DateTime @default(now())
 
   @@schema("landing")
 }
