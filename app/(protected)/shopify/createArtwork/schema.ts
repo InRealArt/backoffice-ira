@@ -16,16 +16,7 @@ export const artworkSchema = z.object({
     metaDescription: z.string()
         .min(10, "La description SEO doit contenir au moins 10 caractères")
         .max(160, "La description SEO ne doit pas dépasser 160 caractères"),
-    artistId: z.string().min(1, "L'artiste est obligatoire"),
-    price: z.number().positive("Le prix doit être supérieur à 0").or(z.string().regex(/^\d+(\.\d{1,2})?$/, "Format de prix invalide")),
-    status: z.string().min(1, "Le statut est obligatoire"),
-    depth: z.string().optional().refine(val => !val || !isNaN(parseFloat(val)), "La profondeur doit être un nombre valide"),
-    isYearEstimated: z.boolean().optional(),
-    framable: z.boolean().optional(),
-    isFramed: z.boolean().optional(),
-    isSigned: z.boolean().optional(),
-    inventoryNumber: z.string().optional(),
-    isFeatured: z.boolean().optional(),
+    price: z.number().positive("Le prix doit être supérieur à 0").or(z.string().regex(/^\d+(\.\d{1,2})?$/, "Format de prix invalide")).optional(),
     pricePhysicalBeforeTax: z.string()
         .optional()
         .refine(val => !val || val === '' || /^\d+$/.test(val), "Le prix doit être un nombre entier"),
@@ -48,12 +39,6 @@ export const artworkSchema = z.object({
         .optional()
         .refine((val) => !val || !isNaN(parseFloat(val)), "La hauteur doit être un nombre valide"),
     weight: z.string().optional(),
-    year: z.string()
-        .optional()
-        .refine(
-            (val) => !val || (/^\d{4}$/.test(val) && parseInt(val) <= new Date().getFullYear()),
-            "L'année doit être valide et ne pas dépasser l'année en cours"
-        ),
     creationYear: z.string()
         .optional()
         .refine(

@@ -377,6 +377,7 @@ export async function createItemRecord(
     name?: string,
     height?: number,
     width?: number,
+    weight?: number,
     intellectualProperty?: boolean,
     intellectualPropertyEndDate?: Date | null,
     creationYear?: number | null,
@@ -385,7 +386,9 @@ export async function createItemRecord(
     priceNftPlusPhysicalBeforeTax?: number,
     artworkSupport?: string | null,
     metaTitle?: string,
-    metaDescription?: string
+    metaDescription?: string,
+    description?: string,
+    slug?: string
   }
 ) {
   try {
@@ -402,6 +405,7 @@ export async function createItemRecord(
         tags: processedTags, // Utiliser directement le tableau traité
         height: additionalData?.height ? new Decimal(additionalData.height) : null,
         width: additionalData?.width ? new Decimal(additionalData.width) : null,
+        weight: additionalData?.weight ? new Decimal(additionalData.weight) : null,
         intellectualProperty: additionalData?.intellectualProperty || false,
         intellectualPropertyEndDate: additionalData?.intellectualPropertyEndDate || null,
         creationYear: additionalData?.creationYear || null,
@@ -411,7 +415,9 @@ export async function createItemRecord(
         priceNftPlusPhysicalBeforeTax: additionalData?.priceNftPlusPhysicalBeforeTax || 0,
         artworkSupport: additionalData?.artworkSupport || null,
         metaTitle: additionalData?.metaTitle || '',
-        metaDescription: additionalData?.metaDescription || ''
+        metaDescription: additionalData?.metaDescription || '',
+        description: additionalData?.description || '',
+        slug: additionalData?.slug || ''
       },
       include: {
         user: true
@@ -1686,5 +1692,86 @@ export async function getArtistById(id: number) {
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'artiste:', error)
     return null
+  }
+}
+
+/**
+ * Met à jour un item existant
+ */
+export async function updateItemRecord(
+  itemId: number,
+  data?: {
+    name?: string,
+    height?: number,
+    width?: number,
+    weight?: number,
+    intellectualProperty?: boolean,
+    intellectualPropertyEndDate?: Date | null,
+    creationYear?: number | null,
+    priceNftBeforeTax?: number,
+    pricePhysicalBeforeTax?: number,
+    priceNftPlusPhysicalBeforeTax?: number,
+    artworkSupport?: string | null,
+    metaTitle?: string,
+    metaDescription?: string,
+    description?: string,
+    slug?: string,
+    tags?: string[]
+  }
+): Promise<{ success: boolean, message?: string, item?: any }> {
+  try {
+    // Vérifier si l'item existe
+    const existingItem = await prisma.item.findUnique({
+      where: { id: itemId }
+    })
+
+    if (!existingItem) {
+      return {
+        success: false,
+        message: 'Item non trouvé'
+      }
+    }
+
+    // Préparer les données de mise à jour
+    const updateData: any = {}
+
+    // Ajouter les champs s'ils sont fournis
+    if (data?.name !== undefined) updateData.name = data.name
+    if (data?.height !== undefined) updateData.height = new Decimal(data.height)
+    if (data?.width !== undefined) updateData.width = new Decimal(data.width)
+    if (data?.weight !== undefined) updateData.weight = new Decimal(data.weight)
+    if (data?.intellectualProperty !== undefined) updateData.intellectualProperty = data.intellectualProperty
+    if (data?.intellectualPropertyEndDate !== undefined) updateData.intellectualPropertyEndDate = data.intellectualPropertyEndDate
+    if (data?.creationYear !== undefined) updateData.creationYear = data.creationYear
+    if (data?.priceNftBeforeTax !== undefined) updateData.priceNftBeforeTax = data.priceNftBeforeTax
+    if (data?.pricePhysicalBeforeTax !== undefined) updateData.pricePhysicalBeforeTax = data.pricePhysicalBeforeTax
+    if (data?.priceNftPlusPhysicalBeforeTax !== undefined) updateData.priceNftPlusPhysicalBeforeTax = data.priceNftPlusPhysicalBeforeTax
+    if (data?.artworkSupport !== undefined) updateData.artworkSupport = data.artworkSupport
+    if (data?.metaTitle !== undefined) updateData.metaTitle = data.metaTitle
+    if (data?.metaDescription !== undefined) updateData.metaDescription = data.metaDescription
+    if (data?.description !== undefined) updateData.description = data.description
+    if (data?.slug !== undefined) updateData.slug = data.slug
+    if (data?.tags) updateData.tags = data.tags
+
+    // Mettre à jour l'item
+    const updatedItem = await prisma.item.update({
+      where: { id: itemId },
+      data: updateData,
+      include: {
+        user: true
+      }
+    })
+
+    return {
+      success: true,
+      message: 'Item mis à jour avec succès',
+      item: serializeData(updatedItem)
+    }
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de l\'item:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Une erreur est survenue lors de la mise à jour de l\'item'
+    }
   }
 }

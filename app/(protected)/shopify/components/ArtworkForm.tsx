@@ -8,7 +8,7 @@ import { createArtwork } from '@/lib/actions/shopify-actions'
 import toast from 'react-hot-toast'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import styles from './ArtworkForm.module.scss'
-import { getBackofficeUserByEmail, createItemRecord, saveAuthCertificate } from '@/lib/actions/prisma-actions'
+import { getBackofficeUserByEmail, createItemRecord, updateItemRecord, saveAuthCertificate } from '@/lib/actions/prisma-actions'
 import { pdfjs } from 'react-pdf'
 import { Document, Page } from 'react-pdf'
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
@@ -159,8 +159,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       width: initialData?.width || '',
       height: initialData?.height || '',
       weight: initialData?.weight || '',
-      year: initialData?.year || new Date().getFullYear().toString(),
-      creationYear: initialData?.creationYear || '',
+      creationYear: initialData?.creationYear || new Date().getFullYear().toString(),
       intellectualProperty: initialData?.intellectualProperty || false,
       intellectualPropertyEndDate: initialData?.intellectualPropertyEndDate || '',
       edition: initialData?.edition || '',
@@ -369,24 +368,53 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       }
         
       if (isEditMode && initialData?.id) {
-        // TODO: Implémenter la logique de mise à jour de l'œuvre
-        toast.success('Mise à jour de l\'œuvre en cours de développement')
-        
-        // Pour la mise à jour, on utilise également name et description pour le titre et la description
-        console.log('Mise à jour de l\'œuvre avec les propriétés:', {
-          id: initialData.id,
-          name: data.title, // Le titre va dans name
-          description: data.description,
-          metaTitle: data.metaTitle,
-          metaDescription: data.metaDescription,
-          // Autres propriétés...
-          slug // On conserve aussi le slug
-        })
-        
-        // Simuler un succès pour le prototype
-        setTimeout(() => {
-          if (onSuccess) onSuccess()
-        }, 2000)
+        try {
+          // Mettre à jour l'œuvre existante
+          setIsSubmitting(true)
+          
+          const result = await updateItemRecord(
+            initialData.id,
+            {
+              name: data.title,
+              height: data.height ? parseFloat(data.height) : undefined,
+              width: data.width ? parseFloat(data.width) : undefined,
+              weight: data.weight ? parseFloat(data.weight) : undefined,
+              intellectualProperty: data.intellectualProperty,
+              intellectualPropertyEndDate: data.intellectualPropertyEndDate ? new Date(data.intellectualPropertyEndDate) : null,
+              creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
+              pricePhysicalBeforeTax: data.hasPhysicalOnly && data.pricePhysicalBeforeTax ? parseInt(data.pricePhysicalBeforeTax, 10) : 0,
+              priceNftBeforeTax: data.hasNftOnly && data.priceNftBeforeTax ? parseInt(data.priceNftBeforeTax, 10) : 0,
+              priceNftPlusPhysicalBeforeTax: data.hasNftPlusPhysical && data.priceNftPlusPhysicalBeforeTax ? parseInt(data.priceNftPlusPhysicalBeforeTax, 10) : 0,
+              artworkSupport: data.medium || null,
+              metaTitle: data.metaTitle,
+              metaDescription: data.metaDescription,
+              description: data.description || '',
+              slug: slug || normalizeString(data.title),
+              tags: tags
+            }
+          )
+          
+          if (result.success) {
+            // Si un nouveau certificat est fourni, mettre à jour le certificat
+            if (data.certificate && data.certificate instanceof FileList && data.certificate.length > 0) {
+              const certificateFile = data.certificate[0]
+              const arrayBuffer = await certificateFile.arrayBuffer()
+              const buffer = new Uint8Array(arrayBuffer)
+              await saveAuthCertificate(initialData.id, buffer)
+            }
+            
+            toast.success(`L'œuvre "${data.title}" a été mise à jour avec succès!`)
+            
+            if (onSuccess) {
+              onSuccess()
+            }
+          } else {
+            toast.error(`Erreur lors de la mise à jour: ${result.message || 'Une erreur est survenue'}`)
+          }
+        } catch (error: any) {
+          console.error('Erreur lors de la mise à jour de l\'œuvre:', error)
+          toast.error(error.message || 'Une erreur est survenue lors de la mise à jour')
+        }
       } else {
         const formData = new FormData()
         
@@ -458,6 +486,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
                 name: data.title,
                 height: data.height ? parseFloat(data.height) : undefined,
                 width: data.width ? parseFloat(data.width) : undefined,
+                weight: data.weight ? parseFloat(data.weight) : undefined,
                 intellectualProperty: data.intellectualProperty,
                 intellectualPropertyEndDate: data.intellectualPropertyEndDate ? new Date(data.intellectualPropertyEndDate) : null,
                 creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
@@ -466,7 +495,9 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
                 priceNftPlusPhysicalBeforeTax: data.hasNftPlusPhysical && data.priceNftPlusPhysicalBeforeTax ? parseInt(data.priceNftPlusPhysicalBeforeTax, 10) : 0,
                 artworkSupport: data.medium || null,
                 metaTitle: data.metaTitle,
-                metaDescription: data.metaDescription
+                metaDescription: data.metaDescription,
+                description: data.description || '',
+                slug: slug || normalizeString(data.title)
                 // Les propriétés imageUrl et images qui causent des erreurs ont été retirées temporairement
                 // Une fois le schéma de la table mis à jour, on pourra les ajouter
                 // imageUrl: previewImages[0] || null,
@@ -576,6 +607,64 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           rows={4}
           placeholder="Décrivez l'œuvre..."
         />
+      </div>
+      
+      {/* SEO Metadata */}
+      <div className={styles.formSectionTitle}>Informations SEO</div>
+      <div className={styles.formSectionContent}>
+        <div className={styles.formGrid}>
+          {/* Meta Title */}
+          <div className={styles.formGroup}>
+            <label htmlFor="metaTitle" className={styles.formLabel} data-required={true}>
+              Titre SEO
+              <InfoTooltip
+                title="Titre SEO"
+                content={
+                  <div>
+                    <p>Ce titre sera utilisé dans les balises meta pour améliorer le référencement. Idéalement entre 50 et 60 caractères.</p>
+                    <p className={styles.tooltipExample}><strong>Exemple :</strong> "Nuit Étoilée - Peinture à l'huile par Jean Dupont | IN REAL ART"</p>
+                    <p className={styles.tooltipTips}>Conseil : Incluez le nom de l'œuvre, la technique et l'artiste.</p>
+                  </div>
+                }
+              />
+            </label>
+            <input
+              id="metaTitle"
+              type="text"
+              {...register("metaTitle", { required: true })}
+              className={`${styles.formInput} ${errors.metaTitle ? styles.formInputError : ''}`}
+              placeholder="Titre optimisé pour les moteurs de recherche"
+              maxLength={60}
+            />
+            {errors.metaTitle && <p className={styles.formError}>Le titre SEO est requis</p>}
+          </div>
+        </div>
+        
+        {/* Meta Description */}
+        <div className={styles.formGroup}>
+          <label htmlFor="metaDescription" className={styles.formLabel} data-required={true}>
+            Description SEO
+            <InfoTooltip
+              title="Description SEO"
+              content={
+                <div>
+                  <p>Cette description sera utilisée dans les balises meta pour améliorer le référencement. Idéalement entre 120 et 160 caractères.</p>
+                  <p className={styles.tooltipExample}><strong>Exemple :</strong> "Découvrez 'Nuit Étoilée', une œuvre originale à l'huile sur toile par Jean Dupont. Créée en 2023, cette peinture expressionniste représente un paysage nocturne avec une technique unique de couches texturées."</p>
+                  <p className={styles.tooltipTips}>Conseil : Mentionnez le médium, l'année, le style artistique, et ce que représente l'œuvre.</p>
+                </div>
+              }
+            />
+          </label>
+          <textarea
+            id="metaDescription"
+            {...register("metaDescription", { required: true })}
+            className={`${styles.formTextarea} ${errors.metaDescription ? styles.formInputError : ''}`}
+            rows={3}
+            placeholder="Description optimisée pour les moteurs de recherche"
+            maxLength={160}
+          />
+          {errors.metaDescription && <p className={styles.formError}>La description SEO est requise</p>}
+        </div>
       </div>
       
       {/* Options de tarification - Fonctionnalité avancée */}
@@ -696,17 +785,17 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           
           {/* Date de création */}
           <div className={styles.formGroup}>
-            <label htmlFor="year" className={styles.formLabel}>
+            <label htmlFor="creationYear" className={styles.formLabel}>
               Date de création
             </label>
             <input
-              id="year"
+              id="creationYear"
               type="number"
-              {...register("year")}
-              className={`${styles.formInput} ${errors.year ? styles.formInputError : ''}`}
+              {...register("creationYear")}
+              className={`${styles.formInput} ${errors.creationYear ? styles.formInputError : ''}`}
               placeholder="2023"
             />
-            {errors.year && <p className={styles.formError}>{errors.year.message}</p>}
+            {errors.creationYear && <p className={styles.formError}>{errors.creationYear.message}</p>}
           </div>
         </div>
         
