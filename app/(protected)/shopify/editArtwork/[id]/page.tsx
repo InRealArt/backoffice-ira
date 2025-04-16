@@ -116,14 +116,15 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
                 ? new Date(item.intellectualPropertyEndDate).toISOString().split('T')[0] 
                 : undefined,
               edition: item.edition,
-              imageUrl: item.imageUrl,
+              imageUrl: item.mainImageUrl,
               hasPhysicalOnly: item.pricePhysicalBeforeTax > 0,
               hasNftOnly: item.priceNftBeforeTax > 0,
               hasNftPlusPhysical: item.priceNftPlusPhysicalBeforeTax > 0,
               pricePhysicalBeforeTax: item.pricePhysicalBeforeTax?.toString(),
               priceNftBeforeTax: item.priceNftBeforeTax?.toString(),
               priceNftPlusPhysicalBeforeTax: item.priceNftPlusPhysicalBeforeTax?.toString(),
-              slug: item.name ? normalizeString(item.name) : ''
+              slug: item.name ? normalizeString(item.name) : '',
+              certificateUrl: certificate?.fileUrl
             }}
             onSuccess={handleSuccess}
           />

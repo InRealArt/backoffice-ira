@@ -583,7 +583,28 @@ export async function getItemById(itemId: number) {
   console.log('Recherche de l\'item avec l\'ID de base de données:', itemId)
   try {
     const item = await prisma.item.findUnique({
-      where: { id: itemId }
+      where: { id: itemId },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        description: true,
+        tags: true,
+        height: true,
+        width: true,
+        weight: true,
+        intellectualProperty: true,
+        intellectualPropertyEndDate: true,
+        creationYear: true,
+        pricePhysicalBeforeTax: true,
+        priceNftBeforeTax: true,
+        priceNftPlusPhysicalBeforeTax: true,
+        artworkSupport: true,
+        metaTitle: true,
+        metaDescription: true,
+        slug: true,
+        mainImageUrl: true
+      }
     })
 
     if (item) {

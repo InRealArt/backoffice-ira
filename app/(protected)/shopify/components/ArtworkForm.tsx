@@ -103,6 +103,7 @@ interface ArtworkFormProps {
     priceNftBeforeTax?: string;
     priceNftPlusPhysicalBeforeTax?: string;
     slug?: string;
+    certificateUrl?: string;
   };
   onSuccess?: () => void;
 }
@@ -133,10 +134,14 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       })
     }
   }, [isEditMode, initialData])
-
+  
   // Initialiser les images en mode édition si disponibles
   useEffect(() => {
     if (isEditMode && initialData?.imageUrl) {
+      // Log pour débogage
+      console.log('Mode édition - URL d\'image reçue:', initialData.imageUrl)
+      
+      // Si l'URL de l'image existe, l'ajouter à la prévisualisation
       setPreviewImages([initialData.imageUrl])
     }
   }, [isEditMode, initialData])
@@ -170,7 +175,8 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       hasNftPlusPhysical: initialData?.hasNftPlusPhysical || false,
       pricePhysicalBeforeTax: initialData?.pricePhysicalBeforeTax || '',
       priceNftBeforeTax: initialData?.priceNftBeforeTax || '',
-      priceNftPlusPhysicalBeforeTax: initialData?.priceNftPlusPhysicalBeforeTax || ''
+      priceNftPlusPhysicalBeforeTax: initialData?.priceNftPlusPhysicalBeforeTax || '',
+      certificateUrl: initialData?.certificateUrl || '',
     }
   })
   
@@ -192,6 +198,31 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     }
   }, [title])
   
+  // En mode édition avec une image existante, on considère que l'image est déjà valide
+  useEffect(() => {
+    // Pour l'image
+    if (isEditMode && initialData?.imageUrl && previewImages.length > 0) {
+      console.log('Désactivation de la validation d\'image obligatoire')
+      // Désactiver la validation d'image obligatoire
+      setValue('images', null, { shouldValidate: false })
+    }
+    
+    // Pour le certificat
+    if (isEditMode && initialData?.certificateUrl) {
+      console.log('Mode édition - URL du certificat reçue:', initialData.certificateUrl)
+      
+      // Stocker l'URL du certificat dans le state pour la prévisualisation
+      setPreviewCertificate(initialData.certificateUrl)
+      
+      console.log('Désactivation de la validation de certificat obligatoire')
+      // Désactiver la validation de certificat obligatoire
+      setValue('certificate', null, { shouldValidate: false })
+      
+      // Enregistrer l'URL du certificat dans le formulaire
+      setValue('certificateUrl', initialData.certificateUrl)
+    }
+  }, [isEditMode, initialData, previewImages, setValue])
+  
   // Définir les options du toast avec fond rouge clair
   const toastErrorOptions = {
     duration: 5000,
@@ -205,7 +236,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     },
     icon: '⚠️',
   };
-
+  
   // Mettre à jour l'état local quand le champ change
   useEffect(() => {
     setHasIntellectualProperty(!!intellectualProperty)
@@ -345,7 +376,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     setPreviewCertificate(url)
     
     // Important: définir manuellement la valeur pour react-hook-form
-    setValue('certificate', e.target.files, { shouldValidate: true })
+    setValue('certificate', e.target.files as unknown as FileList, { shouldValidate: true })
   }
   
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
@@ -464,6 +495,9 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
               const arrayBuffer = await certificateFile.arrayBuffer()
               const buffer = new Uint8Array(arrayBuffer)
               await saveAuthCertificate(initialData.id, buffer)
+              console.log('Nouveau certificat sauvegardé')
+            } else {
+              console.log('Aucun nouveau certificat fourni, conservation du certificat existant')
             }
             
             toast.success(`L'œuvre "${data.title}" a été mise à jour avec succès!`)
@@ -1034,9 +1068,14 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       
       {/* Fichiers Media */}
       <div className={styles.formGroup}>
-        <label htmlFor="images" className={styles.formLabel} data-required={true}>
-          Images
+        <label htmlFor="images" className={styles.formLabel} data-required={!isEditMode || previewImages.length === 0}>
+          Images {isEditMode && previewImages.length > 0 ? '(optionnel)' : ''}
         </label>
+        {isEditMode && previewImages.length > 0 && (
+          <p className={styles.formHelp}>
+            Une image existe déjà. Vous pouvez la remplacer en sélectionnant un nouveau fichier.
+          </p>
+        )}
         <input
           id="images"
           type="file"
@@ -1045,7 +1084,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           onChange={(e) => {
             handleImageChange(e)
             if (e.target.files) {
-              setValue('images', e.target.files, { shouldValidate: true })
+              setValue('images', e.target.files as unknown as FileList, { shouldValidate: true })
             }
           }}
           ref={fileInputRef}
@@ -1058,9 +1097,14 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       
       {/* Certificat d'authenticité */}
       <div className={styles.formGroup}>
-        <label htmlFor="certificate" className={styles.formLabel} data-required={true}>
-          Certificat d'authenticité (PDF)
+        <label htmlFor="certificate" className={styles.formLabel} data-required={!isEditMode || !previewCertificate}>
+          Certificat d'authenticité (PDF) {isEditMode && previewCertificate ? '(optionnel)' : ''}
         </label>
+        {isEditMode && previewCertificate && (
+          <p className={styles.formHelp}>
+            Un certificat existe déjà. Vous pouvez le remplacer en sélectionnant un nouveau fichier.
+          </p>
+        )}
         <input
           id="certificate"
           type="file"
@@ -1068,7 +1112,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           onChange={(e) => {
             handleCertificateChange(e)
             if (e.target.files) {
-              setValue('certificate', e.target.files, { shouldValidate: true })
+              setValue('certificate', e.target.files as unknown as FileList, { shouldValidate: true })
             }
           }}
           ref={certificateInputRef}
@@ -1080,15 +1124,16 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       </div>
       
       {/* Prévisualisation des images */}
-      {previewImages.length > 0 && (
-        <div className={styles.imagePreviewContainer}>
-          {previewImages.map((src, index) => (
-            <div key={index} className={styles.imagePreview}>
-              <img src={src} alt={`Aperçu ${index + 1}`} />
-            </div>
-          ))}
-        </div>
-      )}
+      <div className={styles.imagePreviewContainer}>
+        {previewImages.map((src, index) => (
+          <div key={index} className={styles.imagePreview}>
+            <img src={src} alt={`Aperçu ${index + 1}`} />
+            {isEditMode && index === 0 && initialData?.imageUrl && (
+              <p className={styles.imageInfoText}>Image existante</p>
+            )}
+          </div>
+        ))}
+      </div>
       
       {/* Prévisualisation des images secondaires */}
       {secondaryImages.length > 0 && (
@@ -1111,11 +1156,17 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       {/* Prévisualisation du certificat */}
       {previewCertificate && (
         <div className={styles.certificatePreviewContainer}>
-          <h4>Certificat d'authenticité sélectionné</h4>
+          <h4>Certificat d'authenticité {isEditMode && initialData?.certificateUrl ? 'existant' : 'sélectionné'}</h4>
           <div className={styles.certificateInfo}>
-            <p>Format: PDF</p>
-            <p>Nom: {certificateInputRef.current?.files?.[0]?.name || 'document.pdf'}</p>
-            <p>Taille: {((certificateInputRef.current?.files?.[0]?.size || 0) / 1024).toFixed(2)} Ko</p>
+            {certificateInputRef.current?.files?.[0] ? (
+              <>
+                <p>Format: PDF</p>
+                <p>Nom: {certificateInputRef.current.files[0].name}</p>
+                <p>Taille: {(certificateInputRef.current.files[0].size / 1024).toFixed(2)} Ko</p>
+              </>
+            ) : isEditMode && initialData?.certificateUrl && (
+              <p><strong>Certificat déjà enregistré dans la base de données</strong></p>
+            )}
             <a 
               href={previewCertificate} 
               target="_blank" 

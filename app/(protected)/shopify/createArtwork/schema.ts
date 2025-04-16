@@ -53,16 +53,14 @@ export const artworkSchema = z.object({
             "La date de fin des droits doit être dans le futur"
         ),
     edition: z.string().optional(),
-    images: z.any()
-        .refine(
-            (val) => val instanceof FileList && val.length > 0,
-            "Veuillez sélectionner au moins une image pour votre œuvre"
-        ),
-    certificate: z.any()
-        .refine(
-            (val) => val instanceof FileList && val.length > 0,
-            "Le certificat d'authenticité est obligatoire"
-        ),
+    images: z.union([
+        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Une image est requise' }),
+        z.null()
+    ]).optional(),
+    certificate: z.union([
+        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat d\'authenticité est requis' }),
+        z.null()
+    ]),
     artworkSupport: z.string().optional()
 })
     // Validation qu'au moins une option de tarification est sélectionnée
@@ -113,4 +111,6 @@ export const artworkSchema = z.object({
         path: ["physicalDimensions"]
     });
 
-export type ArtworkFormData = z.infer<typeof artworkSchema>
+export type ArtworkFormData = z.infer<typeof artworkSchema> & {
+    certificateUrl?: string;
+}
