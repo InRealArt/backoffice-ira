@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { getShopifyProductById } from '@/lib/actions/shopify-actions'
 import { getAuthCertificateByItemId, getUserByItemId, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, isCertificateUriUnique, getItemById } from '@/lib/actions/prisma-actions'
 import React from 'react'
 import { z } from 'zod'
@@ -28,11 +27,10 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   const { address, status, chain } = useAccount()
   const isConnected = status === 'connected'
   const [isLoading, setIsLoading] = useState(true)
-  const [product, setProduct] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [item, setItem] = useState<any>(null)
   const [certificate, setCertificate] = useState<any>(null)
   const [productOwner, setProductOwner] = useState<any>(null)
-  const [item, setItem] = useState<any>(null)
   const [showUploadIpfsForm, setShowUploadIpfsForm] = useState(false)
   const [collections, setCollections] = useState<any[]>([])
   const [nftResource, setNftResource] = useState<any>(null)
@@ -87,69 +85,63 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
 
     let isMounted = true
     
-    const fetchProduct = async () => {
+    const fetchData = async () => {
       try {
-        // Extraire l'ID numérique si l'ID est au format GID
-        const productId = id.includes('gid://shopify/Product/') 
-          ? id.split('/').pop() 
-          : id
+        setIsLoading(true)
         
-        const result = await getShopifyProductById(id)
+        // Convertir l'ID en nombre
+        const itemId = parseInt(id, 10)
+        if (isNaN(itemId)) {
+          throw new Error("ID d'item invalide")
+        }
+        
+        // Récupérer l'item directement depuis la table item
+        const itemResult = await getItemById(itemId)
+        
+        if (!itemResult) {
+          throw new Error("Impossible de trouver l'item avec cet ID")
+        }
+        
         if (isMounted) {
-          if (result.success && result.product) {
-            setProduct(result.product)
+          setItem(itemResult)
+          
+          try {
+            // Récupérer le certificat d'authenticité
+            const certificateResult = await getAuthCertificateByItemId(itemResult.id)
+            if (certificateResult && certificateResult.id) {
+              setCertificate(certificateResult)
+            }
             
-            // Utiliser directement l'ID du produit comme ID d'item
-            const productId = id.includes('gid://shopify/Product/') 
-              ? id.split('/').pop() 
-              : id
+            // Récupérer l'utilisateur associé à cet item
+            const ownerResult = await getUserByItemId(itemResult.id)
+            if (ownerResult) {
+              setProductOwner(ownerResult)
+            }
             
-            const itemId = parseInt(productId as string)
-            
-            // Rechercher l'Item associé directement par son ID
-            const itemResult = await getItemById(itemId)
-            if (itemResult?.id) {
-              setItem(itemResult)
-              try {
-                // Récupérer le certificat d'authenticité
-                const certificateResult = await getAuthCertificateByItemId(itemResult.id)
-                if (certificateResult && certificateResult.id) {
-                  setCertificate(certificateResult)
-                }
-                
-                // Récupérer l'utilisateur associé à cet item
-                const ownerResult = await getUserByItemId(itemResult.id)
-                if (ownerResult) {
-                  setProductOwner(ownerResult)
-                }
-                
-                // Récupérer le nftResource associé à cet item
-                const nftResourceResult = await getNftResourceByItemId(itemResult.id)
-                fetchCollections()
-                if (nftResourceResult) {
-                  console.log('nftResourceResult', nftResourceResult)
-                  setNftResource(nftResourceResult)
-                  // Pré-remplir le formulaire avec les données existantes
-                  if (nftResourceResult.status === 'UPLOADIPFS') {
-                    setFormData(prevData => ({
-                      ...prevData,
-                      name: nftResourceResult.name || '',
-                      description: nftResourceResult.description || '',
-                      collection: nftResourceResult.collectionId?.toString() || ''
-                    }))
-                  }
-                }
-              } catch (certError) {
-                console.error('Erreur lors de la récupération des données:', certError)
+            // Récupérer le nftResource associé à cet item
+            const nftResourceResult = await getNftResourceByItemId(itemResult.id)
+            fetchCollections()
+            if (nftResourceResult) {
+              console.log('nftResourceResult', nftResourceResult)
+              setNftResource(nftResourceResult)
+              // Pré-remplir le formulaire avec les données existantes
+              if (nftResourceResult.status === 'UPLOADIPFS') {
+                setFormData(prevData => ({
+                  ...prevData,
+                  name: nftResourceResult.name || '',
+                  description: nftResourceResult.description || '',
+                  collection: nftResourceResult.collectionId?.toString() || ''
+                }))
               }
             }
-          } else {
-            setError(result.message || 'Impossible de charger ce produit')
+          } catch (dataError) {
+            console.error('Erreur lors de la récupération des données associées:', dataError)
           }
+          
           setIsLoading(false)
         }
       } catch (error: any) {
-        console.error('Erreur lors du chargement du produit:', error)
+        console.error('Erreur lors du chargement des données:', error)
         if (isMounted) {
           setError(error.message || 'Une erreur est survenue')
           setIsLoading(false)
@@ -157,7 +149,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
       }
     }
 
-    fetchProduct()
+    fetchData()
     
     return () => {
       isMounted = false
@@ -256,7 +248,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
       const response = await uploadFilesToIpfs(
         formData.image as File,
         formData.certificate as File,
-        formData.name || product.title || 'nft'
+        formData.name || item?.name || 'nft'
       )
       
       // Fermer le toast de chargement
@@ -281,7 +273,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
           description: formData.description,
           imageCID: response.image.data.cid,
           certificateUri: `ipfs://${response.certificate.data.cid}`,
-          externalUrl: `${process.env.NEXT_PUBLIC_WEBSITE_URL}/artwork/${product.handle}`
+          externalUrl: `${process.env.NEXT_PUBLIC_WEBSITE_URL}/artwork/${item?.slug || item?.id}`
         });
         
         if (!metadataResponse.success) {
@@ -308,7 +300,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
           
           // Appel à l'action serveur pour créer l'enregistrement NftResource
           const nftResourceResult = await createNftResource({
-            itemId: item.id,
+            itemId: item.id.toString(),
             imageUri: response.image.data.cid,
             certificateUri: response.certificate.data.cid,
             tokenUri: tokenUri, // Utiliser le CID retourné par Pinata
@@ -465,17 +457,17 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
           {/* Titre de l'œuvre */}
           <div className="form-group">
             <label className="form-label">Titre</label>
-            <div className="form-readonly">{product?.title || "Non défini"}</div>
+            <div className="form-readonly">{item?.name || "Non défini"}</div>
           </div>
           
           {/* Image de l'œuvre */}
           <div className="form-group">
             <label className="form-label">Image</label>
             <div className="form-readonly" style={{ height: "240px", display: "flex", justifyContent: "center", alignItems: "center" }}>
-              {product && product.imageUrl ? (
+              {item && item.mainImageUrl ? (
                 <img 
-                  src={product.imageUrl} 
-                  alt={product.title} 
+                  src={item.mainImageUrl} 
+                  alt={item.name} 
                   style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} 
                 />
               ) : (
@@ -484,25 +476,21 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
             </div>
           </div>
 
-          
-
           {/* Prix */}
           <div className="form-group">
-            <label className="form-label">Prix</label>
+            <label className="form-label">Prix NFT</label>
             <div className="form-readonly">
-              {product?.variants && product.variants[0] ? 
-                `${product.variants[0].price} ${product.variants[0].currency || "EUR"}` : 
+              {item?.priceNftBeforeTax ? 
+                `${item.priceNftBeforeTax} EUR` : 
                 "Non défini"}
             </div>
           </div>
 
-          {/* ID Shopify */}
+          {/* ID Item */}
           <div className="form-group">
-            <label className="form-label">ID Shopify</label>
+            <label className="form-label">ID Item</label>
             <div className="form-readonly">
-              {typeof product?.id === 'string' ? 
-                product.id.replace('gid://shopify/Product/', '') : 
-                product?.id || "Non défini"}
+              {item?.id || "Non défini"}
             </div>
           </div>
 
@@ -516,13 +504,12 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
             </div>
           </div>
 
-
           {/* Description (pleine largeur) */}
           <div className="form-group full-width">
             <label className="form-label">Description</label>
             <div className="form-readonly" style={{ minHeight: "100px" }}>
-              {product?.description ? (
-                <div dangerouslySetInnerHTML={{ __html: product.description }} />
+              {item?.description ? (
+                <div dangerouslySetInnerHTML={{ __html: item.description }} />
               ) : (
                 <p>Aucune description disponible.</p>
               )}

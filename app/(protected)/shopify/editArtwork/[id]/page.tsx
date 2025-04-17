@@ -29,29 +29,29 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
     }
 
     let isMounted = true
-    
+
     const fetchItem = async () => {
       try {
         const itemId = parseInt(resolvedParams.id)
-        
+
         if (isNaN(itemId)) {
           throw new Error('ID d\'item invalide')
         }
-          
+
         // Récupérer l'item par son ID
         const itemData = await getItemById(itemId)
-        
+
         if (isMounted) {
           if (itemData) {
             setItem(itemData)
-            
+
             // Vérifier les valeurs reçues
             console.log('Item chargé pour l\'édition:', {
               id: itemData.id,
               name: itemData.name, // Titre de l'oeuvre
               description: itemData.description // Description de l'oeuvre
             })
-            
+
             try {
               // Rechercher le certificat d'authenticité associé
               const certificateResult = await getAuthCertificateByItemId(itemData.id)
@@ -76,7 +76,7 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
     }
 
     fetchItem()
-    
+
     return () => {
       isMounted = false
     }
@@ -90,14 +90,14 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
     <>
       <div className={styles.container}>
         <h1 className={styles.pageTitle}>Éditer l'œuvre</h1>
-        
+
         {isLoading ? (
           <LoadingSpinner message="Chargement de l'œuvre..." />
         ) : error ? (
           <div className={styles.error}>{error}</div>
         ) : (
-          <ArtworkForm 
-            mode="edit" 
+          <ArtworkForm
+            mode="edit"
             initialData={{
               id: item.id,
               title: item.name,
@@ -112,8 +112,8 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
               year: item.year?.toString(),
               creationYear: item.creationYear?.toString(),
               intellectualProperty: item.intellectualProperty,
-              intellectualPropertyEndDate: item.intellectualPropertyEndDate 
-                ? new Date(item.intellectualPropertyEndDate).toISOString().split('T')[0] 
+              intellectualPropertyEndDate: item.intellectualPropertyEndDate
+                ? new Date(item.intellectualPropertyEndDate).toISOString().split('T')[0]
                 : undefined,
               edition: item.edition,
               imageUrl: item.mainImageUrl,

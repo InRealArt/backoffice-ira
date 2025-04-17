@@ -518,7 +518,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
       return JSON.parse(blogPost?.tags || '[]');
     } catch (e) {
       // Si le parsing échoue, essayons de traiter comme une chaîne séparée par des virgules
-      return (blogPost?.tags || '').split(',').map(tag => tag.trim()).filter(Boolean);
+      return typeof blogPost?.tags === 'string' ? blogPost?.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
     }
   });
   const [relatedArticles, setRelatedArticles] = useState<Array<{ id: string, title: string }>>(() => {
@@ -566,7 +566,7 @@ export default function BlogPostForm({ blogPost, isEditMode = false }: BlogPostF
           return JSON.parse(blogPost?.tags || '[]');
         } catch (e) {
           // Si le parsing échoue, essayons de traiter comme une chaîne séparée par des virgules
-          return (blogPost?.tags || '').split(',').map(tag => tag.trim()).filter(Boolean);
+          return typeof blogPost?.tags === 'string' ? blogPost?.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
         }
       })(),
       metaDescription: blogPost?.metaDescription || '',
