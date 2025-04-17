@@ -514,7 +514,6 @@ export async function checkItemStatus({
  * Sauvegarde un certificat d'authenticité pour un item spécifique
  */
 export async function saveAuthCertificate(itemId: number, fileData: Uint8Array) {
-  console.log('saveAuthCertificate === ', itemId, fileData);
   try {
     const certificate = await prismaClient.authCertificate.create({
       data: {
@@ -580,7 +579,6 @@ export async function getUserByItemId(itemId: number) {
 
 // Fonction pour récupérer un item par son ID
 export async function getItemById(itemId: number) {
-  console.log('Recherche de l\'item avec l\'ID de base de données:', itemId)
   try {
     const item = await prisma.item.findUnique({
       where: { id: itemId },
@@ -608,7 +606,7 @@ export async function getItemById(itemId: number) {
     })
 
     if (item) {
-      console.log('Item trouvé - ID en base de données:', item.id)
+      //console.log('Item trouvé - ID en base de données:', item.id)
     } else {
       console.log('Aucun item trouvé avec cet ID')
     }

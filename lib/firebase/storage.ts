@@ -32,14 +32,16 @@ export async function uploadImageToFirebase(
             : `${Date.now()}-${normalizeString(file.name)}`
 
         // Construire le chemin de stockage
-        const artistPath = options.artistFolder ? `${normalizeString(options.artistFolder)}` : 'unknown-artist'
+        const artistPath = options.artistFolder ? options.artistFolder : 'unknown-artist'
+        console.log('✓ Chemin artiste final (sans transformation) :', artistPath);
         const itemPath = options.itemSlug ? `${normalizeString(options.itemSlug)}` : 'unknown-item'
+        console.log('✓ Chemin item :', itemPath);
 
         // Déterminer le préfixe du nom de fichier selon qu'il s'agit de l'image principale ou non
         const filePrefix = options.isMain ? 'main' : `img-${Date.now()}`
-
         // Chemin complet
         const storagePath = `marketplace/${artistPath}/${itemPath}/${filePrefix}-${normalizedFileName}`
+        console.log('✓ Chemin complet de stockage :', storagePath);
 
         // Créer une référence au fichier dans Firebase Storage
         const storageRef = ref(storage, storagePath)

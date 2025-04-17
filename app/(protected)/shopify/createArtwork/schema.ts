@@ -54,9 +54,9 @@ export const artworkSchema = z.object({
         ),
     edition: z.string().optional(),
     images: z.union([
-        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Une image est requise' }),
+        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: "L'image principale est requise" }),
         z.null()
-    ]).optional(),
+    ]).refine(val => val !== null, { message: "L'image principale est requise" }),
     certificate: z.union([
         z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat d\'authenticité est requis' }),
         z.null()

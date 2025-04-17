@@ -74,7 +74,6 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
 
                 // Utiliser mainImageUrl du modèle Item s'il est disponible
                 // Sinon, utiliser l'image de Shopify ou une image par défaut
-                console.log('Item avec ID', item.id, 'a mainImageUrl:', item.mainImageUrl);
                 const imageUrl = item.mainImageUrl || shopifyProduct?.product?.imageUrl || '/img/Logo_InRealArt.svg'
 
                 return {

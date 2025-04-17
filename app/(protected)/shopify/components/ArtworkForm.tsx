@@ -204,7 +204,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     if (isEditMode && initialData?.imageUrl && previewImages.length > 0) {
       console.log('Désactivation de la validation d\'image obligatoire')
       // Désactiver la validation d'image obligatoire
-      setValue('images', null, { shouldValidate: false })
+      setValue('images', null as any, { shouldValidate: false })
     }
     
     // Pour le certificat
@@ -216,7 +216,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       
       console.log('Désactivation de la validation de certificat obligatoire')
       // Désactiver la validation de certificat obligatoire
-      setValue('certificate', null, { shouldValidate: false })
+      setValue('certificate', null as any, { shouldValidate: false })
       
       // Enregistrer l'URL du certificat dans le formulaire
       setValue('certificateUrl', initialData.certificateUrl)
@@ -256,7 +256,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         priceNftPlusPhysicalBeforeTax: 'Prix - NFT + Oeuvre physique',
         pricingOption: 'Option de tarification',
         medium: 'Support/Medium',
-        images: 'Images',
+        images: 'Image Principale',
         certificate: 'Certificat d\'authenticité',
         width: 'Largeur',
         height: 'Hauteur',
@@ -357,7 +357,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     const files = e.target.files
     if (!files || files.length === 0) {
       setPreviewCertificate(null)
-      setValue('certificate', null, { shouldValidate: true })
+      setValue('certificate', null as any, { shouldValidate: true })
       return
     }
     
@@ -368,7 +368,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         certificateInputRef.current.value = ''
       }
       setPreviewCertificate(null)
-      setValue('certificate', null, { shouldValidate: true })
+      setValue('certificate', null as any, { shouldValidate: true })
       return
     }
     
@@ -425,8 +425,12 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           if (data.images && data.images instanceof FileList && data.images.length > 0) {
             try {
               // Récupérer les informations de l'artiste pour le stockage hiérarchique
-              const artistName = backofficeUser ? `${backofficeUser.firstName} ${backofficeUser.lastName}`.trim() : 'unknown';
-              const artistFolder = artistName;
+              const artistName = backofficeUser.artist ? `${backofficeUser.artist.name} ${backofficeUser.artist.surname}`.trim() : `${backofficeUser.firstName} ${backofficeUser.lastName}`.trim();
+              // Format artistFolder sans normalisation et en minuscules explicites
+              const artistFolder = backofficeUser.artist 
+                ? `${backofficeUser.artist.name.toLowerCase()}${backofficeUser.artist.surname.toLowerCase()}`
+                : `${backofficeUser.firstName?.toLowerCase() || ''}${backofficeUser.lastName?.toLowerCase() || ''}`;
+              console.log('artistFolder direct : ', artistFolder);
               const itemSlug = slug || normalizeString(data.title);
               
               const mainImage = data.images[0];
@@ -539,8 +543,12 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
 
         try {
           // Récupérer les informations de l'artiste pour le stockage hiérarchique
-          const artistName = backofficeUser ? `${backofficeUser.firstName} ${backofficeUser.lastName}`.trim() : 'unknown';
-          const artistFolder = artistName;
+          const artistName = backofficeUser.artist ? `${backofficeUser.artist.name} ${backofficeUser.artist.surname}`.trim() : `${backofficeUser.firstName} ${backofficeUser.lastName}`.trim();
+          // Format artistFolder sans normalisation et en minuscules explicites
+          const artistFolder = backofficeUser.artist 
+            ? `${backofficeUser.artist.name.toLowerCase()}${backofficeUser.artist.surname.toLowerCase()}`
+            : `${backofficeUser.firstName?.toLowerCase() || ''}${backofficeUser.lastName?.toLowerCase() || ''}`;
+          console.log('artistFolder direct : ', artistFolder);
           const itemSlug = slug || normalizeString(data.title);
 
           if (data.images && data.images instanceof FileList && data.images.length > 0) {
@@ -1068,8 +1076,8 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       
       {/* Fichiers Media */}
       <div className={styles.formGroup}>
-        <label htmlFor="images" className={styles.formLabel} data-required={!isEditMode || previewImages.length === 0}>
-          Images {isEditMode && previewImages.length > 0 ? '(optionnel)' : ''}
+        <label htmlFor="images" className={styles.formLabel} data-required={true}>
+          Image Principale
         </label>
         {isEditMode && previewImages.length > 0 && (
           <p className={styles.formHelp}>
