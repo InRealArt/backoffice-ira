@@ -780,15 +780,16 @@
 // Notification Toast
 .toast-notification {
   position: fixed;
-  bottom: $spacing-xl;
-  right: $spacing-xl;
+  top: $spacing-xl;
+  left: 50%;
+  transform: translateX(-50%);
   padding: $spacing-md $spacing-lg;
   border-radius: $border-radius-sm;
   box-shadow: $shadow-lg;
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  z-index: 50;
+  z-index: 9999;
   animation: fadeIn 0.3s ease-out;
   font-size: $font-size-sm;
   font-weight: $font-weight-medium;
@@ -846,11 +847,11 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(1rem);
+    transform: translate(-50%, -1rem);
   }
   to {
     opacity: 0.95;
-    transform: translateY(0);
+    transform: translate(-50%, 0);
   }
 }
 
@@ -1344,5 +1345,28 @@
   svg {
     width: 16px;
     height: 16px;
+  }
+}
+
+// Styles pour le bouton de rafraîchissement
+.refresh-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  
+  svg {
+    transition: transform 0.5s ease;
+  }
+  
+  &:hover svg {
+    transform: rotate(180deg);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  &:focus {
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.3);
   }
 }

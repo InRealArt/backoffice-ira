@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import TransactionsClient from './TransactionsClient'
 
+// Ne pas désactiver le cache, nous utilisons un bouton pour rafraîchir manuellement
+// export const dynamic = 'force-dynamic'
+// export const revalidate = 0
 
 export const metadata = {
   title: 'Transactions Marketplace | Marketplace',

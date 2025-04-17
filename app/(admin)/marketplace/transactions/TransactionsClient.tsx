@@ -11,6 +11,9 @@ import { Filters, FilterItem } from '@/app/components/Common/Filters'
 import { StatusRow } from '@/app/components/Table'
 import { formatDate } from '@/lib/utils'
 import { parseEther, formatEther } from 'viem'
+import Button from '@/app/components/Button/Button'
+import { refreshTransactionsData } from './actions'
+import { useToast } from '@/app/components/Toast/ToastContext'
 
 // Type pour les transactions avec leurs relations
 type TransactionWithRelations = MarketPlaceTransaction & {
@@ -48,6 +51,8 @@ export default function TransactionsClient({
   const [isMobile, setIsMobile] = useState(false)
   const [selectedSmartContractId, setSelectedSmartContractId] = useState<number | null>(null)
   const [collectionFilter, setCollectionFilter] = useState<string>('')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const toast = useToast()
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -96,11 +101,58 @@ export default function TransactionsClient({
     return collections;
   }, [collections, selectedSmartContractId]);
   
+  // Fonction pour rafraîchir les données
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true)
+      const result = await refreshTransactionsData()
+      
+      if (result.success) {
+        toast.success(`Données rafraîchies avec succès à ${result.timestamp}`, {
+          duration: 5000, // Augmenter la durée pour plus de visibilité
+          position: 'top-center' // Position en haut au centre
+        })
+      } else {
+        toast.error(result.error || 'Erreur lors du rafraîchissement', {
+          duration: 5000,
+          position: 'top-center'
+        })
+      }
+    } catch (error) {
+      toast.error('Erreur lors du rafraîchissement des données', {
+        duration: 5000,
+        position: 'top-center'
+      })
+      console.error('Erreur de rafraîchissement:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+  
   return (
     <div className="page-container">
       <div className="page-header">
         <div className="header-top-section">
           <h1 className="page-title">Transactions Marketplace</h1>
+          <Button 
+            onClick={handleRefresh} 
+            disabled={isRefreshing}
+            variant="primary"
+            size="small"
+            isLoading={isRefreshing}
+            loadingText="Rafraîchissement..."
+            className="ml-4 refresh-button"
+          >
+            {!isRefreshing && (
+              <span className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                  <path d="M3 3v5h5"></path>
+                </svg>
+                Rafraîchir les données
+              </span>
+            )}
+          </Button>
         </div>
         <p className="page-subtitle">
           Liste des transactions effectuées sur la marketplace

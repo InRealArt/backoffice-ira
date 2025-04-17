@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import MarketplaceListingClient from './MarketplaceListingClient'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata = {
   title: 'Listing Marketplace | Marketplace',
   description: 'Listez des œuvres sur la marketplace',
