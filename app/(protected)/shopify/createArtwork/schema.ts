@@ -113,4 +113,5 @@ export const artworkSchema = z.object({
 
 export type ArtworkFormData = z.infer<typeof artworkSchema> & {
     certificateUrl?: string;
+    secondaryImagesFiles?: FileList;
 }

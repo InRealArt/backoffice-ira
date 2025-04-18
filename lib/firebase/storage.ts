@@ -71,19 +71,28 @@ export async function uploadMultipleImagesToFirebase(
     options: UploadOptions = {}
 ): Promise<string[]> {
     try {
-        const uploadPromises = files.map((file, index) =>
-            uploadImageToFirebase(file, {
+        console.log(`Démarrage de l'upload multiple: ${files.length} fichiers`);
+        console.log('Options d\'upload:', JSON.stringify({
+            artistFolder: options.artistFolder,
+            itemSlug: options.itemSlug,
+            isMain: options.isMain
+        }));
+
+        const uploadPromises = files.map((file, index) => {
+            console.log(`Préparation de l'upload du fichier ${index + 1}/${files.length}: ${file.name}`);
+            return uploadImageToFirebase(file, {
                 ...options,
-                isMain: index === 0 && options.isMain !== false
-            })
-        )
+                isMain: false
+            });
+        });
 
         // Exécuter tous les uploads en parallèle
-        const urls = await Promise.all(uploadPromises)
-        return urls
+        const urls = await Promise.all(uploadPromises);
+        console.log(`${urls.length} fichiers uploadés avec succès:`, urls);
+        return urls;
     } catch (error) {
-        console.error('Erreur lors de l\'upload multiple d\'images vers Firebase:', error)
-        throw new Error(`Échec de l'upload multiple vers Firebase: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+        console.error('Erreur lors de l\'upload multiple d\'images vers Firebase:', error);
+        throw new Error(`Échec de l'upload multiple vers Firebase: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
 }
 

@@ -104,6 +104,7 @@ interface ArtworkFormProps {
     priceNftPlusPhysicalBeforeTax?: string;
     slug?: string;
     certificateUrl?: string;
+    secondaryImagesUrl?: string[];
   };
   onSuccess?: () => void;
 }
@@ -120,6 +121,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
   const certificateInputRef = useRef<HTMLInputElement>(null)
   const secondaryImagesInputRef = useRef<HTMLInputElement>(null)
   const [secondaryImages, setSecondaryImages] = useState<string[]>([])
+  const [secondaryImagesFiles, setSecondaryImagesFiles] = useState<File[]>([])
   const { user } = useDynamicContext()
   const [formErrors, setFormErrors] = useState<any>(null)
   const isEditMode = mode === 'edit'
@@ -143,6 +145,12 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       
       // Si l'URL de l'image existe, l'ajouter à la prévisualisation
       setPreviewImages([initialData.imageUrl])
+    }
+
+    // Initialiser les images secondaires en mode édition si disponibles
+    if (isEditMode && initialData?.secondaryImagesUrl && Array.isArray(initialData.secondaryImagesUrl)) {
+      console.log('Mode édition - Images secondaires reçues:', initialData.secondaryImagesUrl)
+      setSecondaryImages(initialData.secondaryImagesUrl)
     }
   }, [isEditMode, initialData])
 
@@ -347,10 +355,14 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     })
     
     setSecondaryImages(prev => [...prev, ...newImageUrls])
+    
+    // Stocker les fichiers dans l'état React pour l'upload ultérieur
+    setSecondaryImagesFiles(prev => [...prev, ...newImageFiles])
   }
   
   const removeSecondaryImage = (index: number) => {
     setSecondaryImages(prev => prev.filter((_, i) => i !== index))
+    setSecondaryImagesFiles(prev => prev.filter((_, i) => i !== index))
   }
   
   const handleCertificateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -389,6 +401,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     setPreviewCertificate(null)
     setTags([])
     setSecondaryImages([])
+    setSecondaryImagesFiles([])
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -422,6 +435,8 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           
           // Upload des images vers Firebase si de nouvelles images ont été sélectionnées
           let mainImageUrl = '';
+          let secondaryImageUrls: string[] = [];
+          
           if (data.images && data.images instanceof FileList && data.images.length > 0) {
             try {
               // Récupérer les informations de l'artiste pour le stockage hiérarchique
@@ -435,29 +450,41 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
               
               const mainImage = data.images[0];
               
+              // Utiliser l'état secondaryImagesFiles pour récupérer les fichiers
+              const secondaryImagesArray = secondaryImagesFiles;
+              
               // Importer dynamiquement les modules Firebase
               const { getAuth, signInAnonymously } = await import('firebase/auth');
               const { app } = await import('@/lib/firebase/config');
-              const { uploadImageToFirebase } = await import('@/lib/firebase/storage');
+              const { uploadArtworkImages } = await import('@/lib/firebase/storage');
               
               // S'authentifier avec Firebase
               const auth = getAuth(app);
               const userCredential = await signInAnonymously(auth);
               console.log('Authentification Firebase réussie, UID:', userCredential.user.uid);
               
-              // Uploader l'image principale
-              mainImageUrl = await uploadImageToFirebase(mainImage, {
-                artistFolder,
-                itemSlug,
-                isMain: true
-              });
+              // Uploader les images
+              console.log(`Démarrage de l'upload: ${secondaryImagesArray.length} images secondaires`);
+              const uploadResult = await uploadArtworkImages(
+                mainImage,
+                secondaryImagesArray,
+                {
+                  artistFolder,
+                  itemSlug
+                }
+              );
+              
+              // Récupérer les URLs des images
+              mainImageUrl = uploadResult.mainImageUrl;
+              secondaryImageUrls = uploadResult.secondaryImageUrls;
               
               console.log(`Image principale uploadée: ${mainImageUrl}`);
+              console.log(`Images secondaires uploadées (${secondaryImageUrls.length}):`, secondaryImageUrls);
               
               try {
                 // Sauvegarder l'URL de l'image directement
                 const { saveItemImages } = await import('@/lib/actions/prisma-actions');
-                await saveItemImages(initialData.id as number, mainImageUrl, []);
+                await saveItemImages(initialData.id as number, mainImageUrl, secondaryImageUrls);
                 console.log('URL de l\'image sauvegardée dans la base de données');
               } catch (imageError) {
                 console.error('Erreur lors de la sauvegarde de l\'URL de l\'image:', imageError);
@@ -521,7 +548,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         
         // Ajouter les champs textuels
         Object.entries(data).forEach(([key, value]) => {
-          if (key !== 'images' && key !== 'certificate' && key !== 'tags' && value !== undefined) {
+          if (key !== 'images' && key !== 'certificate' && key !== 'tags' && key !== 'secondaryImagesFiles' && value !== undefined) {
             if (key === 'intellectualPropertyEndDate') {
               if (value) {
                 formData.append(key, new Date(value as string).toISOString())
@@ -540,27 +567,23 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         // Upload des images vers Firebase Storage
         let mainImageUrl = '';
         let secondaryImageUrls: string[] = [];
-
+        
         try {
-          // Récupérer les informations de l'artiste pour le stockage hiérarchique
-          const artistName = backofficeUser.artist ? `${backofficeUser.artist.name} ${backofficeUser.artist.surname}`.trim() : `${backofficeUser.firstName} ${backofficeUser.lastName}`.trim();
-          // Format artistFolder sans normalisation et en minuscules explicites
-          const artistFolder = backofficeUser.artist 
-            ? `${backofficeUser.artist.name.toLowerCase()}${backofficeUser.artist.surname.toLowerCase()}`
-            : `${backofficeUser.firstName?.toLowerCase() || ''}${backofficeUser.lastName?.toLowerCase() || ''}`;
-          console.log('artistFolder direct : ', artistFolder);
-          const itemSlug = slug || normalizeString(data.title);
-
+          // Si nous avons des images, les uploader
           if (data.images && data.images instanceof FileList && data.images.length > 0) {
-            const mainImage = data.images[0];
-            const secondaryImagesArray: File[] = [];
+            // Récupérer les informations de l'artiste pour le stockage hiérarchique
+            const artistName = backofficeUser.artist ? `${backofficeUser.artist.name} ${backofficeUser.artist.surname}`.trim() : `${backofficeUser.firstName} ${backofficeUser.lastName}`.trim();
+            // Format artistFolder sans normalisation et en minuscules explicites
+            const artistFolder = backofficeUser.artist 
+              ? `${backofficeUser.artist.name.toLowerCase()}${backofficeUser.artist.surname.toLowerCase()}`
+              : `${backofficeUser.firstName?.toLowerCase() || ''}${backofficeUser.lastName?.toLowerCase() || ''}`;
+            console.log('artistFolder direct : ', artistFolder);
+            const itemSlug = slug || normalizeString(data.title);
             
-            // Si nous avons des images secondaires au format File, les ajouter
-            if (data.images.length > 1) {
-              for (let i = 1; i < data.images.length; i++) {
-                secondaryImagesArray.push(data.images[i]);
-              }
-            }
+            const mainImage = data.images[0];
+            
+            // Utiliser l'état secondaryImagesFiles pour récupérer les fichiers
+            const secondaryImagesArray = secondaryImagesFiles;
             
             // Importer dynamiquement les modules Firebase pour éviter les erreurs côté serveur
             const { getAuth, signInAnonymously } = await import('firebase/auth');
@@ -576,6 +599,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
               console.log('Authentification Firebase réussie, UID:', userCredential.user.uid);
               
               // Une fois authentifié, uploader les images
+              console.log(`Démarrage de l'upload: ${secondaryImagesArray.length} images secondaires`);
               const uploadResult = await uploadArtworkImages(
                 mainImage,
                 secondaryImagesArray,
@@ -590,7 +614,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
               secondaryImageUrls = uploadResult.secondaryImageUrls;
               
               console.log(`Image principale uploadée: ${mainImageUrl}`);
-              console.log(`Images secondaires uploadées: ${secondaryImageUrls.length}`);
+              console.log(`Images secondaires uploadées (${secondaryImageUrls.length}):`, secondaryImageUrls);
             } catch (authError) {
               console.error('Erreur lors de l\'authentification Firebase:', authError);
               toast.error('Erreur lors de l\'authentification Firebase');
@@ -671,6 +695,9 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
                 // Sauvegarder les URLs des images dans la base de données
                 try {
                   const { saveItemImages } = await import('@/lib/actions/prisma-actions');
+                  console.log(`Sauvegarde des URLs d'images pour l'item #${newItem.item.id}:`);
+                  console.log(`  - URL principale: ${mainImageUrl}`);
+                  console.log(`  - URLs secondaires (${secondaryImageUrls.length}):`, secondaryImageUrls);
                   await saveItemImages(newItem.item.id, mainImageUrl, secondaryImageUrls);
                   console.log('URLs des images sauvegardées dans la base de données');
                 } catch (imageError) {
@@ -1103,6 +1130,45 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         )}
       </div>
       
+      {/* Images secondaires */}
+      <div className={styles.formGroup}>
+        <label htmlFor="secondaryImages" className={styles.formLabel}>
+          Images secondaires
+        </label>
+        <p className={styles.formHelp}>
+          Vous pouvez ajouter une ou plusieurs images secondaires qui seront affichées après l'image principale.
+        </p>
+        <input
+          id="secondaryImages"
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleSecondaryImagesChange}
+          ref={secondaryImagesInputRef}
+          className={styles.formFileInput}
+        />
+        {secondaryImages.length > 0 && (
+          <>
+            <p className={styles.formHelp}>Images secondaires sélectionnées ({secondaryImages.length})</p>
+            <div className={styles.imagePreviewContainer}>
+              {secondaryImages.map((src, index) => (
+                <div key={index} className={styles.imagePreview}>
+                  <img src={src} alt={`Image secondaire ${index + 1}`} />
+                  <button
+                    type="button"
+                    onClick={() => removeSecondaryImage(index)}
+                    className={styles.removeImageBtn}
+                    aria-label="Supprimer cette image"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      
       {/* Certificat d'authenticité */}
       <div className={styles.formGroup}>
         <label htmlFor="certificate" className={styles.formLabel} data-required={!isEditMode || !previewCertificate}>
@@ -1142,24 +1208,6 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           </div>
         ))}
       </div>
-      
-      {/* Prévisualisation des images secondaires */}
-      {secondaryImages.length > 0 && (
-        <div className={styles.imagePreviewContainer}>
-          {secondaryImages.map((src, index) => (
-            <div key={index} className={styles.imagePreview}>
-              <img src={src} alt={`Image secondaire ${index + 1}`} />
-              <button
-                type="button"
-                onClick={() => removeSecondaryImage(index)}
-                className={styles.removeImageBtn}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
       
       {/* Prévisualisation du certificat */}
       {previewCertificate && (

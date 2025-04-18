@@ -657,7 +657,7 @@ model Item {
   metaDescription               String
   metaTitle                     String
   mainImageUrl                  String?
-  images                        String[]          @default([])
+  secondaryImagesUrl            String[]          @default([])
 
   @@index([idUser])
   @@index([idNftResource])

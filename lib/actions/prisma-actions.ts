@@ -1801,8 +1801,6 @@ export async function updateItemRecord(
 
 /**
  * Sauvegarde les URLs des images pour un item
- * Note: Cette fonction est à implémenter une fois que le schéma de la base 
- * de données aura été mis à jour pour prendre en charge les images
  */
 export async function saveItemImages(
   itemId: number,
@@ -1810,15 +1808,25 @@ export async function saveItemImages(
   secondaryImageUrls: string[] = []
 ) {
   try {
+    console.log(`Début de la sauvegarde des images pour l'item #${itemId}`);
+    console.log(`- URL principale: ${mainImageUrl}`);
+    console.log(`- ${secondaryImageUrls.length} URLs secondaires:`, secondaryImageUrls);
+
+    // Préparer les données de mise à jour
+    const updateData = {
+      mainImageUrl: mainImageUrl,
+      ...(secondaryImageUrls.length > 0 ? { secondaryImagesUrl: secondaryImageUrls } : {})
+    };
+
+    console.log('Données de mise à jour:', JSON.stringify(updateData));
+
     // Mettre à jour l'item avec l'URL de l'image principale
     const updatedItem = await prisma.item.update({
       where: { id: itemId },
-      data: {
-        mainImageUrl: mainImageUrl,
-        // Si nous avons des images secondaires, les stocker dans le tableau images
-        ...(secondaryImageUrls.length > 0 ? { images: secondaryImageUrls } : {})
-      }
+      data: updateData
     });
+
+    console.log(`Images sauvegardées avec succès pour l'item #${itemId}`);
 
     return {
       success: true,
