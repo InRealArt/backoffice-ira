@@ -148,11 +148,85 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     }
 
     // Initialiser les images secondaires en mode édition si disponibles
-    if (isEditMode && initialData?.secondaryImagesUrl && Array.isArray(initialData.secondaryImagesUrl)) {
-      console.log('Mode édition - Images secondaires reçues:', initialData.secondaryImagesUrl)
-      setSecondaryImages(initialData.secondaryImagesUrl)
+    if (isEditMode) {
+      console.log('Mode édition - Données initiales complètes:', initialData);
+      console.log('Mode édition - secondaryImagesUrl reçues:', initialData?.secondaryImagesUrl);
+      
+      // S'assurer que secondaryImagesUrl est traité comme un tableau
+      let secondaryImagesArray: string[] = [];
+      
+      if (initialData?.secondaryImagesUrl) {
+        // Traiter les données selon leur type
+        if (Array.isArray(initialData.secondaryImagesUrl)) {
+          // Déjà un tableau, l'utiliser directement
+          secondaryImagesArray = initialData.secondaryImagesUrl;
+          console.log('secondaryImagesUrl est déjà un tableau:', secondaryImagesArray);
+        } else if (typeof initialData.secondaryImagesUrl === 'string') {
+          // Essayer de parser la chaîne JSON
+          try {
+            console.log('secondaryImagesUrl est une chaîne, tentative de parsing JSON');
+            const parsed = JSON.parse(initialData.secondaryImagesUrl);
+            if (Array.isArray(parsed)) {
+              secondaryImagesArray = parsed;
+              console.log('Parsing JSON réussi, tableau obtenu:', secondaryImagesArray);
+            } else {
+              console.warn('Le parsing JSON a réussi mais n\'a pas produit un tableau:', parsed);
+            }
+          } catch (e) {
+            console.error('Erreur lors du parsing des images secondaires:', e);
+          }
+        } else {
+          console.warn('Type de secondaryImagesUrl non géré:', typeof initialData.secondaryImagesUrl);
+        }
+      } else {
+        console.log('Aucune image secondaire trouvée dans initialData');
+      }
+      
+      // Mettre à jour l'état seulement si des images ont été trouvées
+      if (secondaryImagesArray.length > 0) {
+        console.log(`${secondaryImagesArray.length} images secondaires trouvées, mise à jour de l'état`);
+        setSecondaryImages(secondaryImagesArray);
+      } else {
+        console.log('Aucune image secondaire à afficher');
+      }
     }
   }, [isEditMode, initialData])
+
+  // Fonction utilitaire pour vérifier si une image est existante
+  const isExistingImage = (src: string): boolean => {
+    // Aucune source = pas une image existante
+    if (!src) return false;
+    
+    // Aucune donnée initiale = pas une image existante
+    if (!initialData) return false;
+    
+    // Si secondaryImagesUrl n'existe pas = pas une image existante
+    if (!initialData.secondaryImagesUrl) return false;
+    
+    try {
+      // Si c'est un tableau, utiliser some() pour vérifier si l'URL correspond
+      if (Array.isArray(initialData.secondaryImagesUrl)) {
+        return initialData.secondaryImagesUrl.some(url => url === src);
+      }
+      
+      // Si c'est une chaîne, essayer de la parser comme JSON
+      if (typeof initialData.secondaryImagesUrl === 'string') {
+        try {
+          const parsedUrls = JSON.parse(initialData.secondaryImagesUrl);
+          if (Array.isArray(parsedUrls)) {
+            return parsedUrls.some(url => url === src);
+          }
+        } catch {
+          // Ignorer silencieusement les erreurs de parsing
+        }
+      }
+    } catch (error) {
+      console.error('Erreur dans isExistingImage:', error);
+    }
+    
+    // Par défaut, considérer comme non existante
+    return false;
+  }
 
   const {
     register,
@@ -1147,26 +1221,6 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           ref={secondaryImagesInputRef}
           className={styles.formFileInput}
         />
-        {secondaryImages.length > 0 && (
-          <>
-            <p className={styles.formHelp}>Images secondaires sélectionnées ({secondaryImages.length})</p>
-            <div className={styles.imagePreviewContainer}>
-              {secondaryImages.map((src, index) => (
-                <div key={index} className={styles.imagePreview}>
-                  <img src={src} alt={`Image secondaire ${index + 1}`} />
-                  <button
-                    type="button"
-                    onClick={() => removeSecondaryImage(index)}
-                    className={styles.removeImageBtn}
-                    aria-label="Supprimer cette image"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
       </div>
       
       {/* Certificat d'authenticité */}
@@ -1208,6 +1262,39 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           </div>
         ))}
       </div>
+      
+      {/* Prévisualisation des images secondaires en mode édition */}
+      {isEditMode && secondaryImages && secondaryImages.length > 0 && (
+        <>
+          <div className={styles.formSectionTitle}>
+            Images secondaires existantes ({secondaryImages.length})
+          </div>
+          <p className={styles.formHelp}>
+            Ces images sont associées à l'œuvre. Vous pouvez les supprimer en cliquant sur la croix.
+          </p>
+          <div className={styles.imagePreviewContainer}>
+            {secondaryImages.map((src, index) => src && (
+              <div 
+                key={index} 
+                className={`${styles.imagePreview} ${isExistingImage(src) ? styles.existingImagePreview : ''}`}
+              >
+                <img src={src} alt={`Image secondaire ${index + 1}`} />
+                <button
+                  type="button"
+                  onClick={() => removeSecondaryImage(index)}
+                  className={styles.removeImageBtn}
+                  aria-label="Supprimer cette image"
+                >
+                  ×
+                </button>
+                {isExistingImage(src) && (
+                  <p className={styles.imageInfoText}>Image existante</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
       
       {/* Prévisualisation du certificat */}
       {previewCertificate && (

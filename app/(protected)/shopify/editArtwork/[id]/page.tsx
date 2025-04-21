@@ -49,7 +49,11 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
             console.log('Item chargé pour l\'édition:', {
               id: itemData.id,
               name: itemData.name, // Titre de l'oeuvre
-              description: itemData.description // Description de l'oeuvre
+              description: itemData.description, // Description de l'oeuvre
+              mainImageUrl: itemData.mainImageUrl,
+              secondaryImagesUrl: itemData.secondaryImagesUrl,
+              // Afficher l'objet complet pour debugging
+              itemComplet: itemData
             })
 
             try {
@@ -124,7 +128,8 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
               priceNftBeforeTax: item.priceNftBeforeTax?.toString(),
               priceNftPlusPhysicalBeforeTax: item.priceNftPlusPhysicalBeforeTax?.toString(),
               slug: item.name ? normalizeString(item.name) : '',
-              certificateUrl: certificate?.fileUrl
+              certificateUrl: certificate?.fileUrl,
+              secondaryImagesUrl: item.secondaryImagesUrl || []
             }}
             onSuccess={handleSuccess}
           />

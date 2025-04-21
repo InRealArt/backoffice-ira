@@ -601,7 +601,8 @@ export async function getItemById(itemId: number) {
         metaTitle: true,
         metaDescription: true,
         slug: true,
-        mainImageUrl: true
+        mainImageUrl: true,
+        secondaryImagesUrl: true
       }
     })
 
