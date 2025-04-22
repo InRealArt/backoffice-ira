@@ -1,4 +1,4 @@
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { storage } from './config'
 import { normalizeString } from '@/lib/utils'
 
@@ -129,5 +129,62 @@ export async function uploadArtworkImages(
     } catch (error) {
         console.error('Erreur lors de l\'upload des images d\'œuvre vers Firebase:', error)
         throw new Error(`Échec de l'upload des images d'œuvre: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+    }
+}
+
+/**
+ * Extrait le chemin de stockage à partir d'une URL Firebase
+ * 
+ * @param url - URL Firebase Storage
+ * @returns Le chemin de stockage extrait ou null si non trouvé
+ */
+export function extractFirebaseStoragePath(url: string): string | null {
+    try {
+        // Les URLs Firebase Storage contiennent généralement un paramètre token
+        // Format: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?alt=media&token=TOKEN
+        const regex = /firebasestorage\.googleapis\.com\/v0\/b\/[^\/]+\/o\/([^?]+)/;
+        const match = url.match(regex);
+
+        if (match && match[1]) {
+            // Décoder l'URL (Firebase encode les '/' en '%2F')
+            return decodeURIComponent(match[1]);
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Erreur lors de l\'extraction du chemin Firebase:', error);
+        return null;
+    }
+}
+
+/**
+ * Supprime une image de Firebase Storage
+ * 
+ * @param imageUrl - URL de l'image à supprimer
+ * @returns Promise<boolean> - true si la suppression a réussi, false sinon
+ */
+export async function deleteImageFromFirebase(imageUrl: string): Promise<boolean> {
+    try {
+        // Extraire le chemin de stockage à partir de l'URL
+        const storagePath = extractFirebaseStoragePath(imageUrl);
+
+        if (!storagePath) {
+            console.error('Impossible d\'extraire le chemin de stockage:', imageUrl);
+            return false;
+        }
+
+        console.log(`Tentative de suppression de l'image: ${storagePath}`);
+
+        // Créer une référence à l'image
+        const imageRef = ref(storage, storagePath);
+
+        // Supprimer l'image
+        await deleteObject(imageRef);
+
+        console.log(`Image supprimée avec succès: ${storagePath}`);
+        return true;
+    } catch (error) {
+        console.error('Erreur lors de la suppression de l\'image:', error);
+        return false;
     }
 } 

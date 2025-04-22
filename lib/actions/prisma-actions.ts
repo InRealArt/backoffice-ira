@@ -1842,3 +1842,66 @@ export async function saveItemImages(
     throw new Error(`Échec de la sauvegarde des images: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
   }
 }
+
+/**
+ * Supprime une image secondaire de la liste d'un item
+ */
+export async function removeSecondaryImage(
+  itemId: number,
+  imageUrl: string
+) {
+  try {
+    console.log(`Suppression de l'image secondaire pour l'item #${itemId}`);
+    console.log(`URL à supprimer: ${imageUrl}`);
+
+    // Récupérer l'item et ses images secondaires actuelles
+    const item = await prisma.item.findUnique({
+      where: { id: itemId },
+      select: { secondaryImagesUrl: true }
+    });
+
+    if (!item) {
+      throw new Error(`Item #${itemId} non trouvé`);
+    }
+
+    // Traiter le tableau d'images secondaires
+    let secondaryImages: string[] = [];
+
+    // Si secondaryImagesUrl est un tableau, l'utiliser directement
+    if (Array.isArray(item.secondaryImagesUrl)) {
+      secondaryImages = item.secondaryImagesUrl as string[];
+    }
+    // Si c'est une chaîne, essayer de la parser comme JSON
+    else if (typeof item.secondaryImagesUrl === 'string') {
+      try {
+        const parsed = JSON.parse(item.secondaryImagesUrl);
+        if (Array.isArray(parsed)) {
+          secondaryImages = parsed;
+        }
+      } catch (e) {
+        console.error('Erreur lors du parsing des images secondaires:', e);
+      }
+    }
+
+    // Filtrer l'URL à supprimer
+    const updatedImages = secondaryImages.filter(url => url !== imageUrl);
+    console.log(`Images restantes après suppression: ${updatedImages.length}`);
+
+    // Mettre à jour l'item avec le nouveau tableau d'images
+    const updatedItem = await prisma.item.update({
+      where: { id: itemId },
+      data: {
+        secondaryImagesUrl: updatedImages
+      }
+    });
+
+    return {
+      success: true,
+      message: `Image secondaire supprimée avec succès`,
+      remainingImagesCount: updatedImages.length
+    };
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'image secondaire:', error);
+    throw new Error(`Échec de la suppression de l'image: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+  }
+}

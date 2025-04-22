@@ -434,9 +434,61 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     setSecondaryImagesFiles(prev => [...prev, ...newImageFiles])
   }
   
-  const removeSecondaryImage = (index: number) => {
-    setSecondaryImages(prev => prev.filter((_, i) => i !== index))
-    setSecondaryImagesFiles(prev => prev.filter((_, i) => i !== index))
+  const removeSecondaryImage = async (index: number) => {
+    try {
+      // Vérifier si nous sommes en mode édition et si l'image existe dans la base de données
+      if (isEditMode && initialData?.id) {
+        const imageUrl = secondaryImages[index];
+        
+        // Vérifier que l'image est bien une image existante (pas une image locale)
+        if (isExistingImage(imageUrl)) {
+          setIsSubmitting(true);
+          
+          // Afficher un toast pour indiquer que la suppression est en cours
+          const loadingToast = toast.loading('Suppression de l\'image en cours...');
+          
+          try {
+            // 1. Supprimer l'image de Firebase Storage
+            const { deleteImageFromFirebase } = await import('@/lib/firebase/storage');
+            const storageDeleted = await deleteImageFromFirebase(imageUrl);
+            
+            if (!storageDeleted) {
+              console.error('Erreur lors de la suppression de l\'image dans Firebase Storage');
+            }
+            
+            // 2. Supprimer l'image de la base de données
+            const { removeSecondaryImage: deleteImageFromDb } = await import('@/lib/actions/prisma-actions');
+            const dbResult = await deleteImageFromDb(initialData.id, imageUrl);
+            
+            // Fermer le toast de chargement et afficher un message de succès
+            toast.dismiss(loadingToast);
+            toast.success('Image supprimée avec succès');
+            
+            // Mettre à jour l'état local après la suppression
+            setSecondaryImages(prev => prev.filter((_, i) => i !== index));
+            setSecondaryImagesFiles(prev => prev.filter((_, i) => i !== index));
+          } catch (error) {
+            // En cas d'erreur, fermer le toast de chargement et afficher un message d'erreur
+            toast.dismiss(loadingToast);
+            console.error('Erreur lors de la suppression de l\'image:', error);
+            toast.error('Erreur lors de la suppression de l\'image');
+          } finally {
+            setIsSubmitting(false);
+          }
+        } else {
+          // Pour les images non existantes (ajoutées localement), juste les supprimer de l'état local
+          setSecondaryImages(prev => prev.filter((_, i) => i !== index));
+          setSecondaryImagesFiles(prev => prev.filter((_, i) => i !== index));
+        }
+      } else {
+        // Si nous ne sommes pas en mode édition, supprimer simplement de l'état local
+        setSecondaryImages(prev => prev.filter((_, i) => i !== index));
+        setSecondaryImagesFiles(prev => prev.filter((_, i) => i !== index));
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'image:', error);
+      toast.error('Erreur lors de la suppression de l\'image');
+    }
   }
   
   const handleCertificateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
