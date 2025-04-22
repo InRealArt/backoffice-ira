@@ -1805,35 +1805,47 @@ export async function updateItemRecord(
  */
 export async function saveItemImages(
   itemId: number,
-  mainImageUrl: string,
+  mainImageUrl: string | null | undefined,
   secondaryImageUrls: string[] = []
 ) {
   try {
     console.log(`Début de la sauvegarde des images pour l'item #${itemId}`);
-    console.log(`- URL principale: ${mainImageUrl}`);
+    console.log(`- URL principale: ${mainImageUrl || '(aucune modification)'}`);
     console.log(`- ${secondaryImageUrls.length} URLs secondaires:`, secondaryImageUrls);
 
     // Préparer les données de mise à jour
-    const updateData = {
-      mainImageUrl: mainImageUrl,
-      ...(secondaryImageUrls.length > 0 ? { secondaryImagesUrl: secondaryImageUrls } : {})
-    };
+    const updateData: any = {};
+
+    // N'ajouter l'URL principale que si elle est définie et non vide
+    if (mainImageUrl) {
+      updateData.mainImageUrl = mainImageUrl;
+    }
+
+    // Ajouter les URLs secondaires si elles existent
+    if (secondaryImageUrls.length > 0) {
+      updateData.secondaryImagesUrl = secondaryImageUrls;
+    }
 
     console.log('Données de mise à jour:', JSON.stringify(updateData));
 
-    // Mettre à jour l'item avec l'URL de l'image principale
-    const updatedItem = await prisma.item.update({
-      where: { id: itemId },
-      data: updateData
-    });
+    // Ne mettre à jour que si nous avons des données à mettre à jour
+    if (Object.keys(updateData).length > 0) {
+      // Mettre à jour l'item avec les URLs d'images
+      const updatedItem = await prisma.item.update({
+        where: { id: itemId },
+        data: updateData
+      });
 
-    console.log(`Images sauvegardées avec succès pour l'item #${itemId}`);
+      console.log(`Images sauvegardées avec succès pour l'item #${itemId}`);
+    } else {
+      console.log(`Aucune modification d'image pour l'item #${itemId}`);
+    }
 
     return {
       success: true,
       message: `Images sauvegardées pour l'item #${itemId}`,
       data: {
-        mainImageUrl,
+        mainImageUrl: mainImageUrl || undefined,
         secondaryImagesCount: secondaryImageUrls.length
       }
     };

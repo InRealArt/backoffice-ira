@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { artworkSchema, ArtworkFormData } from '../createArtwork/schema'
+import { artworkSchema, artworkEditSchema, ArtworkFormData } from '../createArtwork/schema'
 import { createArtwork } from '@/lib/actions/shopify-actions'
 import toast from 'react-hot-toast'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
@@ -229,6 +229,9 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     return false;
   }
 
+  // Choisir le schéma de validation en fonction du mode (création ou édition)
+  const validationSchema = isEditMode ? artworkEditSchema : artworkSchema;
+
   const {
     register,
     handleSubmit,
@@ -237,7 +240,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     watch,
     formState: { errors }
   } = useForm<ArtworkFormData>({
-    resolver: zodResolver(artworkSchema),
+    resolver: zodResolver(validationSchema),
     defaultValues: {
       title: initialData?.title || '',
       description: initialData?.description || '',
@@ -280,13 +283,19 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     }
   }, [title])
   
+  // Ajouter un état pour suivre si une image principale existe déjà
+  const [hasExistingMainImage, setHasExistingMainImage] = useState(false);
+  
   // En mode édition avec une image existante, on considère que l'image est déjà valide
   useEffect(() => {
     // Pour l'image
     if (isEditMode && initialData?.imageUrl && previewImages.length > 0) {
       console.log('Désactivation de la validation d\'image obligatoire')
-      // Désactiver la validation d'image obligatoire
+      // Désactiver la validation d'image obligatoire - on utilise null car undefined cause une erreur de type
       setValue('images', null as any, { shouldValidate: false })
+      
+      // Au lieu d'utiliser register, utilisons un état local pour suivre si une image existe déjà
+      setHasExistingMainImage(true);
     }
     
     // Pour le certificat
@@ -328,6 +337,9 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors)
       console.log('Erreurs de validation détectées:', errors)
+      
+      // Vérifier si on est en mode édition avec une image principale existante
+      const shouldIgnoreImageError = isEditMode && (initialData?.imageUrl || previewImages.length > 0);
       
       // Mappez les noms de champs pour un affichage plus convivial
       const fieldNames: Record<string, string> = {
@@ -378,6 +390,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       } else {
         // Collecter les noms des champs en erreur
         const missingFields = Object.keys(errors)
+          .filter(key => key !== 'images' || !shouldIgnoreImageError) // Ne pas inclure l'erreur d'image si on doit l'ignorer
           .map(key => fieldNames[key])
           .filter(Boolean);
         
@@ -559,11 +572,34 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           // Mettre à jour l'œuvre existante
           setIsSubmitting(true)
           
-          // Upload des images vers Firebase si de nouvelles images ont été sélectionnées
-          let mainImageUrl = '';
-          let secondaryImageUrls: string[] = [];
+          // Afficher toast de chargement pour l'édition
+          const loadingToast = toast.loading('Mise à jour de l\'œuvre en cours...');
           
-          if (data.images && data.images instanceof FileList && data.images.length > 0) {
+          // Upload des images vers Firebase UNIQUEMENT si de nouvelles images ont été sélectionnées
+          // et que ce ne sont pas des images factices créées pour la validation
+          let mainImageUrl = initialData?.imageUrl || ''; // Initialiser avec l'image existante
+          let newSecondaryImageUrls: string[] = [];
+          
+          // Vérifier si une nouvelle image principale a été sélectionnée en utilisant directement la référence
+          const isRealNewImage = fileInputRef.current && 
+                                 fileInputRef.current.files && 
+                                 fileInputRef.current.files.length > 0;
+          
+          // Vérifier si nous avons de nouvelles images secondaires à uploader
+          const hasNewSecondaryImages = secondaryImagesFiles.length > 0;
+          
+          console.log("Vérification des fichiers d'image:", {
+            fileInputRef: fileInputRef.current?.files,
+            fileInputRefLength: fileInputRef.current?.files?.length || 0,
+            dataImages: data.images,
+            dataImagesLength: data.images instanceof FileList ? data.images.length : 0
+          });
+          
+          console.log("Nouvelle image principale détectée:", isRealNewImage);
+          console.log("Nouvelles images secondaires détectées:", hasNewSecondaryImages, secondaryImagesFiles.length);
+          
+          // Si nous avons une nouvelle image principale ou des nouvelles images secondaires
+          if (isRealNewImage || hasNewSecondaryImages) {
             try {
               // Récupérer les informations de l'artiste pour le stockage hiérarchique
               const artistName = backofficeUser.artist ? `${backofficeUser.artist.name} ${backofficeUser.artist.surname}`.trim() : `${backofficeUser.firstName} ${backofficeUser.lastName}`.trim();
@@ -574,75 +610,150 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
               console.log('artistFolder direct : ', artistFolder);
               const itemSlug = slug || normalizeString(data.title);
               
-              const mainImage = data.images[0];
-              
-              // Utiliser l'état secondaryImagesFiles pour récupérer les fichiers
-              const secondaryImagesArray = secondaryImagesFiles;
-              
-              // Importer dynamiquement les modules Firebase
+              // Import dynamique des modules Firebase
               const { getAuth, signInAnonymously } = await import('firebase/auth');
               const { app } = await import('@/lib/firebase/config');
-              const { uploadArtworkImages } = await import('@/lib/firebase/storage');
+              const { uploadImageToFirebase, uploadMultipleImagesToFirebase, deleteImageFromFirebase } = await import('@/lib/firebase/storage');
               
               // S'authentifier avec Firebase
               const auth = getAuth(app);
               const userCredential = await signInAnonymously(auth);
               console.log('Authentification Firebase réussie, UID:', userCredential.user.uid);
               
-              // Uploader les images
-              console.log(`Démarrage de l'upload: ${secondaryImagesArray.length} images secondaires`);
-              const uploadResult = await uploadArtworkImages(
-                mainImage,
-                secondaryImagesArray,
-                {
-                  artistFolder,
-                  itemSlug
+              // Upload image principale si nécessaire
+              if (isRealNewImage && fileInputRef.current && fileInputRef.current.files && fileInputRef.current.files.length > 0) {
+                try {
+                  // Si nous avons une image existante en database, nous devons d'abord la supprimer
+                  if (initialData?.imageUrl) {
+                    console.log('Suppression de l\'ancienne image principale:', initialData.imageUrl);
+                    toast.loading('Remplacement de l\'image principale en cours...', { id: 'replace-image' });
+                    
+                    try {
+                      // Supprimer l'image existante
+                      const deleteResult = await deleteImageFromFirebase(initialData.imageUrl);
+                      console.log('Résultat de la suppression:', deleteResult ? 'Succès' : 'Échec');
+                    } catch (deleteError) {
+                      console.error('Erreur lors de la suppression de l\'ancienne image:', deleteError);
+                      // On continue même si la suppression échoue, pour permettre le remplacement
+                    }
+                  }
+                  
+                  console.log('Upload de la nouvelle image principale');
+                  // Utiliser directement fileInputRef pour être sûr d'avoir le fichier
+                  mainImageUrl = await uploadImageToFirebase(fileInputRef.current.files[0], {
+                    artistFolder,
+                    itemSlug,
+                    isMain: true
+                  });
+                  console.log('Nouvelle image principale uploadée:', mainImageUrl);
+                  toast.success('Nouvelle image uploadée avec succès', { id: 'replace-image' });
+                } catch (mainImageError) {
+                  console.error('Erreur lors de l\'upload de l\'image principale:', mainImageError);
+                  toast.error('Erreur lors de l\'upload de l\'image principale', { id: 'replace-image' });
                 }
-              );
-              
-              // Récupérer les URLs des images
-              mainImageUrl = uploadResult.mainImageUrl;
-              secondaryImageUrls = uploadResult.secondaryImageUrls;
-              
-              console.log(`Image principale uploadée: ${mainImageUrl}`);
-              console.log(`Images secondaires uploadées (${secondaryImageUrls.length}):`, secondaryImageUrls);
+              }
+
+              // Upload des images secondaires si nécessaire
+              if (hasNewSecondaryImages && secondaryImagesFiles.length > 0) {
+                try {
+                  console.log(`Upload de ${secondaryImagesFiles.length} nouvelles images secondaires`);
+                  newSecondaryImageUrls = await uploadMultipleImagesToFirebase(secondaryImagesFiles, {
+                    artistFolder,
+                    itemSlug,
+                    isMain: false
+                  });
+                  console.log(`${newSecondaryImageUrls.length} nouvelles images secondaires uploadées`);
+                } catch (secondaryImagesError) {
+                  console.error('Erreur lors de l\'upload des images secondaires:', secondaryImagesError);
+                  toast.error('Erreur lors de l\'upload des images secondaires');
+                  newSecondaryImageUrls = [];
+                }
+              }
               
               try {
-                // Sauvegarder l'URL de l'image directement
+                // Récupérer les URLs d'images secondaires existantes
+                let existingSecondaryImageUrls: string[] = [];
+                
+                if (initialData?.secondaryImagesUrl) {
+                  if (Array.isArray(initialData.secondaryImagesUrl)) {
+                    existingSecondaryImageUrls = initialData.secondaryImagesUrl;
+                  } else if (typeof initialData.secondaryImagesUrl === 'string') {
+                    try {
+                      const parsed = JSON.parse(initialData.secondaryImagesUrl);
+                      if (Array.isArray(parsed)) {
+                        existingSecondaryImageUrls = parsed;
+                      }
+                    } catch (e) {
+                      console.error('Erreur lors du parsing des images secondaires existantes:', e);
+                    }
+                  }
+                }
+                
+                console.log(`Images secondaires existantes: ${existingSecondaryImageUrls.length}`);
+                
+                // Fusionner les URLs existantes avec les nouvelles URLs
+                // Nous filtrons les images secondaires existantes pour ne conserver que celles qui sont toujours dans l'état secondaryImages
+                // (car l'utilisateur peut avoir supprimé certaines images existantes via l'interface)
+                const currentExistingUrls = existingSecondaryImageUrls.filter(url => 
+                  secondaryImages.includes(url)
+                );
+                
+                console.log(`Images secondaires existantes après filtrage: ${currentExistingUrls.length}`);
+                
+                // Fusionner les URLs existantes conservées avec les nouvelles URLs
+                const allSecondaryImageUrls = [...currentExistingUrls, ...newSecondaryImageUrls];
+                
+                console.log(`Total images secondaires après fusion: ${allSecondaryImageUrls.length}`);
+                
+                // Sauvegarder les URLs des images
                 const { saveItemImages } = await import('@/lib/actions/prisma-actions');
-                await saveItemImages(initialData.id as number, mainImageUrl, secondaryImageUrls);
-                console.log('URL de l\'image sauvegardée dans la base de données');
+                await saveItemImages(
+                  initialData.id as number, 
+                  isRealNewImage ? mainImageUrl : undefined,
+                  allSecondaryImageUrls
+                );
+                console.log('URLs des images sauvegardées dans la base de données');
+                
               } catch (imageError) {
-                console.error('Erreur lors de la sauvegarde de l\'URL de l\'image:', imageError);
-                // Ne pas bloquer le flux principal si la sauvegarde de l'image échoue
+                console.error('Erreur lors de la sauvegarde des URLs des images:', imageError);
+                // Ne pas bloquer le flux principal si la sauvegarde des images échoue
               }
             } catch (uploadError) {
-              console.error('Erreur lors de l\'upload de l\'image:', uploadError);
-              toast.error('Erreur lors de l\'upload de l\'image');
+              console.error('Erreur lors de l\'upload des images:', uploadError);
+              toast.error('Erreur lors de l\'upload des images');
             }
+          } else {
+            console.log('Aucune nouvelle image détectée, conservation des images existantes');
+          }
+          
+          // Mettre à jour le produit sans inclure le champ d'image principale s'il n'y a pas de nouvelle image
+          const updateData: any = {
+            name: data.title,
+            height: data.height ? parseFloat(data.height) : undefined,
+            width: data.width ? parseFloat(data.width) : undefined,
+            weight: data.weight ? parseFloat(data.weight) : undefined,
+            intellectualProperty: data.intellectualProperty,
+            intellectualPropertyEndDate: data.intellectualPropertyEndDate ? new Date(data.intellectualPropertyEndDate) : null,
+            creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
+            pricePhysicalBeforeTax: data.hasPhysicalOnly && data.pricePhysicalBeforeTax ? parseInt(data.pricePhysicalBeforeTax, 10) : 0,
+            priceNftBeforeTax: data.hasNftOnly && data.priceNftBeforeTax ? parseInt(data.priceNftBeforeTax, 10) : 0,
+            priceNftPlusPhysicalBeforeTax: data.hasNftPlusPhysical && data.priceNftPlusPhysicalBeforeTax ? parseInt(data.priceNftPlusPhysicalBeforeTax, 10) : 0,
+            artworkSupport: data.medium || null,
+            metaTitle: data.metaTitle,
+            metaDescription: data.metaDescription,
+            description: data.description || '',
+            slug: slug || normalizeString(data.title),
+            tags: tags,
+          };
+          
+          // N'ajouter l'URL de l'image principale que si elle a changé
+          if (isRealNewImage && mainImageUrl && mainImageUrl !== initialData.imageUrl) {
+            updateData.mainImageUrl = mainImageUrl;
           }
           
           const result = await updateItemRecord(
             initialData.id,
-            {
-              name: data.title,
-              height: data.height ? parseFloat(data.height) : undefined,
-              width: data.width ? parseFloat(data.width) : undefined,
-              weight: data.weight ? parseFloat(data.weight) : undefined,
-              intellectualProperty: data.intellectualProperty,
-              intellectualPropertyEndDate: data.intellectualPropertyEndDate ? new Date(data.intellectualPropertyEndDate) : null,
-              creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
-              pricePhysicalBeforeTax: data.hasPhysicalOnly && data.pricePhysicalBeforeTax ? parseInt(data.pricePhysicalBeforeTax, 10) : 0,
-              priceNftBeforeTax: data.hasNftOnly && data.priceNftBeforeTax ? parseInt(data.priceNftBeforeTax, 10) : 0,
-              priceNftPlusPhysicalBeforeTax: data.hasNftPlusPhysical && data.priceNftPlusPhysicalBeforeTax ? parseInt(data.priceNftPlusPhysicalBeforeTax, 10) : 0,
-              artworkSupport: data.medium || null,
-              metaTitle: data.metaTitle,
-              metaDescription: data.metaDescription,
-              description: data.description || '',
-              slug: slug || normalizeString(data.title),
-              tags: tags,
-              mainImageUrl: mainImageUrl || null
-            }
+            updateData
           )
           
           if (result.success) {
@@ -657,12 +768,14 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
               console.log('Aucun nouveau certificat fourni, conservation du certificat existant')
             }
             
+            toast.dismiss(loadingToast);
             toast.success(`L'œuvre "${data.title}" a été mise à jour avec succès!`)
             
             if (onSuccess) {
               onSuccess()
             }
           } else {
+            toast.dismiss(loadingToast);
             toast.error(`Erreur lors de la mise à jour: ${result.message || 'Une erreur est survenue'}`)
           }
         } catch (error: any) {
@@ -1219,8 +1332,8 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       <div className={styles.formSectionContent}>
         {/* Image Principale */}
         <div className={styles.formGroup}>
-          <label htmlFor="images" className={styles.formLabel} data-required={true}>
-            Image Principale
+          <label htmlFor="images" className={styles.formLabel} data-required={!isEditMode || !initialData?.imageUrl}>
+            Image Principale {isEditMode && initialData?.imageUrl ? '(optionnelle)' : ''}
           </label>
           {isEditMode && previewImages.length > 0 && (
             <p className={styles.formHelp}>
@@ -1239,9 +1352,9 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
               }
             }}
             ref={fileInputRef}
-            className={`${styles.formFileInput} ${errors.images ? styles.formInputError : ''}`}
+            className={`${styles.formFileInput} ${errors.images && (!isEditMode || !initialData?.imageUrl) ? styles.formInputError : ''}`}
           />
-          {errors.images && (
+          {errors.images && (!isEditMode || !initialData?.imageUrl) && (
             <p className={styles.formError}>{errors.images?.message ? String(errors.images.message) : 'L\'image principale est requise'}</p>
           )}
         </div>
@@ -1304,9 +1417,6 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         {previewImages.map((src, index) => (
           <div key={index} className={styles.imagePreview}>
             <img src={src} alt={`Aperçu ${index + 1}`} />
-            {isEditMode && index === 0 && initialData?.imageUrl && (
-              <p className={styles.imageInfoText}>Image existante</p>
-            )}
           </div>
         ))}
       </div>
