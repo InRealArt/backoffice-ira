@@ -15,6 +15,7 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
 import 'react-pdf/dist/esm/Page/TextLayer.css'
 import { TagInput } from '@/app/components/Tag/TagInput'
 import { normalizeString } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
 // Imports qui causent des erreurs - à supprimer
 // import { Button } from '@/components/ui/button'
 // import { Loader2Icon, UploadIcon, XIcon } from 'lucide-react'
@@ -94,7 +95,6 @@ interface ArtworkFormProps {
     creationYear?: string;
     intellectualProperty?: boolean;
     intellectualPropertyEndDate?: string;
-    edition?: string;
     imageUrl?: string;
     hasPhysicalOnly?: boolean;
     hasNftOnly?: boolean;
@@ -125,6 +125,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
   const { user } = useDynamicContext()
   const [formErrors, setFormErrors] = useState<any>(null)
   const isEditMode = mode === 'edit'
+  const router = useRouter()
   
   // Log pour vérifier les données initiales
   useEffect(() => {
@@ -249,7 +250,6 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       creationYear: initialData?.creationYear || new Date().getFullYear().toString(),
       intellectualProperty: initialData?.intellectualProperty || false,
       intellectualPropertyEndDate: initialData?.intellectualPropertyEndDate || '',
-      edition: initialData?.edition || '',
       images: undefined,
       certificate: undefined,
       hasPhysicalOnly: initialData?.hasPhysicalOnly || false,
@@ -807,56 +807,59 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
   
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-      {/* Informations de base */}
-      <div className={styles.formGrid}>
-        {/* Title */}
-        <div className={styles.formGroup}>
-          <label htmlFor="title" className={styles.formLabel} data-required={true}>
-            Titre
-          </label>
-          <input
-            id="title"
-            type="text"
-            {...register("title", { required: true })}
-            className={`${styles.formInput} ${errors.title ? styles.formInputError : ''}`}
-            placeholder="Entrez le titre de l'œuvre"
-          />
-          {errors.title && <p className={styles.formError}>Le titre est requis</p>}
-        </div>
-        
-        {/* Slug généré automatiquement */}
-        <div className={styles.formGroup}>
-          <label htmlFor="slug" className={styles.formLabel}>
-            Slug
-            <InfoTooltip
-              title="Slug"
-              content="URL simplifiée générée automatiquement à partir du titre"
+      {/* Caractéristiques principales */}
+      <div className={styles.formSectionTitle}>Caractéristiques principales</div>
+      <div className={styles.formSectionContent}>
+        <div className={styles.formGrid}>
+          {/* Title */}
+          <div className={styles.formGroup}>
+            <label htmlFor="title" className={styles.formLabel} data-required={true}>
+              Titre
+            </label>
+            <input
+              id="title"
+              type="text"
+              {...register("title", { required: true })}
+              className={`${styles.formInput} ${errors.title ? styles.formInputError : ''}`}
+              placeholder="Entrez le titre de l'œuvre"
             />
-          </label>
-          <input
-            id="slug"
-            type="text"
-            value={slug}
-            readOnly
-            className={`${styles.formInput} ${styles.formInputDisabled}`}
-            style={{ backgroundColor: '#f0f0f0', color: '#666', cursor: 'not-allowed' }}
-          />
-          <p className={styles.formHelp}>Ce champ est généré automatiquement à partir du titre</p>
+            {errors.title && <p className={styles.formError}>Le titre est requis</p>}
+          </div>
+          
+          {/* Slug généré automatiquement */}
+          <div className={styles.formGroup}>
+            <label htmlFor="slug" className={styles.formLabel}>
+              Slug
+              <InfoTooltip
+                title="Slug"
+                content="URL simplifiée générée automatiquement à partir du titre"
+              />
+            </label>
+            <input
+              id="slug"
+              type="text"
+              value={slug}
+              readOnly
+              className={`${styles.formInput} ${styles.formInputDisabled}`}
+              style={{ backgroundColor: '#f0f0f0', color: '#666', cursor: 'not-allowed' }}
+            />
+            <p className={styles.formHelp}>Ce champ est généré automatiquement à partir du titre</p>
+          </div>
         </div>
-      </div>
 
-      {/* Description */}
-      <div className={styles.formGroup}>
-        <label htmlFor="description" className={styles.formLabel}>
-          Description
-        </label>
-        <textarea
-          id="description"
-          {...register("description")}
-          className={`${styles.formTextarea} ${errors.description ? styles.formInputError : ''}`}
-          rows={4}
-          placeholder="Décrivez l'œuvre..."
-        />
+        {/* Description */}
+        <div className={styles.formGroup}>
+          <label htmlFor="description" className={styles.formLabel}>
+            Description
+          </label>
+          <textarea
+            id="description"
+            {...register("description")}
+            className={`${styles.formTextarea} ${errors.description ? styles.formInputError : ''}`}
+            rows={4}
+            placeholder="Décrivez l'œuvre..."
+          />
+        </div>
       </div>
       
       {/* SEO Metadata */}
@@ -1104,24 +1107,8 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           </div>
         </div>
         
-        <div className={styles.formGrid}>
-          {/* Édition */}
-          <div className={styles.formGroup}>
-            <label htmlFor="edition" className={styles.formLabel}>
-              Édition/Série
-            </label>
-            <input
-              id="edition"
-              type="text"
-              {...register("edition")}
-              className={styles.formInput}
-              placeholder="Édition limitée 2/10"
-            />
-          </div>
-        </div>
-        
         {/* Propriété intellectuelle */}
-        <div className={styles.formGroup}>
+        {/* <div className={styles.formGroup}>
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -1133,10 +1120,10 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
               Droits de propriété intellectuelle réservés
             </label>
           </div>
-        </div>
+        </div> */}
         
         {/* Date de fin des droits - conditionnelle */}
-        {hasIntellectualProperty && (
+        {/* {hasIntellectualProperty && (
           <div className={styles.formGroup}>
             <label htmlFor="intellectualPropertyEndDate" className={styles.formLabel}>
               Date de fin des droits
@@ -1155,7 +1142,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
               <p className={styles.formError}>{errors.intellectualPropertyEndDate.message}</p>
             )}
           </div>
-        )}
+        )} */}
       </div>
       
       {/* Tags */}
@@ -1175,80 +1162,84 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         </p>
       </div>
       
-      {/* Fichiers Media */}
-      <div className={styles.formGroup}>
-        <label htmlFor="images" className={styles.formLabel} data-required={true}>
-          Image Principale
-        </label>
-        {isEditMode && previewImages.length > 0 && (
+      {/* Section Fichiers Media */}
+      <div className={styles.formSectionTitle}>Fichiers Media</div>
+      <div className={styles.formSectionContent}>
+        {/* Image Principale */}
+        <div className={styles.formGroup}>
+          <label htmlFor="images" className={styles.formLabel} data-required={true}>
+            Image Principale
+          </label>
+          {isEditMode && previewImages.length > 0 && (
+            <p className={styles.formHelp}>
+              Une image existe déjà. Vous pouvez la remplacer en sélectionnant un nouveau fichier.
+            </p>
+          )}
+          <input
+            id="images"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => {
+              handleImageChange(e)
+              if (e.target.files) {
+                setValue('images', e.target.files as unknown as FileList, { shouldValidate: true })
+              }
+            }}
+            ref={fileInputRef}
+            className={`${styles.formFileInput} ${errors.images ? styles.formInputError : ''}`}
+          />
+          {errors.images && (
+            <p className={styles.formError}>{errors.images?.message ? String(errors.images.message) : 'L\'image principale est requise'}</p>
+          )}
+        </div>
+        
+        {/* Images secondaires */}
+        <div className={styles.formGroup}>
+          <label htmlFor="secondaryImages" className={styles.formLabel}>
+            Images secondaires
+          </label>
           <p className={styles.formHelp}>
-            Une image existe déjà. Vous pouvez la remplacer en sélectionnant un nouveau fichier.
+            Vous pouvez ajouter une ou plusieurs images secondaires qui seront affichées après l'image principale.
           </p>
-        )}
-        <input
-          id="images"
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={(e) => {
-            handleImageChange(e)
-            if (e.target.files) {
-              setValue('images', e.target.files as unknown as FileList, { shouldValidate: true })
-            }
-          }}
-          ref={fileInputRef}
-          className={`${styles.formFileInput} ${errors.images ? styles.formInputError : ''}`}
-        />
-        {errors.images && (
-          <p className={styles.formError}>{errors.images?.message ? String(errors.images.message) : 'L\'image principale est requise'}</p>
-        )}
-      </div>
-      
-      {/* Images secondaires */}
-      <div className={styles.formGroup}>
-        <label htmlFor="secondaryImages" className={styles.formLabel}>
-          Images secondaires
-        </label>
-        <p className={styles.formHelp}>
-          Vous pouvez ajouter une ou plusieurs images secondaires qui seront affichées après l'image principale.
-        </p>
-        <input
-          id="secondaryImages"
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleSecondaryImagesChange}
-          ref={secondaryImagesInputRef}
-          className={styles.formFileInput}
-        />
-      </div>
-      
-      {/* Certificat d'authenticité */}
-      <div className={styles.formGroup}>
-        <label htmlFor="certificate" className={styles.formLabel} data-required={!isEditMode || !previewCertificate}>
-          Certificat d'authenticité (PDF) {isEditMode && previewCertificate ? '(optionnel)' : ''}
-        </label>
-        {isEditMode && previewCertificate && (
-          <p className={styles.formHelp}>
-            Un certificat existe déjà. Vous pouvez le remplacer en sélectionnant un nouveau fichier.
-          </p>
-        )}
-        <input
-          id="certificate"
-          type="file"
-          accept="application/pdf"
-          onChange={(e) => {
-            handleCertificateChange(e)
-            if (e.target.files) {
-              setValue('certificate', e.target.files as unknown as FileList, { shouldValidate: true })
-            }
-          }}
-          ref={certificateInputRef}
-          className={`${styles.formFileInput} ${errors.certificate ? styles.formInputError : ''}`}
-        />
-        {errors.certificate && (
-          <p className={styles.formError}>{errors.certificate?.message ? String(errors.certificate.message) : 'Le certificat est requis'}</p>
-        )}
+          <input
+            id="secondaryImages"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleSecondaryImagesChange}
+            ref={secondaryImagesInputRef}
+            className={styles.formFileInput}
+          />
+        </div>
+        
+        {/* Certificat d'authenticité */}
+        <div className={styles.formGroup}>
+          <label htmlFor="certificate" className={styles.formLabel} data-required={!isEditMode || !previewCertificate}>
+            Certificat d'authenticité (PDF) {isEditMode && previewCertificate ? '(optionnel)' : ''}
+          </label>
+          {isEditMode && previewCertificate && (
+            <p className={styles.formHelp}>
+              Un certificat existe déjà. Vous pouvez le remplacer en sélectionnant un nouveau fichier.
+            </p>
+          )}
+          <input
+            id="certificate"
+            type="file"
+            accept="application/pdf"
+            onChange={(e) => {
+              handleCertificateChange(e)
+              if (e.target.files) {
+                setValue('certificate', e.target.files as unknown as FileList, { shouldValidate: true })
+              }
+            }}
+            ref={certificateInputRef}
+            className={`${styles.formFileInput} ${errors.certificate ? styles.formInputError : ''}`}
+          />
+          {errors.certificate && (
+            <p className={styles.formError}>{errors.certificate?.message ? String(errors.certificate.message) : 'Le certificat est requis'}</p>
+          )}
+        </div>
       </div>
       
       {/* Prévisualisation des images */}
@@ -1336,10 +1327,10 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         <button 
           type="button" 
           className={styles.cancelButton}
-          onClick={handleResetForm}
+          onClick={() => router.push('/shopify/collection')}
           disabled={isSubmitting}
         >
-          Réinitialiser
+          Annuler
         </button>
         <button 
           type="submit" 
