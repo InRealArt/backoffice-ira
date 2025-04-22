@@ -1,0 +1,7 @@
+export { default as MainInfoSection } from './MainInfoSection'
+export { default as SeoSection } from './SeoSection'
+export { default as PricingSection } from './PricingSection'
+export { default as PhysicalPropertiesSection } from './PhysicalPropertiesSection'
+export { default as MediaFilesSection } from './MediaFilesSection'
+export { default as TagsSection } from './TagsSection'
+export { default as FormActions } from './FormActions' 
