@@ -1252,6 +1252,11 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       </div>
       
       {/* Prévisualisation des images */}
+      {isEditMode && previewImages.length > 0 && initialData?.imageUrl && (
+        <div className={styles.imageMainLabel}>
+          <p><strong>Image principale existante</strong></p>
+        </div>
+      )}
       <div className={styles.imagePreviewContainer}>
         {previewImages.map((src, index) => (
           <div key={index} className={styles.imagePreview}>
@@ -1266,8 +1271,8 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       {/* Prévisualisation des images secondaires en mode édition */}
       {isEditMode && secondaryImages && secondaryImages.length > 0 && (
         <>
-          <div className={styles.formSectionTitle}>
-            Images secondaires existantes ({secondaryImages.length})
+          <div className={styles.imageMainLabel}>
+            <p><strong>Images secondaires existantes ({secondaryImages.length})</strong></p>
           </div>
           <p className={styles.formHelp}>
             Ces images sont associées à l'œuvre. Vous pouvez les supprimer en cliquant sur la croix.
@@ -1299,7 +1304,11 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       {/* Prévisualisation du certificat */}
       {previewCertificate && (
         <div className={styles.certificatePreviewContainer}>
-          <h4>Certificat d'authenticité {isEditMode && initialData?.certificateUrl ? 'existant' : 'sélectionné'}</h4>
+          {isEditMode && initialData?.certificateUrl && (
+            <div className={styles.imageMainLabel}>
+              <p><strong>Certificat d'authenticité existant</strong></p>
+            </div>
+          )}
           <div className={styles.certificateInfo}>
             {certificateInputRef.current?.files?.[0] ? (
               <>
