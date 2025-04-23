@@ -46,10 +46,19 @@ model Order {
 
   // Client (minimum RGPD)
   customerId String
+  customerName String
+  customerEmail String
   customer   User   @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   // Adresse de facturation (obligatoire fiscalement)
   billingAddressId Int
+  // Adresse figée
+  billingStreetAddress String
+  billingPostalCode    String
+  billingCity          String
+  billingCountry       String
+  billingVatNumber     String?
+
   billingAddress   Address @relation(fields: [billingAddressId], references: [id])
 
   // Éléments achetés
@@ -83,6 +92,95 @@ model OrderItem {
   @@index([artworkId])
   @@schema("marketplace")
   @@map("OrderItem")
+}
+
+model Invoice {
+  id              Int       @id @default(autoincrement())
+  invoiceNumber   String    @unique // Numéro de facture obligatoire
+  createdAt       DateTime  @default(now()) // Date d'émission de la facture
+  dueDate         DateTime? // Date d'échéance de paiement
+
+  // Référence à la commande d'origine
+  orderId         Int       @unique
+  orderNumber     String    // Numéro de commande lié
+  orderDate       DateTime  // Date de la commande
+
+  // Montants (strictement obligatoires fiscalement)
+  subtotalPrice   Decimal   @db.Decimal(10, 2) // Prix HT
+  vatAmount       Decimal   @db.Decimal(10, 2) // Montant TVA
+  totalPrice      Decimal   @db.Decimal(10, 2) // Prix TTC
+  vatRate         Decimal   @db.Decimal(5, 2)  // Taux de TVA appliqué
+
+  // Statut de paiement
+  paidAt          DateTime? // Date du paiement
+  paymentMethod   String    // Méthode de paiement
+  isPaid          Boolean   @default(false)
+
+  // Informations du vendeur (fixes)
+  sellerName      String    // Nom de la société
+  sellerAddress   String    // Adresse du vendeur
+  sellerVatNumber String?   // Numéro de TVA intracommunautaire
+  sellerSiret     String    // Numéro SIRET
+  sellerEmail     String    // Email de contact
+
+  // Client (données figées pour historique)
+  customerName    String    // Nom complet du client
+  customerEmail   String    // Email du client
+  customerId      String    // ID du client dans le système
+
+  // Adresse de facturation (figée)
+  billingAddressFullname String
+  billingAddressStreet   String
+  billingAddressCity     String
+  billingAddressPostCode String
+  billingAddressCountry  String
+  billingAddressVatNumber String?  // Pour clients professionnels
+
+  // Éléments de la facture (copiés depuis la commande)
+  items           InvoiceItem[]
+
+  // Champs spécifiques pour conformité légale
+  legalMentions   String    // Mentions légales obligatoires
+  paymentTerms    String    // Conditions de paiement
+  invoiceType     InvoiceType @default(INVOICE) // Type de document (facture, avoir, etc.)
+  
+  // Références pour recherches
+  @@index([orderNumber])
+  @@index([invoiceNumber])
+  @@index([customerId])
+  @@map("Invoice")
+  @@schema("marketplace")
+}
+
+model InvoiceItem {
+  id          Int     @id @default(autoincrement())
+  invoiceId   Int
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  // Données figées de l'article (pour historique complet)
+  title       String    // Nom du produit
+  description String?   // Description du produit
+  isNft       Boolean   @default(false)
+  artworkId   Int       // Référence à l'œuvre
+  
+  // Prix (obligatoire fiscalement)
+  unitPrice   Decimal   @db.Decimal(10, 2)  // Prix unitaire HT
+  vatRate     Decimal   @db.Decimal(5, 2)   // Taux TVA
+  vatAmount   Decimal   @db.Decimal(10, 2)  // Montant TVA
+  totalPrice  Decimal   @db.Decimal(10, 2)  // Prix TTC
+  
+  @@index([invoiceId])
+  @@map("InvoiceItem")
+  @@schema("marketplace")
+}
+
+enum InvoiceType {
+  INVOICE        // Facture standard
+  CREDIT_NOTE    // Avoir
+  PROFORMA       // Facture proforma
+  RECEIPT        // Reçu
+  
+  @@schema("marketplace")
 }
 
 model Address {
