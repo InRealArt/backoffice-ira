@@ -54,10 +54,10 @@ export const artworkSchema = z.object({
             "La date de fin des droits doit être dans le futur"
         ),
     edition: z.string().optional(),
-    images: z.union([
-        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: "L'image principale est requise" }),
-        z.null()
-    ]).refine(val => val !== null, { message: "L'image principale est requise" }),
+    images: z.instanceof(FileList).nullable().optional()
+        .refine(val => val !== null && val !== undefined && val.length > 0, {
+            message: "L'image principale est requise"
+        }),
     certificate: z.union([
         z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat d\'authenticité est requis' }),
         z.null()
@@ -164,11 +164,7 @@ export const artworkEditSchema = z.object({
         ),
     edition: z.string().optional(),
     // En mode édition, l'image est optionnelle
-    images: z.union([
-        z.instanceof(FileList),
-        z.null(),
-        z.undefined()
-    ]).optional(),
+    images: z.instanceof(FileList).nullable().optional(),
     certificate: z.union([
         z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat d\'authenticité est requis' }),
         z.null()
@@ -244,7 +240,7 @@ export type ArtworkFormData = {
     intellectualProperty: boolean;
     intellectualPropertyEndDate?: string;
     edition?: string;
-    images?: FileList | null;
+    images: FileList | null | undefined;
     certificate: FileList | null;
     artworkSupport?: string;
     certificateUrl?: string;

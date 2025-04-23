@@ -31,6 +31,13 @@ export async function getSchemaModels() {
             ]
         },
         {
+            name: 'DetailedFaqPageItem',
+            fields: [
+                { name: 'question', type: 'String' },
+                { name: 'answer', type: 'String' }
+            ]
+        },
+        {
             name: 'DetailedGlossaryHeader',
             fields: [
                 { name: 'name', type: 'String' }

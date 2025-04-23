@@ -119,7 +119,6 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
               intellectualPropertyEndDate: item.intellectualPropertyEndDate
                 ? new Date(item.intellectualPropertyEndDate).toISOString().split('T')[0]
                 : undefined,
-              edition: item.edition,
               imageUrl: item.mainImageUrl,
               hasPhysicalOnly: item.pricePhysicalBeforeTax > 0,
               hasNftOnly: item.priceNftBeforeTax > 0,

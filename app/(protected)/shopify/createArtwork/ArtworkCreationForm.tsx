@@ -39,22 +39,28 @@ export default function ArtworkCreationForm() {
     watch,
     formState: { errors }
   } = useForm<ArtworkFormData>({
-    resolver: zodResolver(artworkSchema),
+    resolver: zodResolver(artworkSchema) as any,
     defaultValues: {
       title: '',
       description: '',
+      metaTitle: 'Artwork Title',
+      metaDescription: 'Artwork Description',
       price: '',
-      artist: '',
       medium: '',
       width: '',
       height: '',
-      year: new Date().getFullYear().toString(),
-      creationDate: '',
+      weight: '',
+      creationYear: new Date().getFullYear().toString(),
       intellectualProperty: false,
       intellectualPropertyEndDate: '',
       edition: '',
       images: undefined,
-      certificate: undefined
+      certificate: undefined,
+      certificateUrl: '',
+      hasPhysicalOnly: true,
+      pricePhysicalBeforeTax: '',
+      hasNftOnly: false,
+      hasNftPlusPhysical: false
     }
   })
   
@@ -132,7 +138,7 @@ export default function ArtworkCreationForm() {
       Object.entries(data).forEach(([key, value]) => {
         //console.log('Traitement du champ:', key, value) // Log de débogage
         if (key !== 'images' && key !== 'certificate' && key !== 'tags' && value !== undefined) {
-          if (key === 'creationDate' || key === 'intellectualPropertyEndDate') {
+          if (key === 'creationYear' || key === 'intellectualPropertyEndDate') {
             if (value) {
               formData.append(key, new Date(value as string).toISOString())
             }
@@ -177,7 +183,6 @@ export default function ArtworkCreationForm() {
             if (backofficeUser) {
               const newItem = await createItemRecord(
                 backofficeUser.id, 
-                result.productId, 
                 'created',
                 tags,
                 {
@@ -185,9 +190,13 @@ export default function ArtworkCreationForm() {
                   width: data.width ? parseFloat(data.width) : undefined,
                   intellectualProperty: !!data.intellectualProperty,
                   intellectualPropertyEndDate: data.intellectualPropertyEndDate ? new Date(data.intellectualPropertyEndDate) : null,
-                  creationDate: data.creationDate ? new Date(data.creationDate) : null,
-                  priceBeforeTax: data.price ? parseInt(data.price, 10) : 0,
-                  artworkSupport: data.medium || null 
+                  creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
+                  pricePhysicalBeforeTax: data.price ? parseInt(typeof data.price === 'string' ? data.price : String(data.price), 10) : 0,
+                  artworkSupport: data.medium || null,
+                  name: data.title,
+                  metaTitle: data.metaTitle,
+                  metaDescription: data.metaDescription,
+                  description: data.description
                 }
               )
               
@@ -238,8 +247,7 @@ export default function ArtworkCreationForm() {
         title: 'Titre',
         description: 'Description',
         price: 'Prix',
-        artist: 'Artiste',
-        medium: 'Support/Medium',
+        medium: 'Artiste',
         images: 'Images',
         certificate: 'Certificat d\'authenticité'
       }
@@ -294,18 +302,18 @@ export default function ArtworkCreationForm() {
           
           {/* Artiste */}
           <div className={styles.formGroup}>
-            <label htmlFor="artist" className={styles.formLabel}>
+            <label htmlFor="medium" className={styles.formLabel}>
               Artiste*
             </label>
             <input
-              id="artist"
+              id="medium"
               type="text"
-              {...register('artist')}
-              className={`${styles.formInput} ${errors.artist ? styles.formInputError : ''}`}
+              {...register('medium')}
+              className={`${styles.formInput} ${errors.medium ? styles.formInputError : ''}`}
               placeholder="Nom de l'artiste"
             />
-            {errors.artist && (
-              <p className={styles.formError}>{errors.artist.message}</p>
+            {errors.medium && (
+              <p className={styles.formError}>{errors.medium.message}</p>
             )}
           </div>
         </div>
@@ -370,17 +378,17 @@ export default function ArtworkCreationForm() {
             
             {/* Date de création */}
             <div className={styles.formGroup}>
-              <label htmlFor="creationDate" className={styles.formLabel}>
+              <label htmlFor="creationYear" className={styles.formLabel}>
                 Date de création
               </label>
               <input
-                id="creationDate"
+                id="creationYear"
                 type="date"
-                {...register('creationDate')}
-                className={`${styles.formInput} ${errors.creationDate ? styles.formInputError : ''}`}
+                {...register('creationYear')}
+                className={`${styles.formInput} ${errors.creationYear ? styles.formInputError : ''}`}
               />
-              {errors.creationDate && (
-                <p className={styles.formError}>{errors.creationDate.message}</p>
+              {errors.creationYear && (
+                <p className={styles.formError}>{errors.creationYear.message}</p>
               )}
             </div>
           </div>
@@ -443,18 +451,18 @@ export default function ArtworkCreationForm() {
           <div className={styles.formGrid}>
             {/* Année */}
             <div className={styles.formGroup}>
-              <label htmlFor="year" className={styles.formLabel}>
+              <label htmlFor="creationYear" className={styles.formLabel}>
                 Année de création
               </label>
               <input
-                id="year"
+                id="creationYear"
                 type="text"
-                {...register('year')}
-                className={`${styles.formInput} ${errors.year ? styles.formInputError : ''}`}
+                {...register('creationYear')}
+                className={`${styles.formInput} ${errors.creationYear ? styles.formInputError : ''}`}
                 placeholder="2023"
               />
-              {errors.year && (
-                <p className={styles.formError}>{errors.year.message}</p>
+              {errors.creationYear && (
+                <p className={styles.formError}>{errors.creationYear.message}</p>
               )}
             </div>
             

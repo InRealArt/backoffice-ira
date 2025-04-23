@@ -64,7 +64,7 @@ export function useArtworkForm({
         getValues,
         formState: { errors }
     } = useForm<ArtworkFormData>({
-        resolver: zodResolver(validationSchema),
+        resolver: zodResolver(validationSchema) as any,
         defaultValues: {
             title: initialData?.title || '',
             description: initialData?.description || '',

@@ -7,7 +7,7 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getItemById, getUserByItemId, getNftResourceByItemId, getActiveCollections, getSmartContractAddress, getAuthCertificateByItemId } from '@/lib/actions/prisma-actions'
 import styles from './royaltySettings.module.scss'
-import React from 'react'
+import React, { use } from 'react'
 import { z } from 'zod'
 import { toast } from 'react-hot-toast'
 import { useAccount, useWalletClient } from 'wagmi'
@@ -25,9 +25,9 @@ import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
 import { NetworkType } from '@prisma/client'
 import { getBlockExplorerUrl } from '@/lib/blockchain/explorerUtils'
 
-type ParamsType = {
+type ParamsType = Promise<{
   id: string
-}
+}>
 
 export default function ViewRoyaltysettingPage({ params }: { params: ParamsType }) {
   const router = useRouter()
@@ -65,6 +65,9 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
   const [allBeneficaryAddress, setAllBeneficaryAddress] = useState<boolean>(false)
   const [royaltiesSettingsOk, setRoyaltiesSettingsOk] = useState<boolean>(false)
   const [royaltiesManager, setRoyaltiesManager] = useState<Address | null>(null)
+
+  // Utiliser React.use pour récupérer l'ID des params de manière synchrone dans un composant client
+  const { id } = use(params)
 
   const fetchCollections = async () => {
     try {
@@ -130,7 +133,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     
     const fetchProduct = async () => {
       try {
-        const itemId = parseInt(params.id)
+        const itemId = parseInt(id)
         if (isNaN(itemId)) {
           throw new Error('ID d\'item invalide')
         }
@@ -199,13 +202,13 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     return () => {
       isMounted = false
     }
-  }, [params.id, user?.email])
+  }, [id, user?.email])
 
   useEffect(() => {
     if (showUploadIpfsForm) {
       fetchCollections()
     }
-  }, [params.id, showUploadIpfsForm])
+  }, [id, showUploadIpfsForm])
 
   const checkUserRoyaltyRole = async (address: string) => {
     const network = getNetwork()

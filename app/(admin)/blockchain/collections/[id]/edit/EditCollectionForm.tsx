@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-hot-toast'
-import { Artist, Collection, CollectionStatus, SmartContract } from '@prisma/client'
+import { Artist, NftCollection, CollectionStatus, SmartContract } from '@prisma/client'
 import { updateCollection, syncCollection } from '@/lib/actions/collection-actions'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import { RefreshCw } from 'lucide-react'
@@ -26,7 +26,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-interface CollectionWithRelations extends Collection {
+interface CollectionWithRelations extends NftCollection {
   artist: Artist
   smartContract: SmartContract | null
 }

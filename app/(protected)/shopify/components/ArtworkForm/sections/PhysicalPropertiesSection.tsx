@@ -33,7 +33,7 @@ function PhysicalPropertiesSection({ register, errors }: FormFields) {
             className={`${styles.formInput} ${errors.creationYear ? styles.formInputError : ''}`}
             placeholder="2023"
           />
-          {errors.creationYear && <p className={styles.formError}>{errors.creationYear.message}</p>}
+          {errors.creationYear && <p className={styles.formError}>{String(errors.creationYear?.message || '')}</p>}
         </div>
       </div>
       
@@ -54,7 +54,7 @@ function PhysicalPropertiesSection({ register, errors }: FormFields) {
             className={`${styles.formInput} ${errors.width ? styles.formInputError : ''}`}
             placeholder="Largeur en cm"
           />
-          {errors.width && <p className={styles.formError}>{errors.width.message || "La largeur est requise"}</p>}
+          {errors.width && <p className={styles.formError}>{String(errors.width?.message || "La largeur est requise")}</p>}
         </div>
 
         {/* Height */}
@@ -73,7 +73,7 @@ function PhysicalPropertiesSection({ register, errors }: FormFields) {
             className={`${styles.formInput} ${errors.height ? styles.formInputError : ''}`}
             placeholder="Hauteur en cm"
           />
-          {errors.height && <p className={styles.formError}>{errors.height.message || "La hauteur est requise"}</p>}
+          {errors.height && <p className={styles.formError}>{String(errors.height?.message || "La hauteur est requise")}</p>}
         </div>
         
         {/* Weight */}
@@ -88,7 +88,7 @@ function PhysicalPropertiesSection({ register, errors }: FormFields) {
             className={`${styles.formInput} ${errors.weight ? styles.formInputError : ''}`}
             placeholder="5.2"
           />
-          {errors.weight && <p className={styles.formError}>{errors.weight.message}</p>}
+          {errors.weight && <p className={styles.formError}>{String(errors.weight?.message || '')}</p>}
         </div>
       </div>
     </FormSection>

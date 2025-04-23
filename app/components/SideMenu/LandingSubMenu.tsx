@@ -54,6 +54,11 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             onClick={() => onNavigate('/landing/detailedFaq', 'detailedFaq')}
           />
           <SideMenuItem
+            label="FAQ par page"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/detailedFaqPage', 'detailedFaqPage')}
+          />
+          <SideMenuItem
             label="Glossaire détaillé"
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/detailedGlossary', 'detailedGlossary')}
@@ -102,6 +107,11 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             label="FAQ détaillée"
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/detailedFaq', 'detailedFaq')}
+          />
+          <SideMenuItem
+            label="FAQ par page"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/detailedFaqPage', 'detailedFaqPage')}
           />
           <SideMenuItem
             label="Glossaire détaillé"

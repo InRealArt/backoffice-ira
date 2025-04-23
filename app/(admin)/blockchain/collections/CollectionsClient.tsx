@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Collection, Artist, SmartContract } from '@prisma/client'
+import { NftCollection, Artist, SmartContract } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import { Filters, FilterItem } from '@/app/components/Common'
@@ -13,7 +13,7 @@ import Modal from '@/app/components/Common/Modal'
 import { StatusRow } from '@/app/components/Table'
 import { getActiveBadge } from '@/app/components/StatusBadge/StatusBadge'
 
-interface CollectionWithRelations extends Collection {
+interface CollectionWithRelations extends NftCollection {
   artist: Artist
   smartContract: SmartContract | null
 }
