@@ -50,6 +50,9 @@ const protectedRoutes: Record<string, AccessLevel> = {
     "/shopify/collection": "artist",
     "/shopify/artworks": "artist",
     "/shopify/artworks/[id]/edit": "artist",
+    "/shopify/addresses": "artist",
+    "/shopify/addresses/create": "artist",
+    "/shopify/addresses/[id]/edit": "artist",
     // Routes nécessitant uniquement une connexion
     "/dashboard": "auth",
     "/profile": "auth",

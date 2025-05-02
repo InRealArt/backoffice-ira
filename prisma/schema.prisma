@@ -185,14 +185,15 @@ enum InvoiceType {
 
 model Address {
   id Int @id @default(autoincrement())
-
+  name String //Name for the adddress
   // Champs minimums obligatoires pour facturation valide
   firstName     String
   lastName      String
   streetAddress String
   postalCode    String
   city          String
-  country       String // Code pays (pour règles TVA)
+  country       String // Country name (for VAT rules)
+  countryCode   String // Country code (for VAT rules)
 
   // Numéro TVA pour B2B (obligatoire si client professionnel)
   vatNumber String?
@@ -208,7 +209,7 @@ model Address {
   thirdPartyAddresses ThirdPartyAddress[]
 
   @@map("Address")
-  @@schema("marketplace")
+  @@schema("public")
 }
 
 model ThirdPartyAddress {
@@ -218,7 +219,7 @@ model ThirdPartyAddress {
   address   Address? @relation(fields: [addressId], references: [id])
   addressId Int?
 
-  @@schema("marketplace")
+  @@schema("public")
 }
 
 model Artist {

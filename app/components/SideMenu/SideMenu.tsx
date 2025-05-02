@@ -65,6 +65,13 @@ export default function SideMenu() {
               icon={<span>🖼️</span>}
             />
             <SideMenuItem 
+              label="Adresses"
+              isActive={activeItem === 'addresses'}
+              onClick={() => handleNavigation('/shopify/addresses', 'addresses')}
+              isCollapsed={isMenuCollapsed}
+              icon={<span>📍</span>}
+            />
+            <SideMenuItem 
               label="Créer une œuvre"
               isActive={activeItem === 'createArtwork'}
               onClick={() => handleNavigation('/shopify/createArtwork', 'createArtwork')}
