@@ -197,12 +197,27 @@ model Address {
   // Numéro TVA pour B2B (obligatoire si client professionnel)
   vatNumber String?
 
-  // Relations
-  customer   User?   @relation(fields: [customerId], references: [id])
-  customerId String?
-  orders     Order[]
+  // Relations Customer (adress d'un client dans la marketplace)
+  customer         User?          @relation(fields: [customerId], references: [id])
+  customerId       String?
+  // Relations BackofficeUser (adress d'un artiste dans le backoffice)
+  backofficeUser   BackofficeUser? @relation(fields: [backofficeUserId], references: [id], onDelete: Cascade)
+  backofficeUserId Int?
+
+  orders Order[]
+  thirdPartyAddresses ThirdPartyAddress[]
 
   @@map("Address")
+  @@schema("marketplace")
+}
+
+model ThirdPartyAddress {
+  id String @id
+
+  // Relations Customer (adress d'un client dans la marketplace)
+  address   Address? @relation(fields: [addressId], references: [id])
+  addressId Int?
+
   @@schema("marketplace")
 }
 
@@ -309,21 +324,21 @@ model Transaction {
 }
 
 model BackofficeUser {
-  id               Int                  @id @default(autoincrement())
-  email            String?              @unique
-  walletAddress    String?              @unique
-  linkedWallets    Json                 @default("[]")
-  lastLogin        DateTime             @db.Timestamp(6)
+  id               Int                     @id @default(autoincrement())
+  email            String?                 @unique
+  walletAddress    String?                 @unique
+  linkedWallets    Json                    @default("[]")
+  lastLogin        DateTime                @db.Timestamp(6)
   userMetadata     Json
   role             BackofficeUserRoles?
   firstName        String?
   lastName         String?
-  isShopifyGranted Boolean              @default(false)
-  createdAt        DateTime             @default(now()) @db.Timestamp(6)
+  isShopifyGranted Boolean                 @default(false)
+  createdAt        DateTime                @default(now()) @db.Timestamp(6)
   artistId         Int?
-  artist           Artist?              @relation(fields: [artistId], references: [id]) // Nouvelle relation
+  artist           Artist?                 @relation(fields: [artistId], references: [id]) // Nouvelle relation
   items            Item[]
-
+  addresses        Address[]
   @@index([email])
   @@index([walletAddress])
   @@index([artistId]) // Nouvel index pour la clé étrangère
