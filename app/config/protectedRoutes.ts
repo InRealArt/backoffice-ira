@@ -40,6 +40,8 @@ const protectedRoutes: Record<string, AccessLevel> = {
     "/marketplace/royaltiesSettings/[id]/edit": "admin",
     "/marketplace/marketplaceListing": "admin",
     "/marketplace/marketplaceListing/[id]/edit": "admin",
+    "/marketplace/invoices": "admin",
+    "/marketplace/invoices/[id]/edit": "admin",
     "/presale-artworks": "admin",
     "/presale-artworks/[id]/edit": "admin",
     "/presale-artworks/new": "admin",

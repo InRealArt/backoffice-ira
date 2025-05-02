@@ -45,6 +45,11 @@ export default function MarketplaceSubMenu({ isActive, isOpen, toggleSubmenu, on
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/transactions', 'transactions')}
           />
+          <SideMenuItem 
+            label="Factures" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/marketplace/invoices', 'invoices')}
+          />
         </ul>
       )}
       
@@ -69,6 +74,11 @@ export default function MarketplaceSubMenu({ isActive, isOpen, toggleSubmenu, on
             label="Transactions Marketplace" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/transactions', 'transactions')}
+          />
+          <SideMenuItem 
+            label="Factures" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/marketplace/invoices', 'invoices')}
           />
         </ul>
       )}
