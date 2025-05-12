@@ -1,0 +1,42 @@
+@shippo_token = {{$dotenv SHIPPO_API_KEY}}
+@api_base_url = https://api.goshippo.com
+@content_type = application/json
+
+# Variables Paris
+@paris_name = Martin Dupont
+@paris_organization = Galerie d'Art Parisienne
+@paris_email = contact@galerieparisienne.fr
+@paris_phone = +33142735091
+@paris_address_line_1 = 25 Rue de Rivoli
+@paris_address_line_2 = Appartement 4B
+@paris_city = Paris
+@paris_state = Île-de-France
+@paris_postal_code = 75004
+@paris_country = FR
+@paris_address_type = commercial
+
+### SHIPPO - API V2 - VALIDATE PARIS ADDRESS
+
+GET {{api_base_url}}/v2/addresses/validate?name={{paris_name}}&organization={{paris_organization}}&address_line_1={{paris_address_line_1}}&address_line_2={{paris_address_line_2}}&city_locality={{paris_city}}&state_province={{paris_state}}&postal_code={{paris_postal_code}}&country_code={{paris_country}}
+Authorization: ShippoToken {{shippo_token}}
+
+### SHIPPO - API V2 - CREATE PARIS ADDRESS
+
+POST {{api_base_url}}/v2/addresses
+Content-Type: {{content_type}}
+Authorization: ShippoToken {{shippo_token}}
+
+{
+  "name": "{{paris_name}}",
+  "organization": "{{paris_organization}}",
+  "email": "{{paris_email}}",
+  "phone": "{{paris_phone}}",
+  "address_line_1": "{{paris_address_line_1}}",
+  "address_line_2": "{{paris_address_line_2}}",
+  "city_locality": "{{paris_city}}",
+  "state_province": "{{paris_state}}",
+  "postal_code": "{{paris_postal_code}}",
+  "country_code": "{{paris_country}}",
+  "address_type": "{{paris_address_type}}"
+} 
+

@@ -1,0 +1,41 @@
+@shippo_token = {{$dotenv SHIPPO_API_KEY}}
+@api_base_url = https://api.goshippo.com
+@content_type = application/json
+
+# Variables Lille
+@lille_name = Pierre Lefebvre
+@lille_organization = Boutique du Nord
+@lille_email = contact@boutiquedunord.fr
+@lille_phone = +33320570123
+@lille_address_line_1 = 35 Rue de la Grande Chaussée
+@lille_address_line_2 = 
+@lille_city = Lille
+@lille_state = Hauts-de-France
+@lille_postal_code = 59800
+@lille_country = FR
+@lille_address_type = commercial
+
+### SHIPPO - API V2 - VALIDATE LILLE ADDRESS
+
+GET {{api_base_url}}/v2/addresses/validate?name={{lille_name}}&organization={{lille_organization}}&address_line_1={{lille_address_line_1}}&address_line_2={{lille_address_line_2}}&city_locality={{lille_city}}&state_province={{lille_state}}&postal_code={{lille_postal_code}}&country_code={{lille_country}}
+Authorization: ShippoToken {{shippo_token}}
+
+### SHIPPO - API V2 - CREATE LILLE ADDRESS
+
+POST {{api_base_url}}/v2/addresses
+Content-Type: {{content_type}}
+Authorization: ShippoToken {{shippo_token}}
+
+{
+  "name": "{{lille_name}}",
+  "organization": "{{lille_organization}}",
+  "email": "{{lille_email}}",
+  "phone": "{{lille_phone}}",
+  "address_line_1": "{{lille_address_line_1}}",
+  "address_line_2": "{{lille_address_line_2}}",
+  "city_locality": "{{lille_city}}",
+  "state_province": "{{lille_state}}",
+  "postal_code": "{{lille_postal_code}}",
+  "country_code": "{{lille_country}}",
+  "address_type": "{{lille_address_type}}"
+} 

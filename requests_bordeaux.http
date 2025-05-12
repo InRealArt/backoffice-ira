@@ -1,0 +1,41 @@
+@shippo_token = {{$dotenv SHIPPO_API_KEY}}
+@api_base_url = https://api.goshippo.com
+@content_type = application/json
+
+# Variables Bordeaux
+@bordeaux_name = Camille Bernard
+@bordeaux_organization = 
+@bordeaux_email = camille.bernard@email.com
+@bordeaux_phone = +33556525489
+@bordeaux_address_line_1 = 18 Cours du Chapeau Rouge
+@bordeaux_address_line_2 = Étage 3
+@bordeaux_city = Bordeaux
+@bordeaux_state = Nouvelle-Aquitaine
+@bordeaux_postal_code = 33000
+@bordeaux_country = FR
+@bordeaux_address_type = residential
+
+### SHIPPO - API V2 - VALIDATE BORDEAUX ADDRESS
+
+GET {{api_base_url}}/v2/addresses/validate?name={{bordeaux_name}}&organization={{bordeaux_organization}}&address_line_1={{bordeaux_address_line_1}}&address_line_2={{bordeaux_address_line_2}}&city_locality={{bordeaux_city}}&state_province={{bordeaux_state}}&postal_code={{bordeaux_postal_code}}&country_code={{bordeaux_country}}
+Authorization: ShippoToken {{shippo_token}}
+
+### SHIPPO - API V2 - CREATE BORDEAUX ADDRESS
+
+POST {{api_base_url}}/v2/addresses
+Content-Type: {{content_type}}
+Authorization: ShippoToken {{shippo_token}}
+
+{
+  "name": "{{bordeaux_name}}",
+  "organization": "{{bordeaux_organization}}",
+  "email": "{{bordeaux_email}}",
+  "phone": "{{bordeaux_phone}}",
+  "address_line_1": "{{bordeaux_address_line_1}}",
+  "address_line_2": "{{bordeaux_address_line_2}}",
+  "city_locality": "{{bordeaux_city}}",
+  "state_province": "{{bordeaux_state}}",
+  "postal_code": "{{bordeaux_postal_code}}",
+  "country_code": "{{bordeaux_country}}",
+  "address_type": "{{bordeaux_address_type}}"
+} 

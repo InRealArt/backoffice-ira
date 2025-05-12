@@ -1,0 +1,41 @@
+@shippo_token = {{$dotenv SHIPPO_API_KEY}}
+@api_base_url = https://api.goshippo.com
+@content_type = application/json
+
+# Variables Nice
+@nice_name = Sophie Moreau
+@nice_organization = 
+@nice_email = sophie.moreau@email.com
+@nice_phone = +33493621548
+@nice_address_line_1 = 37 Promenade des Anglais
+@nice_address_line_2 = 
+@nice_city = Nice
+@nice_state = Provence-Alpes-Côte d'Azur
+@nice_postal_code = 06000
+@nice_country = FR
+@nice_address_type = residential
+
+### SHIPPO - API V2 - VALIDATE NICE ADDRESS
+
+GET {{api_base_url}}/v2/addresses/validate?name={{nice_name}}&organization={{nice_organization}}&address_line_1={{nice_address_line_1}}&address_line_2={{nice_address_line_2}}&city_locality={{nice_city}}&state_province={{nice_state}}&postal_code={{nice_postal_code}}&country_code={{nice_country}}
+Authorization: ShippoToken {{shippo_token}}
+
+### SHIPPO - API V2 - CREATE NICE ADDRESS
+
+POST {{api_base_url}}/v2/addresses
+Content-Type: {{content_type}}
+Authorization: ShippoToken {{shippo_token}}
+
+{
+  "name": "{{nice_name}}",
+  "organization": "{{nice_organization}}",
+  "email": "{{nice_email}}",
+  "phone": "{{nice_phone}}",
+  "address_line_1": "{{nice_address_line_1}}",
+  "address_line_2": "{{nice_address_line_2}}",
+  "city_locality": "{{nice_city}}",
+  "state_province": "{{nice_state}}",
+  "postal_code": "{{nice_postal_code}}",
+  "country_code": "{{nice_country}}",
+  "address_type": "{{nice_address_type}}"
+} 

@@ -1,0 +1,53 @@
+# Importer les variables
+@import variables.http
+
+# Sélectionner la taille du tableau pour cette requête
+@parcel_length = {{grand_length}}
+@parcel_width = {{grand_width}}
+@parcel_height = {{grand_height}}
+@parcel_weight = {{grand_weight}}
+
+# Sélectionner l'adresse de destination (Paris)
+@to_name = {{paris_name}}
+@to_street1 = {{paris_street1}}
+@to_street2 = {{paris_street2}}
+@to_city = {{paris_city}}
+@to_state = {{paris_state}}
+@to_zip = {{paris_zip}}
+@to_country = {{paris_country}}
+
+### SHIPPO - CREATE SHIPMENT PARIS (GET RATES)
+
+POST {{api_base_url}}/shipments/
+Content-Type: {{content_type}}
+Authorization: ShippoToken {{shippo_token}}
+
+{
+  "address_from": {
+    "name": "{{from_name}}",
+    "street1": "{{from_street1}}",
+    "street2": "{{from_street2}}",
+    "city": "{{from_city}}",
+    "state": "{{from_state}}",
+    "zip": "{{from_zip}}",
+    "country": "{{from_country}}"
+  },
+  "address_to": {
+    "name": "{{to_name}}",
+    "street1": "{{to_street1}}",
+    "street2": "{{to_street2}}",
+    "city": "{{to_city}}",
+    "state": "{{to_state}}",
+    "zip": "{{to_zip}}",
+    "country": "{{to_country}}"
+  },
+  "parcels": [{
+    "length": "{{parcel_length}}",
+    "width": "{{parcel_width}}",
+    "height": "{{parcel_height}}",
+    "distance_unit": "{{distance_unit}}",
+    "weight": "{{parcel_weight}}",
+    "mass_unit": "{{mass_unit}}"
+  }],
+  "async": false
+} 

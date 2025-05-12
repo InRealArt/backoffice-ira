@@ -1,0 +1,71 @@
+@shippo_token = {{$dotenv SHIPPO_API_KEY}}
+@api_base_url = https://api.goshippo.com
+@content_type = application/json
+
+# Variables pour les unités
+@distance_unit = cm
+@mass_unit = kg
+
+# Variables pour le colis (tableau d'artiste)
+# Petit tableau
+@petit_length = 40
+@petit_width = 5
+@petit_height = 30
+@petit_weight = 1.5
+
+# Moyen tableau
+@moyen_length = 90
+@moyen_width = 8
+@moyen_height = 70
+@moyen_weight = 3
+
+# Grand tableau
+@grand_length = 150
+@grand_width = 12
+@grand_height = 120
+@grand_weight = 7
+
+# Adresse d'expédition (FROM)
+@from_name = Galerie InRealArt
+@from_street1 = 62 rue des forges
+@from_street2 = 
+@from_city = Plélan-le-grand
+@from_state = Bretagne
+@from_zip = 35380
+@from_country = FR
+
+# Adresse Paris (TO)
+@paris_name = Martin Dupont
+@paris_street1 = 25 Rue de Rivoli
+@paris_street2 = Appartement 4B
+@paris_city = Paris
+@paris_state = Île-de-France
+@paris_zip = 75004
+@paris_country = FR
+
+# Adresse Nice (TO)
+@nice_name = Sophie Moreau
+@nice_street1 = 37 Promenade des Anglais
+@nice_street2 = 
+@nice_city = Nice
+@nice_state = Provence-Alpes-Côte d'Azur
+@nice_zip = 06000
+@nice_country = FR
+
+# Adresse Lille (TO)
+@lille_name = Pierre Lefebvre
+@lille_street1 = 35 Rue de la Grande Chaussée
+@lille_street2 = 
+@lille_city = Lille
+@lille_state = Hauts-de-France
+@lille_zip = 59800
+@lille_country = FR
+
+# Adresse Bordeaux (TO)
+@bordeaux_name = Camille Bernard
+@bordeaux_street1 = 18 Cours du Chapeau Rouge
+@bordeaux_street2 = Étage 3
+@bordeaux_city = Bordeaux
+@bordeaux_state = Nouvelle-Aquitaine
+@bordeaux_zip = 33000
+@bordeaux_country = FR 
