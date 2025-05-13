@@ -7,19 +7,13 @@ import { useRouter } from 'next/navigation'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { getAddressById, updateAddress } from '@/lib/actions/address-actions'
 import AddressForm from '../../components/AddressForm'
-import { Address } from '@prisma/client'
 
-interface EditAddressPageProps {
-  params: {
-    id: string
-  }
-}
-
-export default function EditAddressPage({ params }: EditAddressPageProps) {
+export default function EditAddressPage(props) {
+  const { params } = props
   const { user } = useDynamicContext()
   const [isLoading, setIsLoading] = useState(true)
-  const [address, setAddress] = useState<Address | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [address, setAddress] = useState(null)
+  const [error, setError] = useState(null)
   const router = useRouter()
   
   useEffect(() => {
@@ -31,7 +25,7 @@ export default function EditAddressPage({ params }: EditAddressPageProps) {
 
     const loadData = async () => {
       try {
-        const email = user.email as string
+        const email = user.email
         const userDBResult = await getBackofficeUserByEmail(email)
         
         if (!userDBResult) {
@@ -67,16 +61,7 @@ export default function EditAddressPage({ params }: EditAddressPageProps) {
     loadData()
   }, [user?.email, params.id])
 
-  const handleSubmit = async (formData: {
-    firstName: string
-    lastName: string
-    streetAddress: string
-    postalCode: string
-    city: string
-    country: string
-    vatNumber?: string
-    isDefault: boolean
-  }) => {
+  const handleSubmit = async (formData) => {
     if (!address) {
       setError('Impossible de modifier l\'adresse')
       return
@@ -132,4 +117,4 @@ export default function EditAddressPage({ params }: EditAddressPageProps) {
       </div>
     </div>
   )
-} 
+}

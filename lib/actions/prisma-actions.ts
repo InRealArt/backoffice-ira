@@ -1,7 +1,7 @@
 'use server';
 
-import { memberSchema } from "@/app/(admin)/shopify/create-member/schema";
-import { MemberFormData } from "@/app/(admin)/shopify/create-member/schema";
+import { memberSchema } from "@/app/(admin)/boAdmin/create-member/schema";
+import { MemberFormData } from "@/app/(admin)/boAdmin/create-member/schema";
 import { prisma } from "@/lib/prisma"
 import { NotificationStatus, BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType } from "@prisma/client"
 import { revalidatePath } from "next/cache";
@@ -163,8 +163,8 @@ export async function createMember(data: MemberFormData): Promise<CreateMemberRe
       }
     })
 
-    // Rafraîchir la page après création
-    revalidatePath('/admin/shopify/create-member')
+    // Rafraîchir les pages concernées
+    revalidatePath('/boAdmin/users')
 
     return {
       success: true,
@@ -232,7 +232,6 @@ export async function checkUserExists(
     }
   }
 }
-
 
 export async function getBackofficeUsers(): Promise<BackofficeUser[]> {
   try {
@@ -328,8 +327,8 @@ export async function updateBackofficeUser(
     })
 
     // Revalider les chemins pour forcer le rafraîchissement
-    revalidatePath(`/shopify/users/${data.id}/edit`)
-    revalidatePath('/shopify/users')
+    revalidatePath(`/boAdmin/users/${data.id}/edit`)
+    revalidatePath('/boAdmin/users')
 
     return {
       success: true,
@@ -366,8 +365,6 @@ export async function getBackofficeUserByEmail(email: string) {
     return null
   }
 }
-
-
 
 export async function createItemRecord(
   userId: number,
@@ -619,7 +616,6 @@ export async function getItemById(itemId: number) {
   }
 }
 
-
 /**
  * Récupère toutes les collections
  */
@@ -803,7 +799,6 @@ export async function getNftResourceByItemId(itemId: number) {
     return null
   }
 }
-
 
 export async function getPendingItemsCount() {
   try {
@@ -1118,8 +1113,6 @@ export async function updateNftResourceStatusToListed(id: number): Promise<Updat
     }
   }
 }
-
-
 
 /**
  * Extrait le tokenId des logs de transaction et met à jour la ressource NFT

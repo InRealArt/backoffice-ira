@@ -1,7 +1,7 @@
 'use client'
 
 import SideMenuItem from './SideMenuItem'
-import ShopifySubMenu from './ShopifySubMenu'
+import ShopifySubMenu from './BackofficeAdminSubMenu'
 import BlockchainSubMenu from './BlockchainSubMenu'
 import MenuSeparator from './MenuSeparator'
 import { useSideMenuLogic } from './useSideMenuLogic'

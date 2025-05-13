@@ -76,7 +76,7 @@ export default function Dashboard() {
 
   const handleAdminShowUsers = () => {
     setIsAdminNavigating(true);
-    router.push('/admin/shopify/users');
+    router.push('/admin/boAdmin/users');
   };
 
   if (isLoading) return <LoadingSpinner fullPage message="Chargement du tableau de bord..." />;

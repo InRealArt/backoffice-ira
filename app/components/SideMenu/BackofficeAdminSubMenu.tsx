@@ -11,7 +11,7 @@ interface ShopifySubMenuProps {
   isCollapsed?: boolean
 }
 
-export default function ShopifySubMenu({ isActive, isOpen, toggleSubmenu, onNavigate, isCollapsed = false }: ShopifySubMenuProps) {
+export default function BackofficeAdminSubMenu({ isActive, isOpen, toggleSubmenu, onNavigate, isCollapsed = false }: ShopifySubMenuProps) {
   return (
     <>
       <SideMenuItem 
@@ -28,7 +28,7 @@ export default function ShopifySubMenu({ isActive, isOpen, toggleSubmenu, onNavi
           <SideMenuItem 
             label="Gestion des Membres" 
             isSubmenuItem={true}
-            onClick={() => onNavigate('/shopify/users', 'shopifyUsers')}
+            onClick={() => onNavigate('/boAdmin/users', 'shopifyUsers')}
           />
         </ul>
       )}
@@ -38,12 +38,12 @@ export default function ShopifySubMenu({ isActive, isOpen, toggleSubmenu, onNavi
           <SideMenuItem 
             label="Gestion des Membres" 
             isSubmenuItem={true}
-            onClick={() => onNavigate('/shopify/users', 'shopifyUsers')}
+            onClick={() => onNavigate('/boAdmin/users', 'shopifyUsers')}
           />
           <SideMenuItem 
             label="Créer un Membre" 
             isSubmenuItem={true}
-            onClick={() => onNavigate('/shopify/create-member', 'createMember')}
+            onClick={() => onNavigate('/boAdmin/create-member', 'createMember')}
           />
         </ul>
       )}

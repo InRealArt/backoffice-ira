@@ -243,7 +243,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       
       // Rediriger après 1 seconde
       setTimeout(() => {
-        router.push('/shopify/users')
+        router.push('/boAdmin/users')
         router.refresh()
       }, 1000)
       

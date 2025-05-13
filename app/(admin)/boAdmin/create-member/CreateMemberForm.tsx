@@ -129,6 +129,11 @@ export default function CreateMemberForm() {
         }
         reset()
         setUniqueError(null)
+        
+        // Rediriger vers la liste des membres après une création réussie
+        setTimeout(() => {
+          router.push('/boAdmin/users')
+        }, 1000) // Délai court pour permettre à l'utilisateur de voir le message de succès
       } else {
         toast.error(result.message, {
           duration: 5000,
@@ -303,7 +308,7 @@ export default function CreateMemberForm() {
             <div className="form-actions mt-4 d-flex justify-content-between gap-md">
               <Button
                 variant="secondary"
-                onClick={() => router.push('/shopify/users')}
+                onClick={() => router.push('/boAdmin/users')}
                 disabled={isSubmitting}
                 type="button"
               >

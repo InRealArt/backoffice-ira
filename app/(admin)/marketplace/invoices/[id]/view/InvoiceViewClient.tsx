@@ -303,20 +303,20 @@ export default function InvoiceViewClient({ invoice }: InvoiceViewClientProps) {
                     <tr key={item.id}>
                       <td>{item.title}</td>
                       <td>{item.isNft ? 'NFT' : 'Physique'}</td>
-                      <td>{parseFloat(item.unitPrice).toFixed(2)} €</td>
-                      <td>{parseFloat(item.vatRate).toFixed(2)} %</td>
-                      <td>{parseFloat(item.vatAmount).toFixed(2)} €</td>
-                      <td>{parseFloat(item.totalPrice).toFixed(2)} €</td>
+                      <td>{parseFloat(String(item.unitPrice)).toFixed(2)} €</td>
+                      <td>{parseFloat(String(item.vatRate)).toFixed(2)} %</td>
+                      <td>{parseFloat(String(item.vatAmount)).toFixed(2)} €</td>
+                      <td>{parseFloat(String(item.totalPrice)).toFixed(2)} €</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr>
                     <td colSpan={2}><strong>Total</strong></td>
-                    <td><strong>{parseFloat(invoice.subtotalPrice).toFixed(2)} €</strong></td>
-                    <td><strong>{parseFloat(invoice.vatRate).toFixed(2)} %</strong></td>
-                    <td><strong>{parseFloat(invoice.vatAmount).toFixed(2)} €</strong></td>
-                    <td><strong>{parseFloat(invoice.totalPrice).toFixed(2)} €</strong></td>
+                    <td><strong>{parseFloat(String(invoice.subtotalPrice)).toFixed(2)} €</strong></td>
+                    <td><strong>{parseFloat(String(invoice.vatRate)).toFixed(2)} %</strong></td>
+                    <td><strong>{parseFloat(String(invoice.vatAmount)).toFixed(2)} €</strong></td>
+                    <td><strong>{parseFloat(String(invoice.totalPrice)).toFixed(2)} €</strong></td>
                   </tr>
                 </tfoot>
               </table>

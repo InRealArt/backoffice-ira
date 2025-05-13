@@ -14,6 +14,12 @@ export default function BackofficeUsersClient({ users }: BackofficeUsersClientPr
   const router = useRouter()
   const [loadingUserId, setLoadingUserId] = useState<string | null>(null)
   const [isCreatingUser, setIsCreatingUser] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  
+  // Force le rafraîchissement des données au montage du composant
+  useEffect(() => {
+    router.refresh()
+  }, [router])
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -34,12 +40,24 @@ export default function BackofficeUsersClient({ users }: BackofficeUsersClientPr
   
   const handleUserClick = (userId: string) => {
     setLoadingUserId(userId)
-    router.push(`/shopify/users/${userId}/edit`)
+    router.push(`/boAdmin/users/${userId}/edit`)
   }
   
   const handleCreateUser = () => {
     setIsCreatingUser(true)
-    router.push('/shopify/create-member')
+    router.push('/boAdmin/create-member')
+  }
+
+  // Fonction pour forcer un rechargement complet des données
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    // Utiliser router.refresh pour recharger les données du serveur
+    router.refresh()
+    // Attendre un court délai pour éviter un rafraîchissement trop rapide de l'interface
+    setTimeout(() => {
+      // Pour être vraiment sûr, on peut forcer un rechargement complet de la page
+      window.location.reload()
+    }, 100)
   }
   
   // Fonction pour déterminer la classe et le texte du badge selon le rôle
@@ -64,23 +82,39 @@ export default function BackofficeUsersClient({ users }: BackofficeUsersClientPr
       <div className="page-header">
         <div className="header-top-section">
           <h1 className="page-title">Utilisateurs Shopify</h1>
-          <button 
-            className="btn btn-primary btn-medium"
-            onClick={handleCreateUser}
-            disabled={isCreatingUser}
-          >
-            {isCreatingUser ? (
-              <>
-                <LoadingSpinner size="small" message="" inline />
-                <span>Création...</span>
-              </>
-            ) : (
-              'Créer un utilisateur de backoffice'
-            )}
-          </button>
+          <div className="button-group">
+            <button 
+              className="btn btn-secondary btn-medium"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? (
+                <>
+                  <LoadingSpinner size="small" message="" inline />
+                  <span>Actualisation...</span>
+                </>
+              ) : (
+                'Actualiser la liste'
+              )}
+            </button>
+            <button 
+              className="btn btn-primary btn-medium"
+              onClick={handleCreateUser}
+              disabled={isCreatingUser}
+            >
+              {isCreatingUser ? (
+                <>
+                  <LoadingSpinner size="small" message="" inline />
+                  <span>Création...</span>
+                </>
+              ) : (
+                'Créer un utilisateur de backoffice'
+              )}
+            </button>
+          </div>
         </div>
         <p className="page-subtitle">
-          Liste des utilisateurs Shopify enregistrés dans le système
+          Liste des utilisateurs Shopify enregistrés dans le système ({users.length} utilisateur{users.length > 1 ? 's' : ''})
         </p>
       </div>
       

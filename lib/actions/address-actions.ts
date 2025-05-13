@@ -67,8 +67,15 @@ export async function createAddress(data: {
     backofficeUserId: number
 }) {
     try {
+        // Ajout des champs obligatoires manquants
+        const enrichedData = {
+            ...data,
+            name: `${data.firstName} ${data.lastName}`, // Nom de l'adresse généré à partir du prénom et du nom
+            countryCode: getCountryCode(data.country) // Obtenir le code pays à partir du nom du pays
+        };
+
         const address = await prisma.address.create({
-            data
+            data: enrichedData
         })
 
         revalidatePath('/shopify/addresses')
@@ -108,9 +115,16 @@ export async function updateAddress(id: number, data: {
             }
         }
 
+        // Ajout des champs obligatoires manquants pour la mise à jour
+        const enrichedData = {
+            ...data,
+            name: `${data.firstName} ${data.lastName}`, // Nom de l'adresse généré à partir du prénom et du nom
+            countryCode: getCountryCode(data.country) // Obtenir le code pays à partir du nom du pays
+        };
+
         const updatedAddress = await prisma.address.update({
             where: { id },
-            data
+            data: enrichedData
         })
 
         revalidatePath('/shopify/addresses')
@@ -159,4 +173,26 @@ export async function deleteAddress(id: number) {
             error: 'Impossible de supprimer l\'adresse'
         }
     }
+}
+
+// Fonction utilitaire pour obtenir le code pays à partir du nom du pays
+function getCountryCode(countryName: string): string {
+    // Table de correspondance simple des pays les plus courants
+    const countryCodes: Record<string, string> = {
+        'France': 'FR',
+        'Belgique': 'BE',
+        'Suisse': 'CH',
+        'Luxembourg': 'LU',
+        'Allemagne': 'DE',
+        'Italie': 'IT',
+        'Espagne': 'ES',
+        'Portugal': 'PT',
+        'Royaume-Uni': 'GB',
+        'États-Unis': 'US',
+        'Canada': 'CA',
+        // Ajoutez d'autres pays au besoin
+    };
+
+    // Retourner le code correspondant ou 'XX' par défaut
+    return countryCodes[countryName] || 'XX';
 } 

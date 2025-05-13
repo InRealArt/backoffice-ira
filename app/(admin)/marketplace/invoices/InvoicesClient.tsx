@@ -176,7 +176,7 @@ export default function InvoicesClient({ invoices = [] }: InvoicesClientProps) {
                         {invoice.customerName} {invoice.customerEmail ? `(${invoice.customerEmail})` : ''}
                       </td>
                       <td>
-                        {parseFloat(invoice.totalPrice).toFixed(2)} €
+                        {parseFloat(invoice.totalPrice.toString()).toFixed(2)} €
                       </td>
                       <td>
                         <span className="badge badge-info">
@@ -184,9 +184,11 @@ export default function InvoicesClient({ invoices = [] }: InvoicesClientProps) {
                         </span>
                       </td>
                       <td>
-                        <span className={`badge ${getInvoiceStatusBadge(invoice.isPaid, invoice.invoiceType)}`}>
-                          {invoice.isPaid ? 'Payée' : 'Non payée'}
-                        </span>
+                        {invoice.isPaid ? (
+                          <span className="badge badge-success">Payée</span>
+                        ) : (
+                          <span className="badge badge-danger">Non payée</span>
+                        )}
                       </td>
                       <td className={isMobile ? 'hidden-mobile' : ''}>
                         {invoice.orderNumber}

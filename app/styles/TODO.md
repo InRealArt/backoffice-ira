@@ -70,7 +70,7 @@ Ce document liste les améliorations prévues pour le système de style unifié.
 - [x] marketplace/royaltiesSettings
 - [x] marketplace/marketplaceListing
 - [x] shopify/collection
-- [x] shopify/users
+- [x] boAdmin/users
 - [ ] blockchain/marketplace
 - [ ] users/list
 - [ ] settings
