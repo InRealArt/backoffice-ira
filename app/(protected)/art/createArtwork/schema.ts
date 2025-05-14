@@ -5,9 +5,10 @@ const priceRegex = /^\d+(\.\d{1,2})?$/
 
 // Schéma de base pour la création d'œuvres d'art (image principale obligatoire)
 export const artworkSchema = z.object({
-    title: z.string()
-        .min(1, "Le titre de l'œuvre est obligatoire")
-        .max(100, "Le titre ne doit pas dépasser 100 caractères"),
+    title: z.string().optional(),
+    name: z.string()
+        .min(1, "Le nom de l'œuvre est obligatoire")
+        .max(100, "Le nom ne doit pas dépasser 100 caractères"),
     description: z.string()
         .min(10, "La description doit contenir au moins 10 caractères")
         .max(2000, "La description ne doit pas dépasser 2000 caractères"),
@@ -74,24 +75,24 @@ export const artworkSchema = z.object({
         message: "Vous devez sélectionner au moins une option de tarification",
         path: ["pricingOption"]
     })
-    // Validation du prix pour l'option Œuvre physique seule
+    // Validation du prix pour l'option Œuvre physique
     .refine((data) => {
         if (data.hasPhysicalOnly) {
             return !!data.pricePhysicalBeforeTax && data.pricePhysicalBeforeTax !== '';
         }
         return true;
     }, {
-        message: "Le prix est obligatoire pour l'option Œuvre physique seule",
+        message: "Le prix est obligatoire pour l'option Œuvre physique",
         path: ["pricePhysicalBeforeTax"]
     })
-    // Validation du prix pour l'option NFT seul
+    // Validation du prix pour l'option NFT
     .refine((data) => {
         if (data.hasNftOnly) {
             return !!data.priceNftBeforeTax && data.priceNftBeforeTax !== '';
         }
-        return true;
+        return true;        
     }, {
-        message: "Le prix est obligatoire pour l'option NFT seul",
+        message: "Le prix est obligatoire pour l'option NFT",
         path: ["priceNftBeforeTax"]
     })
     // Validation du prix pour l'option NFT + Œuvre physique
@@ -127,9 +128,10 @@ export const artworkSchema = z.object({
 
 // Schéma alternatif pour l'édition d'œuvres d'art (image principale optionnelle)
 export const artworkEditSchema = z.object({
-    title: z.string()
-        .min(1, "Le titre de l'œuvre est obligatoire")
-        .max(100, "Le titre ne doit pas dépasser 100 caractères"),
+    title: z.string().optional(),
+    name: z.string()
+        .min(1, "Le nom de l'œuvre est obligatoire")
+        .max(100, "Le nom ne doit pas dépasser 100 caractères"),
     description: z.string()
         .min(10, "La description doit contenir au moins 10 caractères")
         .max(2000, "La description ne doit pas dépasser 2000 caractères"),
@@ -194,24 +196,24 @@ export const artworkEditSchema = z.object({
         message: "Vous devez sélectionner au moins une option de tarification",
         path: ["pricingOption"]
     })
-    // Validation du prix pour l'option Œuvre physique seule
+    // Validation du prix pour l'option Œuvre physique
     .refine((data) => {
         if (data.hasPhysicalOnly) {
             return !!data.pricePhysicalBeforeTax && data.pricePhysicalBeforeTax !== '';
         }
         return true;
     }, {
-        message: "Le prix est obligatoire pour l'option Œuvre physique seule",
+        message: "Le prix est obligatoire pour l'option Œuvre physique",
         path: ["pricePhysicalBeforeTax"]
     })
-    // Validation du prix pour l'option NFT seul
+    // Validation du prix pour l'option NFT
     .refine((data) => {
         if (data.hasNftOnly) {
             return !!data.priceNftBeforeTax && data.priceNftBeforeTax !== '';
         }
         return true;
     }, {
-        message: "Le prix est obligatoire pour l'option NFT seul",
+        message: "Le prix est obligatoire pour l'option NFT",
         path: ["priceNftBeforeTax"]
     })
     // Validation du prix pour l'option NFT + Œuvre physique
@@ -247,7 +249,8 @@ export const artworkEditSchema = z.object({
 
 // Type unifié pour représenter les données du formulaire, compatible avec les deux schémas
 export type ArtworkFormData = {
-    title: string;
+    title?: string;
+    name: string;
     description: string;
     metaTitle: string;
     metaDescription: string;

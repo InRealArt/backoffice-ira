@@ -66,6 +66,7 @@ export function useArtworkForm({
     } = useForm<ArtworkFormData>({
         resolver: zodResolver(validationSchema) as any,
         defaultValues: {
+            name: initialData?.name || initialData?.title || '',
             title: initialData?.title || '',
             description: initialData?.description || '',
             metaTitle: initialData?.metaTitle || '',
@@ -95,7 +96,7 @@ export function useArtworkForm({
     const hasPhysicalOnly = watch('hasPhysicalOnly')
     const hasNftPlusPhysical = watch('hasNftPlusPhysical')
     const hasNftOnly = watch('hasNftOnly')
-    const title = watch('title')
+    const name = watch('name')
 
     // Callback for pricing option changes
     useEffect(() => {
@@ -116,10 +117,10 @@ export function useArtworkForm({
 
     // Callback for title changes
     useEffect(() => {
-        if (onTitleChange && title) {
-            onTitleChange(title)
+        if (onTitleChange && name) {
+            onTitleChange(name)
         }
-    }, [title, onTitleChange])
+    }, [name, onTitleChange])
 
     // Function to check if an image is existing
     const isExistingImage = useCallback((src: string): boolean => {
@@ -149,10 +150,10 @@ export function useArtworkForm({
 
     // Update slug when title changes
     useEffect(() => {
-        if (title) {
-            setSlug(normalizeString(title))
+        if (name) {
+            setSlug(normalizeString(name))
         }
-    }, [title])
+    }, [name])
 
     // Initialize images in edit mode
     useEffect(() => {
@@ -215,7 +216,8 @@ export function useArtworkForm({
             const shouldIgnoreImageError = isEditMode && (initialData?.imageUrl || previewImages.length > 0)
 
             const fieldNames: Record<string, string> = {
-                title: 'Titre',
+                title: 'Nom',
+                name: 'Nom',
                 description: 'Description',
                 pricePhysicalBeforeTax: 'Prix - Oeuvre physique',
                 priceNftBeforeTax: 'Prix - NFT',
@@ -551,23 +553,35 @@ export function useArtworkForm({
 
                     const { mainImageUrl } = await handleUpload(data, backofficeUser, isRealNewImage as boolean)
 
+                    // Données de base de l'Item
                     const updateData: any = {
-                        name: data.title,
-                        height: data.height ? parseFloat(data.height) : undefined,
-                        width: data.width ? parseFloat(data.width) : undefined,
-                        weight: data.weight ? parseFloat(data.weight) : undefined,
+                        name: data.name,
                         intellectualProperty: data.intellectualProperty,
                         intellectualPropertyEndDate: data.intellectualPropertyEndDate ? new Date(data.intellectualPropertyEndDate) : null,
-                        creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
-                        pricePhysicalBeforeTax: data.hasPhysicalOnly && data.pricePhysicalBeforeTax ? parseInt(data.pricePhysicalBeforeTax, 10) : 0,
-                        priceNftBeforeTax: data.hasNftOnly && data.priceNftBeforeTax ? parseInt(data.priceNftBeforeTax, 10) : 0,
-                        priceNftPlusPhysicalBeforeTax: data.hasNftPlusPhysical && data.priceNftPlusPhysicalBeforeTax ? parseInt(data.priceNftPlusPhysicalBeforeTax, 10) : 0,
-                        artworkSupport: data.medium || null,
                         metaTitle: data.metaTitle,
                         metaDescription: data.metaDescription,
                         description: data.description || '',
-                        slug: slug || normalizeString(data.title),
+                        slug: slug || normalizeString(data.name),
                         tags: tags,
+                    }
+
+                    // Mise à jour des propriétés spécifiques selon le type d'œuvre
+                    if (data.hasPhysicalOnly) {
+                        updateData.physicalItemData = {
+                            price: data.pricePhysicalBeforeTax ? parseInt(data.pricePhysicalBeforeTax, 10) : 0,
+                            initialQty: data.initialQty ? parseInt(data.initialQty, 10) : 1,
+                            height: data.height ? parseFloat(data.height) : undefined,
+                            width: data.width ? parseFloat(data.width) : undefined,
+                            weight: data.weight ? parseFloat(data.weight) : undefined,
+                            creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
+                            artworkSupport: data.medium || null,
+                        }
+                    }
+
+                    if (data.hasNftOnly) {
+                        updateData.nftItemData = {
+                            price: data.priceNftBeforeTax ? parseInt(data.priceNftBeforeTax, 10) : 0,
+                        }
                     }
 
                     if (isRealNewImage && mainImageUrl && mainImageUrl !== initialData.imageUrl) {
@@ -588,7 +602,7 @@ export function useArtworkForm({
                         }
 
                         toast.dismiss(loadingToast)
-                        toast.success(`L'œuvre "${data.title}" a été mise à jour avec succès!`)
+                        toast.success(`L'œuvre "${data.name}" a été mise à jour avec succès!`)
 
                         if (onSuccess) {
                             onSuccess()
@@ -610,29 +624,42 @@ export function useArtworkForm({
 
                     const { mainImageUrl, allSecondaryImageUrls } = await handleUpload(data, backofficeUser, isRealNewImage as boolean)
 
-                    // Créer l'enregistrement de l'œuvre
+                    // Données de base pour la création d'Item
+                    const itemBaseData = {
+                        name: data.name,
+                        intellectualProperty: data.intellectualProperty,
+                        intellectualPropertyEndDate: data.intellectualPropertyEndDate ? new Date(data.intellectualPropertyEndDate) : null,
+                        metaTitle: data.metaTitle,
+                        metaDescription: data.metaDescription,
+                        description: data.description || '',
+                        slug: slug || normalizeString(data.name),
+                        mainImageUrl: mainImageUrl || null,
+                    }
+
+                    // Données pour PhysicalItem, si applicable
+                    const physicalItemData = data.hasPhysicalOnly ? {
+                        price: data.pricePhysicalBeforeTax ? parseInt(data.pricePhysicalBeforeTax, 10) : 0,
+                        initialQty: data.initialQty ? parseInt(data.initialQty, 10) : 1,
+                        height: data.height ? parseFloat(data.height) : undefined,
+                        width: data.width ? parseFloat(data.width) : undefined,
+                        weight: data.weight ? parseFloat(data.weight) : undefined,
+                        creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
+                        artworkSupport: data.medium || null,
+                    } : null
+
+                    // Données pour NftItem, si applicable
+                    const nftItemData = data.hasNftOnly ? {
+                        price: data.priceNftBeforeTax ? parseInt(data.priceNftBeforeTax, 10) : 0,
+                    } : null
+
+                    // Créer l'enregistrement de l'œuvre avec les types appropriés
                     const newItem = await createItemRecord(
                         backofficeUser.id,
                         'created',
                         tags,
-                        {
-                            name: data.title,
-                            height: data.height ? parseFloat(data.height) : undefined,
-                            width: data.width ? parseFloat(data.width) : undefined,
-                            weight: data.weight ? parseFloat(data.weight) : undefined,
-                            intellectualProperty: data.intellectualProperty,
-                            intellectualPropertyEndDate: data.intellectualPropertyEndDate ? new Date(data.intellectualPropertyEndDate) : null,
-                            creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
-                            pricePhysicalBeforeTax: data.hasPhysicalOnly && data.pricePhysicalBeforeTax ? parseInt(data.pricePhysicalBeforeTax, 10) : 0,
-                            priceNftBeforeTax: data.hasNftOnly && data.priceNftBeforeTax ? parseInt(data.priceNftBeforeTax, 10) : 0,
-                            priceNftPlusPhysicalBeforeTax: data.hasNftPlusPhysical && data.priceNftPlusPhysicalBeforeTax ? parseInt(data.priceNftPlusPhysicalBeforeTax, 10) : 0,
-                            artworkSupport: data.medium || null,
-                            metaTitle: data.metaTitle,
-                            metaDescription: data.metaDescription,
-                            description: data.description || '',
-                            slug: slug || normalizeString(data.title),
-                            mainImageUrl: mainImageUrl || null
-                        }
+                        itemBaseData,
+                        physicalItemData,
+                        nftItemData
                     )
 
                     if (newItem && newItem.item && newItem.item.id) {
@@ -649,7 +676,7 @@ export function useArtworkForm({
                         }
                     }
 
-                    toast.success(`L'œuvre "${data.title}" a été créée avec succès!`)
+                    toast.success(`L'œuvre "${data.name}" a été créée avec succès!`)
 
                     if (onSuccess) {
                         onSuccess()

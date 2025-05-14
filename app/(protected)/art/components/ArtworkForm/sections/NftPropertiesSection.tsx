@@ -25,6 +25,19 @@ function NftPropertiesSection({ register, errors, control, setValue, getValues }
         />
         {errors.priceNftBeforeTax && <p className={styles.formError}>{String(errors.priceNftBeforeTax?.message || "Le prix est requis")}</p>}
       </div>
+      
+      {/* Note explicative sur les propriétés intellectuelles */}
+      <div className={styles.nftInfoBox}>
+        <h4>Propriétés du NFT</h4>
+        <p>
+          Le NFT sera créé sur la blockchain Ethereum et contiendra les métadonnées de l'œuvre, 
+          y compris une référence à l'image et aux informations descriptives.
+        </p>
+        <p>
+          Assurez-vous que vous possédez les droits de propriété intellectuelle sur cette œuvre 
+          avant de la transformer en NFT.
+        </p>
+      </div>
     </FormSection>
   )
 }

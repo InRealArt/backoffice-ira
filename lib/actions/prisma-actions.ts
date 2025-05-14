@@ -3,14 +3,13 @@
 import { memberSchema } from "@/app/(admin)/boAdmin/create-member/schema";
 import { MemberFormData } from "@/app/(admin)/boAdmin/create-member/schema";
 import { prisma } from "@/lib/prisma"
-import { NotificationStatus, BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType } from "@prisma/client"
+import { NotificationStatus, BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType, PhysicalItemStatus, NftItemStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache";
 import { PrismaClient } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
 import { artistNftCollectionAbi } from "@/lib/contracts/ArtistNftCollectionAbi";
 import { decodeEventLog } from "viem";
 import { serverPublicClient } from "@/lib/server-providers";
-const prismaClient = new PrismaClient()
 
 type CreateMemberResult = {
   success: boolean
@@ -370,24 +369,26 @@ export async function createItemRecord(
   userId: number,
   status: string,
   tags: string[] = [],
-  additionalData?: {
+  itemData?: {
     name?: string,
-    height?: number,
-    width?: number,
-    weight?: number,
-    intellectualProperty?: boolean,
-    intellectualPropertyEndDate?: Date | null,
-    creationYear?: number | null,
-    priceNftBeforeTax?: number,
-    pricePhysicalBeforeTax?: number,
-    priceNftPlusPhysicalBeforeTax?: number,
-    artworkSupport?: string | null,
     metaTitle?: string,
     metaDescription?: string,
     description?: string,
     slug?: string,
     mainImageUrl?: string | null
-  }
+  },
+  physicalItemData?: {
+    price?: number,
+    initialQty?: number,
+    height?: number,
+    width?: number,
+    weight?: number,
+    creationYear?: number | null,
+    artworkSupport?: string | null,
+  } | null,
+  nftItemData?: {
+    price?: number,
+  } | null
 ) {
   try {
     // S'assurer que les tags sont bien un tableau de chaînes
@@ -395,33 +396,51 @@ export async function createItemRecord(
       ? tags.filter(tag => tag && typeof tag === 'string')
       : []
 
+    // Créer l'Item principal
     const newItem = await prisma.item.create({
       data: {
         idUser: userId,
-        status: status as ItemStatus,
-        name: additionalData?.name || 'Sans titre', // Utiliser le titre de l'œuvre ou 'Sans titre' par défaut
-        tags: processedTags, // Utiliser directement le tableau traité
-        height: additionalData?.height ? new Decimal(additionalData.height) : null,
-        width: additionalData?.width ? new Decimal(additionalData.width) : null,
-        weight: additionalData?.weight ? new Decimal(additionalData.weight) : null,
-        intellectualProperty: additionalData?.intellectualProperty || false,
-        intellectualPropertyEndDate: additionalData?.intellectualPropertyEndDate || null,
-        creationYear: additionalData?.creationYear || null,
-        // Stockage des différents prix
-        pricePhysicalBeforeTax: additionalData?.pricePhysicalBeforeTax || 0,
-        priceNftBeforeTax: additionalData?.priceNftBeforeTax || 0,
-        priceNftPlusPhysicalBeforeTax: additionalData?.priceNftPlusPhysicalBeforeTax || 0,
-        artworkSupport: additionalData?.artworkSupport || null,
-        metaTitle: additionalData?.metaTitle || '',
-        metaDescription: additionalData?.metaDescription || '',
-        description: additionalData?.description || '',
-        slug: additionalData?.slug || '',
-        mainImageUrl: additionalData?.mainImageUrl || null
+        name: itemData?.name || 'Sans nom',
+        tags: processedTags,
+        metaTitle: itemData?.metaTitle || '',
+        metaDescription: itemData?.metaDescription || '',
+        description: itemData?.description || '',
+        slug: itemData?.slug || '',
+        mainImageUrl: itemData?.mainImageUrl || null
       },
       include: {
         user: true
       }
     })
+
+    // Créer le PhysicalItem si les données sont fournies
+    if (physicalItemData) {
+      await prisma.physicalItem.create({
+        data: {
+          itemId: newItem.id,
+          price: physicalItemData.price || 0,
+          initialQty: physicalItemData.initialQty || 1,
+          stockQty: physicalItemData.initialQty || 1, // Initialiser le stock avec la quantité initiale
+          height: physicalItemData.height ? new Decimal(physicalItemData.height) : null,
+          width: physicalItemData.width ? new Decimal(physicalItemData.width) : null,
+          weight: physicalItemData.weight ? new Decimal(physicalItemData.weight) : null,
+          creationYear: physicalItemData.creationYear || null,
+          artworkSupport: physicalItemData.artworkSupport || null,
+          status: status as PhysicalItemStatus // Utiliser status comme enum pour PhysicalItem
+        }
+      })
+    }
+
+    // Créer le NftItem si les données sont fournies
+    if (nftItemData) {
+      await prisma.nftItem.create({
+        data: {
+          itemId: newItem.id,
+          price: nftItemData.price || 0,
+          status: status as NftItemStatus // Utiliser status comme enum pour NftItem
+        }
+      })
+    }
 
     return serializeData({ success: true, item: newItem })
   } catch (error) {
@@ -512,9 +531,19 @@ export async function checkItemStatus({
  */
 export async function saveAuthCertificate(itemId: number, fileData: Uint8Array) {
   try {
-    const certificate = await prismaClient.authCertificate.create({
+    // D'abord récupérer l'item pour obtenir le NftItem associé
+    const nftItem = await prisma.nftItem.findUnique({
+      where: { itemId }
+    })
+    
+    if (!nftItem) {
+      throw new Error(`Aucun NftItem trouvé pour l'itemId ${itemId}`)
+    }
+    
+    // Maintenant créer le certificat avec la référence correcte au nftItemId
+    const certificate = await prisma.authCertificate.create({
       data: {
-        idItem: itemId,
+        nftItemId: nftItem.id,
         file: fileData
       }
     })
@@ -588,8 +617,6 @@ export async function getItemById(itemId: number) {
         height: true,
         width: true,
         weight: true,
-        intellectualProperty: true,
-        intellectualPropertyEndDate: true,
         creationYear: true,
         pricePhysicalBeforeTax: true,
         priceNftBeforeTax: true,
@@ -1717,22 +1744,24 @@ export async function updateItemRecord(
   itemId: number,
   data?: {
     name?: string,
-    height?: number,
-    width?: number,
-    weight?: number,
-    intellectualProperty?: boolean,
-    intellectualPropertyEndDate?: Date | null,
-    creationYear?: number | null,
-    priceNftBeforeTax?: number,
-    pricePhysicalBeforeTax?: number,
-    priceNftPlusPhysicalBeforeTax?: number,
-    artworkSupport?: string | null,
     metaTitle?: string,
     metaDescription?: string,
     description?: string,
     slug?: string,
     tags?: string[],
-    mainImageUrl?: string | null
+    mainImageUrl?: string | null,
+    physicalItemData?: {
+      price?: number,
+      initialQty?: number,
+      height?: number,
+      width?: number,
+      weight?: number,
+      creationYear?: number | null,
+      artworkSupport?: string | null
+    },
+    nftItemData?: {
+      price?: number
+    }
   }
 ): Promise<{ success: boolean, message?: string, item?: any }> {
   try {
@@ -1748,21 +1777,11 @@ export async function updateItemRecord(
       }
     }
 
-    // Préparer les données de mise à jour
+    // Préparer les données de mise à jour pour l'Item principal
     const updateData: any = {}
 
     // Ajouter les champs s'ils sont fournis
     if (data?.name !== undefined) updateData.name = data.name
-    if (data?.height !== undefined) updateData.height = new Decimal(data.height)
-    if (data?.width !== undefined) updateData.width = new Decimal(data.width)
-    if (data?.weight !== undefined) updateData.weight = new Decimal(data.weight)
-    if (data?.intellectualProperty !== undefined) updateData.intellectualProperty = data.intellectualProperty
-    if (data?.intellectualPropertyEndDate !== undefined) updateData.intellectualPropertyEndDate = data.intellectualPropertyEndDate
-    if (data?.creationYear !== undefined) updateData.creationYear = data.creationYear
-    if (data?.priceNftBeforeTax !== undefined) updateData.priceNftBeforeTax = data.priceNftBeforeTax
-    if (data?.pricePhysicalBeforeTax !== undefined) updateData.pricePhysicalBeforeTax = data.pricePhysicalBeforeTax
-    if (data?.priceNftPlusPhysicalBeforeTax !== undefined) updateData.priceNftPlusPhysicalBeforeTax = data.priceNftPlusPhysicalBeforeTax
-    if (data?.artworkSupport !== undefined) updateData.artworkSupport = data.artworkSupport
     if (data?.metaTitle !== undefined) updateData.metaTitle = data.metaTitle
     if (data?.metaDescription !== undefined) updateData.metaDescription = data.metaDescription
     if (data?.description !== undefined) updateData.description = data.description
@@ -1770,19 +1789,89 @@ export async function updateItemRecord(
     if (data?.tags) updateData.tags = data.tags
     if (data?.mainImageUrl !== undefined) updateData.mainImageUrl = data.mainImageUrl
 
-    // Mettre à jour l'item
-    const updatedItem = await prisma.item.update({
-      where: { id: itemId },
-      data: updateData,
-      include: {
-        user: true
+    // Mise à jour transaction avec Prisma pour assurer la cohérence des données
+    const result = await prisma.$transaction(async (tx) => {
+      // Mettre à jour l'item principal
+      const updatedItem = await tx.item.update({
+        where: { id: itemId },
+        data: updateData,
+        include: {
+          user: true
+        }
+      })
+
+      // Mettre à jour ou créer le PhysicalItem si les données sont fournies
+      if (data?.physicalItemData) {
+        const physicalData = data.physicalItemData
+        const existingPhysicalItem = await tx.physicalItem.findUnique({
+          where: { itemId }
+        })
+
+        const physicalUpdateData: any = {}
+        if (physicalData.price !== undefined) physicalUpdateData.price = physicalData.price
+        if (physicalData.initialQty !== undefined) {
+          physicalUpdateData.initialQty = physicalData.initialQty
+          physicalUpdateData.stockQty = physicalData.initialQty // Mettre à jour le stock si la quantité initiale a changé
+        }
+        if (physicalData.height !== undefined) physicalUpdateData.height = new Decimal(physicalData.height)
+        if (physicalData.width !== undefined) physicalUpdateData.width = new Decimal(physicalData.width)
+        if (physicalData.weight !== undefined) physicalUpdateData.weight = new Decimal(physicalData.weight)
+        if (physicalData.creationYear !== undefined) physicalUpdateData.creationYear = physicalData.creationYear
+        if (physicalData.artworkSupport !== undefined) physicalUpdateData.artworkSupport = physicalData.artworkSupport
+
+        if (existingPhysicalItem) {
+          await tx.physicalItem.update({
+            where: { itemId },
+            data: physicalUpdateData
+          })
+        } else {
+          await tx.physicalItem.create({
+            data: {
+              itemId,
+              price: physicalData.price || 0,
+              initialQty: physicalData.initialQty || 1,
+              stockQty: physicalData.initialQty || 1,
+              height: physicalData.height ? new Decimal(physicalData.height) : null,
+              width: physicalData.width ? new Decimal(physicalData.width) : null,
+              weight: physicalData.weight ? new Decimal(physicalData.weight) : null,
+              creationYear: physicalData.creationYear || null,
+              artworkSupport: physicalData.artworkSupport || null
+            }
+          })
+        }
       }
+
+      // Mettre à jour ou créer le NftItem si les données sont fournies
+      if (data?.nftItemData) {
+        const nftData = data.nftItemData
+        const existingNftItem = await tx.nftItem.findUnique({
+          where: { itemId }
+        })
+
+        if (existingNftItem) {
+          await tx.nftItem.update({
+            where: { itemId },
+            data: {
+              price: nftData.price !== undefined ? nftData.price : undefined
+            }
+          })
+        } else {
+          await tx.nftItem.create({
+            data: {
+              itemId,
+              price: nftData.price || 0
+            }
+          })
+        }
+      }
+
+      return updatedItem
     })
 
     return {
       success: true,
       message: 'Item mis à jour avec succès',
-      item: serializeData(updatedItem)
+      item: serializeData(result)
     }
   } catch (error) {
     console.error('Erreur lors de la mise à jour de l\'item:', error)

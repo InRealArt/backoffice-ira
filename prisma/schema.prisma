@@ -289,7 +289,6 @@ model NftResource {
   purchasedOnce           Boolean?                 @default(false)
   previousOwner           String?
   collection              NftCollection            @relation(fields: [collectionId], references: [id])
-  items                   Item[]
   royaltyBeneficiaries    RoyaltyBeneficiary[]
   marketPlaceTransactions MarketPlaceTransaction[]
   NftItem                 NftItem[]
@@ -444,8 +443,6 @@ model Item {
   // Relations
   nftItem        NftItem?
   physicalItem   PhysicalItem?
-  NftResource    NftResource?  @relation(fields: [nftResourceId], references: [id])
-  nftResourceId  Int?
   ItemCategory   ItemCategory? @relation(fields: [itemCategoryId], references: [id])
   itemCategoryId Int?
 

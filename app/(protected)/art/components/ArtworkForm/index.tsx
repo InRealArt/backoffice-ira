@@ -17,10 +17,11 @@ import {
   TagsSection,
   FormActions
 } from './sections'
+import { useRouter } from 'next/navigation'
 
 export default function ArtworkForm({ mode = 'create', initialData = {}, onSuccess }: ArtworkFormProps) {
-  // État local pour le slug et le titre
-  const [localTitle, setLocalTitle] = useState(initialData?.title || '')
+  // État local pour le slug et le titre/nom
+  const [localTitle, setLocalTitle] = useState(initialData?.title || initialData?.name || '')
   const [localSlug, setLocalSlug] = useState(initialData?.slug || '')
   
   // État local pour les options de tarification
@@ -55,9 +56,9 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     mode, 
     initialData, 
     onSuccess,
-    onTitleChange: (title) => {
-      setLocalTitle(title)
-      setLocalSlug(normalizeString(title))
+    onTitleChange: (name) => {
+      setLocalTitle(name)
+      setLocalSlug(normalizeString(name))
     },
     onPricingOptionsChange: {
       setHasPhysicalOnly,
@@ -68,11 +69,13 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
   
   const certificateFile = certificateInputRef.current?.files?.[0] || null
   
+  const router = useRouter()
+  
   // Surveiller les changements de titre depuis le formulaire
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value
-    setLocalTitle(newTitle)
-    setLocalSlug(normalizeString(newTitle))
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value
+    setLocalTitle(newName)
+    setLocalSlug(normalizeString(newName))
   }
   
   // Surveiller les changements des options de tarification
@@ -111,7 +114,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         getValues={getValues}
         slug={localSlug}
         title={localTitle}
-        onTitleChange={handleTitleChange}
+        onNameChange={handleNameChange}
       />
       
       <SeoSection 
@@ -156,6 +159,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         />
       )}
       
+      {/* Section commune pour les tags */}
       <TagsSection 
         register={register} 
         errors={errors}
@@ -166,6 +170,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         setTags={setTags}
       />
       
+      {/* Section pour les médias et certificats */}
       <MediaFilesSection 
         register={register} 
         errors={errors}
@@ -184,31 +189,57 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       />
       
       {/* Prévisualisations des images */}
-      <ImagePreview 
-        images={previewImages}
-        label={isEditMode && initialData?.imageUrl ? "Image principale existante" : ""}
-      />
+      {previewImages.length > 0 && (
+        <ImagePreview 
+          images={previewImages}
+          label={isEditMode && initialData?.imageUrl ? "Image principale existante" : ""}
+        />
+      )}
       
       {/* Prévisualisations des images secondaires */}
-      <ImagePreview 
-        images={secondaryImages}
-        label={secondaryImages.length > 0 ? `Images secondaires existantes (${secondaryImages.length})` : ""}
-        onRemove={removeSecondaryImage}
-        isExistingImage={isExistingImage}
-      />
+      {secondaryImages.length > 0 && (
+        <ImagePreview 
+          images={secondaryImages}
+          label={secondaryImages.length > 0 ? `Images secondaires existantes (${secondaryImages.length})` : ""}
+          onRemove={removeSecondaryImage}
+          isExistingImage={isExistingImage}
+        />
+      )}
       
       {/* Prévisualisation du certificat */}
       {previewCertificate && (
-        <PdfPreview 
-          url={previewCertificate} 
-          certificateFile={certificateFile} 
-        />
+        <div className={styles.certificatePreviewContainer}>
+          <h4>Certificat d'authenticité</h4>
+          <div className={styles.pdfPreview}>
+            <a 
+              href={previewCertificate} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className={styles.viewPdfLink}
+            >
+              Voir le certificat
+            </a>
+          </div>
+        </div>
       )}
-
-      <FormActions 
-        isSubmitting={isSubmitting} 
-        isEditMode={isEditMode} 
-      />
+      
+      {/* Actions du formulaire */}
+      <div className={styles.formActions}>
+        <button
+          type="button"
+          className={styles.cancelButton}
+          onClick={() => router.back()}
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={styles.submitButton}
+        >
+          {isSubmitting ? 'Traitement en cours...' : isEditMode ? 'Mettre à jour' : 'Créer l\'œuvre'}
+        </button>
+      </div>
     </form>
   )
 } 

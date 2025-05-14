@@ -30,11 +30,11 @@ function MainInfoSection({
               required: true,
               onChange: onNameChange // Appeler le gestionnaire de changement de name
             })}
-            className={`${styles.formInput} ${errors.title ? styles.formInputError : ''}`}
-            placeholder="Entrez le titre de l'œuvre"
+            className={`${styles.formInput} ${errors.name ? styles.formInputError : ''}`}
+            placeholder="Entrez le nom de l'œuvre"
             defaultValue={title}
           />
-          {errors.title && <p className={styles.formError}>Le titre est requis</p>}
+          {errors.name && <p className={styles.formError}>Le nom est requis</p>}
         </div>
         
         {/* Slug généré automatiquement */}
@@ -43,7 +43,7 @@ function MainInfoSection({
             Slug
             <InfoTooltip
               title="Slug"
-              content="URL simplifiée générée automatiquement à partir du titre"
+              content="URL simplifiée générée automatiquement à partir du nom"
             />
           </label>
           <input
@@ -54,7 +54,7 @@ function MainInfoSection({
             className={`${styles.formInput} ${styles.formInputDisabled}`}
             style={{ backgroundColor: '#f0f0f0', color: '#666', cursor: 'not-allowed' }}
           />
-          <p className={styles.formHelp}>Ce champ est généré automatiquement à partir du titre</p>
+          <p className={styles.formHelp}>Ce champ est généré automatiquement à partir du nom</p>
         </div>
       </div>
 
