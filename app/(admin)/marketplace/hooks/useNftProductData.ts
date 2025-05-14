@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getShopifyProductById } from '@/lib/actions/shopify-actions'
+import { getShopifyProductById } from '@/lib/actions/art-actions'
 import {
     getAuthCertificateByItemId,
     getItemById,

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import ArtworkForm from '@/app/(protected)/shopify/components/ArtworkForm'
+import ArtworkForm from '@/app/(protected)/art/components/ArtworkForm'
 import { getAuthCertificateByItemId, getItemById } from '@/lib/actions/prisma-actions'
 import toast, { Toaster } from 'react-hot-toast'
 import { use } from 'react'
@@ -87,7 +87,7 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
   }, [resolvedParams.id, user?.email])
 
   const handleSuccess = () => {
-    router.push('/shopify/collection')
+    router.push('/art/ection')
   }
 
   return (

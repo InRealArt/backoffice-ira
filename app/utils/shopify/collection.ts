@@ -2,7 +2,7 @@ import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import {
     getShopifyCollectionByTitle,
     getShopifyCollectionProducts
-} from '@/lib/actions/shopify-actions'
+} from '@/lib/actions/art-actions'
 
 // Types pour les retours de la fonction
 export type CollectionProduct = {

@@ -38,7 +38,7 @@ import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { useMarketplaceListing } from '@/app/(admin)/marketplace/hooks/useMarketplaceListing'
 import { NetworkType } from '@prisma/client'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
-import { getShopifyProductById } from '@/lib/actions/shopify-actions'
+import { getShopifyProductById } from '@/lib/actions/art-actions'
 import { getTokenOwner } from '@/lib/blockchain/utils'
 import { marketplaceAbi } from '@/lib/contracts/MarketplaceAbi'
 

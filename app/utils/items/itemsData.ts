@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
-import { getShopifyProductById } from '@/lib/actions/shopify-actions'
+import { getShopifyProductById } from '@/lib/actions/art-actions'
 
 export type ItemData = {
     id: number

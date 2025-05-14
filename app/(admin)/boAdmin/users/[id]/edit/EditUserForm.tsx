@@ -11,7 +11,7 @@ import {
   getShopifyCollectionByTitle,
   updateShopifyCollection,
   createShopifyCollection
-} from '@/lib/actions/shopify-actions'
+} from '@/lib/actions/art-actions'
 import { BackofficeUser, Artist } from '@prisma/client'
 import styles from './EditUserForm.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
