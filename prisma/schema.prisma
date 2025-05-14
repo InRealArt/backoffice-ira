@@ -7,7 +7,7 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["auth", "public", "landing", "marketplace"]
+  schemas   = ["auth", "public", "landing", "marketplace", "blockchain"]
 }
 
 // Imported from Marketplace
@@ -302,7 +302,7 @@ model Web3Address {
   publicKey String
   role      Web3Roles
 
-  @@schema("public")
+  @@schema("blockchain")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -331,7 +331,7 @@ model Transaction {
   transferTo      String?
   contractAddress String?
 
-  @@schema("public")
+  @@schema("blockchain")
 }
 
 model BackofficeUser {
@@ -354,30 +354,6 @@ model BackofficeUser {
   @@index([email])
   @@index([walletAddress])
   @@index([artistId]) // Nouvel index pour la clé étrangère
-  @@schema("public")
-}
-
-model Notification {
-  id       Int                 @id @default(autoincrement())
-  from     String
-  sentDate DateTime            @default(now())
-  subject  NotificationSubject
-  complete Boolean             @default(false)
-  status   NotificationStatus?
-
-  @@schema("public")
-}
-
-enum NotificationSubject {
-  requestShopifyMember
-
-  @@schema("public")
-}
-
-enum NotificationStatus {
-  APPROVED
-  REJECTED
-
   @@schema("public")
 }
 
@@ -439,7 +415,7 @@ enum Chain {
   polygon_mainnet
   polygon_testnet
 
-  @@schema("public")
+  @@schema("blockchain")
 }
 
 enum CollectionStatus {
@@ -576,7 +552,7 @@ model SmartContract {
   network            NetworkType
   collections        NftCollection[]
 
-  @@schema("public")
+  @@schema("blockchain")
 }
 
 enum NetworkType {
@@ -588,7 +564,7 @@ enum NetworkType {
   base
   sepoliaBase
 
-  @@schema("public")
+  @@schema("blockchain")
 }
 
 model RoyaltyBeneficiary {
@@ -601,7 +577,7 @@ model RoyaltyBeneficiary {
   nftResource     NftResource @relation(fields: [nftResourceId], references: [id])
 
   @@index([nftResourceId])
-  @@schema("public")
+  @@schema("blockchain")
 }
 
 model MarketPlaceTransaction {
@@ -619,7 +595,7 @@ model MarketPlaceTransaction {
   contractAddress String?
 
   @@index([nftResourceId])
-  @@schema("public")
+  @@schema("blockchain")
 }
 
 /**
