@@ -3,7 +3,7 @@
 import { memberSchema } from "@/app/(admin)/boAdmin/create-member/schema";
 import { MemberFormData } from "@/app/(admin)/boAdmin/create-member/schema";
 import { prisma } from "@/lib/prisma"
-import { NotificationStatus, BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType, PhysicalItemStatus, NftItemStatus } from "@prisma/client"
+import { BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType, PhysicalItemStatus, NftItemStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache";
 import { PrismaClient } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -459,7 +459,11 @@ export async function updateItemStatus(
   try {
     // Vérifier si l'item existe
     const existingItem = await prisma.item.findUnique({
-      where: { id: itemId }
+      where: { id: itemId },
+      include: {
+        nftItem: true,
+        physicalItem: true
+      }
     })
 
     if (!existingItem) {
@@ -469,10 +473,23 @@ export async function updateItemStatus(
       }
     }
 
-    // Mettre à jour le statut de l'item
-    await prisma.item.update({
-      where: { id: itemId },
-      data: { status: newStatus as any }
+    // Mise à jour des statuts dans une transaction pour garantir la cohérence
+    await prisma.$transaction(async (tx) => {
+      // Mettre à jour le statut du NftItem s'il existe
+      if (existingItem.nftItem) {
+        await tx.nftItem.update({
+          where: { id: existingItem.nftItem.id },
+          data: { status: newStatus as NftItemStatus }
+        })
+      }
+
+      // Mettre à jour le statut du PhysicalItem s'il existe
+      if (existingItem.physicalItem) {
+        await tx.physicalItem.update({
+          where: { id: existingItem.physicalItem.id },
+          data: { status: newStatus as PhysicalItemStatus }
+        })
+      }
     })
 
     // Revalider le chemin pour rafraîchir les données sur l'interface
@@ -503,15 +520,23 @@ export async function checkItemStatus({
       where: {
         idUser: idUser
       },
-      select: {
-        status: true
+      include: {
+        nftItem: {
+          select: { status: true }
+        },
+        physicalItem: {
+          select: { status: true }
+        }
       }
     })
 
     if (item) {
+      // Déterminer le statut à retourner (priorité au NFT si les deux existent)
+      const status = item.nftItem?.status || item.physicalItem?.status || 'created'
+
       return {
         exists: true,
-        status: item.status
+        status: status
       }
     }
 
@@ -535,11 +560,11 @@ export async function saveAuthCertificate(itemId: number, fileData: Uint8Array) 
     const nftItem = await prisma.nftItem.findUnique({
       where: { itemId }
     })
-    
+
     if (!nftItem) {
       throw new Error(`Aucun NftItem trouvé pour l'itemId ${itemId}`)
     }
-    
+
     // Maintenant créer le certificat avec la référence correcte au nftItemId
     const certificate = await prisma.authCertificate.create({
       data: {
@@ -737,7 +762,8 @@ export async function createNftResource(params: {
 
     // Vérifier si l'item existe
     const item = await prisma.item.findUnique({
-      where: { id: parseInt(itemId) }
+      where: { id: parseInt(itemId) },
+      include: { nftItem: true }
     })
 
     if (!item) {
@@ -775,11 +801,28 @@ export async function createNftResource(params: {
         mockups,
         tags,
         collection: { connect: { id: collectionId } },
-        items: { connect: { id: parseInt(itemId) } },
         minter: '', // À remplir lors du minting
         purchasedOnce: false
       }
     })
+
+    // Mettre à jour le NftItem pour référencer cette ressource
+    if (item.nftItem) {
+      await prisma.nftItem.update({
+        where: { id: item.nftItem.id },
+        data: { idNftResource: nftResource.id }
+      })
+    } else {
+      // Créer un NftItem si nécessaire
+      await prisma.nftItem.create({
+        data: {
+          itemId: parseInt(itemId),
+          idNftResource: nftResource.id,
+          price: 0,
+          status: NftItemStatus.created
+        }
+      })
+    }
 
     return {
       success: true,
@@ -797,31 +840,31 @@ export async function createNftResource(params: {
 
 /**
  * Récupère la ressource NFT associée à un item spécifique
- * en utilisant le champ idNftResource de l'item
+ * en utilisant la relation NftItem -> NftResource
  * @param itemId - L'ID de l'item pour lequel récupérer la ressource NFT
  * @returns La ressource NFT associée à l'item ou null si aucune n'est trouvée
  */
 export async function getNftResourceByItemId(itemId: number) {
   try {
-    // Récupérer d'abord l'item pour obtenir l'idNftResource
-    const item = await prisma.item.findUnique({
+    // Récupérer d'abord le NftItem associé à l'Item
+    const nftItem = await prisma.nftItem.findUnique({
       where: {
-        id: itemId
+        itemId
       },
       select: {
         idNftResource: true
       }
     })
 
-    // Si l'item n'existe pas ou n'a pas d'idNftResource, retourner null
-    if (!item || !item.idNftResource) {
+    // Si le NftItem n'existe pas ou n'a pas d'idNftResource, retourner null
+    if (!nftItem || !nftItem.idNftResource) {
       return null
     }
 
     // Récupérer la ressource NFT avec toutes les informations de la collection
     const nftResource = await prisma.nftResource.findUnique({
       where: {
-        id: item.idNftResource
+        id: nftItem.idNftResource
       },
       include: {
         collection: {
@@ -868,7 +911,10 @@ export async function getPendingItemsCount() {
   try {
     const count = await prisma.item.count({
       where: {
-        status: ItemStatus.pending
+        OR: [
+          { nftItem: { status: NftItemStatus.pending } },
+          { physicalItem: { status: PhysicalItemStatus.pending } }
+        ]
       }
     })
     return { count }
@@ -977,7 +1023,7 @@ export async function getUserMintedItemsCount(userId: number) {
     const count = await prisma.item.count({
       where: {
         idUser: userId,
-        status: ItemStatus.minted
+        nftItem: { status: NftItemStatus.minted }
       }
     })
     return { count }
@@ -992,7 +1038,10 @@ export async function getUserListedItemsCount(userId: number) {
     const count = await prisma.item.count({
       where: {
         idUser: userId,
-        status: ItemStatus.listed
+        OR: [
+          { nftItem: { status: NftItemStatus.listed } },
+          { physicalItem: { status: PhysicalItemStatus.listed } }
+        ]
       }
     })
     return { count }
@@ -1444,24 +1493,27 @@ export async function updateItemStatusToListedByNftResourceId(nftResourceId: num
   'use server';
 
   try {
-    // Trouver l'item associé à cette ressource NFT
-    const item = await prisma.item.findFirst({
+    // Trouver le NftItem associé à cette ressource NFT
+    const nftItem = await prisma.nftItem.findFirst({
       where: {
         idNftResource: nftResourceId
+      },
+      select: {
+        itemId: true
       }
     });
 
-    if (!item) {
+    if (!nftItem) {
       return {
         success: false,
-        message: 'Aucun item associé à cette ressource NFT n\'a été trouvé'
+        message: 'Aucun NftItem associé à cette ressource NFT n\'a été trouvé'
       };
     }
 
-    // Mettre à jour le statut de l'item à "listed"
-    await prisma.item.update({
-      where: { id: item.id },
-      data: { status: ItemStatus.listed }
+    // Mettre à jour le statut du NftItem à "listed"
+    await prisma.nftItem.update({
+      where: { itemId: nftItem.itemId },
+      data: { status: NftItemStatus.listed }
     });
 
     // Revalider les chemins pour rafraîchir les données sur l'interface
@@ -1804,7 +1856,15 @@ export async function updateItemRecord(
   try {
     // Vérifier si l'item existe
     const existingItem = await prisma.item.findUnique({
-      where: { id: itemId }
+      where: { id: itemId },
+      include: {
+        nftItem: {
+          include: {
+            nftResource: true
+          }
+        },
+        physicalItem: true
+      }
     })
 
     if (!existingItem) {
@@ -1833,16 +1893,20 @@ export async function updateItemRecord(
         where: { id: itemId },
         data: updateData,
         include: {
-          user: true
+          user: true,
+          nftItem: {
+            include: {
+              nftResource: true
+            }
+          },
+          physicalItem: true
         }
       })
 
       // Mettre à jour ou créer le PhysicalItem si les données sont fournies
       if (data?.physicalItemData) {
         const physicalData = data.physicalItemData
-        const existingPhysicalItem = await tx.physicalItem.findUnique({
-          where: { itemId }
-        })
+        const existingPhysicalItem = existingItem.physicalItem
 
         const physicalUpdateData: any = {}
         if (physicalData.price !== undefined) physicalUpdateData.price = physicalData.price
@@ -1872,7 +1936,8 @@ export async function updateItemRecord(
               width: physicalData.width ? new Decimal(physicalData.width) : null,
               weight: physicalData.weight ? new Decimal(physicalData.weight) : null,
               creationYear: physicalData.creationYear || null,
-              artworkSupport: physicalData.artworkSupport || null
+              artworkSupport: physicalData.artworkSupport || null,
+              status: PhysicalItemStatus.created
             }
           })
         }
@@ -1881,9 +1946,7 @@ export async function updateItemRecord(
       // Mettre à jour ou créer le NftItem si les données sont fournies
       if (data?.nftItemData) {
         const nftData = data.nftItemData
-        const existingNftItem = await tx.nftItem.findUnique({
-          where: { itemId }
-        })
+        const existingNftItem = existingItem.nftItem
 
         if (existingNftItem) {
           await tx.nftItem.update({
@@ -1896,7 +1959,8 @@ export async function updateItemRecord(
           await tx.nftItem.create({
             data: {
               itemId,
-              price: nftData.price || 0
+              price: nftData.price || 0,
+              status: NftItemStatus.created
             }
           })
         }
@@ -2034,5 +2098,107 @@ export async function removeSecondaryImage(
   } catch (error) {
     console.error('Erreur lors de la suppression de l\'image secondaire:', error);
     throw new Error(`Échec de la suppression de l'image: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+  }
+}
+
+export async function deletePhysicalItem(
+  physicalItemId: number
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    // Vérifier si le physicalItem existe
+    const physicalItem = await prisma.physicalItem.findUnique({
+      where: { id: physicalItemId }
+    })
+
+    console.log("****** physicalItem", physicalItem)
+
+    if (!physicalItem) {
+      return {
+        success: false,
+        message: 'PhysicalItem introuvable'
+      }
+    }
+
+    // Vérifier si le statut permet la suppression
+    if (physicalItem.status === 'listed' || physicalItem.status === 'sold') {
+      return {
+        success: false,
+        message: 'Impossible de supprimer un PhysicalItem qui est listé ou vendu'
+      }
+    }
+
+    // Supprimer le PhysicalItem
+    await prisma.physicalItem.delete({
+      where: { id: physicalItemId }
+    })
+
+    return {
+      success: true,
+      message: 'PhysicalItem supprimé avec succès'
+    }
+  } catch (error) {
+    console.error('Erreur lors de la suppression du PhysicalItem:', error)
+
+    if (error instanceof Error) {
+      return {
+        success: false,
+        message: error.message
+      }
+    }
+
+    return {
+      success: false,
+      message: 'Une erreur est survenue lors de la suppression du PhysicalItem'
+    }
+  }
+}
+
+export async function deleteNftItem(
+  nftItemId: number
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    // Vérifier si le nftItem existe
+    const nftItem = await prisma.nftItem.findUnique({
+      where: { id: nftItemId }
+    })
+
+    if (!nftItem) {
+      return {
+        success: false,
+        message: 'NftItem introuvable'
+      }
+    }
+
+    // Vérifier si le statut permet la suppression
+    if (nftItem.status === 'listed' || nftItem.status === 'sold') {
+      return {
+        success: false,
+        message: 'Impossible de supprimer un NftItem qui est listé ou vendu'
+      }
+    }
+
+    // Supprimer le NftItem
+    await prisma.nftItem.delete({
+      where: { id: nftItemId }
+    })
+
+    return {
+      success: true,
+      message: 'NftItem supprimé avec succès'
+    }
+  } catch (error) {
+    console.error('Erreur lors de la suppression du NftItem:', error)
+
+    if (error instanceof Error) {
+      return {
+        success: false,
+        message: error.message
+      }
+    }
+
+    return {
+      success: false,
+      message: 'Une erreur est survenue lors de la suppression du NftItem'
+    }
   }
 }

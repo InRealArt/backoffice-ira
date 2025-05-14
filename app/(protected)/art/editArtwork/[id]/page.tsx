@@ -97,7 +97,7 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
   }, [resolvedParams.id, user?.email])
 
   const handleSuccess = () => {
-    router.push('/art/ection')
+    router.push('/art/collection')
   }
 
   return (
@@ -123,6 +123,7 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
               secondaryImagesUrl: item.secondaryImagesUrl || [],
               // Transmettre les données du physicalItem s'il existe
               physicalItem: item.physicalItem ? {
+                id: item.physicalItem.id,
                 price: item.physicalItem.price,
                 initialQty: item.physicalItem.initialQty,
                 stockQty: item.physicalItem.stockQty,
@@ -135,13 +136,12 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
               } : null,
               // Transmettre les données du nftItem s'il existe
               nftItem: item.nftItem ? {
+                id: item.nftItem.id,
                 price: item.nftItem.price,
-                status: item.nftItem.status,
-                id: item.nftItem.id
+                status: item.nftItem.status
               } : null,
               // Transmettre le certificat d'authenticité s'il existe
-              certificateUrl: certificate?.fileUrl || null,
-              hasCertificate: !!certificate?.fileUrl
+              certificateUrl: certificate?.fileUrl || null
             }}
             onSuccess={handleSuccess}
           />

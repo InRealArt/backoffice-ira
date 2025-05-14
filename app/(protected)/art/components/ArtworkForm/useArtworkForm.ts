@@ -66,7 +66,7 @@ export function useArtworkForm({
     } = useForm<ArtworkFormData>({
         resolver: zodResolver(validationSchema) as any,
         defaultValues: {
-            name: initialData?.name || initialData?.title || '',
+            name: initialData?.title || '',
             title: initialData?.title || '',
             description: initialData?.description || '',
             metaTitle: initialData?.metaTitle || '',
@@ -82,10 +82,8 @@ export function useArtworkForm({
             certificate: undefined,
             hasPhysicalOnly: initialData?.hasPhysicalOnly || false,
             hasNftOnly: initialData?.hasNftOnly || false,
-            hasNftPlusPhysical: initialData?.hasNftPlusPhysical || false,
             pricePhysicalBeforeTax: initialData?.pricePhysicalBeforeTax || '',
             priceNftBeforeTax: initialData?.priceNftBeforeTax || '',
-            priceNftPlusPhysicalBeforeTax: initialData?.priceNftPlusPhysicalBeforeTax || '',
             certificateUrl: initialData?.certificateUrl || '',
             initialQty: initialData?.initialQty?.toString() || '1',
         }
@@ -94,7 +92,6 @@ export function useArtworkForm({
     // Watch form values
     const intellectualProperty = watch('intellectualProperty')
     const hasPhysicalOnly = watch('hasPhysicalOnly')
-    const hasNftPlusPhysical = watch('hasNftPlusPhysical')
     const hasNftOnly = watch('hasNftOnly')
     const name = watch('name')
 
@@ -103,17 +100,14 @@ export function useArtworkForm({
         if (onPricingOptionsChange) {
             if (typeof onPricingOptionsChange === 'object') {
                 if (onPricingOptionsChange.setHasPhysicalOnly) {
-                    onPricingOptionsChange.setHasPhysicalOnly(hasPhysicalOnly as boolean)
+                    onPricingOptionsChange.setHasPhysicalOnly(Boolean(hasPhysicalOnly))
                 }
                 if (onPricingOptionsChange.setHasNftOnly) {
-                    onPricingOptionsChange.setHasNftOnly(hasNftOnly as boolean)
-                }
-                if (onPricingOptionsChange.setHasNftPlusPhysical) {
-                    onPricingOptionsChange.setHasNftPlusPhysical(hasNftPlusPhysical as boolean)
+                    onPricingOptionsChange.setHasNftOnly(Boolean(hasNftOnly))
                 }
             }
         }
-    }, [hasPhysicalOnly, hasNftOnly, hasNftPlusPhysical, onPricingOptionsChange])
+    }, [hasPhysicalOnly, hasNftOnly, onPricingOptionsChange])
 
     // Callback for title changes
     useEffect(() => {
@@ -221,7 +215,6 @@ export function useArtworkForm({
                 description: 'Description',
                 pricePhysicalBeforeTax: 'Prix - Oeuvre physique',
                 priceNftBeforeTax: 'Prix - NFT',
-                priceNftPlusPhysicalBeforeTax: 'Prix - NFT + Oeuvre physique',
                 pricingOption: 'Option de tarification',
                 medium: 'Support/Medium',
                 images: 'Image Principale',
@@ -242,8 +235,7 @@ export function useArtworkForm({
                 errors.root.message.includes("dimensions")
 
             const hasPriceError = errors.pricePhysicalBeforeTax?.message ||
-                errors.priceNftBeforeTax?.message ||
-                errors.priceNftPlusPhysicalBeforeTax?.message
+                errors.priceNftBeforeTax?.message
 
             if (hasPricingOptionError && errors.root?.message) {
                 toast.error(String(errors.root.message), {
@@ -260,11 +252,6 @@ export function useArtworkForm({
                     toast.error(String(errors.priceNftBeforeTax.message), {
                         ...toastErrorOptions,
                         id: 'price-nft-error'
-                    })
-                } else if (errors.priceNftPlusPhysicalBeforeTax?.message) {
-                    toast.error(String(errors.priceNftPlusPhysicalBeforeTax.message), {
-                        ...toastErrorOptions,
-                        id: 'price-nft-physical-error'
                     })
                 }
             } else if (hasPhysicalDimensionsError && errors.root?.message) {
@@ -445,7 +432,7 @@ export function useArtworkForm({
                     ? `${backofficeUser.artist.name.toLowerCase()}${backofficeUser.artist.surname.toLowerCase()}`
                     : `${backofficeUser.firstName?.toLowerCase() || ''}${backofficeUser.lastName?.toLowerCase() || ''}`
 
-                const itemSlug = slug || normalizeString(data.title)
+                const itemSlug = slug || (data.title ? normalizeString(data.title) : '')
 
                 const { getAuth, signInAnonymously } = await import('firebase/auth')
                 const { app } = await import('@/lib/firebase/config')

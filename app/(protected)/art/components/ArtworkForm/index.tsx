@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useArtworkForm } from './useArtworkForm'
 import { ArtworkFormProps } from './types'
 import ImagePreview from './ImagePreview'
@@ -18,10 +18,12 @@ import {
   FormActions
 } from './sections'
 import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
+import { deletePhysicalItem, deleteNftItem } from '@/lib/actions/prisma-actions'
 
 export default function ArtworkForm({ mode = 'create', initialData = {}, onSuccess }: ArtworkFormProps) {
   // État local pour le slug et le titre/nom
-  const [localTitle, setLocalTitle] = useState(initialData?.title || initialData?.name || '')
+  const [localTitle, setLocalTitle] = useState(initialData?.title || '')
   const [localSlug, setLocalSlug] = useState(initialData?.slug || '')
   
   // État local pour les options de tarification
@@ -34,11 +36,31 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
   const [hasNftItem, setHasNftItem] = useState<boolean>(!!initialData?.nftItem)
   const [hasCertificate, setHasCertificate] = useState<boolean>(!!initialData?.certificateUrl)
   
+  // États pour suivre les changements des options de tarification
+  const [initialPhysicalOnly, setInitialPhysicalOnly] = useState<boolean>(!!initialData?.physicalItem)
+  const [initialNftOnly, setInitialNftOnly] = useState<boolean>(!!initialData?.nftItem)
+  
+  // État pour le mode lecture seule
+  const [isFormReadOnly, setIsFormReadOnly] = useState<boolean>(false)
+  
+  // Récupérer les statuts des items
+  const physicalItemStatus = initialData?.physicalItem?.status
+  const nftItemStatus = initialData?.nftItem?.status
+  
+  // Vérifier si un des items est au statut "listed"
+  useEffect(() => {
+    if (mode === 'edit') {
+      const isPhysicalListed = physicalItemStatus === 'listed'
+      const isNftListed = nftItemStatus === 'listed'
+      
+      setIsFormReadOnly(isPhysicalListed || isNftListed)
+    }
+  }, [mode, physicalItemStatus, nftItemStatus])
+  
   const {
     isSubmitting,
     previewImages,
     previewCertificate,
-    setPreviewCertificate,
     tags,
     setTags,
     secondaryImages,
@@ -50,7 +72,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     handleSecondaryImagesChange,
     removeSecondaryImage,
     handleCertificateChange,
-    onSubmit,
+    onSubmit: originalOnSubmit,
     isExistingImage,
     handleSubmit,
     formState: { errors },
@@ -79,13 +101,17 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
   
   // Surveiller les changements de titre depuis le formulaire
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value
-    setLocalTitle(newName)
-    setLocalSlug(normalizeString(newName))
+    if (!isFormReadOnly) {
+      const newName = e.target.value
+      setLocalTitle(newName)
+      setLocalSlug(normalizeString(newName))
+    }
   }
   
   // Surveiller les changements des options de tarification
   const handlePricingOptionChange = (option: 'hasPhysicalOnly' | 'hasNftOnly' | 'hasNftPlusPhysical', checked: boolean) => {
+    if (isFormReadOnly) return
+
     switch (option) {
       case 'hasPhysicalOnly':
         setHasPhysicalOnly(checked)
@@ -114,6 +140,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         // Cocher la case "Œuvre physique" et activer la section
         setHasPhysicalItem(true)
         setHasPhysicalOnly(true)
+        setInitialPhysicalOnly(true)
         
         // Enregistrer cette option dans le formulaire
         setValue('hasPhysicalOnly', true)
@@ -123,7 +150,8 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           setValue('pricePhysicalBeforeTax', initialData.physicalItem.price.toString())
         }
         if (initialData.physicalItem.initialQty) {
-          setValue('initialQty', initialData.physicalItem.initialQty)
+          // Convertir la quantité en chaîne de caractères pour éviter l'erreur "Expected string, received number"
+          setValue('initialQty', initialData.physicalItem.initialQty.toString())
         }
         if (initialData.physicalItem.height) {
           setValue('height', initialData.physicalItem.height.toString())
@@ -147,6 +175,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         // Cocher la case "NFT" et activer la section
         setHasNftItem(true)
         setHasNftOnly(true)
+        setInitialNftOnly(true)
         
         // Enregistrer cette option dans le formulaire
         setValue('hasNftOnly', true)
@@ -160,11 +189,6 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         if (initialData.certificateUrl) {
           setHasCertificate(true)
           setValue('certificate', initialData.certificateUrl)
-          
-          // Définir l'URL du certificat pour l'affichage de prévisualisation
-          if (setPreviewCertificate) {
-            setPreviewCertificate(initialData.certificateUrl)
-          }
         }
       }
       
@@ -174,7 +198,65 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         setValue('hasNftPlusPhysical', true)
       }
     }
-  }, [mode, initialData, setValue, setPreviewCertificate])
+  }, [mode, initialData, setValue])
+  
+  // Wrapper pour onSubmit qui vérifie les options de tarification et gère la suppression des items
+  const onSubmit = async (data: any) => {
+    // Vérifier qu'au moins une option de tarification est cochée
+    if (!hasPhysicalOnly && !hasNftOnly) {
+      toast.error('Vous devez sélectionner au moins une option de tarification')
+      return
+    }
+    
+    try {
+      // Si nous sommes en mode édition
+      if (mode === 'edit' && initialData?.id) {
+        console.log('initialData.physicalItem', initialData.physicalItem)
+        console.log('hasPhysicalOnly', hasPhysicalOnly)
+        console.log('initialData.nftItem', initialData.nftItem)
+        console.log('hasNftOnly', hasNftOnly)
+        
+        // Gérer la suppression du PhysicalItem si l'option a été décochée
+        if (initialData.physicalItem && !hasPhysicalOnly) {
+          try {
+            console.log('3')
+            const physicalItemId = initialData.physicalItem.id
+            if (physicalItemId) {
+              await deletePhysicalItem(physicalItemId)
+              console.log('PhysicalItem supprimé:', physicalItemId)
+            } else {
+              console.log('Impossible de supprimer PhysicalItem: ID manquant')
+            }
+          } catch (error) {
+            console.error('Erreur lors de la suppression du PhysicalItem:', error)
+            toast.error('Erreur lors de la suppression de l\'item physique')
+          }
+        }
+        
+        // Gérer la suppression du NftItem si l'option a été décochée
+        if (initialData.nftItem && !hasNftOnly) {
+          try {
+            const nftItemId = initialData.nftItem.id
+            if (nftItemId) {
+              await deleteNftItem(nftItemId)
+              console.log('NftItem supprimé:', nftItemId)
+            } else {
+              console.log('Impossible de supprimer NftItem: ID manquant')
+            }
+          } catch (error) {
+            console.error('Erreur lors de la suppression du NftItem:', error)
+            toast.error('Erreur lors de la suppression du NFT')
+          }
+        }
+      }
+      
+      // Appeler la fonction onSubmit originale
+      await originalOnSubmit(data)
+    } catch (error) {
+      console.error('Erreur lors de la soumission du formulaire:', error)
+      toast.error('Une erreur est survenue lors de la soumission du formulaire')
+    }
+  }
   
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
@@ -187,6 +269,11 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
             ? 'Modifiez les informations de votre œuvre d\'art' 
             : 'Remplissez le formulaire pour ajouter une nouvelle œuvre d\'art'}
         </p>
+        {isFormReadOnly && (
+          <div className={styles.readOnlyWarning}>
+            Au moins un élément est listé, le formulaire est en lecture seule.
+          </div>
+        )}
       </div>
       
       <MainInfoSection 
@@ -198,6 +285,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         slug={localSlug}
         title={localTitle}
         onNameChange={handleNameChange}
+        isFormReadOnly={isFormReadOnly}
       />
       
       <SeoSection 
@@ -206,6 +294,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         setValue={setValue} 
         control={control}
         getValues={getValues}
+        isFormReadOnly={isFormReadOnly}
       />
       
       <PricingSection 
@@ -218,6 +307,10 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         hasNftOnly={hasNftOnly}
         hasNftPlusPhysical={hasNftPlusPhysical}
         onPricingOptionChange={handlePricingOptionChange}
+        isEditMode={isEditMode}
+        physicalItemStatus={physicalItemStatus}
+        nftItemStatus={nftItemStatus}
+        isFormReadOnly={isFormReadOnly}
       />
       
       {/* Conditionnellement afficher la section des propriétés physiques basé uniquement sur l'état de la checkbox */}
@@ -228,6 +321,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           setValue={setValue} 
           control={control}
           getValues={getValues}
+          isFormReadOnly={isFormReadOnly}
         />
       )}
       
@@ -239,6 +333,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
           setValue={setValue} 
           control={control}
           getValues={getValues}
+          isFormReadOnly={isFormReadOnly}
         />
       )}
       
@@ -251,6 +346,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         getValues={getValues}
         tags={tags}
         setTags={setTags}
+        isFormReadOnly={isFormReadOnly}
       />
       
       {/* Section pour les médias et certificats */}
@@ -269,6 +365,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         handleImageChange={handleImageChange}
         handleSecondaryImagesChange={handleSecondaryImagesChange}
         handleCertificateChange={handleCertificateChange}
+        isFormReadOnly={isFormReadOnly}
       />
       
       {/* Prévisualisations des images */}
@@ -284,7 +381,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         <ImagePreview 
           images={secondaryImages}
           label={secondaryImages.length > 0 ? `Images secondaires existantes (${secondaryImages.length})` : ""}
-          onRemove={removeSecondaryImage}
+          onRemove={!isFormReadOnly ? removeSecondaryImage : undefined}
           isExistingImage={isExistingImage}
         />
       )}
@@ -317,7 +414,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         </button>
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isFormReadOnly}
           className={styles.submitButton}
         >
           {isSubmitting ? 'Traitement en cours...' : isEditMode ? 'Mettre à jour' : 'Créer l\'œuvre'}

@@ -111,6 +111,7 @@ export type FormFields = {
     onPricingOptionsChange?: (value: string) => void
     slug?: string
     title?: string
+    isFormReadOnly?: boolean
 }
 
 export type UseArtworkFormReturn = {
@@ -152,6 +153,10 @@ export interface PricingSectionProps extends FormFields {
     hasNftOnly: boolean
     hasNftPlusPhysical: boolean
     onPricingOptionChange: (option: 'hasPhysicalOnly' | 'hasNftOnly' | 'hasNftPlusPhysical', checked: boolean) => void
+    isEditMode?: boolean
+    physicalItemStatus?: string
+    nftItemStatus?: string
+    isFormReadOnly?: boolean
 }
 
 export interface TagsSectionProps extends FormFields {
