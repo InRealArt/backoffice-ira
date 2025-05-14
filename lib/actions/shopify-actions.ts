@@ -806,8 +806,8 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
     }
 
     // Rafraîchir la page après création
-    revalidatePath('/shopify/create')
-    revalidatePath('/shopify/collection')
+    revalidatePath('/art/create')
+    revalidatePath('/art/collection')
 
     return {
       success: true,

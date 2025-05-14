@@ -48,7 +48,7 @@ export default function CreateArtworkPage() {
   }, [user])
   
   const handleSuccess = () => {
-    router.push('/shopify/collection')
+    router.push('/art/collection')
   }
   
   return (

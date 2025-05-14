@@ -73,7 +73,7 @@ export default function EditAddressPage(props) {
       const result = await updateAddress(address.id, formData)
       
       if (result.success) {
-        router.push('/shopify/addresses')
+        router.push('/art/addresses')
       } else {
         setError(result.error || 'Une erreur est survenue lors de la mise à jour de l\'adresse')
         setIsLoading(false)

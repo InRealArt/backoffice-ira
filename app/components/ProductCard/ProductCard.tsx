@@ -107,7 +107,7 @@ export default function ProductCard({
         {isHovered && userId && (
           <div className="product-overlay">
             <Link 
-              href={`/shopify/editArtwork/${id}`} 
+              href={`/art/editArtwork/${id}`} 
               className="product-edit-button"
             >
               Modifier

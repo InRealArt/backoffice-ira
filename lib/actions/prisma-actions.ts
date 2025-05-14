@@ -457,7 +457,7 @@ export async function updateItemStatus(
     })
 
     // Revalider le chemin pour rafraîchir les données sur l'interface
-    revalidatePath('/shopify/collections')
+    revalidatePath('/art/collections')
 
     return {
       success: true,

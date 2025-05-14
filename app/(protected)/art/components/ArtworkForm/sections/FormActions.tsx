@@ -14,7 +14,7 @@ function FormActions({ isSubmitting, isEditMode }: FormActionsProps) {
       <button 
         type="button" 
         className={styles.cancelButton}
-        onClick={() => router.push('/shopify/collection')}
+        onClick={() => router.push('/art/collection')}
         disabled={isSubmitting}
       >
         Annuler

@@ -60,21 +60,21 @@ export default function SideMenu() {
             <SideMenuItem 
               label="Ma Collection"
               isActive={activeItem === 'collection'}
-              onClick={() => handleNavigation('/shopify/collection', 'collection')}
+              onClick={() => handleNavigation('/art/collection', 'collection')}
               isCollapsed={isMenuCollapsed}
               icon={<span>🖼️</span>}
             />
             <SideMenuItem 
               label="Adresses"
               isActive={activeItem === 'addresses'}
-              onClick={() => handleNavigation('/shopify/addresses', 'addresses')}
+              onClick={() => handleNavigation('/art/addresses', 'addresses')}
               isCollapsed={isMenuCollapsed}
               icon={<span>📍</span>}
             />
             <SideMenuItem 
               label="Créer une œuvre"
               isActive={activeItem === 'createArtwork'}
-              onClick={() => handleNavigation('/shopify/createArtwork', 'createArtwork')}
+              onClick={() => handleNavigation('/art/createArtwork', 'createArtwork')}
               isCollapsed={isMenuCollapsed}
               icon={<span>➕</span>}
             />

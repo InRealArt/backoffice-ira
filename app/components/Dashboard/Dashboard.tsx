@@ -123,7 +123,7 @@ export default function Dashboard() {
           <>
             <DashboardCard title="Ma Collection">
               <p>Explorez et gérez votre collection d'œuvres d'art.</p>
-              <Button onClick={() => router.push('/shopify/collection')}>
+              <Button onClick={() => router.push('/art/collection')}>
                 Voir ma collection d'œuvres d'art
               </Button>
             </DashboardCard>
@@ -132,7 +132,7 @@ export default function Dashboard() {
               <p>Créez et publiez une nouvelle œuvre d'art dans Shopify.</p>
               <button 
                 className="dashboard-button" 
-                onClick={() => router.push('/shopify/createArtwork')}
+                onClick={() => router.push('/art/createArtwork')}
               >
                 Créer une œuvre dans Shopify
               </button>
@@ -146,7 +146,7 @@ export default function Dashboard() {
                   <p>Œuvres mintées : <strong>{mintedItemsCount}</strong></p>
                   <p>Œuvres en vente : <strong>{listedItemsCount}</strong></p>
                   <Button 
-                    onClick={() => router.push('/shopify/collection')}
+                    onClick={() => router.push('/art/collection')}
                   >
                     Voir le détail
                   </Button>

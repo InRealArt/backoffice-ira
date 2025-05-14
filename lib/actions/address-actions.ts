@@ -78,7 +78,7 @@ export async function createAddress(data: {
             data: enrichedData
         })
 
-        revalidatePath('/shopify/addresses')
+        revalidatePath('/art/addresses')
 
         return {
             success: true,
@@ -127,8 +127,8 @@ export async function updateAddress(id: number, data: {
             data: enrichedData
         })
 
-        revalidatePath('/shopify/addresses')
-        revalidatePath(`/shopify/addresses/${id}/edit`)
+        revalidatePath('/art/addresses')
+        revalidatePath(`/art/addresses/${id}/edit`)
 
         return {
             success: true,
@@ -161,7 +161,7 @@ export async function deleteAddress(id: number) {
             where: { id }
         })
 
-        revalidatePath('/shopify/addresses')
+        revalidatePath('/art/addresses')
 
         return {
             success: true

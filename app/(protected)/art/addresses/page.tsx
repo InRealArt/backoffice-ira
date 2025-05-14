@@ -64,14 +64,14 @@ export default function AddressesPage() {
     e.preventDefault()
     setIsAddingAddress(true)
     setTimeout(() => {
-      router.push('/shopify/addresses/create')
+      router.push('/art/addresses/create')
     }, 500)
   }
 
   const handleEditAddressClick = (addressId: number) => {
     setNavigatingToAddressId(addressId)
     setTimeout(() => {
-      router.push(`/shopify/addresses/${addressId}/edit`)
+      router.push(`/art/addresses/${addressId}/edit`)
     }, 500)
   }
 

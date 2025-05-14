@@ -201,7 +201,7 @@ export default function AddressForm({ address, defaultFirstName = '', defaultLas
       <div className="form-actions">
         <button
           type="button"
-          onClick={() => router.push('/shopify/addresses')}
+          onClick={() => router.push('/art/addresses')}
           className="btn btn-secondary"
           disabled={isSubmitting}
         >

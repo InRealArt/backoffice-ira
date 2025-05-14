@@ -111,9 +111,9 @@ export function useSideMenuLogic() {
     if (pathname) {
       if (pathname.includes('/dashboard')) {
         setActiveItem('dashboard')
-      } else if (pathname.includes('/shopify/collection')) {
+      } else if (pathname.includes('/art/collection')) {
         setActiveItem('collection')
-      } else if (pathname.includes('/shopify/createArtwork')) {
+      } else if (pathname.includes('/art/createArtwork')) {
         setActiveItem('createArtwork')
       } else if (pathname.includes('/shopify')) {
         setActiveItem('adminShopify')

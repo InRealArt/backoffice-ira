@@ -62,7 +62,7 @@ export default function CreateAddressPage() {
       })
       
       if (result.success) {
-        router.push('/shopify/addresses')
+        router.push('/art/addresses')
       } else {
         setError(result.error || 'Une erreur est survenue lors de la création de l\'adresse')
         setIsLoading(false)

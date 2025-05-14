@@ -48,7 +48,7 @@ export const config = {
     matcher: [
         '/dashboard/:path*',
         '/admin/:path*',
-        '/shopify/:path*',
+        '/art/:path*',
         '/profile/:path*',
         '/notifications/:path*',
     ],
