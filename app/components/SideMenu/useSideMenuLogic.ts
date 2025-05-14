@@ -13,7 +13,7 @@ export function useSideMenuLogic() {
   const dynamicContext = useDynamicContext()
 
   // État des sous-menus
-  const [showShopifySubmenu, setShowShopifySubmenu] = useState(false)
+  const [showBackofficeAdminSubmenu, setShowBackofficeAdminSubmenu] = useState(false)
   const [showBlockchainSubmenu, setShowBlockchainSubmenu] = useState(false)
   const [showMarketplaceSubmenu, setShowMarketplaceSubmenu] = useState(false)
   const [showDataAdministrationSubmenu, setShowDataAdministrationSubmenu] = useState(false)
@@ -33,7 +33,7 @@ export function useSideMenuLogic() {
 
   // Fermer tous les sous-menus sauf celui spécifié
   const closeAllSubmenusExcept = useCallback((menuToKeepOpen: string | null) => {
-    if (menuToKeepOpen !== 'shopify') setShowShopifySubmenu(false)
+    if (menuToKeepOpen !== 'backofficeAdmin') setShowBackofficeAdminSubmenu(false)
     if (menuToKeepOpen !== 'blockchain') setShowBlockchainSubmenu(false)
     if (menuToKeepOpen !== 'marketplace') setShowMarketplaceSubmenu(false)
     if (menuToKeepOpen !== 'dataAdministration') setShowDataAdministrationSubmenu(false)
@@ -41,10 +41,10 @@ export function useSideMenuLogic() {
   }, [])
 
   // Fonction pour basculer l'état du sous-menu Shopify
-  const toggleShopifySubmenu = useCallback(() => {
-    setShowShopifySubmenu(prev => {
+  const toggleBackofficeAdminSubmenu = useCallback(() => {
+    setShowBackofficeAdminSubmenu(prev => {
       const newState = !prev
-      if (newState) closeAllSubmenusExcept('shopify')
+      if (newState) closeAllSubmenusExcept('backofficeAdmin')
       return newState
     })
   }, [closeAllSubmenusExcept])
@@ -116,8 +116,8 @@ export function useSideMenuLogic() {
       } else if (pathname.includes('/art/createArtwork')) {
         setActiveItem('createArtwork')
       } else if (pathname.includes('/shopify')) {
-        setActiveItem('adminShopify')
-        setShowShopifySubmenu(true)
+        setActiveItem('adminBackofficeAdmin')
+        setShowBackofficeAdminSubmenu(true)
       } else if (pathname.includes('/blockchain')) {
         setActiveItem('adminBlockchain')
         setShowBlockchainSubmenu(true)
@@ -230,14 +230,14 @@ export function useSideMenuLogic() {
     activeItem,
     canAccessCollection,
     isAdmin,
-    showShopifySubmenu,
+    showBackofficeAdminSubmenu,
     showBlockchainSubmenu,
     showMarketplaceSubmenu,
     showDataAdministrationSubmenu,
     showLandingSubmenu,
     isMenuCollapsed,
     handleNavigation,
-    toggleShopifySubmenu,
+    toggleBackofficeAdminSubmenu,
     toggleBlockchainSubmenu,
     toggleMarketplaceSubmenu,
     toggleDataAdministrationSubmenu,

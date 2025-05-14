@@ -3,7 +3,7 @@
 import React from 'react'
 import SideMenuItem from './SideMenuItem'
 
-interface ShopifySubMenuProps {
+interface BackofficeAdminSubMenuProps {
   isActive: boolean
   isOpen: boolean
   toggleSubmenu: () => void
@@ -11,7 +11,7 @@ interface ShopifySubMenuProps {
   isCollapsed?: boolean
 }
 
-export default function BackofficeAdminSubMenu({ isActive, isOpen, toggleSubmenu, onNavigate, isCollapsed = false }: ShopifySubMenuProps) {
+export default function BackofficeAdminSubMenu({ isActive, isOpen, toggleSubmenu, onNavigate, isCollapsed = false }: BackofficeAdminSubMenuProps) {
   return (
     <>
       <SideMenuItem 
@@ -28,7 +28,7 @@ export default function BackofficeAdminSubMenu({ isActive, isOpen, toggleSubmenu
           <SideMenuItem 
             label="Gestion des Membres" 
             isSubmenuItem={true}
-            onClick={() => onNavigate('/boAdmin/users', 'shopifyUsers')}
+            onClick={() => onNavigate('/boAdmin/users', 'boUsers')}
           />
         </ul>
       )}
@@ -38,7 +38,7 @@ export default function BackofficeAdminSubMenu({ isActive, isOpen, toggleSubmenu
           <SideMenuItem 
             label="Gestion des Membres" 
             isSubmenuItem={true}
-            onClick={() => onNavigate('/boAdmin/users', 'shopifyUsers')}
+            onClick={() => onNavigate('/boAdmin/users', 'boUsers')}
           />
           <SideMenuItem 
             label="Créer un Membre" 

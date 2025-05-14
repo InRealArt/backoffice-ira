@@ -1,7 +1,7 @@
 'use client'
 
 import SideMenuItem from './SideMenuItem'
-import ShopifySubMenu from './BackofficeAdminSubMenu'
+import BackofficeAdminSubMenu from './BackofficeAdminSubMenu'
 import BlockchainSubMenu from './BlockchainSubMenu'
 import MenuSeparator from './MenuSeparator'
 import { useSideMenuLogic } from './useSideMenuLogic'
@@ -15,12 +15,12 @@ export default function SideMenu() {
     activeItem,
     canAccessCollection,
     isAdmin,
-    showShopifySubmenu,
+    showBackofficeAdminSubmenu,
     showBlockchainSubmenu,
     showMarketplaceSubmenu,
     isMenuCollapsed,
     handleNavigation,
-    toggleShopifySubmenu,
+    toggleBackofficeAdminSubmenu,
     toggleBlockchainSubmenu,
     toggleMarketplaceSubmenu,
     toggleMenuCollapse,
@@ -99,10 +99,10 @@ export default function SideMenu() {
               onNavigate={handleNavigation}
               isCollapsed={isMenuCollapsed}
             />
-            <ShopifySubMenu
-              isActive={activeItem === 'adminShopify'}
-              isOpen={showShopifySubmenu}
-              toggleSubmenu={toggleShopifySubmenu}
+            <BackofficeAdminSubMenu
+              isActive={activeItem === 'adminBackofficeAdmin'}
+              isOpen={showBackofficeAdminSubmenu}
+              toggleSubmenu={toggleBackofficeAdminSubmenu}
               onNavigate={handleNavigation}
               isCollapsed={isMenuCollapsed}
             />
