@@ -560,14 +560,25 @@ export async function saveAuthCertificate(itemId: number, fileData: Uint8Array) 
  */
 export async function getAuthCertificateByItemId(itemId: number) {
   try {
-    // Récupérer le certificat
+    // D'abord récupérer le NftItem associé à l'item
+    const nftItem = await prisma.nftItem.findUnique({
+      where: { itemId }
+    })
+
+    if (!nftItem) {
+      console.log(`Aucun NftItem trouvé pour l'itemId ${itemId}`)
+      return null
+    }
+
+    // Ensuite récupérer le certificat associé au NftItem
     const certificate = await prisma.authCertificate.findFirst({
       where: {
-        idItem: itemId
+        nftItemId: nftItem.id
       }
     })
 
     if (!certificate) {
+      console.log(`Aucun certificat trouvé pour le NftItem ${nftItem.id}`)
       return null
     }
 
@@ -611,24 +622,50 @@ export async function getItemById(itemId: number) {
       select: {
         id: true,
         name: true,
-        status: true,
         description: true,
         tags: true,
-        height: true,
-        width: true,
-        weight: true,
-        creationYear: true,
-        pricePhysicalBeforeTax: true,
-        priceNftBeforeTax: true,
-        priceNftPlusPhysicalBeforeTax: true,
-        artworkSupport: true,
         metaTitle: true,
         metaDescription: true,
         slug: true,
         mainImageUrl: true,
-        secondaryImagesUrl: true
+        secondaryImagesUrl: true,
+        idUser: true,
+        realViewCount: true,
+        fakeViewCount: true,
+        itemCategoryId: true,
+        // Inclure les relations
+        nftItem: {
+          select: {
+            id: true,
+            status: true,
+            price: true
+          }
+        },
+        physicalItem: {
+          select: {
+            id: true,
+            status: true,
+            price: true,
+            initialQty: true,
+            stockQty: true,
+            height: true,
+            width: true,
+            weight: true,
+            creationYear: true,
+            artworkSupport: true
+          }
+        },
+        // Inclure l'utilisateur associé
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
       }
-    })
+    });
 
     if (item) {
       //console.log('Item trouvé - ID en base de données:', item.id)

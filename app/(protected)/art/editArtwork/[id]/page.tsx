@@ -48,19 +48,29 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
             // Vérifier les valeurs reçues
             console.log('Item chargé pour l\'édition:', {
               id: itemData.id,
-              name: itemData.name, // Titre de l'oeuvre
-              description: itemData.description, // Description de l'oeuvre
+              name: itemData.name,
+              description: itemData.description,
               mainImageUrl: itemData.mainImageUrl,
               secondaryImagesUrl: itemData.secondaryImagesUrl,
+              // Vérifier si l'item a des relations
+              hasPhysicalItem: !!itemData.physicalItem,
+              hasNftItem: !!itemData.nftItem,
               // Afficher l'objet complet pour debugging
               itemComplet: itemData
             })
 
             try {
-              // Rechercher le certificat d'authenticité associé
-              const certificateResult = await getAuthCertificateByItemId(itemData.id)
-              if (certificateResult && certificateResult.id) {
-                setCertificate(certificateResult)
+              if (itemData.nftItem) {
+                // Rechercher le certificat d'authenticité associé au NftItem
+                console.log('Recherche du certificat pour le NftItem avec id:', itemData.nftItem.id)
+                const certificateResult = await getAuthCertificateByItemId(itemData.id)
+                
+                if (certificateResult && certificateResult.id) {
+                  console.log('Certificat trouvé:', certificateResult)
+                  setCertificate(certificateResult)
+                } else {
+                  console.log('Aucun certificat trouvé')
+                }
               }
             } catch (certError) {
               console.error('Erreur lors de la récupération du certificat:', certError)
@@ -106,29 +116,32 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
               id: item.id,
               title: item.name,
               description: item.description,
-              price: item.price,
               metaTitle: item.metaTitle,
               metaDescription: item.metaDescription,
-              medium: item.artworkSupport,
-              width: item.width?.toString(),
-              height: item.height?.toString(),
-              weight: item.weight?.toString(),
-              year: item.year?.toString(),
-              creationYear: item.creationYear?.toString(),
-              intellectualProperty: item.intellectualProperty,
-              intellectualPropertyEndDate: item.intellectualPropertyEndDate
-                ? new Date(item.intellectualPropertyEndDate).toISOString().split('T')[0]
-                : undefined,
+              slug: item.slug || (item.name ? normalizeString(item.name) : ''),
               imageUrl: item.mainImageUrl,
-              hasPhysicalOnly: item.pricePhysicalBeforeTax > 0,
-              hasNftOnly: item.priceNftBeforeTax > 0,
-              hasNftPlusPhysical: item.priceNftPlusPhysicalBeforeTax > 0,
-              pricePhysicalBeforeTax: item.pricePhysicalBeforeTax?.toString(),
-              priceNftBeforeTax: item.priceNftBeforeTax?.toString(),
-              priceNftPlusPhysicalBeforeTax: item.priceNftPlusPhysicalBeforeTax?.toString(),
-              slug: item.name ? normalizeString(item.name) : '',
-              certificateUrl: certificate?.fileUrl,
-              secondaryImagesUrl: item.secondaryImagesUrl || []
+              secondaryImagesUrl: item.secondaryImagesUrl || [],
+              // Transmettre les données du physicalItem s'il existe
+              physicalItem: item.physicalItem ? {
+                price: item.physicalItem.price,
+                initialQty: item.physicalItem.initialQty,
+                stockQty: item.physicalItem.stockQty,
+                height: item.physicalItem.height,
+                width: item.physicalItem.width,
+                weight: item.physicalItem.weight,
+                creationYear: item.physicalItem.creationYear,
+                artworkSupport: item.physicalItem.artworkSupport,
+                status: item.physicalItem.status
+              } : null,
+              // Transmettre les données du nftItem s'il existe
+              nftItem: item.nftItem ? {
+                price: item.nftItem.price,
+                status: item.nftItem.status,
+                id: item.nftItem.id
+              } : null,
+              // Transmettre le certificat d'authenticité s'il existe
+              certificateUrl: certificate?.fileUrl || null,
+              hasCertificate: !!certificate?.fileUrl
             }}
             onSuccess={handleSuccess}
           />

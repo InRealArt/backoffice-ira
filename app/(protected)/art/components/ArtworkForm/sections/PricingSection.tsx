@@ -3,6 +3,7 @@
 import { FormFields, PricingSectionProps } from '../types'
 import FormSection from '../FormSection'
 import styles from '../../ArtworkForm.module.scss'
+import { useEffect, useRef } from 'react'
 
 function PricingSection({
   register,
@@ -15,6 +16,25 @@ function PricingSection({
   hasNftPlusPhysical,
   onPricingOptionChange
 }: PricingSectionProps) {
+
+  // Référence pour éviter les rendus infinis
+  const initializedRef = useRef(false);
+
+  // Assurer que les valeurs de formulaire correspondent aux états
+  useEffect(() => {
+    if (!initializedRef.current) {
+      // Enregistrer les valeurs correctes dans le formulaire
+      register('hasPhysicalOnly');
+      register('hasNftOnly');
+      register('hasNftPlusPhysical');
+      
+      setValue('hasPhysicalOnly', hasPhysicalOnly);
+      setValue('hasNftOnly', hasNftOnly);
+      setValue('hasNftPlusPhysical', hasNftPlusPhysical);
+      
+      initializedRef.current = true;
+    }
+  }, [register, setValue, hasPhysicalOnly, hasNftOnly, hasNftPlusPhysical]);
 
   // Fonction pour gérer le changement d'option
   const handleOptionChange = (option: 'hasPhysicalOnly' | 'hasNftOnly' | 'hasNftPlusPhysical', checked: boolean) => {
@@ -68,10 +88,14 @@ function PricingSection({
               Une œuvre d'art numérique certifiée sur la blockchain
             </p>
           </div>
+          
+          
         </div>
         
-        {errors.root && typeof errors.root.message === 'string' && errors.root.message.includes("tarification") && (
-          <p className={styles.formError}>Vous devez sélectionner au moins une option de type d'œuvre</p>
+        {errors.pricingOption && (
+          <p className={styles.formError}>
+            {errors.pricingOption?.message || "Vous devez sélectionner au moins une option"}
+          </p>
         )}
       </div>
     </FormSection>

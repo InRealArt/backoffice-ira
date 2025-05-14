@@ -29,10 +29,16 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
   const [hasNftOnly, setHasNftOnly] = useState(initialData?.hasNftOnly || false)
   const [hasNftPlusPhysical, setHasNftPlusPhysical] = useState(initialData?.hasNftPlusPhysical || false)
   
+  // États pour la détection des entités liées à l'Item
+  const [hasPhysicalItem, setHasPhysicalItem] = useState<boolean>(!!initialData?.physicalItem)
+  const [hasNftItem, setHasNftItem] = useState<boolean>(!!initialData?.nftItem)
+  const [hasCertificate, setHasCertificate] = useState<boolean>(!!initialData?.certificateUrl)
+  
   const {
     isSubmitting,
     previewImages,
     previewCertificate,
+    setPreviewCertificate,
     tags,
     setTags,
     secondaryImages,
@@ -89,9 +95,86 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         break
       case 'hasNftPlusPhysical':
         setHasNftPlusPhysical(checked)
+        // Si l'option NFT+Physique est cochée, activer automatiquement les deux autres options
+        if (checked) {
+          setHasPhysicalOnly(true)
+          setHasNftOnly(true)
+          setValue('hasPhysicalOnly', true)
+          setValue('hasNftOnly', true)
+        }
         break
     }
   }
+  
+  // Effet pour déterminer quelles sections afficher en fonction des relations présentes
+  useEffect(() => {
+    if (mode === 'edit' && initialData) {
+      // Détection du PhysicalItem
+      if (initialData.physicalItem) {
+        // Cocher la case "Œuvre physique" et activer la section
+        setHasPhysicalItem(true)
+        setHasPhysicalOnly(true)
+        
+        // Enregistrer cette option dans le formulaire
+        setValue('hasPhysicalOnly', true)
+        
+        // Mettre à jour les valeurs du formulaire avec les données du PhysicalItem
+        if (initialData.physicalItem.price) {
+          setValue('pricePhysicalBeforeTax', initialData.physicalItem.price.toString())
+        }
+        if (initialData.physicalItem.initialQty) {
+          setValue('initialQty', initialData.physicalItem.initialQty)
+        }
+        if (initialData.physicalItem.height) {
+          setValue('height', initialData.physicalItem.height.toString())
+        }
+        if (initialData.physicalItem.width) {
+          setValue('width', initialData.physicalItem.width.toString())
+        }
+        if (initialData.physicalItem.weight) {
+          setValue('weight', initialData.physicalItem.weight.toString())
+        }
+        if (initialData.physicalItem.creationYear) {
+          setValue('creationYear', initialData.physicalItem.creationYear.toString())
+        }
+        if (initialData.physicalItem.artworkSupport) {
+          setValue('medium', initialData.physicalItem.artworkSupport)
+        }
+      }
+      
+      // Détection du NftItem
+      if (initialData.nftItem) {
+        // Cocher la case "NFT" et activer la section
+        setHasNftItem(true)
+        setHasNftOnly(true)
+        
+        // Enregistrer cette option dans le formulaire
+        setValue('hasNftOnly', true)
+        
+        // Mettre à jour les valeurs du formulaire avec les données du NftItem
+        if (initialData.nftItem.price) {
+          setValue('priceNftBeforeTax', initialData.nftItem.price.toString())
+        }
+        
+        // Vérifier si un certificat d'authenticité est associé
+        if (initialData.certificateUrl) {
+          setHasCertificate(true)
+          setValue('certificate', initialData.certificateUrl)
+          
+          // Définir l'URL du certificat pour l'affichage de prévisualisation
+          if (setPreviewCertificate) {
+            setPreviewCertificate(initialData.certificateUrl)
+          }
+        }
+      }
+      
+      // Si les deux options sont présentes, activer aussi l'option combinée
+      if (initialData.physicalItem && initialData.nftItem) {
+        setHasNftPlusPhysical(true)
+        setValue('hasNftPlusPhysical', true)
+      }
+    }
+  }, [mode, initialData, setValue, setPreviewCertificate])
   
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
@@ -137,7 +220,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         onPricingOptionChange={handlePricingOptionChange}
       />
       
-      {/* Conditionnellement afficher la section des propriétés physiques */}
+      {/* Conditionnellement afficher la section des propriétés physiques basé uniquement sur l'état de la checkbox */}
       {hasPhysicalOnly && (
         <PhysicalPropertiesSection 
           register={register} 
@@ -148,7 +231,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         />
       )}
       
-      {/* Conditionnellement afficher la section des propriétés NFT */}
+      {/* Conditionnellement afficher la section des propriétés NFT basé uniquement sur l'état de la checkbox */}
       {hasNftOnly && (
         <NftPropertiesSection 
           register={register} 
@@ -206,18 +289,18 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         />
       )}
       
-      {/* Prévisualisation du certificat */}
-      {previewCertificate && (
+      {/* Prévisualisation du certificat d'authenticité */}
+      {(previewCertificate || initialData?.certificateUrl) && (
         <div className={styles.certificatePreviewContainer}>
           <h4>Certificat d'authenticité</h4>
           <div className={styles.pdfPreview}>
             <a 
-              href={previewCertificate} 
+              href={previewCertificate || initialData?.certificateUrl} 
               target="_blank" 
               rel="noopener noreferrer" 
               className={styles.viewPdfLink}
             >
-              Voir le certificat
+              Voir le certificat d'authenticité existant
             </a>
           </div>
         </div>

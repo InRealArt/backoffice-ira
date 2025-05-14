@@ -31,6 +31,24 @@ export interface ArtworkFormProps {
         certificateUrl?: string
         secondaryImagesUrl?: string[]
         initialQty?: number
+        // Nouvelles propriétés pour les entités liées
+        physicalItem?: {
+            id?: number
+            price?: number
+            initialQty?: number
+            stockQty?: number
+            height?: number | string
+            width?: number | string
+            weight?: number | string
+            creationYear?: number | string
+            artworkSupport?: string
+            status?: string
+        } | null
+        nftItem?: {
+            id?: number
+            price?: number
+            status?: string
+        } | null
     }
     onSuccess?: () => void
     onTitleChange?: (title: string) => void
