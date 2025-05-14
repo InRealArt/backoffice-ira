@@ -86,6 +86,7 @@ export function useArtworkForm({
             priceNftBeforeTax: initialData?.priceNftBeforeTax || '',
             priceNftPlusPhysicalBeforeTax: initialData?.priceNftPlusPhysicalBeforeTax || '',
             certificateUrl: initialData?.certificateUrl || '',
+            initialQty: initialData?.initialQty?.toString() || '1',
         }
     })
 

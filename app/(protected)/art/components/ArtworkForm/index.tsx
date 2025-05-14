@@ -12,6 +12,7 @@ import {
   SeoSection,
   PricingSection,
   PhysicalPropertiesSection,
+  NftPropertiesSection,
   MediaFilesSection,
   TagsSection,
   FormActions
@@ -91,6 +92,17 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
   
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+      <div className={styles.formHeader}>
+        <h1 className={styles.formTitle}>
+          {isEditMode ? 'Modifier l\'œuvre' : 'Créer une nouvelle œuvre'}
+        </h1>
+        <p className={styles.formSubtitle}>
+          {isEditMode 
+            ? 'Modifiez les informations de votre œuvre d\'art' 
+            : 'Remplissez le formulaire pour ajouter une nouvelle œuvre d\'art'}
+        </p>
+      </div>
+      
       <MainInfoSection 
         register={register} 
         errors={errors}
@@ -122,13 +134,27 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         onPricingOptionChange={handlePricingOptionChange}
       />
       
-      <PhysicalPropertiesSection 
-        register={register} 
-        errors={errors}
-        setValue={setValue} 
-        control={control}
-        getValues={getValues}
-      />
+      {/* Conditionnellement afficher la section des propriétés physiques */}
+      {hasPhysicalOnly && (
+        <PhysicalPropertiesSection 
+          register={register} 
+          errors={errors}
+          setValue={setValue} 
+          control={control}
+          getValues={getValues}
+        />
+      )}
+      
+      {/* Conditionnellement afficher la section des propriétés NFT */}
+      {hasNftOnly && (
+        <NftPropertiesSection 
+          register={register} 
+          errors={errors}
+          setValue={setValue} 
+          control={control}
+          getValues={getValues}
+        />
+      )}
       
       <TagsSection 
         register={register} 

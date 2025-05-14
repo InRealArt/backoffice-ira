@@ -2,9 +2,51 @@ import { FormFields } from '../types'
 import FormSection from '../FormSection'
 import styles from '../../ArtworkForm.module.scss'
 
-function PhysicalPropertiesSection({ register, errors }: FormFields) {
+function PhysicalPropertiesSection({ register, errors, control, setValue, getValues }: FormFields) {
   return (
-    <FormSection title="Caractéristiques">
+    <FormSection title="Caractéristiques physiques">
+      {/* Prix de l'œuvre physique */}
+      <div className={styles.formGroup}>
+        <label htmlFor="pricePhysicalBeforeTax" className={styles.formLabel} data-required={true}>
+          Prix de l'œuvre physique (HT)
+        </label>
+        <input
+          id="pricePhysicalBeforeTax"
+          type="number"
+          {...register("pricePhysicalBeforeTax", {
+            required: true,
+            min: {
+              value: 0,
+              message: "Le prix doit être supérieur ou égal à 0"
+            }
+          })}
+          className={`${styles.formInput} ${errors.pricePhysicalBeforeTax ? styles.formInputError : ''}`}
+          placeholder="Prix HT en euros"
+        />
+        {errors.pricePhysicalBeforeTax && <p className={styles.formError}>{String(errors.pricePhysicalBeforeTax?.message || "Le prix est requis")}</p>}
+      </div>
+
+      {/* Quantité initiale */}
+      <div className={styles.formGroup}>
+        <label htmlFor="initialQty" className={styles.formLabel} data-required={true}>
+          Quantité disponible
+        </label>
+        <input
+          id="initialQty"
+          type="number"
+          {...register("initialQty", {
+            required: true,
+            min: {
+              value: 1,
+              message: "La quantité doit être au moins de 1"
+            }
+          })}
+          className={`${styles.formInput} ${errors.initialQty ? styles.formInputError : ''}`}
+          placeholder="Quantité disponible"
+        />
+        {errors.initialQty && <p className={styles.formError}>{String(errors.initialQty?.message || "La quantité est requise")}</p>}
+      </div>
+
       <div className={styles.formGrid}>
         {/* Medium */}
         <div className={styles.formGroup}>

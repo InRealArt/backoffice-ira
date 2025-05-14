@@ -89,13 +89,9 @@ export default function CollectionPage() {
                 <ProductCard
                   key={item.id}
                   id={item.id}
-                  title={item.title || 'Sans titre'}
-                  price={item.price || '0.00'}
-                  currency="EUR"
-                  imageUrl={item.imageUrl || '/images/no-image.jpg'}
-                  idShopify={item.id.toString()}
+                  name={item.name || 'Sans titre'}
+                  mainImageUrl={item.mainImageUrl || '/images/no-image.jpg'}
                   userId={userDB?.id}
-                  status={item.status}
                   tags={item.tags}
                 />
               ))}

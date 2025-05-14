@@ -8,11 +8,8 @@ import toast from 'react-hot-toast'
 
 type ProductCardProps = {
   id: number
-  title: string
-  price: string
-  currency: string
-  imageUrl: string
-  idShopify: string
+  name: string
+  mainImageUrl: string
   userId?: number
   status?: string
   tags?: string[]
@@ -20,11 +17,8 @@ type ProductCardProps = {
 
 export default function ProductCard({
   id,
-  title,
-  price,
-  currency,
-  imageUrl,
-  idShopify,
+  name,
+  mainImageUrl,
   userId,
   status = 'created',
   tags = []
@@ -33,11 +27,6 @@ export default function ProductCard({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [itemStatus, setItemStatus] = useState(status)
 
-  // Formatter le prix
-  const formattedPrice = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: currency
-  }).format(parseFloat(price))
 
   // Fonction pour gérer la demande de listing
   const handleRequestListing = async () => {
@@ -96,8 +85,8 @@ export default function ProductCard({
       
       <div className="product-image-container">
         <Image
-          src={imageUrl || '/images/no-image.jpg'}
-          alt={title}
+          src={mainImageUrl || '/images/no-image.jpg'}
+          alt={name}
           width={300}
           height={300}
           className="product-image"
@@ -127,8 +116,7 @@ export default function ProductCard({
       </div>
       
       <div className="product-content">
-        <h3 className="product-title">{title}</h3>
-        <p className="product-price">{formattedPrice}</p>
+        <h3 className="product-title">{name}</h3>
         
         {tags && tags.length > 0 && (
           <div className="product-tags">

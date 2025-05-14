@@ -9,25 +9,26 @@ function MainInfoSection({
   setValue, 
   slug = '', 
   title = '', 
-  onTitleChange 
+  onNameChange 
 }: FormFields & { 
   title?: string, 
-  onTitleChange?: (e: React.ChangeEvent<HTMLInputElement>) => void 
+  onTitleChange?: (e: React.ChangeEvent<HTMLInputElement>) => void,
+  onNameChange?: (e: React.ChangeEvent<HTMLInputElement>) => void 
 }) {
   return (
     <FormSection title="Caractéristiques principales">
       <div className={styles.formGrid}>
-        {/* Title */}
+        {/* Name */}
         <div className={styles.formGroup}>
-          <label htmlFor="title" className={styles.formLabel} data-required={true}>
-            Titre
+          <label htmlFor="name" className={styles.formLabel} data-required={true}>
+            Nom
           </label>
           <input
-            id="title"
+            id="name"
             type="text"
-            {...register('title', { 
+            {...register('name', { 
               required: true,
-              onChange: onTitleChange // Appeler le gestionnaire de changement de titre
+              onChange: onNameChange // Appeler le gestionnaire de changement de name
             })}
             className={`${styles.formInput} ${errors.title ? styles.formInputError : ''}`}
             placeholder="Entrez le titre de l'œuvre"

@@ -27,6 +27,9 @@ export const artworkSchema = z.object({
     priceNftPlusPhysicalBeforeTax: z.string()
         .optional()
         .refine(val => !val || val === '' || /^\d+$/.test(val), "Le prix doit être un nombre entier"),
+    initialQty: z.string()
+        .optional()
+        .refine(val => !val || val === '' || (/^\d+$/.test(val) && parseInt(val) > 0), "La quantité doit être un nombre entier positif"),
     hasPhysicalOnly: z.boolean().optional(),
     hasNftOnly: z.boolean().optional(),
     hasNftPlusPhysical: z.boolean().optional(),
@@ -101,6 +104,16 @@ export const artworkSchema = z.object({
         message: "Le prix est obligatoire pour l'option NFT + Œuvre physique",
         path: ["priceNftPlusPhysicalBeforeTax"]
     })
+    // Validation de la quantité initiale pour les options avec œuvre physique
+    .refine((data) => {
+        if (data.hasPhysicalOnly) {
+            return !!data.initialQty && data.initialQty !== '';
+        }
+        return true;
+    }, {
+        message: "La quantité initiale est obligatoire pour une œuvre physique",
+        path: ["initialQty"]
+    })
     // Validation des dimensions pour les options avec œuvre physique
     .refine((data) => {
         if (data.hasPhysicalOnly || data.hasNftPlusPhysical) {
@@ -136,6 +149,9 @@ export const artworkEditSchema = z.object({
     priceNftPlusPhysicalBeforeTax: z.string()
         .optional()
         .refine(val => !val || val === '' || /^\d+$/.test(val), "Le prix doit être un nombre entier"),
+    initialQty: z.string()
+        .optional()
+        .refine(val => !val || val === '' || (/^\d+$/.test(val) && parseInt(val) > 0), "La quantité doit être un nombre entier positif"),
     hasPhysicalOnly: z.boolean().optional(),
     hasNftOnly: z.boolean().optional(),
     hasNftPlusPhysical: z.boolean().optional(),
@@ -208,6 +224,16 @@ export const artworkEditSchema = z.object({
         message: "Le prix est obligatoire pour l'option NFT + Œuvre physique",
         path: ["priceNftPlusPhysicalBeforeTax"]
     })
+    // Validation de la quantité initiale pour les options avec œuvre physique
+    .refine((data) => {
+        if (data.hasPhysicalOnly) {
+            return !!data.initialQty && data.initialQty !== '';
+        }
+        return true;
+    }, {
+        message: "La quantité initiale est obligatoire pour une œuvre physique",
+        path: ["initialQty"]
+    })
     // Validation des dimensions pour les options avec œuvre physique
     .refine((data) => {
         if (data.hasPhysicalOnly || data.hasNftPlusPhysical) {
@@ -229,6 +255,7 @@ export type ArtworkFormData = {
     pricePhysicalBeforeTax?: string;
     priceNftBeforeTax?: string;
     priceNftPlusPhysicalBeforeTax?: string;
+    initialQty?: string;
     hasPhysicalOnly?: boolean;
     hasNftOnly?: boolean;
     hasNftPlusPhysical?: boolean;

@@ -30,6 +30,7 @@ export interface ArtworkFormProps {
         slug?: string
         certificateUrl?: string
         secondaryImagesUrl?: string[]
+        initialQty?: number
     }
     onSuccess?: () => void
     onTitleChange?: (title: string) => void
