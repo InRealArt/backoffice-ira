@@ -75,12 +75,14 @@ model OrderItem {
   orderId Int
   order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  artworkId Int
-  artwork   Item @relation(fields: [artworkId], references: [id])
+  // Nouvelles relations directes avec NftItem et PhysicalItem
+  nftItemId      Int?
+  nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
+  physicalItemId Int?
+  physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id])
 
   // Données figées obligatoires (pour conformité facture)
   title String // Nom du bien vendu (obligation facture)
-  isNft Boolean @default(false)
 
   // Prix (obligatoire fiscalement)
   unitPrice  Decimal @db.Decimal(10, 2) // Prix unitaire HT
@@ -89,7 +91,8 @@ model OrderItem {
   totalPrice Decimal @db.Decimal(10, 2) // Prix TTC
 
   @@index([orderId])
-  @@index([artworkId])
+  @@index([nftItemId])
+  @@index([physicalItemId])
   @@map("OrderItem")
   @@schema("marketplace")
 }
@@ -157,12 +160,16 @@ model InvoiceItem {
   invoiceId Int
   invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
+  // Nouvelles relations directes avec NftItem et PhysicalItem
+  nftItemId      Int?
+  nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
+  physicalItemId Int?
+  physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id])
+
   // Données figées de l'article (pour historique complet)
   title       String // Nom du produit
   description String? // Description du produit
-  isNft       Boolean @default(false)
-  artworkId   Int // Référence à l'œuvre
-
+  
   // Prix (obligatoire fiscalement)
   unitPrice  Decimal @db.Decimal(10, 2) // Prix unitaire HT
   vatRate    Decimal @db.Decimal(5, 2) // Taux TVA
@@ -170,6 +177,8 @@ model InvoiceItem {
   totalPrice Decimal @db.Decimal(10, 2) // Prix TTC
 
   @@index([invoiceId])
+  @@index([nftItemId])
+  @@index([physicalItemId])
   @@map("InvoiceItem")
   @@schema("marketplace")
 }
@@ -184,8 +193,8 @@ enum InvoiceType {
 }
 
 model Address {
-  id Int @id @default(autoincrement())
-  name String //Name for the adddress
+  id            Int    @id @default(autoincrement())
+  name          String //Name for the adddress
   // Champs minimums obligatoires pour facturation valide
   firstName     String
   lastName      String
@@ -199,13 +208,13 @@ model Address {
   vatNumber String?
 
   // Relations Customer (adress d'un client dans la marketplace)
-  customer         User?          @relation(fields: [customerId], references: [id])
+  customer         User?           @relation(fields: [customerId], references: [id])
   customerId       String?
   // Relations BackofficeUser (adress d'un artiste dans le backoffice)
   backofficeUser   BackofficeUser? @relation(fields: [backofficeUserId], references: [id], onDelete: Cascade)
   backofficeUserId Int?
 
-  orders Order[]
+  orders              Order[]
   thirdPartyAddresses ThirdPartyAddress[]
 
   @@map("Address")
@@ -283,6 +292,7 @@ model NftResource {
   items                   Item[]
   royaltyBeneficiaries    RoyaltyBeneficiary[]
   marketPlaceTransactions MarketPlaceTransaction[]
+  NftItem                 NftItem[]
 
   @@schema("public")
 }
@@ -325,21 +335,22 @@ model Transaction {
 }
 
 model BackofficeUser {
-  id               Int                     @id @default(autoincrement())
-  email            String?                 @unique
-  walletAddress    String?                 @unique
-  linkedWallets    Json                    @default("[]")
-  lastLogin        DateTime                @db.Timestamp(6)
+  id               Int                  @id @default(autoincrement())
+  email            String?              @unique
+  walletAddress    String?              @unique
+  linkedWallets    Json                 @default("[]")
+  lastLogin        DateTime             @db.Timestamp(6)
   userMetadata     Json
   role             BackofficeUserRoles?
   firstName        String?
   lastName         String?
-  isShopifyGranted Boolean                 @default(false)
-  createdAt        DateTime                @default(now()) @db.Timestamp(6)
+  isShopifyGranted Boolean              @default(false)
+  createdAt        DateTime             @default(now()) @db.Timestamp(6)
   artistId         Int?
-  artist           Artist?                 @relation(fields: [artistId], references: [id]) // Nouvelle relation
+  artist           Artist?              @relation(fields: [artistId], references: [id]) // Nouvelle relation
   items            Item[]
   addresses        Address[]
+
   @@index([email])
   @@index([walletAddress])
   @@index([artistId]) // Nouvel index pour la clé étrangère
@@ -440,50 +451,99 @@ enum CollectionStatus {
 }
 
 model Item {
-  id                            Int               @id @default(autoincrement())
-  name                          String
-  description                   String
-  status                        ItemStatus        @default(created)
-  idUser                        Int
-  qtyPhysicalArt                Int               @default(1)
-  user                          BackofficeUser    @relation(fields: [idUser], references: [id])
-  authCertificate               AuthCertificate[]
-  nftResource                   NftResource?      @relation(fields: [idNftResource], references: [id])
-  idNftResource                 Int?
-  tags                          String[]          @default([])
-  categoryId                    Int?
-  category                      ItemCategory?     @relation(fields: [categoryId], references: [id])
-  height                        Decimal?          @db.Decimal(10, 2)
-  width                         Decimal?          @db.Decimal(10, 2)
-  weight                        Decimal?          @db.Decimal(10, 2)
-  intellectualProperty          Boolean           @default(false)
-  intellectualPropertyEndDate   DateTime?
-  priceNftBeforeTax             Int?              @default(0)
-  pricePhysicalBeforeTax        Int?              @default(0)
-  priceNftPlusPhysicalBeforeTax Int?              @default(0)
-  artworkSupport                String?
-  realViewCount                 Int               @default(0)
-  fakeViewCount                 Int               @default(0)
-  creationYear                  Int?
-  slug                          String?           @unique
-  metaDescription               String
-  metaTitle                     String
-  mainImageUrl                  String?
-  secondaryImagesUrl            String[]          @default([])
+  id                 Int            @id @default(autoincrement())
+  name               String
+  description        String
+  idUser             Int
+  user               BackofficeUser @relation(fields: [idUser], references: [id])
+  tags               String[]       @default([])
+  slug               String?        @unique
+  metaDescription    String
+  metaTitle          String
+  mainImageUrl       String?
+  secondaryImagesUrl String[]       @default([])
+  realViewCount      Int            @default(0)
+  fakeViewCount      Int            @default(0)
 
   // Relations
-  orderItems OrderItem[]
+  nftItem        NftItem?
+  physicalItem   PhysicalItem?
+  NftResource    NftResource?  @relation(fields: [nftResourceId], references: [id])
+  nftResourceId  Int?
+  ItemCategory   ItemCategory? @relation(fields: [itemCategoryId], references: [id])
+  itemCategoryId Int?
 
   @@index([idUser])
+  @@schema("public")
+}
+
+model NftItem {
+  id              Int               @id @default(autoincrement())
+  itemId          Int               @unique
+  item            Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  idNftResource   Int?
+  nftResource     NftResource?      @relation(fields: [idNftResource], references: [id])
+  price           Int               @default(0)
+  status          NftItemStatus     @default(created)
+  authCertificate AuthCertificate[]
+  orderItems      OrderItem[]
+  invoiceItems    InvoiceItem[]
+
+  @@index([itemId])
   @@index([idNftResource])
+  @@schema("public")
+}
+
+model PhysicalItem {
+  id             Int                @id @default(autoincrement())
+  itemId         Int                @unique
+  item           Item               @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  price          Int                @default(0)
+  status         PhysicalItemStatus @default(created)
+  stockQty       Int                @default(0)
+  initialQty     Int                @default(1)
+  categoryId     Int?
+  category       ItemCategory?      @relation(fields: [categoryId], references: [id])
+  height         Decimal?           @db.Decimal(10, 2)
+  width          Decimal?           @db.Decimal(10, 2)
+  weight         Decimal?           @db.Decimal(10, 2)
+  unitHeight     String?
+  unitWidth      String?
+  unitWeight     String?
+  creationYear   Int?
+  artworkSupport String?
+  orderItems     OrderItem[]
+  invoiceItems   InvoiceItem[]
+
+  @@index([itemId])
   @@index([categoryId])
   @@schema("public")
 }
 
+enum NftItemStatus {
+  created
+  pending
+  minted
+  listed
+  sold
+
+  @@schema("public")
+}
+
+enum PhysicalItemStatus {
+  created
+  pending
+  listed
+  sold
+
+  @@schema("public")
+}
+
 model ItemCategory {
-  id    Int    @id @default(autoincrement())
-  name  String
-  items Item[]
+  id           Int            @id @default(autoincrement())
+  name         String
+  items        Item[]
+  PhysicalItem PhysicalItem[]
 
   @@schema("public")
 }
@@ -498,12 +558,12 @@ enum ItemStatus {
 }
 
 model AuthCertificate {
-  id     Int   @id @default(autoincrement())
-  idItem Int
-  file   Bytes
-  item   Item  @relation(fields: [idItem], references: [id], onDelete: Cascade)
+  id        Int     @id @default(autoincrement())
+  nftItemId Int
+  nftItem   NftItem @relation(fields: [nftItemId], references: [id], onDelete: Cascade)
+  file      Bytes
 
-  @@index([idItem])
+  @@index([nftItemId])
   @@schema("public")
 }
 
