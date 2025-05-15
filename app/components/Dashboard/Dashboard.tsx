@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import Button from '../Button/Button';
 import { DashboardCard } from './DashboardCard/DashboardCard'
-import { getPendingItemsCount, getUserMintedItemsCount, getUserListedItemsCount, getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
+import { getPendingItemsCount, getUserMintedItemsCount, getUserListedItemsCount, getBackofficeUserByEmail, getArtistById } from '@/lib/actions/prisma-actions'
 import { useIsAdmin } from '@/app/hooks/useIsAdmin';
 
 export default function Dashboard() {
@@ -20,6 +21,8 @@ export default function Dashboard() {
   const [listedItemsCount, setListedItemsCount] = useState(0)
   const [isLoadingCount, setIsLoadingCount] = useState(true)
   const [isLoadingUserCounts, setIsLoadingUserCounts] = useState(true)
+  const [associatedArtist, setAssociatedArtist] = useState<any>(null)
+  const [isLoadingArtist, setIsLoadingArtist] = useState(true)
   const { isAdmin, isLoading } = useIsAdmin()
 
   const truncateAddress = (address: string | undefined) => {
@@ -55,8 +58,18 @@ export default function Dashboard() {
           if (!backofficeUser) {
             console.error('Utilisateur Backoffice non trouvé pour cet email');
             setIsLoadingUserCounts(false);
+            setIsLoadingArtist(false);
             return;
           }
+          
+          // Récupérer l'artiste associé via l'artistId
+          if (backofficeUser.artistId) {
+            const artist = await getArtistById(backofficeUser.artistId);
+            if (artist) {
+              setAssociatedArtist(artist);
+            }
+          }
+          setIsLoadingArtist(false);
           
           const mintedResult = await getUserMintedItemsCount(backofficeUser.id);
           const listedResult = await getUserListedItemsCount(backofficeUser.id);
@@ -67,6 +80,7 @@ export default function Dashboard() {
           console.error('Erreur lors de la récupération des statistiques d\'items:', error)
         } finally {
           setIsLoadingUserCounts(false)
+          setIsLoadingArtist(false)
         }
       }
     }
@@ -89,6 +103,30 @@ export default function Dashboard() {
         <DashboardCard title="Informations utilisateur">
           <p><strong>Email:</strong> {user?.email || 'Non défini'}</p>
           <p><strong>Adresse wallet:</strong> <span className="dashboard-small-text">{truncateAddress(primaryWallet?.address)}</span></p>
+          {!isAdmin && (
+            <>
+              {isLoadingArtist ? (
+                <p><strong>Artiste associé:</strong> Chargement...</p>
+              ) : associatedArtist ? (
+                <>
+                  <p><strong>Artiste associé:</strong> {associatedArtist.name} {associatedArtist.surname}</p>
+                  {associatedArtist.imageUrl && (
+                    <div className="artist-image-container" style={{ marginTop: '15px' }}>
+                      <Image 
+                        src={associatedArtist.imageUrl} 
+                        alt={`${associatedArtist.name} ${associatedArtist.surname}`}
+                        width={150}
+                        height={150}
+                        style={{ borderRadius: '8px', objectFit: 'cover' }}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p><strong>Artiste associé:</strong> Aucun</p>
+              )}
+            </>
+          )}
         </DashboardCard>
 
         {isAdmin ? (
@@ -129,12 +167,12 @@ export default function Dashboard() {
             </DashboardCard>
             
             <DashboardCard title="Création d'œuvre">
-              <p>Créez et publiez une nouvelle œuvre d'art dans Shopify.</p>
+              <p>Créez et publiez une nouvelle œuvre d'art.</p>
               <button 
                 className="dashboard-button" 
                 onClick={() => router.push('/art/createArtwork')}
               >
-                Créer une œuvre dans Shopify
+                Créer une œuvre
               </button>
             </DashboardCard>
 
