@@ -1,0 +1,193 @@
+// Variables de couleurs
+$color-primary: #4f46e5; // Indigo
+$color-secondary: #f97316; // Orange
+$color-success: #10b981; // Vert émeraude
+$color-warning: #eab308; // Jaune
+$color-dark: #1e293b; // Slate-800
+$color-light: #f8fafc; // Slate-50
+$color-physical: #c084fc; // Violet
+$color-nft: #ec4899; // Rose
+
+.productSpecificCard {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.92rem;
+}
+
+.badgeType {
+  display: inline-block;
+  padding: 0.08rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  background: #ede9fe;
+  color: #6d28d9;
+  box-shadow: 0 1px 4px rgba(109, 40, 217, 0.07);
+  letter-spacing: 0.01em;
+  transition: background 0.2s, color 0.2s;
+}
+
+.badgeTypeNFT {
+  display: inline-block;
+  padding: 0.08rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  background: #fdf2f8;
+  color: #be185d;
+  box-shadow: 0 1px 4px rgba(190, 24, 93, 0.07);
+  letter-spacing: 0.01em;
+  transition: background 0.2s, color 0.2s;
+}
+
+.badgeStatus {
+  display: inline-block;
+  padding: 0.08rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #fff;
+  margin-left: 0.15rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  background: #2563eb;
+  transition: background 0.2s;
+}
+
+.productOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 12px;
+  z-index: 30;
+  border-radius: 8px;
+  overflow: auto;
+  max-height: 100%;
+}
+
+.editButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $color-light;
+  color: $color-dark;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.875rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  text-decoration: none;
+  margin-bottom: 8px;
+  
+  &:hover {
+    background-color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.badgesContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+  overflow-y: auto;
+}
+
+.badgeItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.badgeType, .badgeTypeNFT {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badgeType {
+  color: $color-physical;
+}
+
+.badgeTypeNFT {
+  color: $color-nft;
+}
+
+.badgePrice {
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+.badgeStatusContainer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.badgeStatusLabel {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: $color-dark;
+}
+
+.badgeStatus {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  
+  // État par défaut (si pas de style)
+  background-color: $color-primary;
+}
+
+.listingButton {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  background: $color-secondary;
+  color: white;
+  font-weight: 600;
+  font-size: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  
+  &:hover:not(:disabled) {
+    background: darken($color-secondary, 5%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+} 

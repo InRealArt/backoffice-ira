@@ -271,7 +271,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         </p>
         {isFormReadOnly && (
           <div className={styles.readOnlyWarning}>
-            Au moins un élément est listé, le formulaire est en lecture seule.
+            Au moins un élément est listé, vous ne pouvez pas modifier l'œuvre.
           </div>
         )}
       </div>

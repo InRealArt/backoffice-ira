@@ -72,7 +72,7 @@ function PricingSection({
           Choisissez le type d'œuvre que vous souhaitez créer. Les champs spécifiques apparaîtront en fonction de votre sélection.
           {isFormReadOnly && (
             <span className={styles.readOnlyWarning}>
-              Au moins un des éléments est listé, le formulaire est en lecture seule.
+              Au moins un des éléments est listé, l'oeuvre est non modifiable.
             </span>
           )}
         </p>

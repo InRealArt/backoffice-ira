@@ -12,6 +12,16 @@ export type ItemData = {
     description: string
     metaTitle: string
     metaDescription: string
+    physicalItem?: {
+        id: number
+        status: string
+        price: number
+    } | null
+    nftItem?: {
+        id: number
+        status: string
+        price: number
+    } | null
 }
 
 export type ItemsDataResult = {
@@ -44,7 +54,21 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
                 mainImageUrl: true, // Sélectionner explicitement mainImageUrl
                 description: true,
                 metaTitle: true,
-                metaDescription: true
+                metaDescription: true,
+                physicalItem: {
+                    select: {
+                        id: true,
+                        status: true,
+                        price: true
+                    }
+                },
+                nftItem: {
+                    select: {
+                        id: true,
+                        status: true,
+                        price: true
+                    }
+                }
             },
             orderBy: {
                 id: 'desc'

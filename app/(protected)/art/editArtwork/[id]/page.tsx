@@ -10,6 +10,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { use } from 'react'
 import styles from './editArtwork.module.scss'
 import { normalizeString } from '@/lib/utils'
+import Button from '@/app/components/Button/Button'
 
 export default function EditArtworkPage({ params }: { params: Promise<{ id: string }> }) {
   // Utiliser React.use pour extraire les paramètres de la promesse
@@ -103,6 +104,11 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
   return (
     <>
       <div className={styles.container}>
+        <div className={styles.backButtonWrapper}>
+          <Button variant='secondary' onClick={() => router.push('/art/collection')}>
+            {'← Back to collection'}
+          </Button>
+        </div>
         <h1 className={styles.pageTitle}>Éditer l'œuvre</h1>
 
         {isLoading ? (

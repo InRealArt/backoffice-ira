@@ -93,6 +93,8 @@ export default function CollectionPage() {
                   mainImageUrl={item.mainImageUrl || '/images/no-image.jpg'}
                   userId={userDB?.id}
                   tags={item.tags}
+                  physicalItem={item.physicalItem}
+                  nftItem={item.nftItem}
                 />
               ))}
             </div>

@@ -80,4 +80,12 @@
   @media (max-width: 480px) {
     flex-direction: column;
   }
+}
+
+.backButtonWrapper {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 1rem;
+  position: relative;
+  left: -1rem;
 } 
