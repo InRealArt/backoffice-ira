@@ -78,6 +78,11 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/blog', 'blog')}
           />
+          <SideMenuItem
+            label="Catégories d'articles de blog"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/blog-categories', 'blog-categories')}
+          />
         </ul>
       )}
 
@@ -132,6 +137,11 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             label="Articles de blog"
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/blog', 'blog')}
+          />
+          <SideMenuItem
+            label="Catégories d'articles"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/blog-categories', 'blog-categories')}
           />
         </ul>
       )}

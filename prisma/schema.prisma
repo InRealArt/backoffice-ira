@@ -773,50 +773,75 @@ model PresaleArtwork {
   @@schema("landing")
 }
 
-model BlogPost {
-  id Int @id @default(autoincrement())
+model SeoCategory {
+  id               Int       @id @default(autoincrement())
+  name             String    @unique
+  url              String?
+  color            String?
+  shortDescription String?
+  longDescription  String?
+  textCTA          String?
+  linkCTA          String?
+  posts            SeoPost[]
 
-  slug            String   @unique
-  title           String
-  metaDescription String
-  metaKeywords    String[] // Tableau de mots-clés
-  canonicalUrl    String?
+  @@schema("landing")
+}
 
-  // Auteur (relation ou embedded)
-  author String
+model SeoPost {
+  id                   Int          @id @default(autoincrement())
+  title                String
+  mainImageUrl         String?
+  mainImageAlt         String?
+  mainImageCaption     String?
+  metaDescription      String
+  metaKeywords         String[]
+  content              String
+  slug                 String       @unique
+  excerpt              String?
+  status               PostStatus   @default(DRAFT)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  author               String
+  authorLink           String?
+  viewsCount           Int          @default(0)
+  estimatedReadTime    Int?
+  generatedHtml        String?
+  generatedArticleHtml String?
+  jsonLd               String?
+  pinned               Boolean      @default(false)
+  category             SeoCategory  @relation(fields: [categoryId], references: [id])
+  categoryId           Int
+  tags                 SeoPostTag[]
 
-  // Dates
-  datePublished DateTime
-  dateModified  DateTime @updatedAt
+  @@schema("landing")
+}
 
-  // Images
-  featuredImageUrl    String
-  featuredImageAlt    String
-  featuredImageWidth  Int
-  featuredImageHeight Int
+model SeoTag {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  slug        String       @unique
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  posts       SeoPostTag[]
 
-  // Contenu
-  introduction String @db.Text
-  content      String @db.Text
+  @@schema("landing")
+}
 
-  // SEO et catégorisation
-  tags              String[]
-  estimatedReadTime Int?
+model SeoPostTag {
+  post      SeoPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+  tag       SeoTag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     Int
+  createdAt DateTime @default(now())
 
-  // Statut
-  isPublished Boolean @default(false)
-  isFeatured  Boolean @default(false)
+  @@id([postId, tagId])
+  @@schema("landing")
+}
 
-  // Relations
-  relatedArticles String[]
-
-  // SEO avancé
-  structuredData String? @db.Text
-  openGraphData  Json?
-  twitterData    Json?
-
-  viewsCount Int      @default(0)
-  createdAt  DateTime @default(now())
+enum PostStatus {
+  DRAFT
+  PUBLISHED
 
   @@schema("landing")
 }

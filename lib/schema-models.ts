@@ -64,8 +64,16 @@ export async function getSchemaModels() {
                 { name: 'description', type: 'String' },
                 { name: 'artworkStyle', type: 'String' },
             ]
+        },
+        {
+            name: 'SeoCategory',
+            fields: [
+                { name: 'name', type: 'String' },
+                { name: 'shortDescription', type: 'String' },
+                { name: 'longDescription', type: 'String' },
+                { name: 'textCTA', type: 'String' }
+            ]
         }
-        // Ajoutez d'autres modèles du schéma 'landing' si nécessaire
     ]
 
     return landingModels
