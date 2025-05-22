@@ -10,6 +10,10 @@ import { Accordion, AccordionItem } from '@/app/components/Accordion'
 import SelectField from '@/app/components/Forms/SelectField'
 import InputField from '@/app/components/Forms/InputField'
 import TextareaField from '@/app/components/Forms/TextareaField'
+import TagInput from '@/app/components/Forms/TagInput'
+import DatePickerField from '@/app/components/Forms/DatePickerField'
+import BlogContentEditor from '@/app/components/BlogEditor/BlogContentEditor'
+import { BlogContent } from '@/app/components/BlogEditor/types'
 import { createSeoPost, updateSeoPost } from '@/lib/actions/seo-post-actions'
 import { generateSlug } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
@@ -22,6 +26,7 @@ const formSchema = z.object({
   metaKeywords: z.string().optional(),
   slug: z.string().min(1, 'Le slug est requis'),
   content: z.string().min(1, 'Le contenu est requis'),
+  blogContent: z.any().optional(), // Contenu structuré du blog
   excerpt: z.string().optional(),
   author: z.string().min(1, 'L\'auteur est requis'),
   authorLink: z.string().optional(),
@@ -31,6 +36,7 @@ const formSchema = z.object({
   mainImageUrl: z.string().optional(),
   mainImageAlt: z.string().optional(),
   mainImageCaption: z.string().optional(),
+  creationDate: z.date().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -44,7 +50,11 @@ interface SeoPostFormProps {
 // Définition des sections d'accordéon pour la gestion des erreurs
 enum AccordionSections {
   CATEGORY = 'category',
-  METADATA = 'metadata'
+  METADATA = 'metadata',
+  TAGS = 'tags',
+  HEADER = 'header',
+  MAIN_IMAGE = 'main_image',
+  CONTENT = 'content'
 }
 
 // Mappage des champs de formulaire aux sections d'accordéon
@@ -52,7 +62,15 @@ const fieldToAccordionMap: Record<string, AccordionSections> = {
   categoryId: AccordionSections.CATEGORY,
   title: AccordionSections.METADATA,
   slug: AccordionSections.METADATA,
-  excerpt: AccordionSections.METADATA
+  excerpt: AccordionSections.MAIN_IMAGE,
+  metaKeywords: AccordionSections.TAGS,
+  author: AccordionSections.HEADER,
+  authorLink: AccordionSections.HEADER,
+  creationDate: AccordionSections.HEADER,
+  mainImageUrl: AccordionSections.MAIN_IMAGE,
+  mainImageAlt: AccordionSections.MAIN_IMAGE,
+  mainImageCaption: AccordionSections.MAIN_IMAGE,
+  content: AccordionSections.CONTENT
 }
 
 export default function SeoPostForm({ 
@@ -63,10 +81,32 @@ export default function SeoPostForm({
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [generatedSlug, setGeneratedSlug] = useState('')
+  const [tags, setTags] = useState<string[]>(seoPost?.metaKeywords || [])
+  const [blogContent, setBlogContent] = useState<BlogContent>([])
   
   // État pour suivre quels accordéons sont ouverts
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [metadataOpen, setMetadataOpen] = useState(true)
+  const [tagsOpen, setTagsOpen] = useState(false)
+  const [headerOpen, setHeaderOpen] = useState(false)
+  const [mainImageOpen, setMainImageOpen] = useState(false)
+  const [contentOpen, setContentOpen] = useState(false)
+
+  // Parsing du contenu existant s'il y en a
+  useEffect(() => {
+    if (seoPost?.content) {
+      try {
+        // Essayez de parser le contenu JSON s'il existe
+        const parsedContent = JSON.parse(seoPost.content)
+        if (Array.isArray(parsedContent)) {
+          setBlogContent(parsedContent)
+        }
+      } catch (error) {
+        // En cas d'erreur, le contenu n'est probablement pas au format JSON attendu
+        console.log('Le contenu existant n\'est pas au format JSON attendu')
+      }
+    }
+  }, [seoPost])
 
   const defaultValues: Partial<FormValues> = {
     title: seoPost?.title || '',
@@ -84,6 +124,7 @@ export default function SeoPostForm({
     mainImageUrl: seoPost?.mainImageUrl || '',
     mainImageAlt: seoPost?.mainImageAlt || '',
     mainImageCaption: seoPost?.mainImageCaption || '',
+    creationDate: seoPost?.createdAt || new Date(),
   }
 
   const {
@@ -111,11 +152,20 @@ export default function SeoPostForm({
     }
   }, [watchedValues.title, setValue])
   
+  // Mettre à jour le champ metaKeywords lorsque les tags changent
+  useEffect(() => {
+    setValue('metaKeywords', tags.join(', '))
+  }, [tags, setValue])
+  
   // Effet pour ouvrir automatiquement les accordéons contenant des erreurs
   useEffect(() => {
     if (isSubmitted && Object.keys(errors).length > 0) {
       let hasCategoryErrors = false
       let hasMetadataErrors = false
+      let hasTagsErrors = false
+      let hasHeaderErrors = false
+      let hasMainImageErrors = false
+      let hasContentErrors = false
       
       // Vérifier quelles sections ont des erreurs
       Object.keys(errors).forEach(fieldName => {
@@ -124,6 +174,14 @@ export default function SeoPostForm({
           hasCategoryErrors = true
         } else if (section === AccordionSections.METADATA) {
           hasMetadataErrors = true
+        } else if (section === AccordionSections.TAGS) {
+          hasTagsErrors = true
+        } else if (section === AccordionSections.HEADER) {
+          hasHeaderErrors = true
+        } else if (section === AccordionSections.MAIN_IMAGE) {
+          hasMainImageErrors = true
+        } else if (section === AccordionSections.CONTENT) {
+          hasContentErrors = true
         }
       })
       
@@ -135,8 +193,31 @@ export default function SeoPostForm({
       if (hasMetadataErrors) {
         setMetadataOpen(true)
       }
+      
+      if (hasTagsErrors) {
+        setTagsOpen(true)
+      }
+      
+      if (hasHeaderErrors) {
+        setHeaderOpen(true)
+      }
+      
+      if (hasMainImageErrors) {
+        setMainImageOpen(true)
+      }
+      
+      if (hasContentErrors) {
+        setContentOpen(true)
+      }
     }
   }, [errors, isSubmitted])
+
+  // Gérer les changements dans l'éditeur de contenu
+  const handleBlogContentChange = (newContent: BlogContent) => {
+    setBlogContent(newContent)
+    // Convertir en JSON et mettre à jour le champ content du formulaire
+    setValue('content', JSON.stringify(newContent))
+  }
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
@@ -147,7 +228,7 @@ export default function SeoPostForm({
         ...data,
         categoryId: parseInt(data.categoryId),
         estimatedReadTime: data.estimatedReadTime ? parseInt(data.estimatedReadTime) : null,
-        metaKeywords: data.metaKeywords ? data.metaKeywords.split(',').map(k => k.trim()) : [],
+        metaKeywords: tags, // Utiliser directement le tableau de tags
       }
       
       let result
@@ -190,7 +271,7 @@ export default function SeoPostForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="form-container">
-      <Accordion>
+      <Accordion spaced={true}>
         <AccordionItem 
           title="Catégorie" 
           isOpen={categoryOpen}
@@ -238,19 +319,129 @@ export default function SeoPostForm({
             className="bg-gray-100"
             showErrorsOnlyAfterSubmit={false}
           />
-          
-          <TextareaField
-            id="excerpt"
-            name="excerpt"
-            label="Extrait"
+        </AccordionItem>
+        
+        <AccordionItem
+          title="Tags"
+          isOpen={tagsOpen}
+          onOpenChange={setTagsOpen}
+        >
+          <TagInput 
+            tags={tags} 
+            onChange={setTags}
+            placeholder="Ajouter un tag et appuyer sur Entrée"
+            maxTags={10}
+            label="Tags de l'article"
+            error={errors.metaKeywords?.message}
+            width="100%"
+          />
+          <input 
+            type="hidden" 
+            {...register('metaKeywords')} 
+          />
+        </AccordionItem>
+        
+        <AccordionItem
+          title="Article Header"
+          isOpen={headerOpen}
+          onOpenChange={setHeaderOpen}
+        >
+          <InputField
+            id="author"
+            name="author"
+            label="Auteur de l'article"
             register={register}
-            error={errors.excerpt?.message}
-            placeholder="Un court résumé de l'article"
-            rows={3}
+            error={errors.author?.message}
+            required={true}
+            placeholder="Nom de l'auteur"
+            showErrorsOnlyAfterSubmit={false}
+          />
+          
+          <InputField
+            id="authorLink"
+            name="authorLink"
+            label="Lien vers le profil de l'auteur"
+            register={register}
+            error={errors.authorLink?.message}
+            placeholder="https://exemple.com/profil-auteur"
+            showErrorsOnlyAfterSubmit={false}
+          />
+          
+          <DatePickerField
+            id="creationDate"
+            name="creationDate"
+            label="Date de création"
+            value={watch('creationDate')}
+            onChange={(date) => setValue('creationDate', date)}
+            error={errors.creationDate?.message}
             showErrorsOnlyAfterSubmit={false}
           />
         </AccordionItem>
         
+        <AccordionItem
+          title="Main image and introduction"
+          isOpen={mainImageOpen}
+          onOpenChange={setMainImageOpen}
+        >
+          <TextareaField
+            id="excerpt"
+            name="excerpt"
+            label="Introduction de l'article"
+            register={register}
+            error={errors.excerpt?.message}
+            placeholder="Un court résumé ou introduction de l'article"
+            rows={3}
+            showErrorsOnlyAfterSubmit={false}
+          />
+          
+          <InputField
+            id="mainImageUrl"
+            name="mainImageUrl"
+            label="URL de l'image principale"
+            register={register}
+            error={errors.mainImageUrl?.message}
+            placeholder="https://exemple.com/image.jpg"
+            showErrorsOnlyAfterSubmit={false}
+          />
+          
+          <InputField
+            id="mainImageAlt"
+            name="mainImageAlt"
+            label="Texte alternatif de l'image"
+            register={register}
+            error={errors.mainImageAlt?.message}
+            placeholder="Description de l'image pour l'accessibilité"
+            showErrorsOnlyAfterSubmit={false}
+          />
+          
+          <InputField
+            id="mainImageCaption"
+            name="mainImageCaption"
+            label="Légende de l'image"
+            register={register}
+            error={errors.mainImageCaption?.message}
+            placeholder="Légende affichée sous l'image"
+            showErrorsOnlyAfterSubmit={false}
+          />
+        </AccordionItem>
+        
+        <AccordionItem
+          title="Contenu principal"
+          isOpen={contentOpen}
+          onOpenChange={setContentOpen}
+        >
+          <BlogContentEditor 
+            initialContent={blogContent}
+            onChange={handleBlogContentChange}
+          />
+          <input 
+            type="hidden" 
+            {...register('content')} 
+          />
+          {errors.content && (
+            <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
+          )}
+        </AccordionItem>
       </Accordion>
       
       <div className="form-actions">

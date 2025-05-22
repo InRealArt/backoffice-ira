@@ -82,11 +82,18 @@ export function AccordionItem({
 export interface AccordionProps {
   children: ReactNode
   className?: string
+  spaced?: boolean
 }
 
-export default function Accordion({ children, className = '' }: AccordionProps) {
+export default function Accordion({ children, className = '', spaced = false }: AccordionProps) {
+  const accordionClasses = [
+    styles.accordion,
+    spaced ? styles.spacedAccordion : '',
+    className
+  ].filter(Boolean).join(' ')
+  
   return (
-    <div className={`${styles.accordion} ${className}`}>
+    <div className={accordionClasses}>
       {children}
     </div>
   )
