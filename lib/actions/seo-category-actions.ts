@@ -11,19 +11,21 @@ export async function getAllSeoCategories() {
     try {
         const categories = await prisma.seoCategory.findMany({
             orderBy: {
-                name: 'asc'
-            },
-            include: {
-                _count: {
-                    select: { posts: true }
-                }
+              name: 'asc'
             }
-        }) || []
+          })
+        || []
 
-        return Array.isArray(categories) ? categories : []
+        return { 
+            success: true, 
+            categories 
+          }
     } catch (error) {
-        console.error('Erreur lors de la récupération des catégories SEO:', error)
-        return []
+        console.error('Failed to fetch categories:', error)
+        return { 
+        success: false, 
+        error: 'Failed to fetch categories' 
+        }
     }
 }
 

@@ -7,6 +7,8 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { createSeoCategory, updateSeoCategory } from '@/lib/actions/seo-category-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import TranslationField from '@/app/components/TranslationField'
+import InputField from '@/app/components/Forms/InputField'
+import TextareaField from '@/app/components/Forms/TextareaField'
 
 interface SeoCategoryFormProps {
   category?: {
@@ -147,32 +149,30 @@ export default function SeoCategoryForm({ category, isEditing = false }: SeoCate
             entityId={isEditing && category ? category.id : null}
             field="name"
             label="Nom"
-            errorMessage={!formData.name.trim() ? 'Le nom est obligatoire' : undefined}
+            required={true}
           >
-            <input
-              type="text"
+            <InputField
               id="name"
               name="name"
+              label=""
+              type="text"
               value={formData.name}
               onChange={handleChange}
-              className="form-input"
-              required
+              required={false}
               placeholder="Nom de la catégorie"
+              error={!formData.name.trim() ? 'Le nom est obligatoire' : undefined}
             />
           </TranslationField>
           
-          <div className="form-group">
-            <label htmlFor="url" className="form-label">URL</label>
-            <input
-              type="text"
-              id="url"
-              name="url"
-              value={formData.url}
-              onChange={handleChange}
-              className="form-input"
-              placeholder="URL de la catégorie (optionnel)"
-            />
-          </div>
+          <InputField
+            id="url"
+            name="url"
+            label="URL"
+            type="text"
+            value={formData.url}
+            onChange={handleChange}
+            placeholder="URL de la catégorie (optionnel)"
+          />
           
           <div className="form-group">
             <label htmlFor="color" className="form-label">Couleur</label>
@@ -185,14 +185,15 @@ export default function SeoCategoryForm({ category, isEditing = false }: SeoCate
                 onChange={handleChange}
                 className="form-color-input"
               />
-              <input
-                type="text"
+              <InputField
+                id="colorText"
                 name="color"
+                label=""
+                type="text"
                 value={formData.color}
                 onChange={handleChange}
-                className="form-input"
                 placeholder="#000000"
-                style={{ flexGrow: 1 }}
+                className="flex-grow-1"
               />
             </div>
           </div>
@@ -203,12 +204,12 @@ export default function SeoCategoryForm({ category, isEditing = false }: SeoCate
             field="shortDescription"
             label="Description courte"
           >
-            <textarea
+            <TextareaField
               id="shortDescription"
               name="shortDescription"
+              label=""
               value={formData.shortDescription}
               onChange={handleChange}
-              className="form-textarea"
               rows={2}
               placeholder="Description courte de la catégorie (optionnel)"
             />
@@ -220,12 +221,12 @@ export default function SeoCategoryForm({ category, isEditing = false }: SeoCate
             field="longDescription"
             label="Description longue"
           >
-            <textarea
+            <TextareaField
               id="longDescription"
               name="longDescription"
+              label=""
               value={formData.longDescription}
               onChange={handleChange}
-              className="form-textarea"
               rows={4}
               placeholder="Description détaillée de la catégorie (optionnel)"
             />
@@ -237,29 +238,26 @@ export default function SeoCategoryForm({ category, isEditing = false }: SeoCate
             field="textCTA"
             label="Texte du CTA"
           >
-            <input
-              type="text"
+            <InputField
               id="textCTA"
               name="textCTA"
+              label=""
+              type="text"
               value={formData.textCTA}
               onChange={handleChange}
-              className="form-input"
               placeholder="Texte du bouton d'appel à l'action (optionnel)"
             />
           </TranslationField>
           
-          <div className="form-group">
-            <label htmlFor="linkCTA" className="form-label">Lien du CTA</label>
-            <input
-              type="text"
-              id="linkCTA"
-              name="linkCTA"
-              value={formData.linkCTA}
-              onChange={handleChange}
-              className="form-input"
-              placeholder="URL de redirection du bouton CTA (optionnel)"
-            />
-          </div>
+          <InputField
+            id="linkCTA"
+            name="linkCTA"
+            label="Lien du CTA"
+            type="text"
+            value={formData.linkCTA}
+            onChange={handleChange}
+            placeholder="URL de redirection du bouton CTA (optionnel)"
+          />
           
           <div className="form-actions">
             <button 

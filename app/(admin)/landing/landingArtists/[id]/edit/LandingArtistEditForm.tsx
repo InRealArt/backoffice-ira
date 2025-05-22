@@ -145,7 +145,7 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
   
   useEffect(() => {
     // Générer le slug à partir des informations de l'artiste
-    const generatedSlug = generateSlug(landingArtist.artist.name, landingArtist.artist.surname)
+    const generatedSlug = generateSlug(landingArtist.artist.name + ' ' + landingArtist.artist.surname)
     setSlug(generatedSlug)
     setValue('slug', generatedSlug)
   }, [landingArtist.artist.name, landingArtist.artist.surname, setValue])

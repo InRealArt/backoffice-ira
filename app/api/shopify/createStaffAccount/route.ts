@@ -106,11 +106,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
-    // Mettre à jour la notification comme complétée
-    await prisma.notification.update({
-      where: { id: Number(notificationId) },
-      data: { complete: true }
-    });
 
     return NextResponse.json({
       success: true,

@@ -8,6 +8,9 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { updateTranslation } from '@/lib/actions/translation-actions'
+import SelectField from '@/app/components/Forms/SelectField'
+import InputField from '@/app/components/Forms/InputField'
+import TextareaField from '@/app/components/Forms/TextareaField'
 
 interface Field {
   name: string
@@ -153,93 +156,61 @@ export default function TranslationEditForm({ translation, languages, models }: 
       <form onSubmit={handleSubmit(onSubmit)} className="form-container">
         <div className="form-card">
           <div className="card-content">
-            <div className="form-group">
-              <label htmlFor="entityType" className="form-label">Type d'entité</label>
-              <select
-                id="entityType"
-                {...register('entityType')}
-                className={`form-select ${errors.entityType ? 'input-error' : ''}`}
-              >
-                <option value="">Sélectionnez un type d'entité</option>
-                {models.map((model) => (
-                  <option key={model.name} value={model.name}>
-                    {model.name}
-                  </option>
-                ))}
-              </select>
-              {errors.entityType && (
-                <p className="form-error">{errors.entityType.message}</p>
-              )}
-            </div>
+            <SelectField 
+              id="entityType"
+              name="entityType"
+              label="Type d'entité"
+              value={watch('entityType')}
+              onChange={(e) => setValue('entityType', e.target.value, { shouldValidate: true })}
+              options={models.map(model => ({ value: model.name, label: model.name }))}
+              error={errors.entityType?.message}
+              placeholder="Sélectionnez un type d'entité"
+            />
 
-            <div className="form-group">
-              <label htmlFor="entityId" className="form-label">ID de l'entité</label>
-              <input
-                id="entityId"
-                type="number"
-                min="1"
-                {...register('entityId')}
-                className={`form-input ${errors.entityId ? 'input-error' : ''}`}
-              />
-              {errors.entityId && (
-                <p className="form-error">{errors.entityId.message}</p>
-              )}
-            </div>
+            <InputField
+              id="entityId"
+              name="entityId"
+              label="ID de l'entité"
+              type="number"
+              min="1"
+              register={register}
+              error={errors.entityId?.message}
+            />
 
-            <div className="form-group">
-              <label htmlFor="field" className="form-label">Champ</label>
-              <select
-                id="field"
-                className={`form-select ${errors.field ? 'input-error' : ''}`}
-                disabled={availableFields.length === 0}
-                value={watch('field')}
-                onChange={(e) => {
-                  setValue('field', e.target.value, { shouldValidate: true })
-                }}
-              >
-                <option value="">Sélectionnez un champ</option>
-                {availableFields.map((field) => (
-                  <option key={field.name} value={field.name}>
-                    {field.name}
-                  </option>
-                ))}
-              </select>
-              {errors.field && (
-                <p className="form-error">{errors.field.message}</p>
-              )}
-            </div>
+            <SelectField 
+              id="field"
+              name="field"
+              label="Champ"
+              value={watch('field')}
+              onChange={(e) => setValue('field', e.target.value, { shouldValidate: true })}
+              options={availableFields.map(field => ({ value: field.name, label: field.name }))}
+              error={errors.field?.message}
+              disabled={availableFields.length === 0}
+              placeholder="Sélectionnez un champ"
+            />
 
-            <div className="form-group">
-              <label htmlFor="languageId" className="form-label">Langue</label>
-              <select
-                id="languageId"
-                {...register('languageId')}
-                className={`form-select ${errors.languageId ? 'input-error' : ''}`}
-              >
-                <option value="">Sélectionnez une langue</option>
-                {languages.map((language) => (
-                  <option key={language.id} value={language.id}>
-                    {language.name} ({language.code})
-                  </option>
-                ))}
-              </select>
-              {errors.languageId && (
-                <p className="form-error">{errors.languageId.message}</p>
-              )}
-            </div>
+            <SelectField 
+              id="languageId"
+              name="languageId"
+              label="Langue"
+              value={watch('languageId')}
+              onChange={(e) => setValue('languageId', Number(e.target.value), { shouldValidate: true })}
+              options={languages.map(language => ({ 
+                value: language.id, 
+                label: `${language.name} (${language.code})` 
+              }))}
+              error={errors.languageId?.message}
+              placeholder="Sélectionnez une langue"
+            />
 
-            <div className="form-group">
-              <label htmlFor="value" className="form-label">Valeur traduite</label>
-              <textarea
-                id="value"
-                {...register('value')}
-                className={`form-textarea ${errors.value ? 'input-error' : ''}`}
-                rows={4}
-              ></textarea>
-              {errors.value && (
-                <p className="form-error">{errors.value.message}</p>
-              )}
-            </div>
+            <TextareaField
+              id="value"
+              name="value"
+              label="Valeur traduite"
+              register={register}
+              error={errors.value?.message}
+              rows={4}
+            />
           </div>
         </div>
         

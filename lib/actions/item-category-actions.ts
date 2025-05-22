@@ -85,7 +85,7 @@ export async function deleteItemCategory(
     try {
         // Vérifier si la catégorie est utilisée par des items
         const itemsUsingCategory = await prisma.item.count({
-            where: { categoryId: id }
+            where: { itemCategoryId: id }
         })
 
         if (itemsUsingCategory > 0) {

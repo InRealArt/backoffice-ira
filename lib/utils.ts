@@ -1,3 +1,7 @@
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+
 /**
  * Formate une date en format français
  * @param dateString - La date à formater (peut être un string, Date ou timestamp)
@@ -28,11 +32,14 @@ export function normalizeString(str: string): string {
 /**
  * Génère un slug à partir du prénom et du nom
  * @param name - Le prénom
- * @param surname - Le nom de famille
  * @returns Le slug généré (prénom-nom sans accents et en minuscules)
  */
-export function generateSlug(name: string, surname: string): string {
-    return `${normalizeString(name)}-${normalizeString(surname)}`
+export function generateSlug(name: string): string {
+    return name
+        .toLowerCase()
+        .replace(/[^\w\s]/gi, '')
+        .replace(/\s+/g, '-')
+
 }
 
 /**

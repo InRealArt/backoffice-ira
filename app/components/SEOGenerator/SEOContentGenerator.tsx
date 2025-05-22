@@ -8,8 +8,7 @@ import {
   Bold, Italic, Link, AlignLeft, BarChart2
 } from 'lucide-react'
 
-// Import du SEOScoreIndicator du formulaire principal
-import BlogPostForm from '@/app/(admin)/landing/blog/BlogPostForm'
+
 
 // Types pour le contenu de l'article
 export interface ArticleContent {

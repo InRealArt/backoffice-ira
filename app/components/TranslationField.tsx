@@ -12,6 +12,7 @@ interface TranslationFieldProps {
   children: React.ReactNode
   className?: string
   errorMessage?: string
+  required?: boolean
 }
 
 export default function TranslationField({
@@ -22,12 +23,14 @@ export default function TranslationField({
   languageCode = 'en',
   children,
   className = '',
-  errorMessage
+  errorMessage,
+  required = false
 }: TranslationFieldProps) {
   return (
     <div className={`form-group ${className}`}>
-      <label htmlFor={field} className="form-label">
+      <label htmlFor={field} className="form-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
         {label}
+        {required && <span className="text-red-500">*</span>}
         {entityId && (
           <TranslationIcon 
             entityType={entityType} 

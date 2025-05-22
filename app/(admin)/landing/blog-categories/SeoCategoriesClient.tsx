@@ -17,7 +17,7 @@ interface CategoryProps {
 }
 
 interface SeoCategoriesClientProps {
-  categories: CategoryProps[]
+  categories: CategoryProps[] | undefined
 }
 
 export default function SeoCategoriesClient({ categories }: SeoCategoriesClientProps) {
@@ -89,7 +89,7 @@ export default function SeoCategoriesClient({ categories }: SeoCategoriesClientP
       </div>
       
       <div className="page-content">
-        {categories.length === 0 ? (
+        {categories && categories.length === 0 ? (
           <div className="empty-state">
             <p>Aucune catégorie trouvée</p>
             <button 
@@ -112,7 +112,7 @@ export default function SeoCategoriesClient({ categories }: SeoCategoriesClientP
                 </tr>
               </thead>
               <tbody>
-                {categories.map((category) => {
+                {categories && categories.map((category) => {
                   const isLoading = loadingCategoryId === category.id
                   const isDeleting = deletingCategoryId === category.id
                   const isDisabled = loadingCategoryId !== null || deletingCategoryId !== null

@@ -14,6 +14,7 @@ type SerializedInvoiceItem = Omit<InvoiceItem, 'unitPrice' | 'vatRate' | 'vatAmo
   vatRate: string
   vatAmount: string
   totalPrice: string
+  isNft?: boolean
 }
 
 type SerializedInvoice = Omit<Invoice, 'subtotalPrice' | 'vatAmount' | 'totalPrice' | 'vatRate'> & {

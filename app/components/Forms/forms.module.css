@@ -1,0 +1,38 @@
+/* Styles pour les labels et l'astérisque des champs obligatoires */
+.form-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.label-text {
+  display: inline-block;
+}
+
+.required-mark {
+  display: inline-block;
+  line-height: 1;
+}
+
+/* Animation de surbrillance pour les champs avec erreur */
+@keyframes highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(244, 63, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+  }
+}
+
+.highlight-error {
+  animation: highlight-pulse 1.5s ease-out;
+}
+
+/* Assurez-vous que les éléments avec une erreur ont une transition douce */
+.input-error {
+  border-color: #f43f5e !important;
+  transition: border-color 0.3s ease;
+} 

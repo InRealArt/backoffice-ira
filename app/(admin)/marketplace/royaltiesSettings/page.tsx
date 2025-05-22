@@ -19,18 +19,23 @@ export default async function RoyaltiesSettingsPage() {
     }) || []
 
     // Récupération des items avec statut MINED et leurs relations
-    const minedItems = await prisma.item.findMany({
+    const minedItems = await prisma.nftItem.findMany({
       where: {
         nftResource: {
           status: 'MINED'
         }
       },
       include: {
-        user: {
-          select: {
-            email: true,
-            firstName: true,
-            lastName: true,
+        item: {
+          include: {
+            user: {
+              select: {
+                email: true,
+                firstName: true,
+                lastName: true,
+              }
+            },
+            physicalItem: true
           }
         },
         nftResource: {
@@ -64,11 +69,18 @@ export default async function RoyaltiesSettingsPage() {
     // Conversion des objets Decimal en nombres standard
     const serializedItems = minedItems.map(item => ({
       ...item,
-      height: item.height ? Number(item.height) : null,
-      width: item.width ? Number(item.width) : null,
-      priceNftBeforeTax: item.priceNftBeforeTax ? Number(item.priceNftBeforeTax) : null,
-      pricePhysicalBeforeTax: item.pricePhysicalBeforeTax ? Number(item.pricePhysicalBeforeTax) : null,
-      priceNftPlusPhysicalBeforeTax: item.priceNftPlusPhysicalBeforeTax ? Number(item.priceNftPlusPhysicalBeforeTax) : null,
+      item: {
+        ...item.item,
+        physicalItem: item.item.physicalItem ? {
+          ...item.item.physicalItem,
+          height: item.item.physicalItem.height ? Number(item.item.physicalItem.height) : null,
+          width: item.item.physicalItem.width ? Number(item.item.physicalItem.width) : null,
+        } : null,
+      },
+      // Ces propriétés sont à ajuster selon vos besoins
+      priceNftBeforeTax: null,
+      pricePhysicalBeforeTax: null,
+      priceNftPlusPhysicalBeforeTax: null,
     }))
 
     return <RoyaltiesSettingsClient minedItems={serializedItems as any} smartContracts={smartContracts} />

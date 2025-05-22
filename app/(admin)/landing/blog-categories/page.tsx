@@ -7,7 +7,7 @@ export const metadata = {
 }
 
 export default async function SeoCategoriesPage() {
-  const categories = await getAllSeoCategories()
+  const categoriesResponse = await getAllSeoCategories()
   
-  return <SeoCategoriesClient categories={categories} />
+  return <SeoCategoriesClient categories={categoriesResponse.categories} />
 } 

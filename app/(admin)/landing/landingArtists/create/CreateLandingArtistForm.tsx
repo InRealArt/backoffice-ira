@@ -45,21 +45,6 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-// Fonction pour normaliser une chaîne (supprimer accents et mettre en minuscules)
-// const normalizeString = (str: string) => {
-//   return str
-//     .normalize('NFD')
-//     .replace(/[\u0300-\u036f]/g, '')
-//     .toLowerCase()
-//     .replace(/[^a-z0-9]+/g, '-')
-//     .replace(/^-|-$/g, '')
-// }
-
-// Fonction pour générer un slug à partir du prénom et nom
-// const generateSlug = (name: string, surname: string) => {
-//   return `${normalizeString(name)}-${normalizeString(surname)}`
-// }
-
 interface Artist {
   id: number
   name: string
@@ -122,7 +107,7 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
     
     // Générer et mettre à jour le slug
     if (artist) {
-      const generatedSlug = generateSlug(artist.name, artist.surname)
+      const generatedSlug = generateSlug(artist.name + ' ' + artist.surname)
       setSlug(generatedSlug)
       setValue('slug', generatedSlug)
     } else {

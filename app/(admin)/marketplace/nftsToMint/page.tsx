@@ -15,7 +15,7 @@ export const metadata = {
 export default async function NftsToMintPage() {
   try {
     // Récupération des items avec les relations user et nftResource
-    const productsRaw = await prisma.item.findMany({
+    const productsRaw = await prisma.nftItem.findMany({
       where: {
         OR: [
           {
@@ -36,11 +36,15 @@ export default async function NftsToMintPage() {
         id: 'desc',
       },
       include: {
-        user: {
-          select: {
-            email: true,
-            firstName: true,
-            lastName: true,
+        item: {
+          include: {
+            user: {
+              select: {
+                email: true,
+                firstName: true,
+                lastName: true,
+              }
+            }
           }
         },
         nftResource: {

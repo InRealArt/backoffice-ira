@@ -19,18 +19,23 @@ export default async function MarketplaceListingPage() {
     }) || []
 
     // Récupération des items avec statut ROYALTYSET et leurs relations
-    const royaltysetItems = await prisma.item.findMany({
+    const royaltysetItems = await prisma.nftItem.findMany({
       where: {
         nftResource: {
           status: 'ROYALTYSET'
         }
       },
       include: {
-        user: {
-          select: {
-            email: true,
-            firstName: true,
-            lastName: true,
+        item: {
+          include: {
+            user: {
+              select: {
+                email: true,
+                firstName: true,
+                lastName: true,
+              }
+            },
+            physicalItem: true
           }
         },
         nftResource: {
@@ -64,11 +69,17 @@ export default async function MarketplaceListingPage() {
     // Conversion des objets Decimal en nombres standard
     const serializedItems = royaltysetItems.map(item => ({
       ...item,
-      height: item.height ? Number(item.height) : null,
-      width: item.width ? Number(item.width) : null,
-      priceNftBeforeTax: item.priceNftBeforeTax ? Number(item.priceNftBeforeTax) : null,
-      pricePhysicalBeforeTax: item.pricePhysicalBeforeTax ? Number(item.pricePhysicalBeforeTax) : null,
-      priceNftPlusPhysicalBeforeTax: item.priceNftPlusPhysicalBeforeTax ? Number(item.priceNftPlusPhysicalBeforeTax) : null,
+      item: {
+        ...item.item,
+        physicalItem: item.item.physicalItem ? {
+          ...item.item.physicalItem,
+          height: item.item.physicalItem.height ? Number(item.item.physicalItem.height) : null,
+          width: item.item.physicalItem.width ? Number(item.item.physicalItem.width) : null,
+        } : null,
+      },
+      priceNftBeforeTax: null, // Ces propriétés seront à définir autrement
+      pricePhysicalBeforeTax: null, // ou à supprimer si non nécessaires
+      priceNftPlusPhysicalBeforeTax: null,
     }))
 
     return <MarketplaceListingClient royaltysetItems={serializedItems as any} smartContracts={smartContracts} />
