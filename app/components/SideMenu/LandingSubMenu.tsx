@@ -76,7 +76,7 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
           <SideMenuItem
             label="Articles de blog"
             isSubmenuItem={true}
-            onClick={() => onNavigate('/landing/blog', 'blog')}
+            onClick={() => onNavigate('/landing/seo-posts', 'seo-posts')}
           />
           <SideMenuItem
             label="Catégories d'articles de blog"
