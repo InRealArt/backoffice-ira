@@ -74,14 +74,14 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             onClick={() => onNavigate('/landing/presaleArtworks', 'presaleArtworks')}
           />
           <SideMenuItem
-            label="Articles de blog"
-            isSubmenuItem={true}
-            onClick={() => onNavigate('/landing/seo-posts', 'seo-posts')}
-          />
-          <SideMenuItem
             label="Catégories d'articles de blog"
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/blog-categories', 'blog-categories')}
+          />
+          <SideMenuItem
+            label="Articles de blog"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/seo-posts', 'seo-posts')}
           />
         </ul>
       )}

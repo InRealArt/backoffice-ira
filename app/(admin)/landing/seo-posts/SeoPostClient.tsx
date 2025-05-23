@@ -139,10 +139,11 @@ export default function SeoPostClient({ seoPosts }: SeoPostClientProps) {
       key: 'status',
       header: 'Statut',
       render: (post) => (
-        <Badge 
-          variant={post.status === PostStatus.PUBLISHED ? 'success' : 'warning'}
-          text={post.status === PostStatus.PUBLISHED ? 'Publié' : 'Brouillon'}
-        />
+        <span 
+          className={`status-badge ${post.status === PostStatus.PUBLISHED ? 'status-success' : 'status-warning'}`}
+        >
+          {post.status === PostStatus.PUBLISHED ? 'Publié' : 'Brouillon'}
+        </span>
       )
     },
     {

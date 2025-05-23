@@ -15,9 +15,9 @@ import DatePickerField from '@/app/components/Forms/DatePickerField'
 import BlogContentEditor from '@/app/components/BlogEditor/BlogContentEditor'
 import { BlogContent } from '@/app/components/BlogEditor/types'
 import { SEOAssistantButton, SEOAssistantModal, FormData } from '@/app/components/SEOAssistant'
-import { createSeoPost, updateSeoPost } from '@/lib/actions/seo-post-actions'
+import { createSeoPost, updateSeoPost, pinSeoPost } from '@/lib/actions/seo-post-actions'
 import { generateSlug } from '@/lib/utils'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -80,7 +80,10 @@ export default function SeoPostForm({
   isEditing = false 
 }: SeoPostFormProps) {
   const router = useRouter()
+  const toast = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isChangingStatus, setIsChangingStatus] = useState(false)
+  const [isPinning, setIsPinning] = useState(false)
   const [generatedSlug, setGeneratedSlug] = useState('')
   const [tags, setTags] = useState<string[]>([])
   const [blogContent, setBlogContent] = useState<BlogContent>([])
@@ -277,6 +280,68 @@ export default function SeoPostForm({
   // Fermer le SEO Assistant
   const closeSEOAssistant = () => {
     setIsSEOAssistantOpen(false)
+  }
+
+  // Fonction pour changer uniquement le statut de l'article
+  const handleStatusChange = async () => {
+    if (!seoPost?.id) return
+    
+    setIsChangingStatus(true)
+    
+    try {
+      const newStatus = seoPost.status === 'DRAFT' ? 'PUBLISHED' : 'DRAFT'
+      
+      const result = await updateSeoPost(seoPost.id, {
+        status: newStatus
+      })
+      
+      if (result.success) {
+        toast.success(
+          newStatus === 'PUBLISHED' 
+            ? 'Article publié avec succès' 
+            : 'Article dépublié avec succès'
+        )
+        
+        // Redirection pour actualiser les données
+        setTimeout(() => {
+          router.refresh()
+        }, 1000)
+      } else {
+        toast.error(result.message || 'Une erreur est survenue')
+      }
+    } catch (error: any) {
+      toast.error('Une erreur est survenue lors du changement de statut')
+      console.error(error)
+    } finally {
+      setIsChangingStatus(false)
+    }
+  }
+
+  // Fonction pour épingler/dépingler l'article
+  const handlePinToggle = async () => {
+    if (!seoPost?.id) return
+    
+    setIsPinning(true)
+    
+    try {
+      const result = await pinSeoPost(seoPost.id)
+      
+      if (result.success) {
+        toast.success('Article épinglé avec succès')
+        
+        // Redirection pour actualiser les données
+        setTimeout(() => {
+          router.refresh()
+        }, 1000)
+      } else {
+        toast.error(result.message || 'Une erreur est survenue')
+      }
+    } catch (error: any) {
+      toast.error('Une erreur est survenue lors de l\'épinglage')
+      console.error(error)
+    } finally {
+      setIsPinning(false)
+    }
   }
 
   const onSubmit = async (data: FormValues) => {
@@ -536,6 +601,56 @@ export default function SeoPostForm({
           >
             Annuler
           </button>
+          
+          {/* Bouton Pin (seulement en mode édition) */}
+          {isEditing && seoPost && (
+            <button
+              type="button"
+              onClick={handlePinToggle}
+              className="btn btn-medium"
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                border: 'none',
+                boxShadow: '0 2px 8px rgba(102, 126, 234, 0.2)',
+                transition: 'all 0.3s ease'
+              }}
+              disabled={isSubmitting || isPinning || isChangingStatus}
+              onMouseEnter={(e) => {
+                if (!isPinning && !isSubmitting && !isChangingStatus) {
+                  const target = e.target as HTMLButtonElement
+                  target.style.transform = 'translateY(-1px)'
+                  target.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                const target = e.target as HTMLButtonElement
+                target.style.transform = 'translateY(0)'
+                target.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.2)'
+              }}
+            >
+              {isPinning ? 'Épinglage...' : 'Pin'}
+            </button>
+          )}
+          
+          {/* Bouton pour changer le statut (seulement en mode édition) */}
+          {isEditing && seoPost && (
+            <button
+              type="button"
+              onClick={handleStatusChange}
+              className={`btn btn-medium ${
+                seoPost.status === 'DRAFT' 
+                  ? 'btn-success' 
+                  : 'btn-warning'
+              }`}
+              disabled={isSubmitting || isChangingStatus}
+            >
+              {isChangingStatus 
+                ? (seoPost.status === 'DRAFT' ? 'Publication...' : 'Dépublication...') 
+                : (seoPost.status === 'DRAFT' ? 'Publish' : 'Unpublish')}
+            </button>
+          )}
+          
           <button
             type="submit"
             className="btn btn-primary btn-medium"

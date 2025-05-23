@@ -333,4 +333,53 @@ export async function updateSeoPost(id: number, data: {
             message: (error as Error).message
         }
     }
+}
+
+export async function pinSeoPost(id: number) {
+    try {
+        // Vérifier que l'article existe
+        const existingPost = await prisma.seoPost.findUnique({
+            where: { id }
+        })
+
+        if (!existingPost) {
+            return {
+                success: false,
+                message: 'Article non trouvé'
+            }
+        }
+
+        // Dépingler tous les autres articles
+        await prisma.seoPost.updateMany({
+            where: {
+                id: { not: id },
+                pinned: true
+            },
+            data: {
+                pinned: false
+            }
+        })
+
+        // Épingler l'article ciblé
+        const seoPost = await prisma.seoPost.update({
+            where: { id },
+            data: {
+                pinned: true
+            }
+        })
+
+        revalidatePath('/landing/seo-posts')
+        revalidatePath(`/landing/seo-posts/${id}/edit`)
+
+        return {
+            success: true,
+            seoPost
+        }
+    } catch (error) {
+        console.error(`Erreur lors de l'épinglage de l'article SEO ${id}:`, error)
+        return {
+            success: false,
+            message: (error as Error).message
+        }
+    }
 } 
