@@ -82,7 +82,7 @@ export default function SeoPostForm({
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [generatedSlug, setGeneratedSlug] = useState('')
-  const [tags, setTags] = useState<string[]>(seoPost?.metaKeywords || [])
+  const [tags, setTags] = useState<string[]>([])
   const [blogContent, setBlogContent] = useState<BlogContent>([])
   
   // État pour le SEO Assistant
@@ -96,7 +96,30 @@ export default function SeoPostForm({
   const [mainImageOpen, setMainImageOpen] = useState(false)
   const [contentOpen, setContentOpen] = useState(false)
 
-  // Parsing du contenu existant s'il y en a
+  // Initialisation des données en mode édition
+  useEffect(() => {
+    if (seoPost) {
+      // Initialiser les tags depuis metaKeywords qui contient maintenant directement le tableau
+      if (seoPost.metaKeywords && Array.isArray(seoPost.metaKeywords)) {
+        setTags(seoPost.metaKeywords)
+      }
+      
+      // Initialiser le contenu du blog
+      if (seoPost.content) {
+        try {
+          const parsedContent = JSON.parse(seoPost.content)
+          if (Array.isArray(parsedContent)) {
+            setBlogContent(parsedContent)
+          }
+        } catch (error) {
+          console.log('Le contenu existant n\'est pas au format JSON attendu')
+          setBlogContent([])
+        }
+      }
+    }
+  }, [seoPost])
+
+  // Parsing du contenu existant s'il y en a (gardé pour compatibilité)
   useEffect(() => {
     if (seoPost?.content) {
       try {
@@ -116,7 +139,7 @@ export default function SeoPostForm({
     title: seoPost?.title || '',
     categoryId: seoPost?.categoryId.toString() || '',
     metaDescription: seoPost?.metaDescription || '',
-    metaKeywords: seoPost?.metaKeywords?.join(', ') || '',
+    metaKeywords: '', // On laisse vide car géré par useState
     slug: seoPost?.slug || '',
     content: seoPost?.content || '',
     excerpt: seoPost?.excerpt || '',
@@ -364,6 +387,18 @@ export default function SeoPostForm({
               disabled={true}
               value={generatedSlug}
               className="bg-gray-100"
+              showErrorsOnlyAfterSubmit={false}
+            />
+            
+            <TextareaField
+              id="metaDescription"
+              name="metaDescription"
+              label="Méta-description (description SEO)"
+              register={register}
+              error={errors.metaDescription?.message}
+              required={true}
+              placeholder="Description qui apparaîtra dans les résultats de recherche"
+              rows={3}
               showErrorsOnlyAfterSubmit={false}
             />
           </AccordionItem>

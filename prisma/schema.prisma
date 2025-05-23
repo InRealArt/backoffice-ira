@@ -169,7 +169,7 @@ model InvoiceItem {
   // Données figées de l'article (pour historique complet)
   title       String // Nom du produit
   description String? // Description du produit
-  
+
   // Prix (obligatoire fiscalement)
   unitPrice  Decimal @db.Decimal(10, 2) // Prix unitaire HT
   vatRate    Decimal @db.Decimal(5, 2) // Taux TVA
@@ -811,7 +811,8 @@ model SeoPost {
   pinned               Boolean      @default(false)
   category             SeoCategory  @relation(fields: [categoryId], references: [id])
   categoryId           Int
-  tags                 SeoPostTag[]
+  listTags             String[]
+  tags                 SeoPostTag[] // Relation pour la logique relationnelle
 
   @@schema("landing")
 }

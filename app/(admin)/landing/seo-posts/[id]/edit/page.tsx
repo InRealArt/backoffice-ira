@@ -6,13 +6,14 @@ import PageHeader from '../../components/PageHeader'
 import { notFound } from 'next/navigation'
 
 interface EditSeoPostPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function EditSeoPostPage({ params }: EditSeoPostPageProps) {
-  const seoPostId = parseInt(params.id)
+  const { id } = await params
+  const seoPostId = parseInt(id)
   
   if (isNaN(seoPostId)) {
     return notFound()

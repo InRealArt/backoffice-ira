@@ -5,7 +5,51 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['cdn.shopify.com', 'firebasestorage.googleapis.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdn.shopify.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'crypto-economy.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.staticimg.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+      // Autoriser d'autres domaines couramment utilisés pour les images de blog
+      {
+        protocol: 'https',
+        hostname: '**.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.pexels.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.pixabay.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.googleusercontent.com',
+      }
+    ],
+    // Garder domains pour la compatibilité avec d'anciens composants
+    domains: ['cdn.shopify.com', 'firebasestorage.googleapis.com', 'crypto-economy.com', 'assets.staticimg.com'],
   },
   // Configuration pour les styles et PostCSS
   sassOptions: {
