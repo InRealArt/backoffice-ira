@@ -535,6 +535,7 @@ export default function SeoPostForm({
               id="excerpt"
               name="excerpt"
               label="Introduction de l'article"
+              required={true}
               register={register}
               error={errors.excerpt?.message}
               placeholder="Un court résumé ou introduction de l'article"
@@ -547,6 +548,7 @@ export default function SeoPostForm({
               name="mainImageUrl"
               label="URL de l'image principale"
               register={register}
+              required={true}
               error={errors.mainImageUrl?.message}
               placeholder="https://exemple.com/image.jpg"
               showErrorsOnlyAfterSubmit={false}
@@ -555,6 +557,7 @@ export default function SeoPostForm({
             <InputField
               id="mainImageAlt"
               name="mainImageAlt"
+              required={true}
               label="Texte alternatif de l'image"
               register={register}
               error={errors.mainImageAlt?.message}
@@ -566,6 +569,7 @@ export default function SeoPostForm({
               id="mainImageCaption"
               name="mainImageCaption"
               label="Légende de l'image"
+              required={true}
               register={register}
               error={errors.mainImageCaption?.message}
               placeholder="Légende affichée sous l'image"
