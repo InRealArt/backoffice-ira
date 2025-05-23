@@ -53,7 +53,9 @@ export default function BlogContentEditor({ initialContent = [], onChange }: Blo
     const targetIndex = direction === 'up' ? index - 1 : index + 1
     
     // Échanger les sections
-    [newSections[index], newSections[targetIndex]] = [newSections[targetIndex], newSections[index]]
+    const temp = newSections[index]
+    newSections[index] = newSections[targetIndex]
+    newSections[targetIndex] = temp
     
     setSections(newSections)
   }
