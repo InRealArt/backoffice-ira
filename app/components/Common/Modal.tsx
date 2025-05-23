@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import styles from './Modal.module.scss';
 
 interface ModalProps {
   isOpen: boolean;
@@ -41,13 +42,13 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-container" ref={modalRef}>
-        <div className="modal-header">
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContainer} ref={modalRef}>
+        <div className={styles.modalHeader}>
           <h2>{title}</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className={styles.modalClose} onClick={onClose}>×</button>
         </div>
-        <div className="modal-content">
+        <div className={styles.modalContent}>
           {children}
         </div>
       </div>

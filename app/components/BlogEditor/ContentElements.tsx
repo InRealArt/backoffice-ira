@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { ElementType, ContentElement, H2Element, H3Element, ParagraphElement, ImageElement, VideoElement, ListElement } from './types'
+import { ElementType, ContentElement, H2Element, H3Element, ParagraphElement, ImageElement, VideoElement, ListElement, AccordionElement, AccordionItemData } from './types'
+import { v4 as uuidv4 } from 'uuid'
 import styles from './BlogSection.module.scss'
 
 interface ElementProps {
@@ -251,6 +252,148 @@ export function ListElementComponent({ element, onUpdate, onDelete }: ElementPro
   )
 }
 
+export function AccordionElementComponent({ element, onUpdate, onDelete }: ElementProps) {
+  const accordionElement = element as AccordionElement
+  const [newItemTitle, setNewItemTitle] = useState('')
+  const [newItemContent, setNewItemContent] = useState('')
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null)
+
+  const addItem = () => {
+    if (newItemTitle.trim()) {
+      const newItem: AccordionItemData = {
+        id: uuidv4(),
+        title: newItemTitle.trim(),
+        content: newItemContent.trim()
+      }
+      
+      onUpdate({
+        ...accordionElement,
+        items: [...accordionElement.items, newItem]
+      })
+      
+      setNewItemTitle('')
+      setNewItemContent('')
+    }
+  }
+
+  const updateItem = (id: string, updates: Partial<AccordionItemData>) => {
+    const newItems = accordionElement.items.map(item => 
+      item.id === id ? { ...item, ...updates } : item
+    )
+    
+    onUpdate({
+      ...accordionElement,
+      items: newItems
+    })
+  }
+
+  const removeItem = (id: string) => {
+    onUpdate({
+      ...accordionElement,
+      items: accordionElement.items.filter(item => item.id !== id)
+    })
+  }
+
+  const toggleItemExpand = (id: string) => {
+    setExpandedItemId(expandedItemId === id ? null : id)
+  }
+
+  return (
+    <div className={styles.elementItem}>
+      <div className="mb-4">
+        <h4 className="text-lg font-medium mb-2">Accordéon / FAQ</h4>
+        <input
+          type="text"
+          value={accordionElement.title || ''}
+          onChange={(e) => onUpdate({ ...accordionElement, title: e.target.value })}
+          placeholder="Titre de l'accordéon (optionnel)"
+          className="form-input w-full mb-4"
+        />
+        
+        {accordionElement.items.length === 0 ? (
+          <p className="text-gray-500 italic mb-4">Aucun élément dans l'accordéon</p>
+        ) : (
+          <div className="border rounded-md mb-4 divide-y">
+            {accordionElement.items.map((item) => (
+              <div key={item.id} className="p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div 
+                    className="font-medium cursor-pointer flex items-center"
+                    onClick={() => toggleItemExpand(item.id)}
+                  >
+                    <span className="mr-2">{expandedItemId === item.id ? '▼' : '►'}</span>
+                    {item.title}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.id)}
+                    className="text-red-500 text-sm"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+                
+                {expandedItemId === item.id && (
+                  <div className="mt-2 pl-5">
+                    <input
+                      type="text"
+                      value={item.title}
+                      onChange={(e) => updateItem(item.id, { title: e.target.value })}
+                      placeholder="Titre de l'élément"
+                      className="form-input w-full mb-2"
+                    />
+                    <textarea
+                      value={item.content}
+                      onChange={(e) => updateItem(item.id, { content: e.target.value })}
+                      placeholder="Contenu de l'élément"
+                      className="form-textarea w-full"
+                      rows={3}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <div className="border rounded-md p-3 bg-gray-50">
+          <h5 className="font-medium mb-2">Ajouter un nouvel élément</h5>
+          <input
+            type="text"
+            value={newItemTitle}
+            onChange={(e) => setNewItemTitle(e.target.value)}
+            placeholder="Titre de l'élément"
+            className="form-input w-full mb-2"
+          />
+          <textarea
+            value={newItemContent}
+            onChange={(e) => setNewItemContent(e.target.value)}
+            placeholder="Contenu de l'élément"
+            className="form-textarea w-full mb-2"
+            rows={3}
+          />
+          <button
+            type="button"
+            onClick={addItem}
+            className="btn btn-secondary btn-small"
+            disabled={!newItemTitle.trim()}
+          >
+            Ajouter l'élément
+          </button>
+        </div>
+      </div>
+      
+      <button 
+        type="button" 
+        onClick={onDelete}
+        className="text-red-500 mt-2"
+      >
+        Supprimer l'accordéon
+      </button>
+    </div>
+  )
+}
+
 export function ContentElementComponent({ element, onUpdate, onDelete }: ElementProps) {
   switch (element.type) {
     case ElementType.H2:
@@ -265,6 +408,8 @@ export function ContentElementComponent({ element, onUpdate, onDelete }: Element
       return <VideoElementComponent element={element} onUpdate={onUpdate} onDelete={onDelete} />
     case ElementType.LIST:
       return <ListElementComponent element={element} onUpdate={onUpdate} onDelete={onDelete} />
+    case ElementType.ACCORDION:
+      return <AccordionElementComponent element={element} onUpdate={onUpdate} onDelete={onDelete} />
     default:
       return null
   }

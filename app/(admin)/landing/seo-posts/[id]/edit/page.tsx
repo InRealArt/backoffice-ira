@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { getAllSeoCategories } from '@/lib/actions/seo-category-actions'
 import { getSeoPostById } from '@/lib/actions/seo-post-actions'
 import SeoPostForm from '../../components/SeoPostForm'
+import PageHeader from '../../components/PageHeader'
 import { notFound } from 'next/navigation'
 
 interface EditSeoPostPageProps {
@@ -30,14 +31,10 @@ export default async function EditSeoPostPage({ params }: EditSeoPostPageProps) 
   
   return (
     <div className="page-container">
-      <div className="page-header">
-        <div className="header-top-section">
-          <h1 className="page-title">Modifier l'article SEO</h1>
-        </div>
-        <p className="page-subtitle">
-          Modifier "{seoPost.title}"
-        </p>
-      </div>
+      <PageHeader title="Modifier l'article SEO" />
+      <p className="page-subtitle">
+        Modifier "{seoPost.title}"
+      </p>
       
       <Suspense fallback={<div>Chargement...</div>}>
         <SeoPostForm 

@@ -4,7 +4,8 @@ export enum ElementType {
     PARAGRAPH = 'paragraph',
     IMAGE = 'image',
     VIDEO = 'video',
-    LIST = 'list'
+    LIST = 'list',
+    ACCORDION = 'accordion'
 }
 
 export interface BaseElement {
@@ -46,7 +47,19 @@ export interface ListElement extends BaseElement {
     items: string[]
 }
 
-export type ContentElement = H2Element | H3Element | ParagraphElement | ImageElement | VideoElement | ListElement
+export interface AccordionItemData {
+    id: string
+    title: string
+    content: string
+}
+
+export interface AccordionElement extends BaseElement {
+    type: ElementType.ACCORDION
+    title?: string
+    items: AccordionItemData[]
+}
+
+export type ContentElement = H2Element | H3Element | ParagraphElement | ImageElement | VideoElement | ListElement | AccordionElement
 
 export interface BlogSection {
     id: string
