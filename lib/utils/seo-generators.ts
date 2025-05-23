@@ -11,6 +11,7 @@ export interface SeoPostData {
     creationDate: Date
     excerpt?: string
     blogContent: BlogContent
+    tags?: string[]
 }
 
 /**
@@ -96,6 +97,39 @@ export function generateSeoHtml(postData: SeoPostData): string {
   <meta name="twitter:description" content="${postData.metaDescription}">
   ${cleanMainImageUrl ? `<meta name="twitter:image" content="${cleanMainImageUrl}">` : ''}
   ${postData.author ? `<meta name="author" content="${postData.author}">` : ''}
+  <style>
+    .tags-section {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+    }
+    .tags-section h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .tag-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background-color: #f3f4f6;
+      color: #374151;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 9999px;
+      border: 1px solid #d1d5db;
+      text-decoration: none;
+      transition: background-color 0.2s ease;
+    }
+    .tag-badge:hover {
+      background-color: #e5e7eb;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -222,5 +256,12 @@ ${sectionHtml}
     <div class="content">
 ${generateBlogContentHtml(postData.blogContent)}
     </div>
+    
+    ${postData.tags && postData.tags.length > 0 ? `<div class="tags-section">
+      <h3>Tags</h3>
+      <div class="tags-list">
+        ${postData.tags.map(tag => `<span class="tag-badge">${tag}</span>`).join('\n        ')}
+      </div>
+    </div>` : ''}
   </article>`
 } 

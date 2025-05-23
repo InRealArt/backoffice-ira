@@ -255,6 +255,7 @@ export default function SeoPostForm({
       title: currentValues.title || '',
       metaDescription: currentValues.metaDescription || '',
       metaKeywords: tags.join(', '),
+      tags: tags, // Ajouter le tableau de tags directement
       slug: currentValues.slug || '',
       excerpt: currentValues.excerpt || '',
       author: currentValues.author || '',

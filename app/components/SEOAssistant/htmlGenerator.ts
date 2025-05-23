@@ -4,6 +4,7 @@ export interface FormData {
     title?: string
     metaDescription?: string
     metaKeywords?: string
+    tags?: string[]
     slug?: string
     excerpt?: string
     author?: string
@@ -21,6 +22,7 @@ export function generateSEOHTML(formData: FormData): string {
         title = '',
         metaDescription = '',
         metaKeywords = '',
+        tags = [],
         slug = '',
         excerpt = '',
         author = '',
@@ -147,6 +149,40 @@ ${sectionHTML}
   <!-- Autres balises méta importantes -->
   ${author ? `<meta name="author" content="${author}">` : ''}
   <link rel="canonical" href="https://example.com/${slug}">
+  
+  <style>
+    .tags-section {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+    }
+    .tags-section h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .tag-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background-color: #f3f4f6;
+      color: #374151;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 9999px;
+      border: 1px solid #d1d5db;
+      text-decoration: none;
+      transition: background-color 0.2s ease;
+    }
+    .tag-badge:hover {
+      background-color: #e5e7eb;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -176,6 +212,14 @@ ${sectionHTML}
       
       <!-- Corps de l'article bien structuré -->
 ${generateBlogContentHTML(blogContent)}
+
+      ${tags && tags.length > 0 ? `<!-- Section des tags -->
+      <div class="tags-section">
+        <h3>Tags</h3>
+        <div class="tags-list">
+          ${tags.map(tag => `<span class="tag-badge">${tag}</span>`).join('\n          ')}
+        </div>
+      </div>` : ''}
     </article>
   </main>
   

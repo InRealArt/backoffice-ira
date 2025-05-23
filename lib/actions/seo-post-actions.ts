@@ -90,7 +90,8 @@ export async function createSeoPost(data: {
             mainImageCaption: data.mainImageCaption,
             creationDate: data.creationDate || new Date(),
             excerpt: data.excerpt,
-            blogContent: blogContent
+            blogContent: blogContent,
+            tags: data.metaKeywords || []
         }
 
         // Générer le JSON-LD, HTML complet et HTML de l'article
@@ -228,7 +229,8 @@ export async function updateSeoPost(id: number, data: {
             mainImageCaption: data.mainImageCaption || existingPost.mainImageCaption || undefined,
             creationDate: data.creationDate || existingPost.createdAt,
             excerpt: data.excerpt || existingPost.excerpt || undefined,
-            blogContent: blogContent
+            blogContent: blogContent,
+            tags: data.metaKeywords || existingPost.metaKeywords || []
         }
 
         // Générer le JSON-LD, HTML complet et HTML de l'article

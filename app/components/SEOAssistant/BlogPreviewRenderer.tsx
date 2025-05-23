@@ -18,7 +18,8 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
     mainImageUrl = '',
     mainImageAlt = '',
     mainImageCaption = '',
-    blogContent = []
+    blogContent = [],
+    tags = []
   } = formData
 
   const formatDateReadable = (date: Date) => {
@@ -161,7 +162,6 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
       
       <div className={styles.previewMeta}>
         <div className={styles.previewAuthor}>
-          <div className={styles.previewAuthorImg}></div>
           <span>
             Par {authorLink ? (
               <a href={authorLink} target="_blank" rel="noopener noreferrer">{author}</a>
@@ -197,6 +197,46 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
         )}
         
         {renderBlogContent(blogContent)}
+        
+        {tags && tags.length > 0 && (
+          <div style={{ 
+            marginTop: '2rem', 
+            paddingTop: '1.5rem', 
+            borderTop: '1px solid #e5e7eb' 
+          }}>
+            <h3 style={{ 
+              margin: '0 0 1rem 0', 
+              fontSize: '1.125rem', 
+              fontWeight: '600', 
+              color: '#374151' 
+            }}>
+              Tags
+            </h3>
+            <div style={{ 
+              display: 'flex', 
+              flexWrap: 'wrap', 
+              gap: '0.5rem' 
+            }}>
+              {tags.map((tag, index) => (
+                <span
+                  key={index}
+                  style={{
+                    display: 'inline-block',
+                    padding: '0.25rem 0.75rem',
+                    backgroundColor: '#f3f4f6',
+                    color: '#374151',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    borderRadius: '9999px',
+                    border: '1px solid #d1d5db'
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
         
         {blogContent.length === 0 && (
           <div style={{ textAlign: 'center', color: '#6b7280', padding: '2rem' }}>
