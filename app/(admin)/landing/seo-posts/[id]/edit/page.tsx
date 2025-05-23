@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { getAllSeoCategories } from '@/lib/actions/seo-category-actions'
 import { getSeoPostById } from '@/lib/actions/seo-post-actions'
 import SeoPostForm from '../../components/SeoPostForm'
-import PageHeader from '@/app/components/PageLayout/PageHeader'
+import PageHeader from '../../components/PageHeader'
 import { notFound } from 'next/navigation'
 
 interface EditSeoPostPageProps {
@@ -33,6 +33,7 @@ export default async function EditSeoPostPage({ params }: EditSeoPostPageProps) 
   return (
     <div className="page-container">
       <PageHeader title="Modifier l'article SEO" />
+      
       <div className="flex items-start gap-3 mb-6">
         <p className="page-subtitle">
           Modifier "{seoPost.title}"
