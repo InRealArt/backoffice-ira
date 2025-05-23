@@ -14,6 +14,7 @@ import TagInput from '@/app/components/Forms/TagInput'
 import DatePickerField from '@/app/components/Forms/DatePickerField'
 import BlogContentEditor from '@/app/components/BlogEditor/BlogContentEditor'
 import { BlogContent } from '@/app/components/BlogEditor/types'
+import { SEOAssistantButton, SEOAssistantModal, FormData } from '@/app/components/SEOAssistant'
 import { createSeoPost, updateSeoPost } from '@/lib/actions/seo-post-actions'
 import { generateSlug } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
@@ -84,6 +85,9 @@ export default function SeoPostForm({
   const [tags, setTags] = useState<string[]>(seoPost?.metaKeywords || [])
   const [blogContent, setBlogContent] = useState<BlogContent>([])
   
+  // État pour le SEO Assistant
+  const [isSEOAssistantOpen, setIsSEOAssistantOpen] = useState(false)
+  
   // État pour suivre quels accordéons sont ouverts
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [metadataOpen, setMetadataOpen] = useState(true)
@@ -133,6 +137,7 @@ export default function SeoPostForm({
     formState: { errors, isSubmitted },
     watch,
     setValue,
+    getValues,
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
@@ -219,6 +224,37 @@ export default function SeoPostForm({
     setValue('content', JSON.stringify(newContent))
   }
 
+  // Fonction pour préparer les données du formulaire pour le SEO Assistant
+  const prepareFormDataForSEOAssistant = useCallback((): FormData => {
+    const currentValues = getValues()
+    
+    return {
+      title: currentValues.title || '',
+      metaDescription: currentValues.metaDescription || '',
+      metaKeywords: tags.join(', '),
+      slug: currentValues.slug || '',
+      excerpt: currentValues.excerpt || '',
+      author: currentValues.author || '',
+      authorLink: currentValues.authorLink || '',
+      creationDate: currentValues.creationDate || new Date(),
+      mainImageUrl: currentValues.mainImageUrl || '',
+      mainImageAlt: currentValues.mainImageAlt || '',
+      mainImageCaption: currentValues.mainImageCaption || '',
+      content: currentValues.content || '',
+      blogContent: blogContent
+    }
+  }, [getValues, tags, blogContent])
+
+  // Ouvrir le SEO Assistant
+  const openSEOAssistant = () => {
+    setIsSEOAssistantOpen(true)
+  }
+
+  // Fermer le SEO Assistant
+  const closeSEOAssistant = () => {
+    setIsSEOAssistantOpen(false)
+  }
+
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
     
@@ -270,199 +306,211 @@ export default function SeoPostForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="form-container">
-      <Accordion spaced={true}>
-        <AccordionItem 
-          title="Catégorie" 
-          isOpen={categoryOpen}
-          onOpenChange={setCategoryOpen}
-        >
-          <SelectField
-            id="category"
-            name="categoryId"
-            label="Catégorie de l'article"
-            value={watchedValues.categoryId}
-            onChange={(e) => setValue('categoryId', e.target.value)}
-            options={categoryOptions}
-            error={errors.categoryId?.message}
-            required={true}
-            placeholder="Sélectionner une catégorie"
-            showErrorsOnlyAfterSubmit={false}
-          />
-        </AccordionItem>
-
-        <AccordionItem 
-          title="Méta-data Article" 
-          isOpen={metadataOpen}
-          onOpenChange={setMetadataOpen}
-        >
-          <InputField
-            id="title"
-            name="title"
-            label="Titre de l'article"
-            register={register}
-            error={errors.title?.message}
-            required={true}
-            placeholder="Entrez le titre de l'article"
-            showErrorsOnlyAfterSubmit={false}
-          />
-          
-          <InputField
-            id="slug"
-            name="slug"
-            label="Slug (URL de l'article)"
-            register={register}
-            error={errors.slug?.message}
-            required={true}
-            disabled={true}
-            value={generatedSlug}
-            className="bg-gray-100"
-            showErrorsOnlyAfterSubmit={false}
-          />
-        </AccordionItem>
-        
-        <AccordionItem
-          title="Tags"
-          isOpen={tagsOpen}
-          onOpenChange={setTagsOpen}
-        >
-          <TagInput 
-            tags={tags} 
-            onChange={setTags}
-            placeholder="Ajouter un tag et appuyer sur Entrée"
-            maxTags={10}
-            label="Tags de l'article"
-            error={errors.metaKeywords?.message}
-            width="100%"
-          />
-          <input 
-            type="hidden" 
-            {...register('metaKeywords')} 
-          />
-        </AccordionItem>
-        
-        <AccordionItem
-          title="Article Header"
-          isOpen={headerOpen}
-          onOpenChange={setHeaderOpen}
-        >
-          <InputField
-            id="author"
-            name="author"
-            label="Auteur de l'article"
-            register={register}
-            error={errors.author?.message}
-            required={true}
-            placeholder="Nom de l'auteur"
-            showErrorsOnlyAfterSubmit={false}
-          />
-          
-          <InputField
-            id="authorLink"
-            name="authorLink"
-            label="Lien vers le profil de l'auteur"
-            register={register}
-            error={errors.authorLink?.message}
-            placeholder="https://exemple.com/profil-auteur"
-            showErrorsOnlyAfterSubmit={false}
-          />
-          
-          <DatePickerField
-            id="creationDate"
-            name="creationDate"
-            label="Date de création"
-            value={watch('creationDate')}
-            onChange={(date) => setValue('creationDate', date)}
-            error={errors.creationDate?.message}
-            showErrorsOnlyAfterSubmit={false}
-          />
-        </AccordionItem>
-        
-        <AccordionItem
-          title="Main image and introduction"
-          isOpen={mainImageOpen}
-          onOpenChange={setMainImageOpen}
-        >
-          <TextareaField
-            id="excerpt"
-            name="excerpt"
-            label="Introduction de l'article"
-            register={register}
-            error={errors.excerpt?.message}
-            placeholder="Un court résumé ou introduction de l'article"
-            rows={3}
-            showErrorsOnlyAfterSubmit={false}
-          />
-          
-          <InputField
-            id="mainImageUrl"
-            name="mainImageUrl"
-            label="URL de l'image principale"
-            register={register}
-            error={errors.mainImageUrl?.message}
-            placeholder="https://exemple.com/image.jpg"
-            showErrorsOnlyAfterSubmit={false}
-          />
-          
-          <InputField
-            id="mainImageAlt"
-            name="mainImageAlt"
-            label="Texte alternatif de l'image"
-            register={register}
-            error={errors.mainImageAlt?.message}
-            placeholder="Description de l'image pour l'accessibilité"
-            showErrorsOnlyAfterSubmit={false}
-          />
-          
-          <InputField
-            id="mainImageCaption"
-            name="mainImageCaption"
-            label="Légende de l'image"
-            register={register}
-            error={errors.mainImageCaption?.message}
-            placeholder="Légende affichée sous l'image"
-            showErrorsOnlyAfterSubmit={false}
-          />
-        </AccordionItem>
-        
-        <AccordionItem
-          title="Contenu principal"
-          isOpen={contentOpen}
-          onOpenChange={setContentOpen}
-        >
-          <BlogContentEditor 
-            initialContent={blogContent}
-            onChange={handleBlogContentChange}
-          />
-          <input 
-            type="hidden" 
-            {...register('content')} 
-          />
-          {errors.content && (
-            <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
-          )}
-        </AccordionItem>
-      </Accordion>
+    <>
+      {/* SEO Assistant Button */}
+      <SEOAssistantButton onClick={openSEOAssistant} />
       
-      <div className="form-actions">
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="secondary-button"
-          disabled={isSubmitting}
-        >
-          Annuler
-        </button>
-        <button
-          type="submit"
-          className="btn btn-primary btn-medium"
-          disabled={isSubmitting}
-        >
-          {isSubmitting 
-            ? (isEditing ? 'Mise à jour...' : 'Création...') 
-            : (isEditing ? 'Mettre à jour' : 'Créer')}
-        </button>
-      </div>
-    </form>
+      {/* SEO Assistant Modal */}
+      <SEOAssistantModal 
+        isOpen={isSEOAssistantOpen}
+        onClose={closeSEOAssistant}
+        formData={prepareFormDataForSEOAssistant()}
+      />
+      
+      <form onSubmit={handleSubmit(onSubmit)} className="form-container">
+        <Accordion spaced={true}>
+          <AccordionItem 
+            title="Catégorie" 
+            isOpen={categoryOpen}
+            onOpenChange={setCategoryOpen}
+          >
+            <SelectField
+              id="category"
+              name="categoryId"
+              label="Catégorie de l'article"
+              value={watchedValues.categoryId}
+              onChange={(e) => setValue('categoryId', e.target.value)}
+              options={categoryOptions}
+              error={errors.categoryId?.message}
+              required={true}
+              placeholder="Sélectionner une catégorie"
+              showErrorsOnlyAfterSubmit={false}
+            />
+          </AccordionItem>
+
+          <AccordionItem 
+            title="Méta-data Article" 
+            isOpen={metadataOpen}
+            onOpenChange={setMetadataOpen}
+          >
+            <InputField
+              id="title"
+              name="title"
+              label="Titre de l'article"
+              register={register}
+              error={errors.title?.message}
+              required={true}
+              placeholder="Entrez le titre de l'article"
+              showErrorsOnlyAfterSubmit={false}
+            />
+            
+            <InputField
+              id="slug"
+              name="slug"
+              label="Slug (URL de l'article)"
+              register={register}
+              error={errors.slug?.message}
+              required={true}
+              disabled={true}
+              value={generatedSlug}
+              className="bg-gray-100"
+              showErrorsOnlyAfterSubmit={false}
+            />
+          </AccordionItem>
+          
+          <AccordionItem
+            title="Tags"
+            isOpen={tagsOpen}
+            onOpenChange={setTagsOpen}
+          >
+            <TagInput 
+              tags={tags} 
+              onChange={setTags}
+              placeholder="Ajouter un tag et appuyer sur Entrée"
+              maxTags={10}
+              label="Tags de l'article"
+              error={errors.metaKeywords?.message}
+              width="100%"
+            />
+            <input 
+              type="hidden" 
+              {...register('metaKeywords')} 
+            />
+          </AccordionItem>
+          
+          <AccordionItem
+            title="Article Header"
+            isOpen={headerOpen}
+            onOpenChange={setHeaderOpen}
+          >
+            <InputField
+              id="author"
+              name="author"
+              label="Auteur de l'article"
+              register={register}
+              error={errors.author?.message}
+              required={true}
+              placeholder="Nom de l'auteur"
+              showErrorsOnlyAfterSubmit={false}
+            />
+            
+            <InputField
+              id="authorLink"
+              name="authorLink"
+              label="Lien vers le profil de l'auteur"
+              register={register}
+              error={errors.authorLink?.message}
+              placeholder="https://exemple.com/profil-auteur"
+              showErrorsOnlyAfterSubmit={false}
+            />
+            
+            <DatePickerField
+              id="creationDate"
+              name="creationDate"
+              label="Date de création"
+              value={watch('creationDate')}
+              onChange={(date) => setValue('creationDate', date)}
+              error={errors.creationDate?.message}
+              showErrorsOnlyAfterSubmit={false}
+            />
+          </AccordionItem>
+          
+          <AccordionItem
+            title="Main image and introduction"
+            isOpen={mainImageOpen}
+            onOpenChange={setMainImageOpen}
+          >
+            <TextareaField
+              id="excerpt"
+              name="excerpt"
+              label="Introduction de l'article"
+              register={register}
+              error={errors.excerpt?.message}
+              placeholder="Un court résumé ou introduction de l'article"
+              rows={3}
+              showErrorsOnlyAfterSubmit={false}
+            />
+            
+            <InputField
+              id="mainImageUrl"
+              name="mainImageUrl"
+              label="URL de l'image principale"
+              register={register}
+              error={errors.mainImageUrl?.message}
+              placeholder="https://exemple.com/image.jpg"
+              showErrorsOnlyAfterSubmit={false}
+            />
+            
+            <InputField
+              id="mainImageAlt"
+              name="mainImageAlt"
+              label="Texte alternatif de l'image"
+              register={register}
+              error={errors.mainImageAlt?.message}
+              placeholder="Description de l'image pour l'accessibilité"
+              showErrorsOnlyAfterSubmit={false}
+            />
+            
+            <InputField
+              id="mainImageCaption"
+              name="mainImageCaption"
+              label="Légende de l'image"
+              register={register}
+              error={errors.mainImageCaption?.message}
+              placeholder="Légende affichée sous l'image"
+              showErrorsOnlyAfterSubmit={false}
+            />
+          </AccordionItem>
+          
+          <AccordionItem
+            title="Contenu principal"
+            isOpen={contentOpen}
+            onOpenChange={setContentOpen}
+          >
+            <BlogContentEditor 
+              initialContent={blogContent}
+              onChange={handleBlogContentChange}
+            />
+            <input 
+              type="hidden" 
+              {...register('content')} 
+            />
+            {errors.content && (
+              <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
+            )}
+          </AccordionItem>
+        </Accordion>
+        
+        <div className="form-actions">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="secondary-button"
+            disabled={isSubmitting}
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            className="btn btn-primary btn-medium"
+            disabled={isSubmitting}
+          >
+            {isSubmitting 
+              ? (isEditing ? 'Mise à jour...' : 'Création...') 
+              : (isEditing ? 'Mettre à jour' : 'Créer')}
+          </button>
+        </div>
+      </form>
+    </>
   )
 } 

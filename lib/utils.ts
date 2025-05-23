@@ -39,7 +39,7 @@ export function generateSlug(name: string): string {
         .toLowerCase()
         .replace(/[^\w\s]/gi, '')
         .replace(/\s+/g, '-')
-
+        .replace(/^-|-$/g, '') // Supprime les tirets au début et à la fin
 }
 
 /**
