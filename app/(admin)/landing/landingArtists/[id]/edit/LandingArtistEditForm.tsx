@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import Image from 'next/image'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -116,7 +116,7 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
   const [newImageUrl, setNewImageUrl] = useState('')
   const [newImageName, setNewImageName] = useState('')
   const [slug, setSlug] = useState('')
-  
+  const { success, error } = useToast()
   const {
     register,
     handleSubmit,
@@ -178,7 +178,7 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
       const result = await updateLandingArtistAction(landingArtist.id, landingArtistDataWithImages)
       
       if (result.success) {
-        toast.success('Artiste mis à jour avec succès')
+        success('Artiste mis à jour avec succès')
         
         // Gestion des traductions pour intro et description
         try {
@@ -198,10 +198,10 @@ export default function LandingArtistEditForm({ landingArtist }: LandingArtistEd
           router.refresh()
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de la mise à jour')
+      error('Une erreur est survenue lors de la mise à jour')
       console.error(error)
     } finally {
       setIsSubmitting(false)

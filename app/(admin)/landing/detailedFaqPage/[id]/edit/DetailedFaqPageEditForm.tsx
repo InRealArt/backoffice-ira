@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -52,6 +52,7 @@ export default function DetailedFaqPageEditForm({ faqPage }: DetailedFaqPageEdit
   const [editingItemId, setEditingItemId] = useState<number | null>(null)
   const [isUpdatingItem, setIsUpdatingItem] = useState(false)
   const [nextOrder, setNextOrder] = useState<number>(1)
+  const { success, error } = useToast()
 
   // Récupérer le prochain ordre disponible
   useEffect(() => {
@@ -141,7 +142,7 @@ export default function DetailedFaqPageEditForm({ faqPage }: DetailedFaqPageEdit
           // On ne bloque pas la création en cas d'erreur de traduction
         }
         
-        toast.success('Question ajoutée avec succès')
+        success('Question ajoutée avec succès')
         resetItem()
         setIsAddingItem(false)
         
@@ -150,11 +151,11 @@ export default function DetailedFaqPageEditForm({ faqPage }: DetailedFaqPageEdit
         
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de l\'ajout de la question:', error)
-      toast.error('Une erreur est survenue lors de l\'ajout de la question')
+      error('Une erreur est survenue lors de l\'ajout de la question')
     } finally {
       setIsSubmittingItem(false)
     }
@@ -184,16 +185,16 @@ export default function DetailedFaqPageEditForm({ faqPage }: DetailedFaqPageEdit
           console.error('Erreur lors de la gestion des traductions:', translationError)
         }
         
-        toast.success('Question mise à jour avec succès')
+        success('Question mise à jour avec succès')
         setEditingItemId(null)
         resetEditItem()
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la mise à jour de la question:', error)
-      toast.error('Une erreur est survenue lors de la mise à jour')
+      error('Une erreur est survenue lors de la mise à jour')
     } finally {
       setIsUpdatingItem(false)
     }
@@ -207,7 +208,7 @@ export default function DetailedFaqPageEditForm({ faqPage }: DetailedFaqPageEdit
       const result = await deleteDetailedFaqPageItem(itemId)
       
       if (result.success) {
-        toast.success('Question supprimée avec succès')
+        success('Question supprimée avec succès')
         
         // Si nous supprimons l'item en cours d'édition, annuler l'édition
         if (editingItemId === itemId) {
@@ -217,11 +218,11 @@ export default function DetailedFaqPageEditForm({ faqPage }: DetailedFaqPageEdit
         
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la suppression de la question:', error)
-      toast.error('Une erreur est survenue lors de la suppression')
+      error('Une erreur est survenue lors de la suppression')
     } finally {
       setIsDeletingItem(null)
     }

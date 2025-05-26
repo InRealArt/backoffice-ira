@@ -4,12 +4,13 @@ import { useState, useRef, useEffect, useCallback, RefObject } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { artworkSchema, artworkEditSchema, ArtworkFormData } from '../../createArtwork/schema'
-import toast from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import { getBackofficeUserByEmail, createItemRecord, updateItemRecord, saveAuthCertificate } from '@/lib/actions/prisma-actions'
 import { useRouter } from 'next/navigation'
 import { normalizeString } from '@/lib/utils'
 import { ArtworkFormProps, UseArtworkFormReturn } from './types'
+import { toast } from 'react-hot-toast'
 
 export function useArtworkForm({
     mode = 'create',
@@ -35,7 +36,7 @@ export function useArtworkForm({
     const isEditMode = mode === 'edit'
     const router = useRouter()
     const [hasExistingMainImage, setHasExistingMainImage] = useState(false)
-
+    const { error: errorToast } = useToast()
     // Toast styling for errors
     const toastErrorOptions = {
         duration: 5000,
@@ -238,27 +239,15 @@ export function useArtworkForm({
                 errors.priceNftBeforeTax?.message
 
             if (hasPricingOptionError && errors.root?.message) {
-                toast.error(String(errors.root.message), {
-                    ...toastErrorOptions,
-                    id: 'pricing-option-error'
-                })
+                errorToast(String(errors.root.message))
             } else if (hasPriceError) {
                 if (errors.pricePhysicalBeforeTax?.message) {
-                    toast.error(String(errors.pricePhysicalBeforeTax.message), {
-                        ...toastErrorOptions,
-                        id: 'price-physical-error'
-                    })
+                    errorToast(String(errors.pricePhysicalBeforeTax.message))
                 } else if (errors.priceNftBeforeTax?.message) {
-                    toast.error(String(errors.priceNftBeforeTax.message), {
-                        ...toastErrorOptions,
-                        id: 'price-nft-error'
-                    })
+                    errorToast(String(errors.priceNftBeforeTax.message))
                 }
             } else if (hasPhysicalDimensionsError && errors.root?.message) {
-                toast.error(String(errors.root.message), {
-                    ...toastErrorOptions,
-                    id: 'physical-dimensions-error'
-                })
+                errorToast(String(errors.root.message))
             } else {
                 const missingFields = Object.keys(errors)
                     .filter(key => key !== 'images' || !shouldIgnoreImageError)
@@ -266,10 +255,7 @@ export function useArtworkForm({
                     .filter(Boolean)
 
                 if (missingFields.length > 0) {
-                    toast.error(`Champs obligatoires manquants : ${missingFields.join(', ')}`, {
-                        ...toastErrorOptions,
-                        id: 'missing-fields-error'
-                    })
+                    errorToast(`Champs obligatoires manquants : ${missingFields.join(', ')}`)
                 }
             }
 

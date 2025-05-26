@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -29,7 +29,7 @@ export default function CreateArtistForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
-
+  const { success, error: errorToast } = useToast()
   const {
     register,
     handleSubmit,
@@ -87,21 +87,21 @@ export default function CreateArtistForm() {
       console.log('Résultat de la création:', result)
 
       if (result.success) {
-        toast.success('Artiste créé avec succès')
+        success('Artiste créé avec succès')
 
         // Rediriger immédiatement
         router.push('/dataAdministration/artists')
         router.refresh()
       } else {
         console.error('Erreur retournée par l\'API:', result.message)
-        toast.error(result.message || 'Une erreur est survenue')
+        errorToast(result.message || 'Une erreur est survenue')
         setFormError(result.message || 'Échec de la création de l\'artiste')
         setIsSubmitting(false)
       }
     } catch (error: any) {
       console.error('Exception lors de la création de l\'artiste:', error)
       const errorMessage = error.message || 'Une erreur est survenue lors de la création'
-      toast.error(errorMessage)
+      errorToast(errorMessage)
       setFormError(errorMessage)
       setIsSubmitting(false)
     }

@@ -18,8 +18,8 @@ import {
   FormActions
 } from './sections'
 import { useRouter } from 'next/navigation'
-import toast from 'react-hot-toast'
 import { deletePhysicalItem, deleteNftItem } from '@/lib/actions/prisma-actions'
+import { useToast } from '@/app/components/Toast/ToastContext'
 
 export default function ArtworkForm({ mode = 'create', initialData = {}, onSuccess }: ArtworkFormProps) {
   // État local pour le slug et le titre/nom
@@ -98,7 +98,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
   const certificateFile = certificateInputRef.current?.files?.[0] || null
   
   const router = useRouter()
-  
+  const { error: errorToast } = useToast()
   // Surveiller les changements de titre depuis le formulaire
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isFormReadOnly) {
@@ -204,7 +204,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
   const onSubmit = async (data: any) => {
     // Vérifier qu'au moins une option de tarification est cochée
     if (!hasPhysicalOnly && !hasNftOnly) {
-      toast.error('Vous devez sélectionner au moins une option de tarification')
+      errorToast('Vous devez sélectionner au moins une option de tarification')
       return
     }
     
@@ -229,7 +229,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
             }
           } catch (error) {
             console.error('Erreur lors de la suppression du PhysicalItem:', error)
-            toast.error('Erreur lors de la suppression de l\'item physique')
+            errorToast('Erreur lors de la suppression de l\'item physique')
           }
         }
         
@@ -245,7 +245,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
             }
           } catch (error) {
             console.error('Erreur lors de la suppression du NftItem:', error)
-            toast.error('Erreur lors de la suppression du NFT')
+            errorToast('Erreur lors de la suppression du NFT')
           }
         }
       }
@@ -254,7 +254,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
       await originalOnSubmit(data)
     } catch (error) {
       console.error('Erreur lors de la soumission du formulaire:', error)
-      toast.error('Une erreur est survenue lors de la soumission du formulaire')
+      errorToast('Une erreur est survenue lors de la soumission du formulaire')
     }
   }
   

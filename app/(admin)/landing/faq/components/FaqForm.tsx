@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Faq } from '@prisma/client'
 import { createFaq, updateFaq } from '@/lib/actions/faq-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import TranslationField from '@/app/components/TranslationField'
 
@@ -18,7 +18,7 @@ export default function FaqForm({ mode, faq }: FaqFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isFormDisabled, setIsFormDisabled] = useState(false)
-  
+  const { success, error } = useToast()
   const [formData, setFormData] = useState({
     question: faq?.question || '',
     answer: faq?.answer || '',
@@ -80,7 +80,7 @@ export default function FaqForm({ mode, faq }: FaqFormProps) {
           const result = await createFaq(formData)
           
           if (result.success) {
-            toast.success('FAQ créée avec succès')
+            success('FAQ créée avec succès')
             
             // Gestion des traductions pour les champs question et answer
             try {
@@ -97,14 +97,14 @@ export default function FaqForm({ mode, faq }: FaqFormProps) {
             
             router.push('/landing/faq')
           } else {
-            toast.error(result.message || 'Une erreur est survenue lors de la création')
+            error(result.message || 'Une erreur est survenue lors de la création')
             setIsFormDisabled(false)
           }
         } else if (mode === 'edit' && faq) {
           const result = await updateFaq(faq.id, formData)
           
           if (result.success) {
-            toast.success('FAQ mise à jour avec succès')
+            success('FAQ mise à jour avec succès')
             
             // Gestion des traductions pour les champs question et answer
             try {
@@ -119,13 +119,13 @@ export default function FaqForm({ mode, faq }: FaqFormProps) {
             
             router.push('/landing/faq')
           } else {
-            toast.error(result.message || 'Une erreur est survenue lors de la mise à jour')
+            error(result.message || 'Une erreur est survenue lors de la mise à jour')
             setIsFormDisabled(false)
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erreur lors de la soumission du formulaire:', error)
-        toast.error('Une erreur est survenue')
+        error('Une erreur est survenue')
         setIsFormDisabled(false)
       }
     })

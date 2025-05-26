@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import Modal from '@/app/components/Common/Modal'
-import { useCategories } from './hooks/useCategories'
+import { deleteSeoCategory } from '@/lib/actions/seo-category-actions'
 
 interface CategoryProps {
   id: number
@@ -18,24 +20,30 @@ interface SeoCategoriesClientProps {
   categories: CategoryProps[] | undefined
 }
 
-export default function SeoCategoriesClient({ categories: initialCategories }: SeoCategoriesClientProps) {
-  const {
-    categories,
-    loadingCategoryId,
-    deletingCategoryId,
-    navigateToEdit,
-    navigateToCreate,
-    deleteCategory,
-    isLoading
-  } = useCategories({ initialCategories })
-
+/**
+ * @deprecated Utiliser SeoCategoriesClientWithHook à la place
+ * Version legacy conservée pour référence
+ */
+export default function SeoCategoriesClientLegacy({ categories: initialCategories }: SeoCategoriesClientProps) {
+  const router = useRouter()
+  const [categories, setCategories] = useState<CategoryProps[] | undefined>(initialCategories)
+  const [loadingCategoryId, setLoadingCategoryId] = useState<number | null>(null)
+  const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null)
+  const { success, error } = useToast()
+  // Synchroniser avec les nouvelles props quand elles changent
+  useEffect(() => {
+    setCategories(initialCategories)
+  }, [initialCategories])
 
   const handleCategoryClick = (categoryId: number) => {
-    if (!isLoading) {
-      navigateToEdit(categoryId)
-    }
+    setLoadingCategoryId(categoryId)
+    router.push(`/landing/blog-categories/${categoryId}/edit`)
+  }
+
+  const handleAddNewCategory = () => {
+    router.push(`/landing/blog-categories/create`)
   }
 
   const handleDeleteClick = (e: React.MouseEvent, categoryId: number) => {
@@ -45,12 +53,34 @@ export default function SeoCategoriesClient({ categories: initialCategories }: S
   }
   
   const handleDeleteConfirm = async () => {
-    if (!categoryToDelete) return
+    if (!categoryToDelete || !categories) return
     
     setIsDeleteModalOpen(false)
-    const success = await deleteCategory(categoryToDelete)
+    setDeletingCategoryId(categoryToDelete)
     
-    if (success) {
+    try {
+      const result = await deleteSeoCategory(categoryToDelete)
+      
+      if (result.success) {
+        // Mise à jour optimiste : supprimer immédiatement de l'état local
+        setCategories(prevCategories => 
+          prevCategories?.filter(category => category.id !== categoryToDelete)
+        )
+        success('Catégorie supprimée avec succès')
+        
+        // Rafraîchir en arrière-plan pour s'assurer de la synchronisation
+        router.refresh()
+      } else {
+        error(result.message || 'Une erreur est survenue lors de la suppression')
+      }
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression:', error)
+      error('Une erreur est survenue lors de la suppression')
+      
+      // En cas d'erreur, rafraîchir pour restaurer l'état correct
+      router.refresh()
+    } finally {
+      setDeletingCategoryId(null)
       setCategoryToDelete(null)
     }
   }
@@ -67,7 +97,7 @@ export default function SeoCategoriesClient({ categories: initialCategories }: S
           <h1 className="page-title">Catégories d'articles</h1>
           <button 
             className="btn btn-primary btn-small"
-            onClick={navigateToCreate}
+            onClick={handleAddNewCategory}
           >
             Ajouter une catégorie
           </button>
@@ -83,7 +113,7 @@ export default function SeoCategoriesClient({ categories: initialCategories }: S
             <p>Aucune catégorie trouvée</p>
             <button 
               className="btn btn-primary btn-medium mt-4"
-              onClick={navigateToCreate}
+              onClick={handleAddNewCategory}
             >
               Ajouter une catégorie
             </button>
@@ -102,20 +132,20 @@ export default function SeoCategoriesClient({ categories: initialCategories }: S
               </thead>
               <tbody>
                 {categories && categories.map((category) => {
-                  const isCategoryLoading = loadingCategoryId === category.id
-                  const isCategoryDeleting = deletingCategoryId === category.id
-                  const isCategoryDisabled = isLoading && !isCategoryLoading && !isCategoryDeleting
+                  const isLoading = loadingCategoryId === category.id
+                  const isDeleting = deletingCategoryId === category.id
+                  const isDisabled = loadingCategoryId !== null || deletingCategoryId !== null
                   
                   return (
                     <tr 
                       key={category.id} 
-                      onClick={() => handleCategoryClick(category.id)}
-                      className={`clickable-row ${isCategoryLoading || isCategoryDeleting ? 'loading-row' : ''} ${isCategoryDisabled ? 'disabled-row' : ''}`}
+                      onClick={() => !isDisabled && handleCategoryClick(category.id)}
+                      className={`clickable-row ${isLoading || isDeleting ? 'loading-row' : ''} ${isDisabled && !isLoading && !isDeleting ? 'disabled-row' : ''}`}
                     >
                       <td>
                         <div className="d-flex align-items-center gap-sm">
-                          {isCategoryLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isCategoryLoading ? 'text-muted' : ''}>
+                          {isLoading && <LoadingSpinner size="small" message="" inline />}
+                          <span className={isLoading ? 'text-muted' : ''}>
                             {category.name}
                           </span>
                         </div>
@@ -141,10 +171,10 @@ export default function SeoCategoriesClient({ categories: initialCategories }: S
                         <button
                           onClick={(e) => handleDeleteClick(e, category.id)}
                           className="btn btn-danger btn-small"
-                          disabled={isLoading || (category._count?.posts || 0) > 0}
+                          disabled={isDisabled || (category._count?.posts || 0) > 0}
                           title={category._count?.posts && category._count.posts > 0 ? 'Impossible de supprimer une catégorie contenant des articles' : ''}
                         >
-                          {isCategoryDeleting ? (
+                          {isDeleting ? (
                             <LoadingSpinner size="small" message="" inline />
                           ) : (
                             'Supprimer'

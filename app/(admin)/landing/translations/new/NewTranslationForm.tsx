@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Language } from '@prisma/client'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -40,7 +40,7 @@ export default function NewTranslationForm({ languages, models }: NewTranslation
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedModel, setSelectedModel] = useState<string>('')
   const [availableFields, setAvailableFields] = useState<Field[]>([])
-  
+  const { success, error } = useToast()
   const {
     register,
     handleSubmit,
@@ -85,7 +85,7 @@ export default function NewTranslationForm({ languages, models }: NewTranslation
       const result = await createTranslation(data)
       
       if (result.success) {
-        toast.success('Traduction ajoutée avec succès')
+        success('Traduction ajoutée avec succès')
         
         // Rediriger après 1 seconde
         setTimeout(() => {
@@ -93,10 +93,10 @@ export default function NewTranslationForm({ languages, models }: NewTranslation
           router.refresh()
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de l\'ajout de la traduction')
+      error('Une erreur est survenue lors de l\'ajout de la traduction')
       console.error(error)
     } finally {
       setIsSubmitting(false)

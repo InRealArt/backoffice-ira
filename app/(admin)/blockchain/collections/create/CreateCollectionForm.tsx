@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import styles from './CreateCollectionForm.module.scss'
 import { Artist, SmartContract } from '@prisma/client'
 import { createCollection, syncCollection, updateCollection } from '@/lib/actions/collection-actions'
@@ -55,7 +55,7 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
   const { address, status, chain } = useAccount()
   const config = useConfig()
   const chainId = useChainId()
-  
+  const { success: successToast, error, info } = useToast()
   const {
     register,
     handleSubmit,
@@ -199,7 +199,7 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
           try {
             console.log('smartContract.network', smartContract.network)
             const targetChainId = getChainId(smartContract.network)
-            toast.success(`Changement vers le réseau ${formatChainName(smartContract.network)}...`)
+            successToast(`Changement vers le réseau ${formatChainName(smartContract.network)}...`)
             
             // Utiliser switchChain au lieu de switchNetwork
             const targetChain = getChainByName(smartContract.network)
@@ -210,8 +210,8 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
               const hasRole = await checkDeployerRole(smartContract.factoryAddress, address)
               setHasDeployerRole(hasRole)
             }
-          } catch (error) {
-            toast.error(`Erreur lors du changement de réseau: ${(error as Error).message}`)
+          } catch (error: any) {
+            error(`Erreur lors du changement de réseau: ${(error as Error).message}`)
           }
         } else if (address) {
           // Si nous sommes déjà sur le bon réseau, vérifier le rôle immédiatement
@@ -255,7 +255,7 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
       })
       
       if (result.success) {
-        toast.success(data.contractAddress
+        successToast(data.contractAddress
           ? 'Collection soumise avec succès! Confirmation en attente...'
           : 'Collection créée avec succès!'
         )
@@ -263,13 +263,13 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
           router.push('/blockchain/collections')
         }
       } else {
-        toast.error(result.message || 'Erreur lors de la création de la collection')
+        error(result.message || 'Erreur lors de la création de la collection')
         setIsSubmitting(false)
       }
       return result.collection
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur:', error)
-      toast.error('Une erreur est survenue lors de l\'enregistrement de la collection')
+      error('Une erreur est survenue lors de l\'enregistrement de la collection')
       setIsSubmitting(false)
     }
   }
@@ -285,20 +285,20 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
     
     // Vérifier si le wallet est connecté
     if (status !== 'connected' || !address) {
-      toast.error('Veuillez connecter votre wallet')
+      error('Veuillez connecter votre wallet')
       setIsSubmitting(false)
       return
     }
     
     // Vérifier si nous sommes sur le bon réseau
     if (selectedSmartContract && chain && getChainId(selectedSmartContract.network) !== chain.id) {
-      toast.error(`Veuillez passer sur le réseau ${formatChainName(selectedSmartContract.network)}`)
+      error(`Veuillez passer sur le réseau ${formatChainName(selectedSmartContract.network)}`)
       setIsSubmitting(false)
       return
     }
     
     if (!selectedSmartContract) {
-      toast.error('Aucune factory sélectionnée')
+      error('Aucune factory sélectionnée')
       setIsSubmitting(false)
       return
     }
@@ -318,7 +318,7 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
         smartContractId: parseInt(data.smartContractId)
       })
       if (!success) {
-        toast.error(message || 'Erreur lors de la création de la collection avec code erreur: ' + errorCode)
+        error(message || 'Erreur lors de la création de la collection avec code erreur: ' + errorCode)
         setIsSubmitting(false)
         return
       }
@@ -365,16 +365,16 @@ export default function CreateCollectionForm({ artists, smartContracts }: Create
         }
       } catch (timeoutError) {
         console.warn('Timeout lors de l\'attente de la confirmation:', timeoutError)
-        toast.loading('La transaction a été soumise mais n\'est pas encore confirmée. Vous pourrez la synchroniser depuis la liste des collections.')
+        info('La transaction a été soumise mais n\'est pas encore confirmée. Vous pourrez la synchroniser depuis la liste des collections.')
         
         // Ne pas rediriger, juste informer l'utilisateur
-        toast.success('Collection enregistrée en attente de confirmation blockchain')
+        successToast('Collection enregistrée en attente de confirmation blockchain')
         router.push('/blockchain/collections')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de l\'appel au smart contract:', error)
       setTransactionError(error as Error)
-      toast.error(`Erreur lors de l'appel au smart contract: ${(error as Error).message}`)
+      error(`Erreur lors de l'appel au smart contract: ${(error as Error).message}`)
     } finally {
       setIsTransactionPending(false)
       setIsSubmitting(false)

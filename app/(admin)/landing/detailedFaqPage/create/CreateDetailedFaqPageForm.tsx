@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -21,6 +21,7 @@ export default function CreateDetailedFaqPageForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [availablePages, setAvailablePages] = useState<string[]>([])
+  const { success, error } = useToast()
 
   // Charger les pages disponibles au chargement du composant
   useEffect(() => {
@@ -28,9 +29,9 @@ export default function CreateDetailedFaqPageForm() {
       try {
         const pages = await getAvailableLandingPages()
         setAvailablePages(pages)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erreur lors du chargement des pages disponibles:', error)
-        toast.error('Impossible de charger la liste des pages disponibles')
+        error('Impossible de charger la liste des pages disponibles')
       }
     }
     
@@ -57,7 +58,7 @@ export default function CreateDetailedFaqPageForm() {
       const result = await createDetailedFaqPage(data.name as LandingPage)
       
       if (result.success && result.data) {
-        toast.success('FAQ pour la page créée avec succès')
+        success('FAQ pour la page créée avec succès')
         
         // Rediriger vers la page d'édition
         setTimeout(() => {
@@ -65,11 +66,11 @@ export default function CreateDetailedFaqPageForm() {
           router.refresh()
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
         setIsSubmitting(false)
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de la création')
+      error('Une erreur est survenue lors de la création')
       console.error(error)
       setIsSubmitting(false)
     }

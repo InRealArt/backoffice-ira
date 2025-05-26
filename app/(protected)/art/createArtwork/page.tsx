@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Toaster } from 'react-hot-toast'
 import ArtworkForm from '../components/ArtworkForm'
 import styles from './createArtwork.module.scss'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
@@ -13,7 +12,6 @@ export default function CreateArtworkPage() {
   const [artistName, setArtistName] = useState('')
   const { user } = useDynamicContext()
   const router = useRouter()
-  
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768)
@@ -53,11 +51,6 @@ export default function CreateArtworkPage() {
   
   return (
     <>
-      <Toaster 
-        position={isMobile ? "bottom-center" : "top-right"} 
-        toastOptions={{ duration: isMobile ? 5000 : 3000 }}
-      />
-      
       <div className={styles.artworkCreationHeader}>
         <h1>Créer une œuvre dans la Collection de l'artiste <span className={styles.artistHighlight}>{artistName}</span></h1>
         <p className={styles.subtitle}>

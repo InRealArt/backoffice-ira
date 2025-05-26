@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createTeamMember } from '@/lib/actions/team-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import Image from 'next/image'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -33,7 +33,7 @@ type FormValues = z.infer<typeof formSchema>
 export default function NewTeamMemberForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-
+  const { success, error } = useToast()
   const {
     register,
     handleSubmit,
@@ -87,7 +87,7 @@ export default function NewTeamMemberForm() {
       const result = await createTeamMember(formattedData)
       
       if (result.success && result.id) {
-        toast.success('Membre d\'équipe créé avec succès')
+        success('Membre d\'équipe créé avec succès')
         
         // Gestion des traductions pour le rôle et la description
         try {
@@ -107,10 +107,10 @@ export default function NewTeamMemberForm() {
           router.refresh()
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de la création')
+      error('Une erreur est survenue lors de la création')
       console.error(error)
     } finally {
       setIsSubmitting(false)

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,7 +19,7 @@ type FormValues = z.infer<typeof formSchema>
 export default function CreateDetailedGlossaryForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-
+  const { success, error } = useToast()
   // Formulaire principal pour le DetailedGlossaryHeader
   const {
     register,
@@ -50,7 +50,7 @@ export default function CreateDetailedGlossaryForm() {
           // On ne bloque pas la création en cas d'erreur de traduction
         }
         
-        toast.success('Section de Glossaire créée avec succès')
+        success('Section de Glossaire créée avec succès')
         
         // Rediriger vers la page d'édition
         setTimeout(() => {
@@ -58,11 +58,11 @@ export default function CreateDetailedGlossaryForm() {
           router.refresh()
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
         setIsSubmitting(false)
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de la création')
+      error('Une erreur est survenue lors de la création')
       console.error(error)
       setIsSubmitting(false)
     }

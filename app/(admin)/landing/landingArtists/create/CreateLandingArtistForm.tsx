@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -59,6 +59,7 @@ interface CreateLandingArtistFormProps {
 
 export default function CreateLandingArtistForm({ artists }: CreateLandingArtistFormProps) {
   const router = useRouter()
+  const { success, error } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [artworkImages, setArtworkImages] = useState<{name: string, url: string}[]>([])
   const [newImageUrl, setNewImageUrl] = useState('')
@@ -141,7 +142,7 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
       const result = await createLandingArtistAction(formattedData)
       
       if (result.success) {
-        toast.success('Artiste ajouté avec succès')
+        success('Artiste ajouté avec succès')
         
         // Gestion des traductions pour intro et description
         try {
@@ -163,10 +164,10 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
           router.refresh()
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de la création')
+      error('Une erreur est survenue lors de la création')
       console.error(error)
     } finally {
       setIsSubmitting(false)

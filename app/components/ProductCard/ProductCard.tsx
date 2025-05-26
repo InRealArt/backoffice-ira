@@ -4,8 +4,9 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { updateItemStatus } from '@/lib/actions/prisma-actions'
-import toast from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import styles from './ProductCard.module.scss'
+import toast from 'react-hot-toast'
 
 type ProductCardProps = {
   id: number
@@ -39,7 +40,7 @@ export default function ProductCard({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [physicalStatus, setPhysicalStatus] = useState(physicalItem?.status)
   const [nftStatus, setNftStatus] = useState(nftItem?.status)
-
+  const { success, error: errorToast } = useToast()
   // Formater un prix en euros
   const formatPrice = (price?: number) => {
     if (!price && price !== 0) return null
@@ -55,14 +56,14 @@ export default function ProductCard({
       if (result && result.success) {
         if (physicalStatus === 'created') setPhysicalStatus('pending')
         if (nftStatus === 'created') setNftStatus('pending')
-        toast.success('Demande de listing envoyée avec succès')
+        success('Demande de listing envoyée avec succès')
       } else {
         const errorMessage = result?.message || 'Erreur lors de la demande de listing'
-        toast.error(errorMessage)
+        errorToast(errorMessage)
       }
     } catch (error: any) {
       console.error('Erreur lors de la demande de listing:', error)
-      toast.error(error.message || 'Une erreur est survenue')
+      errorToast(error.message || 'Une erreur est survenue')
     } finally {
       setIsSubmitting(false)
     }

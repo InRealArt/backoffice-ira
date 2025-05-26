@@ -7,7 +7,7 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { getAuthCertificateByItemId, getUserByItemId, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, isCertificateUriUnique, getItemById } from '@/lib/actions/prisma-actions'
 import React from 'react'
 import { z } from 'zod'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { uploadFilesToIpfs, uploadMetadataToIpfs } from '@/lib/actions/pinata-actions'
 import { useAccount, useWalletClient } from 'wagmi'
 import { publicClient } from '@/lib/providers'
@@ -18,6 +18,7 @@ import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
 import Image from 'next/image'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
+import { toast } from 'react-hot-toast'
 
 type ParamsType = Promise<{ id: string }>
 
@@ -47,7 +48,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   const [isMinter, setIsMinter] = useState<boolean>(false)
   const [isCheckingMinter, setIsCheckingMinter] = useState<boolean>(false)
   const { data: walletClient } = useWalletClient()
-
+  const { success, error: errorToast, info, dismiss } = useToast()
   const unwrappedParams = React.use(params)
   const id = unwrappedParams.id
   const { mintNFT, isLoading: isMinting, error: mintingError, success: mintingSuccess } = useNftMinting()
@@ -223,26 +224,26 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
         })
         setFormErrors(errors)
         // Afficher un toast d'erreur
-        toast.error('Veuillez corriger les erreurs du formulaire')
+        errorToast('Veuillez corriger les erreurs du formulaire')
         return
       }
       
       // Vérifier l'unicité du nom NFT
-      const nameCheckToast = toast.loading('Vérification du nom du NFT...')
+      const nameCheckToast = info('Vérification du nom du NFT...')
       const nameExists = await checkNftResourceNameExists(formData.name)
-      toast.dismiss(nameCheckToast)
+      dismiss(nameCheckToast as any)
       
       if (nameExists) {
         setFormErrors(prev => ({
           ...prev,
           name: 'Ce nom de NFT existe déjà. Veuillez en choisir un autre.'
         }))
-        toast.error('Ce nom de NFT existe déjà')
+        errorToast('Ce nom de NFT existe déjà')
         return
       }
       
       // Afficher un toast de chargement
-      const loadingToast = toast.loading('Upload des fichiers sur IPFS en cours...')
+      const loadingToast = info('Upload des fichiers sur IPFS en cours...')
       
       // Appel du server action pour upload les fichiers
       const response = await uploadFilesToIpfs(
@@ -252,20 +253,20 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
       )
       
       // Fermer le toast de chargement
-      toast.dismiss(loadingToast)
+      dismiss(loadingToast as any)
       
       if (!response.success) {
-        toast.error(response.error || 'Erreur lors de l\'upload sur IPFS')
+        errorToast(response.error || 'Erreur lors de l\'upload sur IPFS')
         return
       }
       
       if (await isCertificateUriUnique(response.certificate.data.cid)) {
-        toast.error('Le certificat d\'authenticité existe déjà sur IPFS')
+        errorToast('Le certificat d\'authenticité existe déjà sur IPFS')
         return
       }
       
       // Upload des métadonnées sur IPFS via la Server Action
-      const metadataToast = toast.loading('Upload des métadonnées NFT sur IPFS...');
+      const metadataToast = info('Upload des métadonnées NFT sur IPFS...');
       
       try {
         const metadataResponse = await uploadMetadataToIpfs({
@@ -277,16 +278,16 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
         });
         
         if (!metadataResponse.success) {
-          toast.dismiss(metadataToast);
-          toast.error(metadataResponse.error || 'Erreur lors de l\'upload des métadonnées');
+          dismiss(metadataToast as any);
+          errorToast(metadataResponse.error || 'Erreur lors de l\'upload des métadonnées');
           return;
         }
         
         const tokenUri = metadataResponse.metadata?.data.cid;
-        toast.dismiss(metadataToast);
+        dismiss(metadataToast as any);
         
         // Création d'un enregistrement dans la table NftResource
-        const nftResourceToast = toast.loading('Enregistrement des ressources NFT...')
+        const nftResourceToast = info('Enregistrement des ressources NFT...')
         
         try {
           if (!item || !item.id) {
@@ -311,27 +312,27 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
             collectionId: collectionId
           });
           
-          toast.dismiss(nftResourceToast);
+          dismiss(nftResourceToast as any);
           
           if (!nftResourceResult.success) {
-            toast.error(nftResourceResult.error || 'Erreur lors de l\'enregistrement des ressources NFT');
+            errorToast(nftResourceResult.error || 'Erreur lors de l\'enregistrement des ressources NFT');
             return;
           }
           
-          toast.success('Ressources NFT enregistrées avec succès');
+          success('Ressources NFT enregistrées avec succès');
           setShowUploadIpfsForm(false);
           
           // Rediriger vers la liste des NFTs à minter
           router.push('/marketplace/nftsToMint');
         } catch (resourceError) {
-          toast.dismiss(nftResourceToast);
+          dismiss(nftResourceToast as any);
           console.error('Erreur lors de l\'enregistrement des ressources NFT:', resourceError);
-          toast.error('Une erreur est survenue lors de l\'enregistrement des ressources NFT');
+          errorToast('Une erreur est survenue lors de l\'enregistrement des ressources NFT');
         }
       } catch (metadataError) {
-        toast.dismiss(metadataToast);
+        dismiss(metadataToast as any);
         console.error('Erreur lors de l\'upload des métadonnées:', metadataError);
-        toast.error('Une erreur est survenue lors de l\'upload des métadonnées');
+        errorToast('Une erreur est survenue lors de l\'upload des métadonnées');
       }
     } catch (error) {
       console.error('Erreur lors de l\'upload sur IPFS:', error);

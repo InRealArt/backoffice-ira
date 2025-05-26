@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { useRouter } from 'next/navigation'
 import { artistNftCollectionAbi } from '@/lib/contracts/ArtistNftCollectionAbi'
 import {
@@ -56,7 +56,7 @@ export function useNftMinting(): UseNftMintingReturn {
     const [success, setSuccess] = useState<boolean>(false)
     const [txHash, setTxHash] = useState<Hash | null>(null)
     const router = useRouter()
-
+    const { success: successToast, error: errorToast, info: infoToast, dismiss: dismissToast } = useToast()
     /**
      * Fonction pour minter un NFT
      * @param {MintNFTParams} params - Paramètres pour le minting
@@ -79,7 +79,7 @@ export function useNftMinting(): UseNftMintingReturn {
         const contractAddress = nftResource.collection.contractAddress
 
         // Afficher un toast de chargement
-        const mintingToast = toast.loading('Minting en cours...')
+        const mintingToast = infoToast('Minting en cours...')
 
         try {
             // Préparer les paramètres NFT pour le smart contract
@@ -120,17 +120,17 @@ export function useNftMinting(): UseNftMintingReturn {
                 const updateResult = await updateNftResourceTxHash(Number(nftResource.id), hash)
 
                 if (updateResult.success) {
-                    toast.success('NFT minté en attente de confirmation...')
+                    successToast('NFT minté en attente de confirmation...')
                 } else {
-                    toast.error(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
+                    errorToast(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
                 }
             } catch (updateError) {
                 console.error('Erreur lors de la mise à jour du txHash:', updateError)
-                toast.error('NFT minté, mais erreur lors de la mise à jour des informations')
+                errorToast('NFT minté, mais erreur lors de la mise à jour des informations')
             }
 
-            toast.dismiss(mintingToast)
-            const waitingBlockchainconfirmationToast = toast.loading(`Transaction soumise en attente de confirmation dans la blockchain. Hash: ${hash.slice(0, 10)}...`)
+            dismissToast(mintingToast as any)
+            const waitingBlockchainconfirmationToast = infoToast(`Transaction soumise en attente de confirmation dans la blockchain. Hash: ${hash.slice(0, 10)}...`)
 
             // Attendre la confirmation de la transaction
             const receipt = await publicClient.waitForTransactionReceipt({
@@ -140,9 +140,9 @@ export function useNftMinting(): UseNftMintingReturn {
 
             // Vérifier si la transaction est réussie
             if (receipt.status === 'success') {
-                toast.dismiss(waitingBlockchainconfirmationToast)
+                dismissToast(waitingBlockchainconfirmationToast as any)
                 setSuccess(true)
-                toast.success('NFT minté avec succès!')
+                successToast('NFT minté avec succès!')
 
                 // Mettre à jour le statut de la ressource NFT
                 await updateNftResourceStatusToMinted(Number(nftResource.id))
@@ -167,22 +167,22 @@ export function useNftMinting(): UseNftMintingReturn {
 
                 return { success: true, receipt, hash }
             } else {
-                toast.dismiss(waitingBlockchainconfirmationToast)
-                toast.error('La confirmation de la transaction dans la Blockchain a échoué')
+                dismissToast(waitingBlockchainconfirmationToast as any)
+                errorToast('La confirmation de la transaction dans la Blockchain a échoué')
                 throw new Error('La transaction a échoué')
             }
 
         } catch (error: any) {
             console.error('Erreur lors du minting:', error.message)
             if (error.message.includes('User rejected the request')) {
-                toast.dismiss(mintingToast)
-                toast.error('La transaction a été refusée par l\'utilisateur')
+                dismissToast(mintingToast as any)
+                errorToast('La transaction a été refusée par l\'utilisateur')
                 return { success: false, error: 'La transaction a été refusée par l\'utilisateur' }
             } else {
                 const errorMessage = error.message || 'Une erreur est survenue'
                 setError(errorMessage)
-                toast.dismiss(mintingToast)
-                toast.error(`Erreur lors du minting: ${errorMessage}`)
+                dismissToast(mintingToast as any)
+                errorToast(`Erreur lors du minting: ${errorMessage}`)
                 return { success: false, error: errorMessage }
             }
         } finally {

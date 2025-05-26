@@ -2,13 +2,13 @@
 
 import { useDynamicContext, useDynamicEvents, useUserWallets } from '@dynamic-labs/sdk-react-core'
 import { updateLinkedWallets } from '@/lib/actions/dynamic-actions'
-import toast from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { useEffect } from 'react'
 
 export default function WalletEventListener() {
   const { primaryWallet } = useDynamicContext()
   const userWallets = useUserWallets()
-
+  const { success, error: errorToast } = useToast()
   // Logs de débogage améliorés et détection des wallets Turnkey HD
   useEffect(() => {
     // console.log('WalletEventListener monté')
@@ -99,13 +99,13 @@ export default function WalletEventListener() {
       console.log('Résultat de updateLinkedWallets:', result)
 
       if (result.success) {
-        toast.success('Nouveau portefeuille lié avec succès')
+        success('Nouveau portefeuille lié avec succès')
       } else {
-        toast.error(result.message || 'Erreur lors de la liaison du portefeuille')
+        errorToast(result.message || 'Erreur lors de la liaison du portefeuille')
       }
     } catch (error) {
       console.error('Erreur lors du traitement de l\'ajout de wallet:', error)
-      toast.error('Erreur lors de la liaison du portefeuille')
+      errorToast('Erreur lors de la liaison du portefeuille')
     }
   })
 

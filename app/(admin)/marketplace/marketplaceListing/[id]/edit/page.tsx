@@ -28,7 +28,7 @@ import Button from '@/app/components/Button/Button'
 import { getItemById, getNftResourceByItemId, getSmartContractAddress, updateNftResourceStatusToListed } from '@/lib/actions/prisma-actions'
 import styles from './marketplaceListing.module.scss'
 import React from 'react'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { useAccount, useWalletClient } from 'wagmi'
 import { publicClient } from '@/lib/providers'
 import { parseEther, Address } from 'viem'
@@ -61,6 +61,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   })
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [marketplaceManager, setMarketplaceManager] = useState<Address | null>(null)
+  const { success, error: errorToast } = useToast()
   const { 
     listNftOnMarketplace, 
     checkMarketplaceSellerRole,
@@ -381,7 +382,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   useEffect(() => {
     if (transferSuccess) {
       setTransferStep('completed');
-      toast.success('NFT transféré avec succès. L\'admin marketplace peut maintenant le lister.');
+      success('NFT transféré avec succès. L\'admin marketplace peut maintenant le lister.');
       fetchTokenOwner(); // Rafraîchir le propriétaire après le transfert
     }
   }, [transferSuccess]);
@@ -405,7 +406,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   // Fonction pour initialiser le processus de transfert direct
   const handleTransferProcess = async () => {
     if (!nftResource?.collection?.contractAddress || !nftResource?.tokenId) {
-      toast.error('Informations du NFT non disponibles');
+      errorToast('Informations du NFT non disponibles');
       return;
     }
     
@@ -416,14 +417,14 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       const marketplaceAdminAddress = await getSmartContractAddress('Marketplace', network as NetworkType) as Address;
       
       // Informer l'utilisateur de l'action à entreprendre
-      toast.success('Vous allez maintenant transférer le NFT à l\'admin de la marketplace');
+      success('Vous allez maintenant transférer le NFT à l\'admin de la marketplace');
       
       // Initier le processus (transfert direct)
       setTransferStep('transfer');
       
     } catch (error) {
       console.error('Erreur lors de l\'initialisation du processus de transfert:', error);
-      toast.error('Impossible d\'initialiser le processus de transfert');
+      errorToast('Impossible d\'initialiser le processus de transfert');
       setTransferStep('idle');
     }
   };
@@ -431,12 +432,12 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   // Fonction de transfert du NFT directement à l'admin marketplace
   const handleTransferNft = async () => {
     if (!nftResource?.collection?.contractAddress || !nftResource?.tokenId) {
-      toast.error('Informations du NFT non disponibles');
+      errorToast('Informations du NFT non disponibles');
       return;
     }
     
     if (!walletClient) {
-      toast.error('Portefeuille non connecté ou non disponible');
+      errorToast('Portefeuille non connecté ou non disponible');
       return;
     }
     
@@ -463,7 +464,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
         }
       } catch (error) {
         console.error("Erreur lors de la récupération de l'adresse du super admin:", error);
-        toast.error("Impossible de récupérer l'adresse de l'administrateur de la marketplace");
+        errorToast("Impossible de récupérer l'adresse de l'administrateur de la marketplace");
         return;
       }
       
@@ -480,7 +481,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
         adminMarketplace: marketplaceAdminAddress, // Adresse du super admin marketplace (personne)
         walletClient,
         onSuccess: () => {
-          toast.success("NFT transféré avec succès à l'administrateur de la marketplace");
+          success("NFT transféré avec succès à l'administrateur de la marketplace");
           setTransferStep('completed');
           setListingProcess(prev => ({...prev, tokenTransferred: true}));
           fetchTokenOwner(); // Rafraîchir le propriétaire après le transfert
@@ -489,19 +490,19 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       
     } catch (error: any) {
       console.error('Erreur lors du transfert du NFT:', error);
-      toast.error(`Erreur lors du safeTransferFrom: ${error.message || 'Erreur inconnue'}`);
+      errorToast(`Erreur lors du safeTransferFrom: ${error.message || 'Erreur inconnue'}`);
     }
   };
 
   // Fonction pour approuver le smart contract Marketplace pour ce NFT
   const handleApproveNftForMarketplace = async () => {
     if (!nftResource?.collection?.contractAddress || !nftResource?.tokenId) {
-      toast.error('Informations du NFT non disponibles');
+      errorToast('Informations du NFT non disponibles');
       return;
     }
     console.log('walletClient', walletClient)
     if (!walletClient) {
-      toast.error('Portefeuille non connecté ou non disponible');
+      errorToast('Portefeuille non connecté ou non disponible');
       return;
     }
 
@@ -524,7 +525,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
         marketplaceAddress,
         walletClient,
         onSuccess: () => {
-          toast.success('Le NFT a été approuvé avec succès pour être géré par le smart contract Marketplace');
+          success('Le NFT a été approuvé avec succès pour être géré par le smart contract Marketplace');
           setIsNftApproved(true);
           // Vérifier l'approbation pour confirmer
           setTimeout(() => checkNftApproval(), 2000);
@@ -590,7 +591,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       }
       
       // Afficher à la fois un message toast et un log détaillé
-      toast.error(`Erreur lors de l'approbation: ${verboseError}`);
+      errorToast(`Erreur lors de l'approbation: ${verboseError}`);
       console.error('[VERBOSE ERROR]', {
         message: errorMessage,
         code: error.code,
@@ -639,23 +640,23 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
     if (e) e.preventDefault();
     
     if (!validateForm()) {
-      toast.error('Veuillez corriger les erreurs du formulaire');
+      errorToast('Veuillez corriger les erreurs du formulaire');
       return;
     }
     
     // Vérifications pour s'assurer que toutes les conditions sont remplies
     if (!hasMarketplaceRole) {
-      toast.error('Vous devez avoir le rôle d\'admin marketplace pour lister un NFT');
+      errorToast('Vous devez avoir le rôle d\'admin marketplace pour lister un NFT');
       return;
     }
     
     if (!isMarketplaceOwner) {
-      toast.error('Vous devez être propriétaire du NFT pour le lister');
+      errorToast('Vous devez être propriétaire du NFT pour le lister');
       return;
     }
     
     if (!isNftApproved) {
-      toast.error('Vous devez d\'abord approuver le contrat marketplace pour gérer ce NFT');
+      errorToast('Vous devez d\'abord approuver le contrat marketplace pour gérer ce NFT');
       return;
     }
     
@@ -684,7 +685,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
             await updateNftResourceStatusToListed(nftResource.id);
             setListingProcess(prev => ({...prev, listingComplete: true}));
             // Notification de succès
-            toast.success('NFT mis en vente avec succès');
+            success('NFT mis en vente avec succès');
             router.refresh(); // Rafraîchir la page pour mettre à jour les données
           } catch (error) {
             console.error('Erreur lors de la mise à jour du statut:', error);
@@ -695,7 +696,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       
     } catch (error) {
       console.error('Erreur lors de la mise en vente:', error);
-      toast.error('Échec de la mise en vente du NFT');
+      errorToast('Échec de la mise en vente du NFT');
     } finally {
       setIsSubmitting(false);
     }
@@ -868,7 +869,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
                 <div className={styles.stepAction}>
                   <Button
                     variant="secondary"
-                    onClick={() => toast.success('Veuillez vous connecter avec Rabby wallet en tant qu\'admin de la collection')}
+                    onClick={() => success('Veuillez vous connecter avec Rabby wallet en tant qu\'admin de la collection')}
                     size="small"
                   >
                     Se connecter avec Rabby
@@ -926,7 +927,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
                 <div className={styles.stepAction}>
                   <Button
                     variant="secondary"
-                    onClick={() => toast.success('Connectez-vous avec un compte ayant le rôle SELLER_ROLE sur la marketplace')}
+                    onClick={() => success('Connectez-vous avec un compte ayant le rôle SELLER_ROLE sur la marketplace')}
                     size="small"
                   >
                     Connecter admin marketplace

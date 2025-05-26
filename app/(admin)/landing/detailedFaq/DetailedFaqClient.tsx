@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DetailedFaqHeader } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import Modal from '@/app/components/Common/Modal'
 import { deleteDetailedFaqHeader } from '@/lib/actions/faq-actions'
 
@@ -29,7 +29,7 @@ export default function DetailedFaqClient({ faqHeaders }: DetailedFaqClientProps
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [headerToDelete, setHeaderToDelete] = useState<number | null>(null)
   const [showItems, setShowItems] = useState<number | null>(null)
-
+  const { success, error } = useToast()
   const handleHeaderClick = (headerId: number) => {
     setLoadingHeaderId(headerId)
     router.push(`/landing/detailedFaq/${headerId}/edit`)
@@ -56,14 +56,14 @@ export default function DetailedFaqClient({ faqHeaders }: DetailedFaqClientProps
       const result = await deleteDetailedFaqHeader(headerToDelete)
       
       if (result.success) {
-        toast.success('FAQ détaillée supprimée avec succès')
+        success('FAQ détaillée supprimée avec succès')
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue lors de la suppression')
+        error(result.message || 'Une erreur est survenue lors de la suppression')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la suppression:', error)
-      toast.error('Une erreur est survenue lors de la suppression')
+      error('Une erreur est survenue lors de la suppression')
     } finally {
       setDeletingHeaderId(null)
       setHeaderToDelete(null)

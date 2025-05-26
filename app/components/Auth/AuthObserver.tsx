@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core';
 import { useRouter, usePathname } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { useToast } from '@/app/components/Toast/ToastContext';
 import UnauthorizedMessage from './UnauthorizedMessage';
 import WalletEventListener from './WalletEventListener';
 
@@ -15,7 +15,7 @@ export default function AuthObserver() {
   const [previousLoginState, setPreviousLoginState] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(false);
-
+  const { error: errorToast } = useToast()
   // Vérifier si l'utilisateur est autorisé lorsqu'il se connecte
   useEffect(() => {
     const checkUserAuthorization = async () => {
@@ -38,7 +38,7 @@ export default function AuthObserver() {
           if (!data.authorized && pathname !== '/') {
             // Rediriger vers la page d'accueil si l'utilisateur n'est pas autorisé
             router.push('/');
-            toast.error('Vous n\'êtes pas autorisé à accéder à cette application');
+            errorToast('Vous n\'êtes pas autorisé à accéder à cette application');
           }
         } catch (error) {
           console.error('Erreur lors de la vérification de l\'autorisation:', error);

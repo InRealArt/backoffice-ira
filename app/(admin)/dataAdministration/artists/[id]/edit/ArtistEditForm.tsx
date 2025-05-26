@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Artist } from '@prisma/client'
 import { updateArtist } from '@/lib/actions/artist-actions'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import Image from 'next/image'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -36,7 +36,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [newImageUrl, setNewImageUrl] = useState('')
   const [newImageName, setNewImageName] = useState('')
-
+  const { success, error } = useToast()
   const {
     register,
     handleSubmit,
@@ -75,7 +75,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
       const result = await updateArtist(artist.id, formattedData)
       
       if (result.success) {
-        toast.success('Artiste mis à jour avec succès')
+        success('Artiste mis à jour avec succès')
         
         // Rediriger après 1 seconde
         setTimeout(() => {
@@ -83,10 +83,10 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
           router.refresh()
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de la mise à jour')
+      error('Une erreur est survenue lors de la mise à jour')
       console.error(error)
     } finally {
       setIsSubmitting(false)

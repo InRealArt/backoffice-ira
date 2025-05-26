@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { Artist, NftCollection, CollectionStatus, SmartContract } from '@prisma/client'
 import { updateCollection, syncCollection } from '@/lib/actions/collection-actions'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
@@ -41,7 +41,7 @@ export default function EditCollectionForm({ collection, artists, smartContracts
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
-  
+  const { success, error, info } = useToast()
   const {
     register,
     handleSubmit,
@@ -71,7 +71,7 @@ export default function EditCollectionForm({ collection, artists, smartContracts
       })
 
       if (result.success) {
-        toast.success('Collection mise à jour avec succès')
+        success('Collection mise à jour avec succès')
         
         // Rediriger après un court délai
         setTimeout(() => {
@@ -79,10 +79,10 @@ export default function EditCollectionForm({ collection, artists, smartContracts
           router.refresh()
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error(`Erreur: ${error.message}`)
+      error(`Erreur: ${error.message}`)
       console.error(error)
     } finally {
       setIsSubmitting(false)
@@ -95,14 +95,14 @@ export default function EditCollectionForm({ collection, artists, smartContracts
     }
     
     setIsSyncing(true)
-    const toastIsSyncing = toast.loading('Synchronisation avec la blockchain en cours...')
+    const toastIsSyncing = info('Synchronisation avec la blockchain en cours...')
     
     try {
       const result = await syncCollection(collection.id)
       
       if (result.success && result.updated) {
-        toast.success('Collection synchronisée avec succès')
-        toast.dismiss(toastIsSyncing)
+        success('Collection synchronisée avec succès')
+        
         if (result.contractAddress) {
           setValue('contractAddress', result.contractAddress)
           setValue('status', 'confirmed')
@@ -113,12 +113,12 @@ export default function EditCollectionForm({ collection, artists, smartContracts
         // Rafraîchir le formulaire avec les nouvelles valeurs
         router.refresh()
       } else {
-        toast.error(result.message || 'Aucune mise à jour effectuée')
-        toast.dismiss(toastIsSyncing)
+        error(result.message || 'Aucune mise à jour effectuée')
+        //toast.dismiss(toastIsSyncing)
       }
     } catch (error: any) {
-      toast.error(`Erreur: ${error.message}`)
-      toast.dismiss(toastIsSyncing)
+      error(`Erreur: ${error.message}`)
+      // toast.dismiss(toastIsSyncing)
       console.error(error)
     } finally {
       setIsSyncing(false)

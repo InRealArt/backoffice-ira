@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ItemCategory } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { deleteItemCategory } from '@/lib/actions/item-category-actions'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import Modal from '@/app/components/Common/Modal'
 
 interface ItemCategoriesClientProps {
@@ -14,6 +14,7 @@ interface ItemCategoriesClientProps {
 
 export default function ItemCategoriesClient({ itemCategories }: ItemCategoriesClientProps) {
   const router = useRouter()
+  const { success, error } = useToast()
   const [loadingCategoryId, setLoadingCategoryId] = useState<number | null>(null)
   const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
@@ -44,14 +45,14 @@ export default function ItemCategoriesClient({ itemCategories }: ItemCategoriesC
       const result = await deleteItemCategory(categoryToDelete)
       
       if (result.success) {
-        toast.success('Catégorie supprimée avec succès')
+        success('Catégorie supprimée avec succès')
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue lors de la suppression')
+        error(result.message || 'Une erreur est survenue lors de la suppression')
       }
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error)
-      toast.error('Une erreur est survenue lors de la suppression')
+    } catch (catchError) {
+      console.error('Erreur lors de la suppression:', catchError)
+      error('Une erreur est survenue lors de la suppression')
     } finally {
       setDeletingCategoryId(null)
       setCategoryToDelete(null)

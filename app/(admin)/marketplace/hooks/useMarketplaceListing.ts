@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { useRouter } from 'next/navigation'
 import { Address, PublicClient, WalletClient, encodeFunctionData } from 'viem'
 import { CONTRACT_ADDRESSES, ContractName } from '@/constants/contracts'
@@ -87,7 +87,7 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
     const [approvalSuccess, setApprovalSuccess] = useState(false)
     const [transferSuccess, setTransferSuccess] = useState(false)
     const router = useRouter()
-
+    const { success: successToast, error: errorToast, info: infoToast, dismiss: dismissToast } = useToast()
     /**
      * Vérifie si l'utilisateur a les droits pour lister sur la marketplace
      * @param userAddress - Adresse Ethereum de l'utilisateur
@@ -144,13 +144,13 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
 
         if (!walletClient || !walletClient.account) {
             setError('Wallet client non disponible ou non connecté')
-            toast.error('Portefeuille non connecté. Veuillez vous connecter avec Rabby.')
+            errorToast('Portefeuille non connecté. Veuillez vous connecter avec Rabby.')
             setIsLoading(false)
             return false
         }
 
         // Afficher un toast de chargement
-        const listingToast = toast.loading('Listing du NFT sur la marketplace en cours...')
+        const listingToastId = infoToast('Listing du NFT sur la marketplace en cours...')
 
         try {
             const currentNetwork = getNetwork()
@@ -181,8 +181,8 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
             const hash = await walletClient.writeContract(request)
             setTxHash(hash)
 
-            toast.dismiss(listingToast)
-            const waitingBlockchainConfirmationToast = toast.loading(
+            dismissToast(listingToastId as any)
+            const waitingBlockchainConfirmationToastId = infoToast(
                 `Transaction soumise en attente de confirmation dans la blockchain. Hash: ${hash.slice(0, 10)}...`
             )
 
@@ -193,9 +193,9 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
 
             // Vérifier si la transaction est réussie
             if (receipt.status === 'success') {
-                toast.dismiss(waitingBlockchainConfirmationToast)
+                dismissToast(waitingBlockchainConfirmationToastId as any)
                 setSuccess(true)
-                toast.success('NFT listé sur la marketplace avec succès!')
+                successToast('NFT listé sur la marketplace avec succès!')
 
                 // Mettre à jour le statut de la ressource NFT
                 await updateNftResourceStatusToListed(Number(nftResource.id))
@@ -226,8 +226,8 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
 
                 return true
             } else {
-                toast.dismiss(waitingBlockchainConfirmationToast)
-                toast.error('La confirmation de la transaction dans la Blockchain a échoué')
+                dismissToast(waitingBlockchainConfirmationToastId as any)
+                errorToast('La confirmation de la transaction dans la Blockchain a échoué')
                 throw new Error('La transaction a échoué')
             }
 
@@ -236,13 +236,13 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
             const errorMessage = error.message || 'Une erreur est survenue'
 
             if (errorMessage.includes('User rejected the request')) {
-                toast.dismiss(listingToast)
-                toast.error('La transaction a été refusée par l\'utilisateur')
+                dismissToast(listingToastId as any)
+                errorToast('La transaction a été refusée par l\'utilisateur')
                 //setError('La transaction a été refusée par l\'utilisateur')
             } else {
                 setError(errorMessage)
-                toast.dismiss(listingToast)
-                toast.error(`Erreur lors du listing du NFT: ${errorMessage}`)
+                dismissToast(listingToastId as any)
+                errorToast(`Erreur lors du listing du NFT: ${errorMessage}`)
             }
             return false
         } finally {
@@ -372,7 +372,7 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
                 await updateNftResourceOwner(Number(tokenId), adminMarketplace);
             }
             else {
-                toast.error('Erreur dans la mise à jour du owner en database')
+                errorToast('Erreur dans la mise à jour du owner en database')
             }
 
             setTransferSuccess(true);

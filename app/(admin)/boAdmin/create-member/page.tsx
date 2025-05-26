@@ -1,12 +1,10 @@
 'use client'
 
-import { Toaster } from 'react-hot-toast'
 import { useEffect, useState } from 'react'
 import CreateMemberForm from './CreateMemberForm'
 
 export default function CreateMemberPage() {
   const [isMobile, setIsMobile] = useState(false)
-  
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768)
@@ -22,11 +20,6 @@ export default function CreateMemberPage() {
   
   return (
     <>
-      <Toaster 
-        position={isMobile ? "bottom-center" : "top-right"} 
-        toastOptions={{ duration: isMobile ? 5000 : 3000 }}
-      />
-      
       <div className="page-container">
         <div className="page-header">
           <div className="header-top-section">

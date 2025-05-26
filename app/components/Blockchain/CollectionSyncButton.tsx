@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'react-hot-toast'
+import { useToast } from '../Toast/ToastContext' 
 import Button from '../Button/Button'
 import { RefreshCw } from 'lucide-react'
 import { syncCollection } from '@/lib/actions/collection-actions'
+import toast from 'react-hot-toast'
 
 export default function CollectionSyncButton({ collectionId }: { collectionId: number }) {
   const [isSyncing, setIsSyncing] = useState(false)
-  
+  const { success, error: errorToast } = useToast()
   const handleSync = async () => {
     if (isSyncing) return
     
@@ -19,15 +20,15 @@ export default function CollectionSyncButton({ collectionId }: { collectionId: n
       const result = await syncCollection(collectionId)
       
       if (result.success) {
-        toast.success(`Synchronisation terminée: ${result.updated || 0} collection(s) mise(s) à jour`)
+        success(`Synchronisation terminée: ${result.updated || 0} collection(s) mise(s) à jour`)
         // Rafraîchir la page pour voir les changements
         window.location.reload()
       } else {
-        toast.error(result.message || 'Erreur lors de la synchronisation')
+        errorToast(result.message || 'Erreur lors de la synchronisation')
       }
     } catch (error) {
       console.error('Erreur de synchronisation:', error)
-      toast.error(`Erreur de synchronisation: ${(error as Error).message}`)
+      errorToast(`Erreur de synchronisation: ${(error as Error).message}`)
     } finally {
       setIsSyncing(false)
     }

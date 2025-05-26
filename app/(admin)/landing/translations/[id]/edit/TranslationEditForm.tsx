@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Language, Translation } from '@prisma/client'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -47,7 +47,7 @@ export default function TranslationEditForm({ translation, languages, models }: 
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [availableFields, setAvailableFields] = useState<Field[]>([])
-  
+  const { success, error } = useToast()
   const {
     register,
     handleSubmit,
@@ -109,7 +109,7 @@ export default function TranslationEditForm({ translation, languages, models }: 
       const isFieldValid = model?.fields.some(f => f.name === data.field)
       
       if (!isFieldValid) {
-        toast.error('Le champ sélectionné n\'est pas valide pour ce type d\'entité')
+        error('Le champ sélectionné n\'est pas valide pour ce type d\'entité')
         setIsSubmitting(false)
         return
       }
@@ -120,7 +120,7 @@ export default function TranslationEditForm({ translation, languages, models }: 
       const result = await updateTranslation(translation.id, data)
       
       if (result.success) {
-        toast.success('Traduction mise à jour avec succès')
+        success('Traduction mise à jour avec succès')
         
         // Rediriger après 1 seconde
         setTimeout(() => {
@@ -128,10 +128,10 @@ export default function TranslationEditForm({ translation, languages, models }: 
           router.refresh()
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de la mise à jour')
+      error('Une erreur est survenue lors de la mise à jour')
       console.error(error)
     } finally {
       setIsSubmitting(false)

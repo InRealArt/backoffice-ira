@@ -6,7 +6,7 @@ import { Invoice, InvoiceType, InvoiceItem } from '@prisma/client'
 import { formatDate } from '@/lib/utils'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { updateInvoicePaymentStatus, downloadInvoice } from '../../actions'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 
 // Types pour les factures sérialisées
 type SerializedInvoiceItem = Omit<InvoiceItem, 'unitPrice' | 'vatRate' | 'vatAmount' | 'totalPrice'> & {
@@ -33,7 +33,7 @@ export default function InvoiceViewClient({ invoice }: InvoiceViewClientProps) {
   const router = useRouter()
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
-  
+  const { success, error } = useToast()
   // Formater la date avec l'heure
   const formatFullDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -70,14 +70,14 @@ export default function InvoiceViewClient({ invoice }: InvoiceViewClientProps) {
       const result = await updateInvoicePaymentStatus(invoice.id, !invoice.isPaid)
       
       if (result.success) {
-        toast.success(`La facture a été marquée comme ${!invoice.isPaid ? 'payée' : 'non payée'}`)
+        success(`La facture a été marquée comme ${!invoice.isPaid ? 'payée' : 'non payée'}`)
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue lors de la mise à jour')
+        error(result.message || 'Une erreur est survenue lors de la mise à jour')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la mise à jour du statut:', error)
-      toast.error('Une erreur est survenue lors de la mise à jour')
+      error('Une erreur est survenue lors de la mise à jour')
     } finally {
       setIsUpdatingStatus(false)
     }
@@ -91,13 +91,13 @@ export default function InvoiceViewClient({ invoice }: InvoiceViewClientProps) {
       const result = await downloadInvoice(invoice.id)
       
       if (result.success) {
-        toast.success(result.message || 'Téléchargement initié')
+        success(result.message || 'Téléchargement initié')
       } else {
-        toast.error(result.message || 'Une erreur est survenue lors du téléchargement')
+        error(result.message || 'Une erreur est survenue lors du téléchargement')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors du téléchargement:', error)
-      toast.error('Une erreur est survenue lors du téléchargement')
+      error('Une erreur est survenue lors du téléchargement')
     } finally {
       setIsDownloading(false)
     }

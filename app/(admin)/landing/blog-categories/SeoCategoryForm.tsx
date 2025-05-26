@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { createSeoCategory, updateSeoCategory } from '@/lib/actions/seo-category-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
@@ -26,6 +26,7 @@ interface SeoCategoryFormProps {
 
 export default function SeoCategoryForm({ category, isEditing = false }: SeoCategoryFormProps) {
   const router = useRouter()
+  const { success, error } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const [formData, setFormData] = useState({
@@ -61,7 +62,7 @@ export default function SeoCategoryForm({ category, isEditing = false }: SeoCate
     e.preventDefault()
     
     if (!formData.name.trim()) {
-      toast.error('Le nom de la catégorie est obligatoire')
+      error('Le nom de la catégorie est obligatoire')
       return
     }
     
@@ -85,11 +86,11 @@ export default function SeoCategoryForm({ category, isEditing = false }: SeoCate
             // On ne bloque pas la mise à jour de la catégorie en cas d'erreur de traduction
           }
           
-          toast.success('Catégorie mise à jour avec succès')
+          success('Catégorie mise à jour avec succès')
           router.push('/landing/blog-categories')
           router.refresh()
         } else {
-          toast.error(result.message || 'Une erreur est survenue lors de la mise à jour')
+          error(result.message || 'Une erreur est survenue lors de la mise à jour')
         }
       } else {
         const result = await createSeoCategory(formData)
@@ -109,16 +110,16 @@ export default function SeoCategoryForm({ category, isEditing = false }: SeoCate
             }
           }
           
-          toast.success('Catégorie créée avec succès')
+          success('Catégorie créée avec succès')
           router.push('/landing/blog-categories')
           router.refresh()
         } else {
-          toast.error(result.message || 'Une erreur est survenue lors de la création')
+          error(result.message || 'Une erreur est survenue lors de la création')
         }
       }
-    } catch (error) {
-      console.error('Erreur lors de l\'enregistrement:', error)
-      toast.error('Une erreur est survenue lors de l\'enregistrement')
+    } catch (catchError) {
+      console.error('Erreur lors de l\'enregistrement:', catchError)
+      error('Une erreur est survenue lors de l\'enregistrement')
     } finally {
       setIsSubmitting(false)
     }

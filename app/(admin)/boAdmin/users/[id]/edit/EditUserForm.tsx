@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import toast from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -54,7 +54,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
   const [hasDescriptionChanged, setHasDescriptionChanged] = useState(false)
   const [artists, setArtists] = useState<Artist[]>([])
   const [isLoadingArtists, setIsLoadingArtists] = useState(true)
-
+  const { success, error } = useToast()
   // Déterminer si l'utilisateur est un administrateur
   const isAdmin = user.role?.toLowerCase() === 'admin' || user.role?.toLowerCase() === 'administrateur'
   
@@ -97,9 +97,9 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       try {
         const artistsList = await getAllArtists()
         setArtists(artistsList)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erreur lors du chargement des artistes:', error)
-        toast.error('Erreur lors du chargement des artistes')
+        error('Erreur lors du chargement des artistes')
       } finally {
         setIsLoadingArtists(false)
       }
@@ -146,7 +146,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         } else if (isMounted) {
           console.log('Aucune collection trouvée pour:', collectionTitle)
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erreur lors de la récupération de la collection:', error)
       } finally {
         if (isMounted) {
@@ -209,14 +209,14 @@ export default function EditUserForm({ user }: EditUserFormProps) {
             
             if (!createResult.success) {
               console.error('Erreur lors de la création de la collection:', createResult.message)
-              toast.error(`L'utilisateur a été mis à jour mais la création de collection a échoué: ${createResult.message}`)
+              error(`L'utilisateur a été mis à jour mais la création de collection a échoué: ${createResult.message}`)
             } else {
               console.log('Collection créée avec succès:', createResult.collection)
-              toast.success('Utilisateur mis à jour et nouvelle collection créée')
+              success('Utilisateur mis à jour et nouvelle collection créée')
             }
           } catch (createError: any) {
             console.error('Erreur lors de la création de la collection:', createError)
-            toast.error(`L'utilisateur a été mis à jour mais la création de collection a échoué`)
+            error(`L'utilisateur a été mis à jour mais la création de collection a échoué`)
           }
         } else if (hasDescriptionChanged) {
           // Collection existante avec description modifiée - mettre à jour
@@ -228,17 +228,17 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           
           if (!updateResult.success) {
             console.error('Erreur lors de la mise à jour de la collection:', updateResult.message)
-            toast.error('Erreur lors de la mise à jour de la collection')
+            error('Erreur lors de la mise à jour de la collection')
           } else {
-            toast.success('Utilisateur et collection mis à jour avec succès')
+            success('Utilisateur et collection mis à jour avec succès')
           }
         } else {
           // Collection existante sans modification - ne rien faire
-          toast.success('Utilisateur mis à jour avec succès')
+          success('Utilisateur mis à jour avec succès')
         }
       } else {
         // Accès Shopify non accordé ou utilisateur admin
-        toast.success('Utilisateur mis à jour avec succès')
+        success('Utilisateur mis à jour avec succès')
       }
       
       // Rediriger après 1 seconde
@@ -249,7 +249,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       
     } catch (error: any) {
       console.error('Erreur lors de la mise à jour:', error)
-      toast.error(error.message || 'Une erreur est survenue lors de la mise à jour')
+      error(error.message || 'Une erreur est survenue lors de la mise à jour')
     } finally {
       setIsSubmitting(false)
     }

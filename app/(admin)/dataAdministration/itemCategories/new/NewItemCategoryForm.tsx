@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createItemCategory } from '@/lib/actions/item-category-actions'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,7 +18,7 @@ type FormValues = z.infer<typeof formSchema>
 export default function NewItemCategoryForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-
+  const { success, error } = useToast()
   const {
     register,
     handleSubmit,
@@ -37,7 +37,7 @@ export default function NewItemCategoryForm() {
       const result = await createItemCategory(data)
       
       if (result.success) {
-        toast.success('Catégorie créée avec succès')
+        success('Catégorie créée avec succès')
         
         // Rediriger après 1 seconde
         setTimeout(() => {
@@ -45,10 +45,10 @@ export default function NewItemCategoryForm() {
           router.refresh()
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de la création')
+      error('Une erreur est survenue lors de la création')
       console.error(error)
     } finally {
       setIsSubmitting(false)

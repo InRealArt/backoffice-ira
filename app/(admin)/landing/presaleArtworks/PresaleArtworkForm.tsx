@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import Image from 'next/image'
 import { X, Plus, AlertCircle } from 'lucide-react'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
@@ -76,7 +76,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
   const [orderExists, setOrderExists] = useState<boolean>(true)
   const [orderValue, setOrderValue] = useState<string>('0')
   const [isCheckingOrder, setIsCheckingOrder] = useState<boolean>(false)
-  
+  const { success, error } = useToast()
   const {
     register,
     handleSubmit,
@@ -101,9 +101,9 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
       try {
         const artistsData = await getAllArtistsAndGalleries()
         setArtists(artistsData)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erreur lors de la récupération des artistes:', error)
-        toast.error('Erreur lors de la récupération des artistes')
+        error('Erreur lors de la récupération des artistes')
       }
     }
     
@@ -149,12 +149,12 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
               }
             }
           } else {
-            toast.error("Œuvre en prévente non trouvée")
+            error("Œuvre en prévente non trouvée")
             router.push('/landing/presaleArtworks')
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Erreur lors de la récupération de l\'œuvre en prévente:', error)
-          toast.error('Erreur lors de la récupération de l\'œuvre en prévente')
+          error('Erreur lors de la récupération de l\'œuvre en prévente')
         } finally {
           setIsLoading(false)
         }
@@ -203,7 +203,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
         })
         
         if (result.success) {
-          toast.success('Œuvre en prévente créée avec succès')
+          success('Œuvre en prévente créée avec succès')
           
           // Gestion des traductions pour name et description
           try {
@@ -220,7 +220,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
           
           router.push('/landing/presaleArtworks')
         } else {
-          toast.error(result.message || 'Erreur lors de la création de l\'œuvre en prévente')
+          error(result.message || 'Erreur lors de la création de l\'œuvre en prévente')
         }
       } else if (mode === 'edit' && presaleArtworkId) {
         const result = await updatePresaleArtwork(presaleArtworkId, {
@@ -234,7 +234,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
         })
         
         if (result.success) {
-          toast.success('Œuvre en prévente mise à jour avec succès')
+          success('Œuvre en prévente mise à jour avec succès')
           
           // Gestion des traductions pour name et description
           try {
@@ -249,12 +249,12 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
           
           router.push('/landing/presaleArtworks')
         } else {
-          toast.error(result.message || 'Erreur lors de la mise à jour de l\'œuvre en prévente')
+          error(result.message || 'Erreur lors de la mise à jour de l\'œuvre en prévente')
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la soumission:', error)
-      toast.error('Une erreur est survenue')
+      error('Une erreur est survenue')
     } finally {
       setIsSubmitting(false)
     }

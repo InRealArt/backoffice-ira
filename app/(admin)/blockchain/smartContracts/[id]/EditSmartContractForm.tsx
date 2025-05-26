@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { SmartContract } from '@prisma/client'
 import { updateSmartContract } from '@/lib/actions/smartContract-actions'
 
@@ -34,7 +34,7 @@ interface EditSmartContractFormProps {
 export default function EditSmartContractForm({ smartContract }: EditSmartContractFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-
+  const { success, error } = useToast()
   const {
     register,
     handleSubmit,
@@ -56,14 +56,14 @@ export default function EditSmartContractForm({ smartContract }: EditSmartContra
       const result = await updateSmartContract(smartContract.id, data)
 
       if (result.success) {
-        toast.success('Smart contract mis à jour avec succès')
+        success('Smart contract mis à jour avec succès')
         router.push('/blockchain/smartContracts')
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
-    } catch (error) {
-      toast.error('Une erreur est survenue lors de la mise à jour')
+    } catch (error: any) {
+      error('Une erreur est survenue lors de la mise à jour')
       console.error(error)
     } finally {
       setIsSubmitting(false)

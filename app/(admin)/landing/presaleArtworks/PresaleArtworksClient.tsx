@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Artist } from '@prisma/client'
 import Image from 'next/image'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import Modal from '@/app/components/Common/Modal'
 import { deletePresaleArtwork } from '@/lib/actions/presale-artwork-actions'
 import { Filters, FilterItem } from '@/app/components/Common'
@@ -50,7 +50,7 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
   const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null)
   const [sortField, setSortField] = useState<'order' | null>('order')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
-
+  const { success, error } = useToast()
   const handleArtworkClick = (artworkId: number) => {
     setLoadingArtworkId(artworkId)
     router.push(`/landing/presaleArtworks/${artworkId}/edit`)
@@ -76,14 +76,14 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
       const result = await deletePresaleArtwork(artworkToDelete)
       
       if (result.success) {
-        toast.success('Œuvre en prévente supprimée avec succès')
+        success('Œuvre en prévente supprimée avec succès')
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue lors de la suppression')
+        error(result.message || 'Une erreur est survenue lors de la suppression')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la suppression:', error)
-      toast.error('Une erreur est survenue lors de la suppression')
+      error('Une erreur est survenue lors de la suppression')
     } finally {
       setDeletingArtworkId(null)
       setArtworkToDelete(null)

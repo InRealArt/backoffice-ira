@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Translation } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import Modal from '@/app/components/Common/Modal'
 import { deleteTranslation } from '@/lib/actions/translation-actions'
 import { Filters, FilterItem } from '@/app/components/Common'
@@ -29,7 +29,7 @@ export default function TranslationsClient({ translations }: TranslationsClientP
   const [translationToDelete, setTranslationToDelete] = useState<number | null>(null)
   const [selectedEntityType, setSelectedEntityType] = useState<string>('')
   const [selectedLanguageId, setSelectedLanguageId] = useState<number | null>(null)
-
+  const { success, error } = useToast()
   const handleTranslationClick = (translationId: number) => {
     setLoadingTranslationId(translationId)
     router.push(`/landing/translations/${translationId}/edit`)
@@ -55,14 +55,14 @@ export default function TranslationsClient({ translations }: TranslationsClientP
       const result = await deleteTranslation(translationToDelete)
       
       if (result.success) {
-        toast.success('Traduction supprimée avec succès')
+        success('Traduction supprimée avec succès')
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue lors de la suppression')
+        error(result.message || 'Une erreur est survenue lors de la suppression')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la suppression:', error)
-      toast.error('Une erreur est survenue lors de la suppression')
+      error('Une erreur est survenue lors de la suppression')
     } finally {
       setDeletingTranslationId(null)
       setTranslationToDelete(null)

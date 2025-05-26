@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Language } from '@prisma/client'
 import { updateLanguage } from '@/lib/actions/language-actions'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,7 +25,7 @@ interface LanguageEditFormProps {
 export default function LanguageEditForm({ language }: LanguageEditFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-
+  const { success, error } = useToast()
   const {
     register,
     handleSubmit,
@@ -46,7 +46,7 @@ export default function LanguageEditForm({ language }: LanguageEditFormProps) {
       const result = await updateLanguage(language.id, data)
       
       if (result.success) {
-        toast.success('Langue mise à jour avec succès')
+        success('Langue mise à jour avec succès')
         
         // Rediriger après 1 seconde
         setTimeout(() => {
@@ -54,10 +54,10 @@ export default function LanguageEditForm({ language }: LanguageEditFormProps) {
           router.refresh()
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de la mise à jour')
+      error('Une erreur est survenue lors de la mise à jour')
       console.error(error)
     } finally {
       setIsSubmitting(false)

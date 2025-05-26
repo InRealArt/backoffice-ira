@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Faq } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { deleteFaq } from '@/lib/actions/faq-actions'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext' 
 import Modal from '@/app/components/Common/Modal'
 
 interface FaqClientProps {
@@ -18,7 +18,7 @@ export default function FaqClient({ faqs }: FaqClientProps) {
   const [deletingFaqId, setDeletingFaqId] = useState<number | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [faqToDelete, setFaqToDelete] = useState<number | null>(null)
-
+  const { success, error } = useToast()
   const handleFaqClick = (faqId: number) => {
     setLoadingFaqId(faqId)
     router.push(`/landing/faq/${faqId}/edit`)
@@ -44,14 +44,14 @@ export default function FaqClient({ faqs }: FaqClientProps) {
       const result = await deleteFaq(faqToDelete)
       
       if (result.success) {
-        toast.success('FAQ supprimée avec succès')
+        success('FAQ supprimée avec succès')
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue lors de la suppression')
+        error(result.message || 'Une erreur est survenue lors de la suppression')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la suppression:', error)
-      toast.error('Une erreur est survenue lors de la suppression')
+      error('Une erreur est survenue lors de la suppression')
     } finally {
       setDeletingFaqId(null)
       setFaqToDelete(null)

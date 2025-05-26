@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -47,7 +47,7 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
   const [isEditingHeader, setIsEditingHeader] = useState(false)
   const [newQuestion, setNewQuestion] = useState('')
   const [newAnswer, setNewAnswer] = useState('')
-  
+  const { success, error } = useToast()
   // Formulaire pour l'édition du header
   const {
     register: registerHeader,
@@ -92,14 +92,14 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
           // On ne bloque pas la mise à jour en cas d'erreur de traduction
         }
         
-        toast.success('Section mise à jour avec succès')
+        success('Section mise à jour avec succès')
         setIsEditingHeader(false)
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de la mise à jour')
+      error('Une erreur est survenue lors de la mise à jour')
       console.error(error)
     } finally {
       setIsSubmitting(false)
@@ -118,14 +118,14 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
       })
       
       if (result.success) {
-        toast.success('Question ajoutée avec succès')
+        success('Question ajoutée avec succès')
         resetItemForm()
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de l\'ajout')
+      error('Une erreur est survenue lors de l\'ajout')
       console.error(error)
     } finally {
       setIsSubmitting(false)
@@ -161,13 +161,13 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
         
         setNewQuestion('')
         setNewAnswer('')
-        toast.success('Question ajoutée avec succès')
+        success('Question ajoutée avec succès')
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de l\'ajout')
+      error('Une erreur est survenue lors de l\'ajout')
       console.error(error)
     } finally {
       setIsSubmitting(false)
@@ -182,13 +182,13 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
       const result = await deleteDetailedFaqItem(itemId)
       
       if (result.success) {
-        toast.success('Question supprimée avec succès')
+        success('Question supprimée avec succès')
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        error(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de la suppression')
+      error('Une erreur est survenue lors de la suppression')
       console.error(error)
     } finally {
       setIsDeletingItem(null)

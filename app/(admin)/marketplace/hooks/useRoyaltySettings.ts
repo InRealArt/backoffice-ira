@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { useRouter } from 'next/navigation'
 import { artistNftCollectionAbi } from '@/lib/contracts/ArtistNftCollectionAbi'
 import { Address, PublicClient, WalletClient } from 'viem'
@@ -11,6 +11,7 @@ import { artistRoyaltiesAbi } from '@/lib/contracts/ArtistRoyaltiesAbi'
 import { InRealArtSmartContractConstants, InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
 import { createRoyaltyBeneficiary, updateNftResourceStatusToRoyaltySet, updateNftResourceTxHash } from '@/lib/actions/prisma-actions'
 import { publicClient } from '@/lib/providers'
+import { toast } from 'react-hot-toast'
 
 interface RoyaltyParams {
     nftResource: {
@@ -54,7 +55,7 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
     const [success, setSuccess] = useState<boolean>(false)
     const [txHash, setTxHash] = useState<string | null>(null)
     const router = useRouter()
-
+    const { success: successToast, error: errorToast, info: infoToast, dismiss: dismissToast } = useToast()
     /**
      * Vérifie si l'utilisateur a les droits pour configurer les royalties
      * @param userAddress - Adresse Ethereum de l'utilisateur
@@ -114,7 +115,7 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
         setTxHash(null)
 
         // Afficher un toast de chargement
-        const configToast = toast.loading('Configuration des royalties en cours...')
+        const configToast = infoToast('Configuration des royalties en cours...')
 
         const args = [
             nftResource.collection.contractAddress,
@@ -145,8 +146,8 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
 
             await updateNftResourceTransactionHash(hash, nftResource)
 
-            toast.dismiss(configToast)
-            const waitingBlockchainConfirmationToast = toast.loading(
+            dismissToast(configToast as any)
+            const waitingBlockchainConfirmationToast = infoToast(
                 `Transaction soumise en attente de confirmation dans la blockchain. Hash: ${hash.slice(0, 10)}...`
             )
 
@@ -157,9 +158,9 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
 
             // Vérifier si la transaction est réussie
             if (receipt.status === 'success') {
-                toast.dismiss(waitingBlockchainConfirmationToast)
+                dismissToast(waitingBlockchainConfirmationToast as any)
                 setSuccess(true)
-                toast.success('Royalties configurées avec succès!')
+                successToast('Royalties configurées avec succès!')
                 //Update Status to ROYALTYSET
                 await updateNftResourceStatus(nftResource)
                 // Créer les beneficiaires
@@ -176,22 +177,22 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
 
                 return true
             } else {
-                toast.dismiss(waitingBlockchainConfirmationToast)
-                toast.error('La confirmation de la transaction dans la Blockchain a échoué')
+                dismissToast(waitingBlockchainConfirmationToast as any)
+                errorToast('La confirmation de la transaction dans la Blockchain a échoué')
                 throw new Error('La transaction a échoué')
             }
 
         } catch (error: any) {
             console.error('Erreur lors de la configuration des royalties:', error.message)
             if (error.message.includes('User rejected the request')) {
-                toast.dismiss(configToast)
-                toast.error('La transaction a été refusée par l\'utilisateur')
+                dismissToast(configToast as any)
+                errorToast('La transaction a été refusée par l\'utilisateur')
                 setError('La transaction a été refusée par l\'utilisateur')
             } else {
                 const errorMessage = error.message || 'Une erreur est survenue'
                 setError(errorMessage)
-                toast.dismiss(configToast)
-                toast.error(`Erreur lors de la configuration des royalties: ${errorMessage}`)
+                dismissToast(configToast as any)
+                errorToast(`Erreur lors de la configuration des royalties: ${errorMessage}`)
             }
             return false
         } finally {

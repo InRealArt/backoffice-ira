@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DetailedFaqPage } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { toast } from 'react-hot-toast'
 import Modal from '@/app/components/Common/Modal'
 import { deleteDetailedFaqPage } from '@/lib/actions/faq-page-actions'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useToast } from '@/app/components/Toast/ToastContext'
 
 interface DetailedFaqPageWithItems extends DetailedFaqPage {
   faqItems: {
@@ -33,7 +33,8 @@ export default function DetailedFaqPageClient({ faqPages }: DetailedFaqPageClien
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [pageToDelete, setPageToDelete] = useState<number | null>(null)
   const [showItems, setShowItems] = useState<number | null>(null)
-  
+  const { success, error } = useToast()
+
   // État pour le tri
   const [sortField, setSortField] = useState<SortField>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
@@ -63,14 +64,14 @@ export default function DetailedFaqPageClient({ faqPages }: DetailedFaqPageClien
       const result = await deleteDetailedFaqPage(pageToDelete)
       
       if (result.success) {
-        toast.success('FAQ par page supprimée avec succès')
+        success('FAQ par page supprimée avec succès')
         router.refresh()
       } else {
-        toast.error(result.message || 'Une erreur est survenue lors de la suppression')
+        error(result.message || 'Une erreur est survenue lors de la suppression')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la suppression:', error)
-      toast.error('Une erreur est survenue lors de la suppression')
+      error('Une erreur est survenue lors de la suppression')
     } finally {
       setDeletingPageId(null)
       setPageToDelete(null)

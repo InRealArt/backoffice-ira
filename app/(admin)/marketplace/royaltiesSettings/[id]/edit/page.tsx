@@ -9,7 +9,7 @@ import { getItemById, getUserByItemId, getNftResourceByItemId, getActiveCollecti
 import styles from './royaltySettings.module.scss'
 import React, { use } from 'react'
 import { z } from 'zod'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { useAccount, useWalletClient } from 'wagmi'
 import { publicClient } from '@/lib/providers'
 import { Address, WalletClient } from 'viem'
@@ -24,6 +24,7 @@ import { useRoyaltySettings } from '@/app/(admin)/marketplace/hooks/useRoyaltySe
 import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
 import { NetworkType } from '@prisma/client'
 import { getBlockExplorerUrl } from '@/lib/blockchain/explorerUtils'
+import { toast } from 'react-hot-toast'
 
 type ParamsType = Promise<{
   id: string
@@ -65,7 +66,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
   const [allBeneficaryAddress, setAllBeneficaryAddress] = useState<boolean>(false)
   const [royaltiesSettingsOk, setRoyaltiesSettingsOk] = useState<boolean>(false)
   const [royaltiesManager, setRoyaltiesManager] = useState<Address | null>(null)
-
+  const { success, error: errorToast } = useToast()
   // Utiliser React.use pour récupérer l'ID des params de manière synchrone dans un composant client
   const { id } = use(params)
 
@@ -320,7 +321,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
     try {
       const addresses = royalties.map(r => r.address as Address)
       if (addresses.some(addr => !isValidEthereumAddress(addr))) {
-        toast.error('Certaines adresses ne sont pas valides')
+        errorToast('Certaines adresses ne sont pas valides')
         return
       }
       
@@ -333,7 +334,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
       })
       
       if (isNaN(totalPercentage) || totalPercentage <= 0 || totalPercentage > 100) {
-        toast.error('Le pourcentage total doit être entre 1 et 100')
+        errorToast('Le pourcentage total doit être entre 1 et 100')
         return
       }
       

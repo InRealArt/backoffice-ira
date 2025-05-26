@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { memberSchema, MemberFormData } from './schema'
 import { createMember, checkUserExists, getAllArtists, getArtistById, getAllGalleries } from '@/lib/actions/prisma-actions'
-import toast from 'react-hot-toast'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { createShopifyCollection } from '@/lib/actions/art-actions'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
@@ -20,7 +20,7 @@ export default function CreateMemberForm() {
   const [isLoadingArtists, setIsLoadingArtists] = useState(true)
   const [isLoadingGalleries, setIsLoadingGalleries] = useState(true)
   const router = useRouter()
-  
+  const { success, error } = useToast()
   const {
     register,
     handleSubmit,
@@ -47,9 +47,9 @@ export default function CreateMemberForm() {
       try {
         const artistsList = await getAllArtists()
         setArtists(artistsList)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erreur lors du chargement des artistes:', error)
-        toast.error('Erreur lors du chargement des artistes')
+        error('Erreur lors du chargement des artistes')
       } finally {
         setIsLoadingArtists(false)
       }
@@ -64,9 +64,9 @@ export default function CreateMemberForm() {
       try {
         const galleriesList = await getAllGalleries()
         setGalleries(galleriesList)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erreur lors du chargement des galeries:', error)
-        toast.error('Erreur lors du chargement des galeries')
+        error('Erreur lors du chargement des galeries')
       } finally {
         setIsLoadingGalleries(false)
       }
@@ -102,7 +102,7 @@ export default function CreateMemberForm() {
           const artist = await getArtistById(data.artistId as number)
           
           if (!artist) {
-            toast.error('Erreur : Artiste associé non trouvé')
+            error('Erreur : Artiste associé non trouvé')
             setIsSubmitting(false)
             return
           }
@@ -111,18 +111,18 @@ export default function CreateMemberForm() {
           const collectionResult = await createShopifyCollection(collectionName)
           
           if (collectionResult.success) {
-            toast.success(`Membre créé et collection "${collectionName}" créée avec succès!`, {
+            success(`Membre créé et collection "${collectionName}" créée avec succès!`, {
               duration: 5000,
               position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
             })
           } else {
-            toast.success(`Membre créé avec succès, mais la création de la collection a échoué: ${collectionResult.message}`, {
+            success(`Membre créé avec succès, mais la création de la collection a échoué: ${collectionResult.message}`, {
               duration: 5000,
               position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
             })
           }
         } else {
-          toast.success(result.message, {
+          success(result.message, {
             duration: 5000,
             position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
           })
@@ -135,13 +135,13 @@ export default function CreateMemberForm() {
           router.push('/boAdmin/users')
         }, 1000) // Délai court pour permettre à l'utilisateur de voir le message de succès
       } else {
-        toast.error(result.message, {
+        error(result.message, {
           duration: 5000,
           position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
         })
       }
-    } catch (error) {
-      toast.error('Une erreur est survenue. Veuillez réessayer.', {
+    } catch (error: any) {
+      error('Une erreur est survenue. Veuillez réessayer.', {
         duration: 5000,
         position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
       })
