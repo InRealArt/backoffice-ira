@@ -55,6 +55,7 @@ export async function createSeoPost(data: {
     categoryId: number
     metaDescription: string
     metaKeywords: string[]
+    listTags?: string[]
     slug: string
     content: string
     excerpt?: string
@@ -124,19 +125,19 @@ export async function createSeoPost(data: {
             }
         })
 
-        // Mettre à jour le champ listTags avec une requête SQL brute
-        if (data.metaKeywords && data.metaKeywords.length > 0) {
+        // Mettre à jour le champ listTags avec les vrais tags (pas les keywords)
+        if (data.listTags && data.listTags.length > 0) {
             await prisma.$executeRaw`
                 UPDATE "landing"."SeoPost" 
-                SET "listTags" = ${data.metaKeywords}::text[] 
+                SET "listTags" = ${data.listTags}::text[] 
                 WHERE id = ${seoPost.id}
             `
         }
 
-        // Gérer les tags - créer les relations SeoPostTag
-        if (data.metaKeywords && data.metaKeywords.length > 0) {
-            // Créer les relations SeoPostTag (cohérence avec listTags)
-            await Promise.all(data.metaKeywords.map(async (tagName) => {
+        // Gérer les tags - créer les relations SeoPostTag avec listTags (pas metaKeywords)
+        if (data.listTags && data.listTags.length > 0) {
+            // Créer les relations SeoPostTag avec les vrais tags
+            await Promise.all(data.listTags.map(async (tagName) => {
                 // Créer ou récupérer le tag
                 const tag = await prisma.seoTag.upsert({
                     where: { name: tagName },
@@ -176,6 +177,7 @@ export async function updateSeoPost(id: number, data: {
     categoryId?: number
     metaDescription?: string
     metaKeywords?: string[]
+    listTags?: string[]
     slug?: string
     content?: string
     excerpt?: string
@@ -248,10 +250,9 @@ export async function updateSeoPost(id: number, data: {
         // Ajouter les champs de base s'ils sont fournis
         if (data.title !== undefined) updateData.title = data.title
         if (data.metaDescription !== undefined) updateData.metaDescription = data.metaDescription
-        // Stocker le même tableau de tags dans metaKeywords et listTags
+        // Gérer séparément metaKeywords et listTags
         if (data.metaKeywords !== undefined) {
             updateData.metaKeywords = data.metaKeywords || []
-            // Note: listTags sera mis à jour après avec une requête SQL brute
         }
         if (data.slug !== undefined) updateData.slug = data.slug
         if (data.content !== undefined) updateData.content = data.content
@@ -279,9 +280,9 @@ export async function updateSeoPost(id: number, data: {
             data: updateData
         })
 
-        // Mettre à jour le champ listTags avec une requête SQL brute si les tags ont changé
-        if (data.metaKeywords !== undefined) {
-            const listTagsArray = data.metaKeywords || []
+        // Mettre à jour le champ listTags avec les vrais tags (si fournis)
+        if (data.listTags !== undefined) {
+            const listTagsArray = data.listTags || []
 
             await prisma.$executeRaw`
                 UPDATE "landing"."SeoPost" 
@@ -289,15 +290,15 @@ export async function updateSeoPost(id: number, data: {
                 WHERE id = ${id}
             `
 
-            // Gérer la mise à jour des relations SeoPostTag
+            // Gérer la mise à jour des relations SeoPostTag avec listTags
             // Supprimer toutes les relations de tags existantes
             await prisma.seoPostTag.deleteMany({
                 where: { postId: id }
             })
 
-            // Créer les nouvelles relations de tags (cohérence avec listTags)
-            if (data.metaKeywords && data.metaKeywords.length > 0) {
-                await Promise.all(data.metaKeywords.map(async (tagName) => {
+            // Créer les nouvelles relations de tags avec listTags (pas metaKeywords)
+            if (data.listTags && data.listTags.length > 0) {
+                await Promise.all(data.listTags.map(async (tagName) => {
                     // Créer ou récupérer le tag
                     const tag = await prisma.seoTag.upsert({
                         where: { name: tagName },

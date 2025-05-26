@@ -24,7 +24,7 @@ const formSchema = z.object({
   title: z.string().min(1, 'Le titre est requis'),
   categoryId: z.string().min(1, 'La catégorie est requise'),
   metaDescription: z.string().min(1, 'La méta-description est requise'),
-  metaKeywords: z.string().optional(),
+  metaKeywords: z.string().optional(), // Retour en optional car géré par validation custom
   slug: z.string().min(1, 'Le slug est requis'),
   content: z.string().min(1, 'Le contenu est requis'),
   blogContent: z.any().optional(), // Contenu structuré du blog
@@ -52,6 +52,7 @@ interface SeoPostFormProps {
 enum AccordionSections {
   CATEGORY = 'category',
   METADATA = 'metadata',
+  KEYWORDS = 'keywords',
   TAGS = 'tags',
   HEADER = 'header',
   MAIN_IMAGE = 'main_image',
@@ -64,7 +65,7 @@ const fieldToAccordionMap: Record<string, AccordionSections> = {
   title: AccordionSections.METADATA,
   slug: AccordionSections.METADATA,
   excerpt: AccordionSections.MAIN_IMAGE,
-  metaKeywords: AccordionSections.TAGS,
+  metaKeywords: AccordionSections.KEYWORDS,
   author: AccordionSections.HEADER,
   authorLink: AccordionSections.HEADER,
   creationDate: AccordionSections.HEADER,
@@ -85,6 +86,7 @@ export default function SeoPostForm({
   const [isChangingStatus, setIsChangingStatus] = useState(false)
   const [isPinning, setIsPinning] = useState(false)
   const [generatedSlug, setGeneratedSlug] = useState('')
+  const [keywords, setKeywords] = useState<string[]>([])
   const [tags, setTags] = useState<string[]>([])
   const [blogContent, setBlogContent] = useState<BlogContent>([])
   
@@ -94,6 +96,7 @@ export default function SeoPostForm({
   // État pour suivre quels accordéons sont ouverts
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [metadataOpen, setMetadataOpen] = useState(true)
+  const [keywordsOpen, setKeywordsOpen] = useState(false)
   const [tagsOpen, setTagsOpen] = useState(false)
   const [headerOpen, setHeaderOpen] = useState(false)
   const [mainImageOpen, setMainImageOpen] = useState(false)
@@ -102,9 +105,14 @@ export default function SeoPostForm({
   // Initialisation des données en mode édition
   useEffect(() => {
     if (seoPost) {
-      // Initialiser les tags depuis metaKeywords qui contient maintenant directement le tableau
+      // Initialiser les keywords depuis metaKeywords
       if (seoPost.metaKeywords && Array.isArray(seoPost.metaKeywords)) {
-        setTags(seoPost.metaKeywords)
+        setKeywords(seoPost.metaKeywords)
+      }
+      
+      // Initialiser les tags depuis listTags
+      if (seoPost.listTags && Array.isArray(seoPost.listTags)) {
+        setTags(seoPost.listTags)
       }
       
       // Initialiser le contenu du blog
@@ -142,7 +150,7 @@ export default function SeoPostForm({
     title: seoPost?.title || '',
     categoryId: seoPost?.categoryId.toString() || '',
     metaDescription: seoPost?.metaDescription || '',
-    metaKeywords: '', // On laisse vide car géré par useState
+    metaKeywords: '', // On laisse vide car géré par useState pour keywords
     slug: seoPost?.slug || '',
     content: seoPost?.content || '',
     excerpt: seoPost?.excerpt || '',
@@ -183,16 +191,12 @@ export default function SeoPostForm({
     }
   }, [watchedValues.title, setValue])
   
-  // Mettre à jour le champ metaKeywords lorsque les tags changent
-  useEffect(() => {
-    setValue('metaKeywords', tags.join(', '))
-  }, [tags, setValue])
-  
   // Effet pour ouvrir automatiquement les accordéons contenant des erreurs
   useEffect(() => {
     if (isSubmitted && Object.keys(errors).length > 0) {
       let hasCategoryErrors = false
       let hasMetadataErrors = false
+      let hasKeywordsErrors = false
       let hasTagsErrors = false
       let hasHeaderErrors = false
       let hasMainImageErrors = false
@@ -205,6 +209,8 @@ export default function SeoPostForm({
           hasCategoryErrors = true
         } else if (section === AccordionSections.METADATA) {
           hasMetadataErrors = true
+        } else if (section === AccordionSections.KEYWORDS) {
+          hasKeywordsErrors = true
         } else if (section === AccordionSections.TAGS) {
           hasTagsErrors = true
         } else if (section === AccordionSections.HEADER) {
@@ -223,6 +229,10 @@ export default function SeoPostForm({
       
       if (hasMetadataErrors) {
         setMetadataOpen(true)
+      }
+      
+      if (hasKeywordsErrors) {
+        setKeywordsOpen(true)
       }
       
       if (hasTagsErrors) {
@@ -257,7 +267,7 @@ export default function SeoPostForm({
     return {
       title: currentValues.title || '',
       metaDescription: currentValues.metaDescription || '',
-      metaKeywords: tags.join(', '),
+      metaKeywords: keywords.join(', '),
       tags: tags, // Ajouter le tableau de tags directement
       slug: currentValues.slug || '',
       excerpt: currentValues.excerpt || '',
@@ -270,7 +280,7 @@ export default function SeoPostForm({
       content: currentValues.content || '',
       blogContent: blogContent
     }
-  }, [getValues, tags, blogContent])
+  }, [getValues, keywords, tags, blogContent])
 
   // Ouvrir le SEO Assistant
   const openSEOAssistant = () => {
@@ -348,12 +358,28 @@ export default function SeoPostForm({
     setIsSubmitting(true)
     
     try {
+      // Validation des keywords et tags avant soumission
+      if (keywords.length === 0) {
+        toast.error('Au moins un mot-clé est requis')
+        setKeywordsOpen(true)
+        setIsSubmitting(false)
+        return
+      }
+      
+      if (tags.length === 0) {
+        toast.error('Au moins un tag est requis')
+        setTagsOpen(true)
+        setIsSubmitting(false)
+        return
+      }
+      
       // Formatage des données
       const formattedData = {
         ...data,
         categoryId: parseInt(data.categoryId),
         estimatedReadTime: data.estimatedReadTime ? parseInt(data.estimatedReadTime) : null,
-        metaKeywords: tags, // Utiliser directement le tableau de tags
+        metaKeywords: keywords, // Utiliser le tableau de keywords pour metaKeywords
+        listTags: tags, // Utiliser le tableau de tags pour listTags
       }
       
       let result
@@ -470,6 +496,21 @@ export default function SeoPostForm({
           </AccordionItem>
           
           <AccordionItem
+            title="Keywords"
+            isOpen={keywordsOpen}
+            onOpenChange={setKeywordsOpen}
+          >
+            <TagInput 
+              tags={keywords} 
+              onChange={setKeywords}
+              placeholder="Ajouter un mot-clé et appuyer sur Entrée"
+              maxTags={10}
+              label="Mots-clés SEO de l'article *"
+              width="100%"
+            />
+          </AccordionItem>
+          
+          <AccordionItem
             title="Tags"
             isOpen={tagsOpen}
             onOpenChange={setTagsOpen}
@@ -479,13 +520,8 @@ export default function SeoPostForm({
               onChange={setTags}
               placeholder="Ajouter un tag et appuyer sur Entrée"
               maxTags={10}
-              label="Tags de l'article"
-              error={errors.metaKeywords?.message}
+              label="Tags de l'article *"
               width="100%"
-            />
-            <input 
-              type="hidden" 
-              {...register('metaKeywords')} 
             />
           </AccordionItem>
           
