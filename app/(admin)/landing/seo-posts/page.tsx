@@ -6,6 +6,10 @@ export const metadata = {
   description: 'Gérez les articles du blog SEO affichés sur le site',
 }
 
+// Désactiver le cache pour cette page
+export const revalidate = 0
+export const dynamic = 'force-dynamic'
+
 export default async function SeoPostPage() {
   const seoPosts = await getAllSeoPosts()
   return <SeoPostClient seoPosts={seoPosts} />

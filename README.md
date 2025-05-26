@@ -97,7 +97,6 @@ Le fichier CSV généré contiendra les colonnes suivantes, séparées par des p
 
 Vous pouvez facilement modifier le script pour ajouter de nouvelles adresses ou types de colis en modifiant les objets `addresses` et `parcels` dans le code.
 
-
 # Script de génération des tarifs d'expédition Shippo au format Excel
 
 Ce script permet d'exécuter toutes les combinaisons possibles d'envois entre différentes adresses avec différents types de colis, et de générer un fichier Excel contenant les tarifs proposés par les transporteurs.
@@ -168,3 +167,139 @@ Vous pouvez facilement modifier le script pour :
 - Ajouter de nouvelles adresses en modifiant l'objet `addresses`
 - Ajouter de nouveaux types de colis en modifiant l'objet `parcels`
 - Personnaliser le formatage du fichier Excel en modifiant les fonctions `initExcelFile` et `addResultsToExcel`
+
+# IRA Backoffice
+
+## Configuration de la traduction automatique
+
+Le système de traduction automatique utilise Google Translate pour une solution gratuite et simple, avec support complet de la traduction HTML.
+
+### Fonctionnalités
+
+#### Traduction des champs textuels
+
+- **Titre, méta-description, mots-clés**
+- **Résumé/extrait, tags**
+- **Textes alternatifs et légendes des images**
+
+#### Traduction du contenu HTML
+
+- **HTML complet** (`generatedHtml`) - Traduit tous les textes en préservant la structure
+- **JSON-LD** (`jsonLd`) - Parse et traduit les données structurées
+- **Article HTML** (`generatedArticleHtml`) - Traduit le contenu de l'article
+
+### Éléments traduits dans le HTML
+
+Le système traduit intelligemment :
+
+- ✅ **Contenu des balises** : `<title>`, `<h1>-<h6>`, `<p>`, `<span>`, `<div>`, `<figcaption>`
+- ✅ **Attributs meta** : `content`, `og:title`, `og:description`, `twitter:title`, etc.
+- ✅ **Attributs d'accessibilité** : `alt`, `title`
+- ✅ **Données JSON-LD** : `headline`, `description`, `keywords`, etc.
+
+### Éléments préservés
+
+Le système préserve intelligemment :
+
+- 🔒 **URLs et liens** - Jamais traduits
+- 🔒 **Dates et timestamps** - Format préservé
+- 🔒 **Structure HTML** - Balises et attributs intacts
+- 🔒 **Classes CSS et IDs** - Styles préservés
+- 🔒 **Attribut lang** - Automatiquement mis à jour
+
+### Fonctionnement
+
+- **Service principal** : Google Translate (API gratuite)
+- **Fallback automatique** : Traduction simple avec préfixe de langue en cas d'erreur
+- **Langues supportées** : Anglais, Espagnol, Allemand, Italien, Portugais, Néerlandais, Russe, Japonais, Coréen, Chinois
+
+### Avantages
+
+- ✅ **Gratuit** - Aucun coût d'API
+- ✅ **Simple** - Aucune configuration requise
+- ✅ **Intelligent** - Préserve la structure HTML
+- ✅ **Fiable** - Service stable de Google
+- ✅ **Rapide** - Traduction instantanée
+- ✅ **Compatible Vercel** - Fonctionne parfaitement en production
+
+### Tests du système
+
+Pour tester la traduction des champs textuels :
+
+```bash
+npm run test-translation
+```
+
+Pour tester la traduction HTML :
+
+```bash
+npm run test-html-translation
+```
+
+Pour tester la traduction complète (avec base de données) :
+
+```bash
+npm run test-complete-translation
+```
+
+Pour tester la traduction complète (sans base de données) :
+
+```bash
+npm run test-standalone-translation
+```
+
+### Utilisation
+
+Les traductions sont automatiquement créées/mises à jour lors de l'édition d'un article SEO dans l'interface d'administration. Le système traduit :
+
+**Champs textuels :**
+
+- Titre
+- Méta-description
+- Mots-clés
+- Résumé/extrait
+- Tags
+- Textes alternatifs des images
+- Légendes des images
+
+**Champs HTML :**
+
+- HTML complet généré (`generatedHtml`)
+- Données structurées JSON-LD (`jsonLd`)
+- Contenu d'article HTML (`generatedArticleHtml`)
+
+### Architecture technique
+
+```
+lib/services/
+├── translation-service.ts          # Service principal
+├── html-translation-service.ts     # Service spécialisé HTML
+└── scripts/
+    ├── test-google-translation.ts  # Tests champs textuels
+    └── test-html-translation.ts    # Tests traduction HTML
+```
+
+### Gestion des erreurs
+
+En cas de problème avec Google Translate (limite de taux, erreur réseau), le système bascule automatiquement vers une traduction simple avec préfixe de langue pour assurer la continuité du service. Les champs HTML sont retournés intacts en cas d'erreur.
+
+### Exemple de traduction HTML
+
+**Avant (français) :**
+
+```html
+<h1>Pourquoi utiliser la blockchain dans l'art ?</h1>
+<meta
+  name="description"
+  content="Les raisons d'utiliser la blockchain dans l'art"
+/>
+```
+
+**Après (anglais) :**
+
+```html
+<h1>Why use the blockchain in art?</h1>
+<meta name="description" content="Reasons to use the blockchain in art" />
+```
+
+La structure, les attributs et les styles restent parfaitement intacts.

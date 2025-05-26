@@ -606,6 +606,7 @@ model Language {
   name         String // ex: Français, English, Español
   isDefault    Boolean       @default(false)
   translations Translation[]
+  seoPosts     SeoPost[] // Nouvelle relation
 
   @@schema("landing")
 }
@@ -788,7 +789,9 @@ model SeoCategory {
 }
 
 model SeoPost {
-  id                   Int          @id @default(autoincrement())
+  id                   Int        @id @default(autoincrement())
+  languageId           Int // Nouvelle relation vers Language
+  originalPostId       Int? // Référence vers le post original (null pour l'original)
   title                String
   mainImageUrl         String?
   mainImageAlt         String?
@@ -796,24 +799,33 @@ model SeoPost {
   metaDescription      String
   metaKeywords         String[]
   content              String
-  slug                 String       @unique
+  slug                 String
   excerpt              String?
-  status               PostStatus   @default(DRAFT)
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  status               PostStatus @default(DRAFT)
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
   author               String
   authorLink           String?
-  viewsCount           Int          @default(0)
+  viewsCount           Int        @default(0)
   estimatedReadTime    Int?
   generatedHtml        String?
   generatedArticleHtml String?
   jsonLd               String?
-  pinned               Boolean      @default(false)
-  category             SeoCategory  @relation(fields: [categoryId], references: [id])
+  pinned               Boolean    @default(false)
   categoryId           Int
   listTags             String[]
-  tags                 SeoPostTag[] // Relation pour la logique relationnelle
 
+  // Relations
+  language     Language     @relation(fields: [languageId], references: [id])
+  category     SeoCategory  @relation(fields: [categoryId], references: [id])
+  tags         SeoPostTag[] // Relation pour la logique relationnelle
+  originalPost SeoPost?     @relation("PostTranslations", fields: [originalPostId], references: [id])
+  translations SeoPost[]    @relation("PostTranslations")
+
+  @@unique([slug, languageId]) // Slug unique par langue
+  @@index([languageId])
+  @@index([originalPostId])
+  @@index([categoryId])
   @@schema("landing")
 }
 

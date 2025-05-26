@@ -5,11 +5,13 @@ import { revalidatePath } from 'next/cache'
 import { SeoPost } from '@prisma/client'
 import { generateSeoJsonLd, generateSeoHtml, generateArticleHtml, SeoPostData } from '@/lib/utils/seo-generators'
 import { BlogContent } from '@/app/components/BlogEditor/types'
+import { translateSeoPostFields, getLanguageByCode, checkTranslationExists, handleSeoPostTranslationsOnUpdate } from '@/lib/services/translation-service'
 
 export async function getAllSeoPosts() {
     try {
         const seoPosts = await prisma.seoPost.findMany({
             include: {
+                language: true,
                 category: true,
                 tags: {
                     include: {
@@ -68,8 +70,21 @@ export async function createSeoPost(data: {
     mainImageAlt?: string
     mainImageCaption?: string
     creationDate?: Date
+    languageId?: number
+    originalPostId?: number
+    autoTranslate?: boolean
+    targetLanguageCodes?: string[]
 }) {
     try {
+        // Si pas de languageId fourni, utiliser la langue par défaut
+        let languageId = data.languageId
+        if (!languageId) {
+            const defaultLanguage = await prisma.language.findFirst({
+                where: { isDefault: true }
+            })
+            languageId = defaultLanguage?.id || 1 // fallback à 1 si pas de défaut trouvé
+        }
+
         // Parser le contenu JSON pour obtenir le BlogContent
         let blogContent: BlogContent = []
         try {
@@ -111,17 +126,19 @@ export async function createSeoPost(data: {
                 content: data.content, // Stocker le JSON du blog content
                 excerpt: data.excerpt,
                 author: data.author,
-                authorLink: data.authorLink,
+                authorLink: data.authorLink ?? undefined,
                 estimatedReadTime: data.estimatedReadTime,
                 status: data.status,
                 pinned: data.pinned || false,
-                mainImageUrl: data.mainImageUrl,
+                mainImageUrl: data.mainImageUrl ?? undefined,
                 mainImageAlt: data.mainImageAlt,
                 mainImageCaption: data.mainImageCaption,
                 createdAt: data.creationDate,
                 jsonLd: jsonLd,
                 generatedHtml: generatedHtml,
-                generatedArticleHtml: generatedArticleHtml
+                generatedArticleHtml: generatedArticleHtml,
+                languageId: languageId,
+                originalPostId: data.originalPostId || null
             }
         })
 
@@ -138,13 +155,18 @@ export async function createSeoPost(data: {
         if (data.listTags && data.listTags.length > 0) {
             // Créer les relations SeoPostTag avec les vrais tags
             await Promise.all(data.listTags.map(async (tagName) => {
-                // Créer ou récupérer le tag
+                // Générer un slug unique pour le tag
+                const baseSlug = tagName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
+
+                // Créer ou récupérer le tag en utilisant le slug comme clé unique
                 const tag = await prisma.seoTag.upsert({
-                    where: { name: tagName },
-                    update: {},
+                    where: { slug: baseSlug },
+                    update: {
+                        name: tagName // Mettre à jour le nom si le slug existe déjà
+                    },
                     create: {
                         name: tagName,
-                        slug: tagName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
+                        slug: baseSlug
                     }
                 })
 
@@ -158,16 +180,78 @@ export async function createSeoPost(data: {
             }))
         }
 
+        console.log("data.autoTranslate : ", data.autoTranslate)
+        console.log("data.targetLanguageCodes : ", data.targetLanguageCodes)
+        console.log("data.originalPostId : ", data.originalPostId)
+
+        // TRADUCTION AUTOMATIQUE : Gérer les traductions dans les autres langues
+        // Seulement si le post créé est un post original (originalPostId === null) et que l'auto-traduction est activée
+        const isOriginalPost = !data.originalPostId
+        const shouldAutoTranslate = data.autoTranslate && isOriginalPost
+
+        console.log('🔍 Vérification pour traduction automatique lors de la création:')
+        console.log(`   - Post ID: ${seoPost.id}`)
+        console.log(`   - Est un post original (pivot): ${isOriginalPost}`)
+        console.log(`   - originalPostId: ${data.originalPostId || 'null'}`)
+        console.log(`   - Auto-traduction demandée: ${data.autoTranslate}`)
+        console.log(`   - Langues cibles: ${data.targetLanguageCodes?.join(', ') || 'aucune'}`)
+        console.log(`   - Doit traduire: ${shouldAutoTranslate}`)
+
+        if (shouldAutoTranslate) {
+            console.log('✅ Conditions remplies pour la traduction automatique')
+
+            // Préparer les champs à traduire
+            const fieldsToTranslate = {
+                title: data.title,
+                metaDescription: data.metaDescription,
+                metaKeywords: data.metaKeywords || [],
+                content: data.content,
+                excerpt: data.excerpt || '',
+                listTags: data.listTags || [],
+                mainImageAlt: data.mainImageAlt || '',
+                mainImageCaption: data.mainImageCaption || '',
+                // IMPORTANT: Inclure les champs HTML générés
+                generatedHtml: generatedHtml || '',
+                jsonLd: jsonLd || '',
+                generatedArticleHtml: generatedArticleHtml || ''
+            }
+
+            console.log('🔄 Lancement de la traduction automatique avec champs HTML')
+            console.log(`   - generatedHtml: ${fieldsToTranslate.generatedHtml ? 'Présent' : 'Absent'}`)
+            console.log(`   - jsonLd: ${fieldsToTranslate.jsonLd ? 'Présent' : 'Absent'}`)
+            console.log(`   - generatedArticleHtml: ${fieldsToTranslate.generatedArticleHtml ? 'Présent' : 'Absent'}`)
+
+            // Lancer la traduction automatique de manière asynchrone pour ne pas bloquer la réponse
+            handleSeoPostTranslationsOnUpdate(seoPost.id, fieldsToTranslate)
+                .then(result => {
+                    if (result.success) {
+                        console.log(`✅ Traductions automatiques lors de la création: ${result.message}`)
+                    } else {
+                        console.error('❌ Erreur lors des traductions automatiques:', result.message)
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Erreur lors des traductions automatiques:', error)
+                })
+        } else {
+            if (!isOriginalPost) {
+                console.log('⏭️  Traduction automatique ignorée: ce post est une traduction (originalPostId !== null)')
+            }
+            if (!data.autoTranslate) {
+                console.log('⏭️  Traduction automatique ignorée: auto-traduction non demandée')
+            }
+        }
+
         revalidatePath('/landing/seo-posts')
         return {
             success: true,
             seoPost
         }
     } catch (error) {
-        console.error('Erreur lors de la création de l\'article SEO:', error)
+        console.error('Erreur lors de la création de l\'article SEO:', error || 'Erreur inconnue')
         return {
             success: false,
-            message: (error as Error).message
+            message: error instanceof Error ? error.message : 'Une erreur inconnue est survenue'
         }
     }
 }
@@ -225,8 +309,8 @@ export async function updateSeoPost(id: number, data: {
             title: data.title || existingPost.title,
             metaDescription: data.metaDescription || existingPost.metaDescription,
             author: data.author || existingPost.author,
-            authorLink: data.authorLink || existingPost.authorLink || undefined,
-            mainImageUrl: data.mainImageUrl || existingPost.mainImageUrl || undefined,
+            authorLink: (data.authorLink || existingPost.authorLink) ?? undefined,
+            mainImageUrl: (data.mainImageUrl || existingPost.mainImageUrl) ?? undefined,
             mainImageAlt: data.mainImageAlt || existingPost.mainImageAlt || undefined,
             mainImageCaption: data.mainImageCaption || existingPost.mainImageCaption || undefined,
             creationDate: data.creationDate || existingPost.createdAt,
@@ -258,11 +342,11 @@ export async function updateSeoPost(id: number, data: {
         if (data.content !== undefined) updateData.content = data.content
         if (data.excerpt !== undefined) updateData.excerpt = data.excerpt
         if (data.author !== undefined) updateData.author = data.author
-        if (data.authorLink !== undefined) updateData.authorLink = data.authorLink
+        if (data.authorLink !== undefined) updateData.authorLink = data.authorLink ?? undefined
         if (data.estimatedReadTime !== undefined) updateData.estimatedReadTime = data.estimatedReadTime
         if (data.status !== undefined) updateData.status = data.status
         if (data.pinned !== undefined) updateData.pinned = data.pinned
-        if (data.mainImageUrl !== undefined) updateData.mainImageUrl = data.mainImageUrl
+        if (data.mainImageUrl !== undefined) updateData.mainImageUrl = data.mainImageUrl ?? undefined
         if (data.mainImageAlt !== undefined) updateData.mainImageAlt = data.mainImageAlt
         if (data.mainImageCaption !== undefined) updateData.mainImageCaption = data.mainImageCaption
         if (data.creationDate !== undefined) updateData.createdAt = data.creationDate
@@ -299,24 +383,95 @@ export async function updateSeoPost(id: number, data: {
             // Créer les nouvelles relations de tags avec listTags (pas metaKeywords)
             if (data.listTags && data.listTags.length > 0) {
                 await Promise.all(data.listTags.map(async (tagName) => {
-                    // Créer ou récupérer le tag
+                    // Générer un slug unique pour le tag
+                    const baseSlug = tagName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
+
+                    // Créer ou récupérer le tag en utilisant le slug comme clé unique
                     const tag = await prisma.seoTag.upsert({
-                        where: { name: tagName },
-                        update: {},
+                        where: { slug: baseSlug },
+                        update: {
+                            name: tagName // Mettre à jour le nom si le slug existe déjà
+                        },
                         create: {
                             name: tagName,
-                            slug: tagName.toLowerCase().replace(/[^\w\s]/gi, '').replace(/\s+/g, '-')
+                            slug: baseSlug
                         }
                     })
 
-                    // Créer la relation
-                    await prisma.seoPostTag.create({
-                        data: {
+                    // Créer la relation seulement si elle n'existe pas déjà
+                    const existingRelation = await prisma.seoPostTag.findFirst({
+                        where: {
                             postId: id,
                             tagId: tag.id
                         }
                     })
+
+                    if (!existingRelation) {
+                        await prisma.seoPostTag.create({
+                            data: {
+                                postId: id,
+                                tagId: tag.id
+                            }
+                        })
+                    }
                 }))
+            }
+        }
+
+        // TRADUCTION AUTOMATIQUE : Gérer les traductions dans les autres langues
+        // Seulement si le post est le post pivot (originalPostId === null) et qu'il y a des modifications de contenu
+        const isContentUpdate = data.title || data.metaDescription || data.content || data.excerpt || data.listTags || data.mainImageAlt || data.mainImageCaption
+        const isOriginalPost = existingPost.originalPostId === null
+
+        console.log('🔍 Vérification pour traduction automatique:')
+        console.log(`   - Post ID: ${id}`)
+        console.log(`   - Est un post original (pivot): ${isOriginalPost}`)
+        console.log(`   - originalPostId: ${existingPost.originalPostId}`)
+        console.log(`   - Modifications de contenu: ${isContentUpdate}`)
+
+        if (isContentUpdate && isOriginalPost) {
+            // C'est un post original/pivot (pas une traduction) et il y a des modifications de contenu
+            console.log('✅ Conditions remplies pour la traduction automatique')
+
+            // Préparer les champs à traduire avec les données mises à jour
+            const fieldsToTranslate = {
+                title: data.title || existingPost.title,
+                metaDescription: data.metaDescription || existingPost.metaDescription,
+                metaKeywords: data.metaKeywords || existingPost.metaKeywords || [],
+                content: data.content || existingPost.content,
+                excerpt: data.excerpt || existingPost.excerpt || '',
+                listTags: data.listTags || existingPost.listTags || [],
+                mainImageAlt: data.mainImageAlt || existingPost.mainImageAlt || '',
+                mainImageCaption: data.mainImageCaption || existingPost.mainImageCaption || '',
+                // IMPORTANT: Inclure les champs HTML
+                generatedHtml: generatedHtml || existingPost.generatedHtml || '',
+                jsonLd: jsonLd || existingPost.jsonLd || '',
+                generatedArticleHtml: generatedArticleHtml || existingPost.generatedArticleHtml || ''
+            }
+
+            console.log('🔄 Lancement de la traduction automatique avec champs HTML')
+            console.log(`   - generatedHtml: ${fieldsToTranslate.generatedHtml ? 'Présent' : 'Absent'}`)
+            console.log(`   - jsonLd: ${fieldsToTranslate.jsonLd ? 'Présent' : 'Absent'}`)
+            console.log(`   - generatedArticleHtml: ${fieldsToTranslate.generatedArticleHtml ? 'Présent' : 'Absent'}`)
+
+            // Lancer la traduction automatique de manière asynchrone pour ne pas bloquer la réponse
+            handleSeoPostTranslationsOnUpdate(id, fieldsToTranslate)
+                .then(result => {
+                    if (result.success) {
+                        console.log(`✅ Traductions automatiques: ${result.message}`)
+                    } else {
+                        console.error('❌ Erreur lors des traductions automatiques:', result.message)
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Erreur lors des traductions automatiques:', error)
+                })
+        } else {
+            if (!isOriginalPost) {
+                console.log('⏭️  Traduction automatique ignorée: ce post est une traduction (originalPostId !== null)')
+            }
+            if (!isContentUpdate) {
+                console.log('⏭️  Traduction automatique ignorée: aucune modification de contenu détectée')
             }
         }
 
@@ -328,10 +483,10 @@ export async function updateSeoPost(id: number, data: {
             seoPost
         }
     } catch (error) {
-        console.error(`Erreur lors de la mise à jour de l'article SEO ${id}:`, error)
+        console.error(`Erreur lors de la mise à jour de l'article SEO ${id}:`, error || 'Erreur inconnue')
         return {
             success: false,
-            message: (error as Error).message
+            message: error instanceof Error ? error.message : 'Une erreur inconnue est survenue'
         }
     }
 }
@@ -382,5 +537,131 @@ export async function pinSeoPost(id: number) {
             success: false,
             message: (error as Error).message
         }
+    }
+}
+
+// Nouvelle fonction pour créer une traduction
+export async function createSeoPostTranslation(
+    originalPostId: number,
+    targetLanguageCode: string
+) {
+    try {
+        // Récupérer la langue cible
+        const targetLanguage = await getLanguageByCode(targetLanguageCode)
+        if (!targetLanguage) {
+            return {
+                success: false,
+                message: 'Langue cible non trouvée'
+            }
+        }
+
+        // Récupérer le post original avec sa langue
+        const originalPost = await prisma.seoPost.findUnique({
+            where: { id: originalPostId },
+            include: { language: true }
+        })
+
+        if (!originalPost) {
+            return {
+                success: false,
+                message: 'Article original non trouvé'
+            }
+        }
+
+        // Vérifier si une traduction existe déjà
+        const existingTranslation = await prisma.seoPost.findFirst({
+            where: {
+                originalPostId: originalPostId,
+                languageId: targetLanguage.id
+            }
+        })
+
+        if (existingTranslation) {
+            return {
+                success: false,
+                message: `Une traduction en ${targetLanguage.name} existe déjà`
+            }
+        }
+
+        // Préparer les champs à traduire
+        const fieldsToTranslate = {
+            title: originalPost.title,
+            metaDescription: originalPost.metaDescription,
+            metaKeywords: originalPost.metaKeywords || [],
+            content: originalPost.content,
+            excerpt: originalPost.excerpt || '',
+            listTags: originalPost.listTags || [],
+            mainImageAlt: originalPost.mainImageAlt || '',
+            mainImageCaption: originalPost.mainImageCaption || '',
+            // IMPORTANT: Inclure les champs HTML
+            generatedHtml: originalPost.generatedHtml || '',
+            jsonLd: originalPost.jsonLd || '',
+            generatedArticleHtml: originalPost.generatedArticleHtml || ''
+        }
+
+        // Traduire
+        const translatedFields = await translateSeoPostFields(fieldsToTranslate, targetLanguageCode)
+
+        // Créer le post traduit
+        const translatedPost = await createSeoPost({
+            title: translatedFields.title,
+            categoryId: originalPost.categoryId,
+            metaDescription: translatedFields.metaDescription,
+            metaKeywords: translatedFields.metaKeywords,
+            slug: translatedFields.slug,
+            content: translatedFields.content,
+            excerpt: translatedFields.excerpt,
+            author: originalPost.author,
+            authorLink: originalPost.authorLink ?? undefined,
+            estimatedReadTime: originalPost.estimatedReadTime,
+            status: originalPost.status,
+            pinned: false,
+            mainImageUrl: originalPost.mainImageUrl ?? undefined,
+            mainImageAlt: translatedFields.mainImageAlt,
+            mainImageCaption: translatedFields.mainImageCaption,
+            creationDate: originalPost.createdAt,
+            listTags: translatedFields.listTags,
+            // Nouveaux champs
+            languageId: targetLanguage.id,
+            originalPostId: originalPostId
+        })
+
+        return translatedPost
+    } catch (error) {
+        console.error('Erreur lors de la création de la traduction:', error)
+        return {
+            success: false,
+            message: (error as Error).message
+        }
+    }
+}
+
+// Nouvelle fonction pour récupérer les posts par langue
+export async function getSeoPostsByLanguage(languageCode: string = 'fr') {
+    try {
+        const posts = await prisma.seoPost.findMany({
+            where: {
+                language: {
+                    code: languageCode
+                }
+            },
+            include: {
+                language: true,
+                category: true,
+                tags: {
+                    include: {
+                        tag: true
+                    }
+                }
+            },
+            orderBy: {
+                updatedAt: 'desc'
+            }
+        })
+
+        return posts
+    } catch (error) {
+        console.error('Erreur lors de la récupération des articles:', error)
+        throw new Error('Impossible de récupérer les articles')
     }
 } 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { SeoCategory, SeoPost } from '@prisma/client'
+import { SeoCategory, SeoPost, Language } from '@prisma/client'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -16,6 +16,7 @@ import BlogContentEditor from '@/app/components/BlogEditor/BlogContentEditor'
 import { BlogContent } from '@/app/components/BlogEditor/types'
 import { SEOAssistantButton, SEOAssistantModal, FormData } from '@/app/components/SEOAssistant'
 import { createSeoPost, updateSeoPost, pinSeoPost } from '@/lib/actions/seo-post-actions'
+import { getAllLanguages } from '@/lib/services/translation-service'
 import { generateSlug } from '@/lib/utils'
 import { useToast } from '@/app/components/Toast/ToastContext'
 
@@ -93,6 +94,9 @@ export default function SeoPostForm({
   // État pour le SEO Assistant
   const [isSEOAssistantOpen, setIsSEOAssistantOpen] = useState(false)
   
+  // État pour les langues disponibles
+  const [availableLanguages, setAvailableLanguages] = useState<Language[]>([])
+  
   // État pour suivre quels accordéons sont ouverts
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [metadataOpen, setMetadataOpen] = useState(true)
@@ -129,6 +133,22 @@ export default function SeoPostForm({
       }
     }
   }, [seoPost])
+
+  // Chargement des langues disponibles
+  useEffect(() => {
+    const loadLanguages = async () => {
+      try {
+        const languages = await getAllLanguages()
+        // Filtrer pour exclure la langue par défaut (français)
+        const filteredLanguages = languages.filter(lang => !lang.isDefault)
+        setAvailableLanguages(filteredLanguages)
+      } catch (error) {
+        console.error('Erreur lors du chargement des langues:', error)
+      }
+    }
+    
+    loadLanguages()
+  }, [])
 
   // Parsing du contenu existant s'il y en a (gardé pour compatibilité)
   useEffect(() => {
@@ -380,6 +400,9 @@ export default function SeoPostForm({
         estimatedReadTime: data.estimatedReadTime ? parseInt(data.estimatedReadTime) : null,
         metaKeywords: keywords, // Utiliser le tableau de keywords pour metaKeywords
         listTags: tags, // Utiliser le tableau de tags pour listTags
+        // Traduction automatique pour tous les nouveaux posts
+        autoTranslate: !isEditing && availableLanguages.length > 0,
+        targetLanguageCodes: !isEditing ? availableLanguages.map(lang => lang.code) : undefined
       }
       
       let result
@@ -393,7 +416,11 @@ export default function SeoPostForm({
       }
       
       if (result.success) {
-        toast.success(isEditing ? 'Article mis à jour avec succès' : 'Article créé avec succès')
+        let successMessage = isEditing ? 'Article mis à jour avec succès' : 'Article créé avec succès'
+        if (!isEditing && availableLanguages.length > 0) {
+          successMessage += ` et traductions en cours pour ${availableLanguages.length} langue(s)`
+        }
+        toast.success(successMessage)
         
         // Redirection
         setTimeout(() => {

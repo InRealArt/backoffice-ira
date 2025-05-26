@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { SeoPost, SeoCategory, PostStatus } from '@prisma/client'
+import { SeoPost, SeoCategory, PostStatus, Language } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Image from 'next/image'
 import {
@@ -18,6 +18,7 @@ import {
 
 interface SeoPostWithRelations extends SeoPost {
   category: SeoCategory
+  language: Language
   tags: {
     tag: {
       id: number
@@ -143,6 +144,26 @@ export default function SeoPostClient({ seoPosts }: SeoPostClientProps) {
           className={`status-badge ${post.status === PostStatus.PUBLISHED ? 'status-success' : 'status-warning'}`}
         >
           {post.status === PostStatus.PUBLISHED ? 'Publié' : 'Brouillon'}
+        </span>
+      )
+    },
+    {
+      key: 'pinned',
+      header: 'Épinglé',
+      render: (post) => (
+        <span 
+          className={`status-badge ${post.pinned ? 'status-info' : 'status-muted'}`}
+        >
+          {post.pinned ? '📌 Oui' : 'Non'}
+        </span>
+      )
+    },
+    {
+      key: 'language',
+      header: 'Langue',
+      render: (post) => (
+        <span className="language-badge">
+          {post.language.code.toUpperCase()}
         </span>
       )
     },
