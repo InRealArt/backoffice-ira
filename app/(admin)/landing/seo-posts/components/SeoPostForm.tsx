@@ -334,7 +334,7 @@ export default function SeoPostForm({
         
         // Redirection pour actualiser les données
         setTimeout(() => {
-          router.refresh()
+          window.location.href = '/landing/seo-posts'
         }, 1000)
       } else {
         toast.error(result.message || 'Une erreur est survenue')
@@ -361,7 +361,7 @@ export default function SeoPostForm({
         
         // Redirection pour actualiser les données
         setTimeout(() => {
-          router.refresh()
+          window.location.href = '/landing/seo-posts'
         }, 1000)
       } else {
         toast.error(result.message || 'Une erreur est survenue')
@@ -424,8 +424,7 @@ export default function SeoPostForm({
         
         // Redirection
         setTimeout(() => {
-          router.push('/landing/seo-posts')
-          router.refresh()
+          window.location.href = '/landing/seo-posts'
         }, 1000)
       } else {
         toast.error(result.message || 'Une erreur est survenue')

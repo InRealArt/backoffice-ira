@@ -16,6 +16,9 @@ export interface FieldsToTranslate {
     generatedHtml?: string
     jsonLd?: string
     generatedArticleHtml?: string
+    // Nouveaux champs à synchroniser
+    status?: 'DRAFT' | 'PUBLISHED'
+    pinned?: boolean
 }
 
 export interface TranslatedFields {
@@ -32,6 +35,9 @@ export interface TranslatedFields {
     generatedHtml?: string
     jsonLd?: string
     generatedArticleHtml?: string
+    // Nouveaux champs à synchroniser
+    status?: 'DRAFT' | 'PUBLISHED'
+    pinned?: boolean
 }
 
 // Fonction de traduction avec Google Translate
@@ -83,7 +89,10 @@ async function simpleTranslation(
         // Pour les champs HTML, on les garde tels quels en fallback
         generatedHtml: fields.generatedHtml,
         jsonLd: fields.jsonLd,
-        generatedArticleHtml: fields.generatedArticleHtml
+        generatedArticleHtml: fields.generatedArticleHtml,
+        // Champs à synchroniser (non traduits)
+        status: fields.status,
+        pinned: fields.pinned
     }
 }
 
@@ -177,7 +186,10 @@ export async function translateSeoPostFields(
             // Champs HTML traduits
             generatedHtml: translatedGeneratedHtml,
             jsonLd: translatedJsonLd,
-            generatedArticleHtml: translatedGeneratedArticleHtml
+            generatedArticleHtml: translatedGeneratedArticleHtml,
+            // Champs à synchroniser (non traduits)
+            status: fields.status,
+            pinned: fields.pinned
         }
     } catch (error: any) {
         console.error('❌ Erreur lors de la traduction Google:', error)
@@ -258,7 +270,10 @@ export async function handleSeoPostTranslationsOnUpdate(
             // IMPORTANT: Inclure les champs HTML depuis la base de données
             generatedHtml: updatedFields.generatedHtml || originalPost.generatedHtml || '',
             jsonLd: updatedFields.jsonLd || originalPost.jsonLd || '',
-            generatedArticleHtml: updatedFields.generatedArticleHtml || originalPost.generatedArticleHtml || ''
+            generatedArticleHtml: updatedFields.generatedArticleHtml || originalPost.generatedArticleHtml || '',
+            // Nouveaux champs à synchroniser
+            status: updatedFields.status || originalPost.status,
+            pinned: updatedFields.pinned === undefined ? originalPost.pinned : updatedFields.pinned
         }
 
         console.log('🔄 Champs HTML à traduire:')
@@ -301,8 +316,8 @@ export async function handleSeoPostTranslationsOnUpdate(
                     author: originalPost.author,
                     authorLink: originalPost.authorLink,
                     estimatedReadTime: originalPost.estimatedReadTime,
-                    status: originalPost.status,
-                    pinned: false, // Les traductions ne sont jamais épinglées
+                    status: translatedFields.status,
+                    pinned: translatedFields.pinned,
                     mainImageUrl: originalPost.mainImageUrl,
                     categoryId: originalPost.categoryId,
                     viewsCount: 0,

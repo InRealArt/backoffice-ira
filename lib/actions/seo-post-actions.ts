@@ -213,7 +213,10 @@ export async function createSeoPost(data: {
                 // IMPORTANT: Inclure les champs HTML générés
                 generatedHtml: generatedHtml || '',
                 jsonLd: jsonLd || '',
-                generatedArticleHtml: generatedArticleHtml || ''
+                generatedArticleHtml: generatedArticleHtml || '',
+                // Champs à synchroniser
+                status: data.status,
+                pinned: data.pinned || false
             }
 
             console.log('🔄 Lancement de la traduction automatique avec champs HTML')
@@ -421,6 +424,8 @@ export async function updateSeoPost(id: number, data: {
         // TRADUCTION AUTOMATIQUE : Gérer les traductions dans les autres langues
         // Seulement si le post est le post pivot (originalPostId === null) et qu'il y a des modifications de contenu
         const isContentUpdate = data.title || data.metaDescription || data.content || data.excerpt || data.listTags || data.mainImageAlt || data.mainImageCaption
+        const isStatusUpdate = data.status !== undefined
+        const isPinnedUpdate = data.pinned !== undefined
         const isOriginalPost = existingPost.originalPostId === null
 
         console.log('🔍 Vérification pour traduction automatique:')
@@ -428,9 +433,26 @@ export async function updateSeoPost(id: number, data: {
         console.log(`   - Est un post original (pivot): ${isOriginalPost}`)
         console.log(`   - originalPostId: ${existingPost.originalPostId}`)
         console.log(`   - Modifications de contenu: ${isContentUpdate}`)
+        console.log(`   - Modification de statut: ${isStatusUpdate}`)
+        console.log(`   - Modification d'épinglage: ${isPinnedUpdate}`)
+
+        // Synchroniser le statut et l'épinglage avec toutes les traductions si c'est un post pivot
+        if (isOriginalPost && (isStatusUpdate || isPinnedUpdate)) {
+            console.log('🔄 Synchronisation du statut/épinglage avec les traductions...')
+
+            const updateDataForTranslations: any = {}
+            if (isStatusUpdate) updateDataForTranslations.status = data.status
+            if (isPinnedUpdate) updateDataForTranslations.pinned = data.pinned
+
+            await prisma.seoPost.updateMany({
+                where: { originalPostId: id },
+                data: updateDataForTranslations
+            })
+
+            console.log(`✅ Statut/épinglage synchronisé avec les traductions`)
+        }
 
         if (isContentUpdate && isOriginalPost) {
-            // C'est un post original/pivot (pas une traduction) et il y a des modifications de contenu
             console.log('✅ Conditions remplies pour la traduction automatique')
 
             // Préparer les champs à traduire avec les données mises à jour
@@ -446,7 +468,10 @@ export async function updateSeoPost(id: number, data: {
                 // IMPORTANT: Inclure les champs HTML
                 generatedHtml: generatedHtml || existingPost.generatedHtml || '',
                 jsonLd: jsonLd || existingPost.jsonLd || '',
-                generatedArticleHtml: generatedArticleHtml || existingPost.generatedArticleHtml || ''
+                generatedArticleHtml: generatedArticleHtml || existingPost.generatedArticleHtml || '',
+                // Champs à synchroniser
+                status: data.status || existingPost.status,
+                pinned: data.pinned || existingPost.pinned || false
             }
 
             console.log('🔄 Lancement de la traduction automatique avec champs HTML')
@@ -505,10 +530,51 @@ export async function pinSeoPost(id: number) {
             }
         }
 
-        // Dépingler tous les autres articles
+        // Déterminer l'ID du post pivot et récupérer tous les posts associés
+        let pivotPostId: number
+        let relatedPostIds: number[] = []
+
+        if (existingPost.originalPostId === null) {
+            // Le post courant est le pivot
+            pivotPostId = id
+
+            // Récupérer toutes les traductions de ce post pivot
+            const translations = await prisma.seoPost.findMany({
+                where: { originalPostId: id },
+                select: { id: true }
+            })
+
+            relatedPostIds = [id, ...translations.map(t => t.id)]
+        } else {
+            // Le post courant est une traduction
+            pivotPostId = existingPost.originalPostId
+
+            // Récupérer le post pivot et toutes ses traductions (y compris le post courant)
+            const [pivotPost, translations] = await Promise.all([
+                prisma.seoPost.findUnique({
+                    where: { id: pivotPostId },
+                    select: { id: true }
+                }),
+                prisma.seoPost.findMany({
+                    where: { originalPostId: pivotPostId },
+                    select: { id: true }
+                })
+            ])
+
+            if (!pivotPost) {
+                return {
+                    success: false,
+                    message: 'Post pivot non trouvé'
+                }
+            }
+
+            relatedPostIds = [pivotPostId, ...translations.map(t => t.id)]
+        }
+
+        // Dépingler tous les autres articles (qui ne sont pas dans le groupe à épingler)
         await prisma.seoPost.updateMany({
             where: {
-                id: { not: id },
+                id: { notIn: relatedPostIds },
                 pinned: true
             },
             data: {
@@ -516,12 +582,19 @@ export async function pinSeoPost(id: number) {
             }
         })
 
-        // Épingler l'article ciblé
-        const seoPost = await prisma.seoPost.update({
-            where: { id },
+        // Épingler tous les articles du groupe (pivot + traductions)
+        await prisma.seoPost.updateMany({
+            where: {
+                id: { in: relatedPostIds }
+            },
             data: {
                 pinned: true
             }
+        })
+
+        // Récupérer l'article mis à jour pour la réponse
+        const updatedPost = await prisma.seoPost.findUnique({
+            where: { id }
         })
 
         revalidatePath('/landing/seo-posts')
@@ -529,7 +602,8 @@ export async function pinSeoPost(id: number) {
 
         return {
             success: true,
-            seoPost
+            seoPost: updatedPost,
+            message: `Article épinglé avec ${relatedPostIds.length - 1} traduction(s) associée(s)`
         }
     } catch (error) {
         console.error(`Erreur lors de l'épinglage de l'article SEO ${id}:`, error)
@@ -596,7 +670,10 @@ export async function createSeoPostTranslation(
             // IMPORTANT: Inclure les champs HTML
             generatedHtml: originalPost.generatedHtml || '',
             jsonLd: originalPost.jsonLd || '',
-            generatedArticleHtml: originalPost.generatedArticleHtml || ''
+            generatedArticleHtml: originalPost.generatedArticleHtml || '',
+            // Champs à synchroniser
+            status: originalPost.status,
+            pinned: originalPost.pinned || false
         }
 
         // Traduire
@@ -614,8 +691,8 @@ export async function createSeoPostTranslation(
             author: originalPost.author,
             authorLink: originalPost.authorLink ?? undefined,
             estimatedReadTime: originalPost.estimatedReadTime,
-            status: originalPost.status,
-            pinned: false,
+            status: translatedFields.status || 'DRAFT',
+            pinned: translatedFields.pinned || false,
             mainImageUrl: originalPost.mainImageUrl ?? undefined,
             mainImageAlt: translatedFields.mainImageAlt,
             mainImageCaption: translatedFields.mainImageCaption,
