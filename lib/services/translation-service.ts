@@ -76,11 +76,84 @@ async function simpleTranslation(
     // Traduction basique avec préfixe indiquant la langue
     const languagePrefix = `[${targetLanguageCode.toUpperCase()}]`
 
+    // Traduction simple du contenu JSON
+    let translatedContent = fields.content
+    try {
+        const contentData = JSON.parse(fields.content)
+        if (Array.isArray(contentData)) {
+            const translatedSections = contentData.map((section: any) => {
+                const translatedSection = { ...section }
+
+                // Traduire le titre de la section
+                if (section.title) {
+                    translatedSection.title = `${languagePrefix} ${section.title}`
+                }
+
+                // Traduire les éléments
+                if (section.elements && Array.isArray(section.elements)) {
+                    translatedSection.elements = section.elements.map((element: any) => {
+                        const translatedElement = { ...element }
+
+                        // Traduire le contenu textuel (h2, h3, paragraph)
+                        if (['h2', 'h3', 'paragraph'].includes(element.type)) {
+                            if (element.content) {
+                                translatedElement.content = `${languagePrefix} ${element.content}`
+                            }
+                        }
+
+                        // Traduire les attributs des images
+                        if (element.type === 'image') {
+                            if (element.alt) {
+                                translatedElement.alt = `${languagePrefix} ${element.alt}`
+                            }
+                            if (element.caption) {
+                                translatedElement.caption = `${languagePrefix} ${element.caption}`
+                            }
+                        }
+
+                        // Traduire les attributs des vidéos
+                        if (element.type === 'video') {
+                            if (element.caption) {
+                                translatedElement.caption = `${languagePrefix} ${element.caption}`
+                            }
+                            // L'URL reste inchangée
+                        }
+
+                        // Traduire les accordéons
+                        if (element.type === 'accordion') {
+                            // Traduire le titre de l'accordéon
+                            if (element.title) {
+                                translatedElement.title = `${languagePrefix} ${element.title}`
+                            }
+
+                            // Traduire chaque item de l'accordéon
+                            if (element.items && Array.isArray(element.items)) {
+                                translatedElement.items = element.items.map((item: any) => ({
+                                    ...item,
+                                    title: item.title ? `${languagePrefix} ${item.title}` : item.title,
+                                    content: item.content ? `${languagePrefix} ${item.content}` : item.content
+                                }))
+                            }
+                        }
+
+                        return translatedElement
+                    })
+                }
+
+                return translatedSection
+            })
+            translatedContent = JSON.stringify(translatedSections, null, 2)
+        }
+    } catch (error) {
+        console.error('Erreur lors de la traduction simple du JSON:', error)
+        // Garder le contenu original en cas d'erreur
+    }
+
     return {
         title: `${languagePrefix} ${fields.title}`,
         metaDescription: `${languagePrefix} ${fields.metaDescription}`,
         metaKeywords: fields.metaKeywords.map(keyword => `${languagePrefix} ${keyword}`),
-        content: fields.content,
+        content: translatedContent,
         excerpt: fields.excerpt ? `${languagePrefix} ${fields.excerpt}` : undefined,
         listTags: fields.listTags.map(tag => `${languagePrefix} ${tag}`),
         mainImageAlt: fields.mainImageAlt ? `${languagePrefix} ${fields.mainImageAlt}` : undefined,
@@ -93,6 +166,101 @@ async function simpleTranslation(
         // Champs à synchroniser (non traduits)
         status: fields.status,
         pinned: fields.pinned
+    }
+}
+
+// Fonction pour traduire le contenu JSON structuré
+async function translateJsonContent(
+    jsonContent: string,
+    targetLang: string
+): Promise<string> {
+    if (!jsonContent || jsonContent.trim() === '') return jsonContent
+
+    try {
+        const contentData = JSON.parse(jsonContent)
+
+        // Si ce n'est pas un tableau, retourner tel quel
+        if (!Array.isArray(contentData)) {
+            return jsonContent
+        }
+
+        // Traduire chaque section
+        const translatedSections = await Promise.all(
+            contentData.map(async (section: any) => {
+                if (!section.elements || !Array.isArray(section.elements)) {
+                    return section
+                }
+
+                // Traduire le titre de la section si présent
+                const translatedTitle = section.title
+                    ? await translateWithGoogle(section.title, targetLang)
+                    : section.title
+
+                // Traduire chaque élément de la section
+                const translatedElements = await Promise.all(
+                    section.elements.map(async (element: any) => {
+                        const translatedElement = { ...element }
+
+                        // Traduire le contenu textuel selon le type
+                        if (['h2', 'h3', 'paragraph'].includes(element.type)) {
+                            if (element.content) {
+                                translatedElement.content = await translateWithGoogle(element.content, targetLang)
+                            }
+                        }
+
+                        // Traduire les attributs des images
+                        if (element.type === 'image') {
+                            if (element.alt) {
+                                translatedElement.alt = await translateWithGoogle(element.alt, targetLang)
+                            }
+                            if (element.caption) {
+                                translatedElement.caption = await translateWithGoogle(element.caption, targetLang)
+                            }
+                        }
+
+                        // Traduire les attributs des vidéos
+                        if (element.type === 'video') {
+                            if (element.caption) {
+                                translatedElement.caption = await translateWithGoogle(element.caption, targetLang)
+                            }
+                            // L'URL reste inchangée
+                        }
+
+                        // Traduire les accordéons
+                        if (element.type === 'accordion') {
+                            // Traduire le titre de l'accordéon
+                            if (element.title) {
+                                translatedElement.title = await translateWithGoogle(element.title, targetLang)
+                            }
+
+                            // Traduire chaque item de l'accordéon
+                            if (element.items && Array.isArray(element.items)) {
+                                translatedElement.items = await Promise.all(
+                                    element.items.map(async (item: any) => ({
+                                        ...item,
+                                        title: item.title ? await translateWithGoogle(item.title, targetLang) : item.title,
+                                        content: item.content ? await translateWithGoogle(item.content, targetLang) : item.content
+                                    }))
+                                )
+                            }
+                        }
+
+                        return translatedElement
+                    })
+                )
+
+                return {
+                    ...section,
+                    title: translatedTitle,
+                    elements: translatedElements
+                }
+            })
+        )
+
+        return JSON.stringify(translatedSections, null, 2)
+    } catch (error) {
+        console.error('❌ Erreur lors de la traduction du contenu JSON:', error)
+        return jsonContent // Retourner le contenu original en cas d'erreur
     }
 }
 
@@ -149,6 +317,10 @@ export async function translateSeoPostFields(
             Promise.all(fields.listTags.map(tag => translateWithGoogle(tag, mappedLang)))
         ])
 
+        // Traduire le contenu JSON structuré
+        console.log('📝 Traduction du contenu JSON...')
+        const translatedContent = await translateJsonContent(fields.content, mappedLang)
+
         // Traduire les champs HTML si présents
         let translatedGeneratedHtml: string | undefined
         let translatedJsonLd: string | undefined
@@ -177,7 +349,7 @@ export async function translateSeoPostFields(
             title: translatedTitle,
             metaDescription: translatedMetaDescription,
             metaKeywords: translatedKeywords,
-            content: fields.content, // Garder le JSON tel quel pour l'instant
+            content: translatedContent, // Contenu JSON traduit
             excerpt: translatedExcerpt,
             listTags: translatedTags,
             mainImageAlt: translatedMainImageAlt,
