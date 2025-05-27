@@ -6,6 +6,7 @@ import { SeoPost } from '@prisma/client'
 import { generateSeoJsonLd, generateSeoHtml, generateArticleHtml, SeoPostData } from '@/lib/utils/seo-generators'
 import { BlogContent } from '@/app/components/BlogEditor/types'
 import { translateSeoPostFields, getLanguageByCode, checkTranslationExists, handleSeoPostTranslationsOnUpdate } from '@/lib/services/translation-service'
+import { calculateReadingTime } from '@/lib/utils/reading-time-calculator'
 
 export async function getAllSeoPosts() {
     try {
@@ -110,10 +111,22 @@ export async function createSeoPost(data: {
             tags: data.metaKeywords || []
         }
 
-        // Générer le JSON-LD, HTML complet et HTML de l'article
-        const jsonLd = generateSeoJsonLd(seoPostData)
-        const generatedHtml = generateSeoHtml(seoPostData)
-        const generatedArticleHtml = generateArticleHtml(seoPostData)
+        // Générer le HTML initial pour calculer le temps de lecture
+        const initialGeneratedHtml = generateSeoHtml(seoPostData)
+
+        // Calculer automatiquement le temps de lecture basé sur le HTML généré
+        const calculatedReadingTime = calculateReadingTime(initialGeneratedHtml)
+
+        // Préparer les données pour la génération SEO avec le temps de lecture
+        const seoPostDataWithReadTime: SeoPostData = {
+            ...seoPostData,
+            estimatedReadTime: calculatedReadingTime
+        }
+
+        // Générer le JSON-LD, HTML complet et HTML de l'article avec le temps de lecture
+        const jsonLd = generateSeoJsonLd(seoPostDataWithReadTime)
+        const generatedHtmlWithReadTime = generateSeoHtml(seoPostDataWithReadTime)
+        const generatedArticleHtmlWithReadTime = generateArticleHtml(seoPostDataWithReadTime)
 
         // Créer l'article
         const seoPost = await prisma.seoPost.create({
@@ -127,7 +140,7 @@ export async function createSeoPost(data: {
                 excerpt: data.excerpt,
                 author: data.author,
                 authorLink: data.authorLink ?? undefined,
-                estimatedReadTime: data.estimatedReadTime,
+                estimatedReadTime: calculatedReadingTime, // Utiliser le temps calculé automatiquement
                 status: data.status,
                 pinned: data.pinned || false,
                 mainImageUrl: data.mainImageUrl ?? undefined,
@@ -135,8 +148,8 @@ export async function createSeoPost(data: {
                 mainImageCaption: data.mainImageCaption,
                 createdAt: data.creationDate,
                 jsonLd: jsonLd,
-                generatedHtml: generatedHtml,
-                generatedArticleHtml: generatedArticleHtml,
+                generatedHtml: generatedHtmlWithReadTime,
+                generatedArticleHtml: generatedArticleHtmlWithReadTime,
                 languageId: languageId,
                 originalPostId: data.originalPostId || null
             }
@@ -211,9 +224,9 @@ export async function createSeoPost(data: {
                 mainImageAlt: data.mainImageAlt || '',
                 mainImageCaption: data.mainImageCaption || '',
                 // IMPORTANT: Inclure les champs HTML générés
-                generatedHtml: generatedHtml || '',
+                generatedHtml: generatedHtmlWithReadTime || '',
                 jsonLd: jsonLd || '',
-                generatedArticleHtml: generatedArticleHtml || '',
+                generatedArticleHtml: generatedArticleHtmlWithReadTime || '',
                 // Champs à synchroniser
                 status: data.status,
                 pinned: data.pinned || false
@@ -322,16 +335,29 @@ export async function updateSeoPost(id: number, data: {
             tags: data.metaKeywords || existingPost.metaKeywords || []
         }
 
-        // Générer le JSON-LD, HTML complet et HTML de l'article
-        const jsonLd = generateSeoJsonLd(seoPostData)
-        const generatedHtml = generateSeoHtml(seoPostData)
-        const generatedArticleHtml = generateArticleHtml(seoPostData)
+        // Générer le HTML initial pour calculer le temps de lecture
+        const initialGeneratedHtml = generateSeoHtml(seoPostData)
+
+        // Calculer automatiquement le temps de lecture basé sur le HTML généré
+        const calculatedReadingTime = calculateReadingTime(initialGeneratedHtml)
+
+        // Préparer les données pour la génération SEO avec le temps de lecture
+        const seoPostDataWithReadTime: SeoPostData = {
+            ...seoPostData,
+            estimatedReadTime: calculatedReadingTime
+        }
+
+        // Générer le JSON-LD, HTML complet et HTML de l'article avec le temps de lecture
+        const jsonLd = generateSeoJsonLd(seoPostDataWithReadTime)
+        const generatedHtmlWithReadTime = generateSeoHtml(seoPostDataWithReadTime)
+        const generatedArticleHtmlWithReadTime = generateArticleHtml(seoPostDataWithReadTime)
 
         // Préparer les données pour la mise à jour
         const updateData: any = {
             jsonLd: jsonLd,
-            generatedHtml: generatedHtml,
-            generatedArticleHtml: generatedArticleHtml
+            generatedHtml: generatedHtmlWithReadTime,
+            generatedArticleHtml: generatedArticleHtmlWithReadTime,
+            estimatedReadTime: calculatedReadingTime // Toujours mettre à jour le temps de lecture calculé
         }
 
         // Ajouter les champs de base s'ils sont fournis
@@ -346,7 +372,6 @@ export async function updateSeoPost(id: number, data: {
         if (data.excerpt !== undefined) updateData.excerpt = data.excerpt
         if (data.author !== undefined) updateData.author = data.author
         if (data.authorLink !== undefined) updateData.authorLink = data.authorLink ?? undefined
-        if (data.estimatedReadTime !== undefined) updateData.estimatedReadTime = data.estimatedReadTime
         if (data.status !== undefined) updateData.status = data.status
         if (data.pinned !== undefined) updateData.pinned = data.pinned
         if (data.mainImageUrl !== undefined) updateData.mainImageUrl = data.mainImageUrl ?? undefined
@@ -466,9 +491,9 @@ export async function updateSeoPost(id: number, data: {
                 mainImageAlt: data.mainImageAlt || existingPost.mainImageAlt || '',
                 mainImageCaption: data.mainImageCaption || existingPost.mainImageCaption || '',
                 // IMPORTANT: Inclure les champs HTML
-                generatedHtml: generatedHtml || existingPost.generatedHtml || '',
+                generatedHtml: generatedHtmlWithReadTime || existingPost.generatedHtml || '',
                 jsonLd: jsonLd || existingPost.jsonLd || '',
-                generatedArticleHtml: generatedArticleHtml || existingPost.generatedArticleHtml || '',
+                generatedArticleHtml: generatedArticleHtmlWithReadTime || existingPost.generatedArticleHtml || '',
                 // Champs à synchroniser
                 status: data.status || existingPost.status,
                 pinned: data.pinned || existingPost.pinned || false

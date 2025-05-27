@@ -3,6 +3,7 @@
 import { BlogContent, ElementType } from '../BlogEditor/types'
 import { FormData } from './htmlGenerator'
 import styles from '../SeoGuide/SeoGuideModal.module.scss'
+import { calculateReadingTimeFromBlogContent } from '@/lib/utils/reading-time-calculator'
 
 interface BlogPreviewRendererProps {
   formData: FormData
@@ -170,7 +171,7 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
             )} • {formatDateReadable(creationDate)}
           </span>
         </div>
-        <span>Temps de lecture: 5 min</span>
+        <span>Temps de lecture: {calculateReadingTimeFromBlogContent(JSON.stringify(blogContent))} min</span>
       </div>
       
       <div className={styles.previewContent}>

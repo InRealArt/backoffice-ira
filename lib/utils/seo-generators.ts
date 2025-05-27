@@ -1,87 +1,88 @@
 import { BlogContent, BlogSection, ElementType } from '@/app/components/BlogEditor/types'
 
 export interface SeoPostData {
-    title: string
-    metaDescription: string
-    author: string
-    authorLink?: string
-    mainImageUrl?: string
-    mainImageAlt?: string
-    mainImageCaption?: string
-    creationDate: Date
-    excerpt?: string
-    blogContent: BlogContent
-    tags?: string[]
+  title: string
+  metaDescription: string
+  author: string
+  authorLink?: string
+  mainImageUrl?: string
+  mainImageAlt?: string
+  mainImageCaption?: string
+  creationDate: Date
+  excerpt?: string
+  blogContent: BlogContent
+  tags?: string[]
+  estimatedReadTime?: number // Temps de lecture en minutes
 }
 
 /**
  * Valide et nettoie une URL d'image
  */
 function validateImageUrl(url?: string): string {
-    if (!url) return ''
+  if (!url) return ''
 
-    // Nettoyer l'URL en supprimant les doubles slashes (sauf après le protocole)
-    const cleanUrl = url.replace(/([^:]\/)\/+/g, '$1')
+  // Nettoyer l'URL en supprimant les doubles slashes (sauf après le protocole)
+  const cleanUrl = url.replace(/([^:]\/)\/+/g, '$1')
 
-    // Vérifier que l'URL est valide
-    try {
-        new URL(cleanUrl)
-        return cleanUrl
-    } catch (error) {
-        console.warn('URL d\'image invalide:', url)
-        return ''
-    }
+  // Vérifier que l'URL est valide
+  try {
+    new URL(cleanUrl)
+    return cleanUrl
+  } catch (error) {
+    console.warn('URL d\'image invalide:', url)
+    return ''
+  }
 }
 
 /**
  * Génère le JSON-LD pour un article SEO
  */
 export function generateSeoJsonLd(postData: SeoPostData): string {
-    const logoUrl = 'http://localhost:3000/_next/image?url=%2Fimages%2Flogos%2Fretro%2FRetro_logo_1.png&w=256&q=75'
+  const logoUrl = 'http://localhost:3000/_next/image?url=%2Fimages%2Flogos%2Fretro%2FRetro_logo_1.png&w=256&q=75'
 
-    const jsonLd = {
-        "@context": "https://schema.org",
-        "@type": "BlogPosting",
-        "headline": postData.title,
-        "image": validateImageUrl(postData.mainImageUrl),
-        "datePublished": postData.creationDate.toISOString().split('T')[0],
-        "dateModified": new Date().toISOString(),
-        "author": {
-            "@type": "Person",
-            "name": postData.author,
-            ...(postData.authorLink && { "url": postData.authorLink })
-        },
-        "publisher": {
-            "@type": "Organization",
-            "name": "InRealArt",
-            "logo": {
-                "@type": "ImageObject",
-                "url": logoUrl
-            }
-        },
-        "description": postData.metaDescription || postData.excerpt || ""
-    }
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": postData.title,
+    "image": validateImageUrl(postData.mainImageUrl),
+    "datePublished": postData.creationDate.toISOString().split('T')[0],
+    "dateModified": new Date().toISOString(),
+    "author": {
+      "@type": "Person",
+      "name": postData.author,
+      ...(postData.authorLink && { "url": postData.authorLink })
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "InRealArt",
+      "logo": {
+        "@type": "ImageObject",
+        "url": logoUrl
+      }
+    },
+    "description": postData.metaDescription || postData.excerpt || ""
+  }
 
-    return JSON.stringify(jsonLd, null, 2)
+  return JSON.stringify(jsonLd, null, 2)
 }
 
 /**
  * Génère le HTML complet pour un article SEO
  */
 export function generateSeoHtml(postData: SeoPostData): string {
-    const articleHtml = generateArticleHtml(postData)
+  const articleHtml = generateArticleHtml(postData)
 
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })
-    }
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
 
-    const cleanMainImageUrl = validateImageUrl(postData.mainImageUrl)
+  const cleanMainImageUrl = validateImageUrl(postData.mainImageUrl)
 
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -153,94 +154,95 @@ export function generateSeoHtml(postData: SeoPostData): string {
  * Génère uniquement le HTML de la balise <article>
  */
 export function generateArticleHtml(postData: SeoPostData): string {
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })
-    }
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
 
-    const formatDatetime = (date: Date) => {
-        return date.toISOString().split('T')[0]
-    }
+  const formatDatetime = (date: Date) => {
+    return date.toISOString().split('T')[0]
+  }
 
-    const generateBlogContentHtml = (content: BlogContent): string => {
-        return content.map(section => {
-            const sectionHtml = section.elements.map(element => {
-                switch (element.type) {
-                    case ElementType.H2:
-                        return `      <h2>${element.content || ''}</h2>`
-                    case ElementType.H3:
-                        return `      <h3>${element.content || ''}</h3>`
-                    case ElementType.PARAGRAPH:
-                        return `      <p>${element.content || ''}</p>`
-                    case ElementType.IMAGE:
-                        if (element.url) {
-                            const cleanImageUrl = validateImageUrl(element.url)
-                            if (cleanImageUrl) {
-                                return `      <figure>
+  const generateBlogContentHtml = (content: BlogContent): string => {
+    return content.map(section => {
+      const sectionHtml = section.elements.map(element => {
+        switch (element.type) {
+          case ElementType.H2:
+            return `      <h2>${element.content || ''}</h2>`
+          case ElementType.H3:
+            return `      <h3>${element.content || ''}</h3>`
+          case ElementType.PARAGRAPH:
+            return `      <p>${element.content || ''}</p>`
+          case ElementType.IMAGE:
+            if (element.url) {
+              const cleanImageUrl = validateImageUrl(element.url)
+              if (cleanImageUrl) {
+                return `      <figure>
         <img src="${cleanImageUrl}" alt="${element.alt || ''}" width="600" height="400">
         ${element.caption ? `<figcaption>${element.caption}</figcaption>` : ''}
       </figure>`
-                            }
-                        }
-                        return ''
-                    case ElementType.VIDEO:
-                        if (element.url) {
-                            return `      <div class="video-container">
+              }
+            }
+            return ''
+          case ElementType.VIDEO:
+            if (element.url) {
+              return `      <div class="video-container">
         <iframe src="${element.url}" frameborder="0" allowfullscreen></iframe>
         ${element.caption ? `<p class="video-caption">${element.caption}</p>` : ''}
       </div>`
-                        }
-                        return ''
-                    case ElementType.LIST:
-                        if (element.items && element.items.length > 0) {
-                            const listItems = element.items.map(item => `        <li>${item}</li>`).join('\n')
-                            return `      <ul>
+            }
+            return ''
+          case ElementType.LIST:
+            if (element.items && element.items.length > 0) {
+              const listItems = element.items.map(item => `        <li>${item}</li>`).join('\n')
+              return `      <ul>
 ${listItems}
       </ul>`
-                        }
-                        return ''
-                    case ElementType.ACCORDION:
-                        if (element.items && element.items.length > 0) {
-                            const accordionTitle = element.title ? `      <h2>${element.title}</h2>` : ''
-                            const accordionItems = element.items.map(item =>
-                                `        <div class="accordion-item">
+            }
+            return ''
+          case ElementType.ACCORDION:
+            if (element.items && element.items.length > 0) {
+              const accordionTitle = element.title ? `      <h2>${element.title}</h2>` : ''
+              const accordionItems = element.items.map(item =>
+                `        <div class="accordion-item">
           <h3 class="accordion-header">${item.title}</h3>
           <div class="accordion-content">
             <p>${item.content}</p>
           </div>
         </div>`
-                            ).join('\n')
+              ).join('\n')
 
-                            return `${accordionTitle}
+              return `${accordionTitle}
       <div class="accordion">
 ${accordionItems}
       </div>`
-                        }
-                        return ''
-                    default:
-                        return ''
-                }
-            }).filter(html => html.length > 0).join('\n')
-
-            if (sectionHtml) {
-                return `    <section>
-${sectionHtml}
-    </section>`
             }
             return ''
-        }).filter(html => html.length > 0).join('\n\n')
-    }
+          default:
+            return ''
+        }
+      }).filter(html => html.length > 0).join('\n')
 
-    return `  <article>
+      if (sectionHtml) {
+        return `    <section>
+${sectionHtml}
+    </section>`
+      }
+      return ''
+    }).filter(html => html.length > 0).join('\n\n')
+  }
+
+  return `  <article>
     <header>
       <h1>${postData.title}</h1>
       
       <div class="article-meta">
         ${postData.author ? `<span class="author">Par ${postData.authorLink ? `<a href="${postData.authorLink}">` : ''}${postData.author}${postData.authorLink ? '</a>' : ''}</span>` : ''}
         <time datetime="${formatDatetime(postData.creationDate)}">${formatDate(postData.creationDate)}</time>
+        ${postData.estimatedReadTime ? `<span class="read-time">Temps de lecture: ${postData.estimatedReadTime} min</span>` : ''}
       </div>
       
       ${validateImageUrl(postData.mainImageUrl) ? `<figure class="main-image">

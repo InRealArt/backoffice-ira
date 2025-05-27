@@ -32,7 +32,6 @@ const formSchema = z.object({
   excerpt: z.string().optional(),
   author: z.string().min(1, 'L\'auteur est requis'),
   authorLink: z.string().optional(),
-  estimatedReadTime: z.string().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED']),
   pinned: z.boolean().optional(),
   mainImageUrl: z.string().optional(),
@@ -176,7 +175,6 @@ export default function SeoPostForm({
     excerpt: seoPost?.excerpt || '',
     author: seoPost?.author || '',
     authorLink: seoPost?.authorLink || '',
-    estimatedReadTime: seoPost?.estimatedReadTime?.toString() || '',
     status: seoPost?.status || 'DRAFT',
     pinned: seoPost?.pinned || false,
     mainImageUrl: seoPost?.mainImageUrl || '',
@@ -397,7 +395,6 @@ export default function SeoPostForm({
       const formattedData = {
         ...data,
         categoryId: parseInt(data.categoryId),
-        estimatedReadTime: data.estimatedReadTime ? parseInt(data.estimatedReadTime) : null,
         metaKeywords: keywords, // Utiliser le tableau de keywords pour metaKeywords
         listTags: tags, // Utiliser le tableau de tags pour listTags
         // Traduction automatique pour tous les nouveaux posts
