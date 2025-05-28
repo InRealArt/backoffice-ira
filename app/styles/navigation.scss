@@ -406,6 +406,38 @@
   justify-content: space-between;
   align-items: center;
   
+  // Styles pour le skeleton de chargement
+  &.skeleton {
+    cursor: default;
+    opacity: 0.7;
+    
+    .menu-item-label {
+      background: linear-gradient(90deg, 
+        rgba(0, 0, 0, 0.1) 25%, 
+        rgba(0, 0, 0, 0.05) 50%, 
+        rgba(0, 0, 0, 0.1) 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 4px;
+      color: transparent;
+      
+      .dark-theme &,
+      body.dark & {
+        background: linear-gradient(90deg, 
+          rgba(255, 255, 255, 0.1) 25%, 
+          rgba(255, 255, 255, 0.05) 50%, 
+          rgba(255, 255, 255, 0.1) 75%
+        );
+        background-size: 200% 100%;
+      }
+    }
+    
+    .menu-item-icon {
+      opacity: 0.5;
+    }
+  }
+  
   &:hover {
     background-color: rgba(0, 0, 0, 0.04);
     
@@ -622,5 +654,15 @@
       margin-left: 0;
       width: 100%;
     }
+  }
+}
+
+// Animation pour le shimmer effect du skeleton
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
   }
 } 

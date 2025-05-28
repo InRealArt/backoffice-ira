@@ -9,12 +9,36 @@ import MarketplaceSubMenu from './MarketplaceSubMenu'
 import DataAdministrationSubMenu from './DataAdministrationSubMenu'
 import LandingSubMenu from './LandingSubMenu'
 
+// Composant de fallback pour le chargement
+function SideMenuSkeleton({ isMenuCollapsed }: { isMenuCollapsed: boolean }) {
+  return (
+    <div className={`side-menu side-menu-debug animate-side-menu ${isMenuCollapsed ? 'side-menu-collapsed' : ''}`}>
+      <button 
+        className="side-menu-toggle" 
+        disabled
+        aria-label="Chargement du menu"
+      >
+        <span className="toggle-icon">
+          {isMenuCollapsed ? '→' : '←'}
+        </span>
+      </button>
+      <ul className="menu-list">
+        <li className="menu-item skeleton">
+          <span className="menu-item-icon">📊</span>
+          {!isMenuCollapsed && <span className="menu-item-label">Chargement...</span>}
+        </li>
+      </ul>
+    </div>
+  )
+}
+
 export default function SideMenu() {
   const {
     isLoggedIn,
     activeItem,
     canAccessCollection,
     isAdmin,
+    isLoading,
     showBackofficeAdminSubmenu,
     showBlockchainSubmenu,
     showMarketplaceSubmenu,
@@ -32,6 +56,11 @@ export default function SideMenu() {
   
   if (!isLoggedIn) {
     return null;
+  }
+
+  // Afficher le skeleton pendant le chargement des rôles
+  if (isLoading) {
+    return <SideMenuSkeleton isMenuCollapsed={isMenuCollapsed} />
   }
 
   return (

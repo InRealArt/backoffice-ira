@@ -31,6 +31,9 @@ export function useSideMenuLogic() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [canAccessCollection, setCanAccessCollection] = useState(true)
 
+  // État de chargement pour les vérifications d'authentification
+  const [isLoading, setIsLoading] = useState(true)
+
   // Fermer tous les sous-menus sauf celui spécifié
   const closeAllSubmenusExcept = useCallback((menuToKeepOpen: string | null) => {
     if (menuToKeepOpen !== 'backofficeAdmin') setShowBackofficeAdminSubmenu(false)
@@ -147,6 +150,7 @@ export function useSideMenuLogic() {
   // Vérification de l'authentification et des rôles utilisateur
   useEffect(() => {
     const checkUserRole = async () => {
+      setIsLoading(true)
       const { user } = dynamicContext;
 
       if (user?.email) {
@@ -203,6 +207,8 @@ export function useSideMenuLogic() {
         setIsAdmin(false);
         setCanAccessCollection(false);
       }
+
+      setIsLoading(false)
     };
 
     checkUserRole();
@@ -230,6 +236,7 @@ export function useSideMenuLogic() {
     activeItem,
     canAccessCollection,
     isAdmin,
+    isLoading,
     showBackofficeAdminSubmenu,
     showBlockchainSubmenu,
     showMarketplaceSubmenu,
