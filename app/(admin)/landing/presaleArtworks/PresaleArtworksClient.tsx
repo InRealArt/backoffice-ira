@@ -9,6 +9,15 @@ import { useToast } from '@/app/components/Toast/ToastContext'
 import Modal from '@/app/components/Common/Modal'
 import { deletePresaleArtwork } from '@/lib/actions/presale-artwork-actions'
 import { Filters, FilterItem } from '@/app/components/Common'
+import {
+  PageContainer,
+  PageHeader,
+  PageContent,
+  DataTable,
+  EmptyState,
+  ActionButton,
+  Column
+} from '../../../components/PageLayout/index'
 
 function ImageThumbnail({ url }: { url: string }) {
   return (
@@ -48,12 +57,18 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [artworkToDelete, setArtworkToDelete] = useState<number | null>(null)
   const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null)
-  const [sortField, setSortField] = useState<'order' | null>('order')
+  const [sortColumn, setSortColumn] = useState<string>('order')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(25)
+  
   const { success, error } = useToast()
-  const handleArtworkClick = (artworkId: number) => {
-    setLoadingArtworkId(artworkId)
-    router.push(`/landing/presaleArtworks/${artworkId}/edit`)
+
+  const handleArtworkClick = (artwork: PresaleArtwork) => {
+    setLoadingArtworkId(artwork.id)
+    router.push(`/landing/presaleArtworks/${artwork.id}/edit`)
   }
 
   const handleAddNewArtwork = () => {
@@ -112,15 +127,15 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
   )
   
   // Fonction pour gérer le tri
-  const handleSort = (field: 'order') => {
-    if (sortField === field) {
-      // Si on clique sur la même colonne, on inverse la direction
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
     } else {
-      // Sinon, on trie par le nouveau champ en ordre ascendant
-      setSortField(field)
+      setSortColumn(column)
       setSortDirection('asc')
     }
+    // Réinitialiser à la première page lors du tri
+    setCurrentPage(1)
   }
   
   // Filtrer les œuvres en fonction de l'artiste sélectionné
@@ -128,37 +143,116 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
     ? presaleArtworks.filter(artwork => artwork.artistId === selectedArtistId)
     : presaleArtworks
   
-  // Trier les œuvres
+  // Trier les œuvres selon le champ sélectionné
   const sortedArtworks = [...filteredArtworks].sort((a, b) => {
-    if (sortField === 'order') {
-      return sortDirection === 'asc' ? a.order - b.order : b.order - a.order
+    const valueA = (a as any)[sortColumn] ?? 0
+    const valueB = (b as any)[sortColumn] ?? 0
+    
+    if (sortDirection === 'asc') {
+      return typeof valueA === 'string' 
+        ? valueA.localeCompare(valueB) 
+        : valueA - valueB
+    } else {
+      return typeof valueA === 'string' 
+        ? valueB.localeCompare(valueA) 
+        : valueB - valueA
     }
-    return 0
   })
+
+  // Gestion des changements de pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage)
+    setCurrentPage(1) // Réinitialiser à la première page
+  }
+
+  // Gestion du changement de filtre artiste
+  const handleArtistFilterChange = (value: string) => {
+    setSelectedArtistId(value ? parseInt(value) : null)
+    setCurrentPage(1) // Réinitialiser à la première page lors du filtrage
+  }
+  
+  // Définition des colonnes pour le DataTable
+  const columns: Column<PresaleArtwork>[] = [
+    {
+      key: 'imageUrl',
+      header: 'Image',
+      width: '60px',
+      render: (artwork) => <ImageThumbnail url={artwork.imageUrl} />
+    },
+    {
+      key: 'order',
+      header: 'Ordre',
+      width: '80px',
+      sortable: true
+    },
+    {
+      key: 'name',
+      header: 'Nom',
+      sortable: true,
+      render: (artwork) => (
+        <div className="d-flex align-items-center gap-sm">
+          {loadingArtworkId === artwork.id && <LoadingSpinner size="small" message="" inline />}
+          <span className={loadingArtworkId === artwork.id ? 'text-muted' : ''}>
+            {artwork.name}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'artist',
+      header: 'Artiste',
+      render: (artwork) => `${artwork.artist.name} ${artwork.artist.surname}`
+    },
+    {
+      key: 'price',
+      header: 'Prix',
+      sortable: true,
+      render: (artwork) => formatPrice(artwork.price)
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      width: '120px',
+      render: (artwork) => (
+        <button
+          onClick={(e) => handleDeleteClick(e, artwork.id)}
+          className="btn btn-danger btn-small"
+          disabled={loadingArtworkId !== null || deletingArtworkId !== null}
+        >
+          {deletingArtworkId === artwork.id ? (
+            <LoadingSpinner size="small" message="" inline />
+          ) : (
+            'Supprimer'
+          )}
+        </button>
+      )
+    }
+  ]
   
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="header-top-section">
-          <h1 className="page-title">Œuvres en prévente</h1>
-          <button 
-            className="btn btn-primary btn-small"
+    <PageContainer>
+      <PageHeader 
+        title="Œuvres en prévente"
+        subtitle="Gérez les œuvres disponibles en prévente"
+        actions={
+          <ActionButton 
+            label="Ajouter une œuvre"
             onClick={handleAddNewArtwork}
-          >
-            Ajouter une œuvre
-          </button>
-        </div>
-        <p className="page-subtitle">
-          Gérez les œuvres disponibles en prévente
-        </p>
-      </div>
+            size="small"
+          />
+        }
+      />
       
       <Filters>
         <FilterItem
           id="artistFilter"
           label="Filtrer par artiste:"
           value={selectedArtistId ? selectedArtistId.toString() : ''}
-          onChange={(value) => setSelectedArtistId(value ? parseInt(value) : null)}
+          onChange={handleArtistFilterChange}
           options={[
             { value: '', label: 'Tous les artistes' },
             ...artists.map(artist => ({
@@ -169,90 +263,41 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
         />
       </Filters>
       
-      <div className="page-content">
-        {filteredArtworks.length === 0 ? (
-          <div className="empty-state">
-            <p>Aucune œuvre en prévente trouvée</p>
-            <button 
-              className="btn btn-primary btn-medium mt-4"
-              onClick={handleAddNewArtwork}
-            >
-              Ajouter une œuvre en prévente
-            </button>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Image</th>
-                  <th 
-                    className="cursor-pointer select-none"
-                    onClick={() => handleSort('order')}
-                  >
-                    Ordre {sortField === 'order' && (
-                      <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                    )}
-                  </th>
-                  <th>Nom</th>
-                  <th>Artiste</th>
-                  <th>Prix</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedArtworks.map((artwork) => {
-                  const isLoading = loadingArtworkId === artwork.id
-                  const isDeleting = deletingArtworkId === artwork.id
-                  const isDisabled = loadingArtworkId !== null || deletingArtworkId !== null
-                  
-                  return (
-                    <tr 
-                      key={artwork.id} 
-                      onClick={() => !isDisabled && handleArtworkClick(artwork.id)}
-                      className={`clickable-row ${isLoading || isDeleting ? 'loading-row' : ''} ${isDisabled && !isLoading && !isDeleting ? 'disabled-row' : ''}`}
-                    >
-                      <td className="w-8">
-                        <ImageThumbnail url={artwork.imageUrl} />
-                      </td>
-                      <td>
-                        {artwork.order}
-                      </td>
-                      <td>
-                        <div className="d-flex align-items-center gap-sm">
-                          {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? 'text-muted' : ''}>
-                            {artwork.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        {artwork.artist.name} {artwork.artist.surname}
-                      </td>
-                      <td>
-                        {formatPrice(artwork.price)}
-                      </td>
-                      <td className="text-right">
-                        <button
-                          onClick={(e) => handleDeleteClick(e, artwork.id)}
-                          className="btn btn-danger btn-small"
-                          disabled={isDisabled}
-                        >
-                          {isDeleting ? (
-                            <LoadingSpinner size="small" message="" inline />
-                          ) : (
-                            'Supprimer'
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <PageContent>
+        <DataTable
+          data={sortedArtworks}
+          columns={columns}
+          keyExtractor={(artwork) => artwork.id}
+          onRowClick={handleArtworkClick}
+          isLoading={false}
+          loadingRowId={loadingArtworkId}
+          sortColumn={sortColumn}
+          sortDirection={sortDirection}
+          onSort={handleSort}
+          pagination={{
+            enabled: true,
+            currentPage,
+            itemsPerPage,
+            totalItems: sortedArtworks.length,
+            onPageChange: handlePageChange,
+            onItemsPerPageChange: handleItemsPerPageChange,
+            showItemsPerPage: true,
+            itemsPerPageOptions: [10, 25, 50, 100]
+          }}
+          emptyState={
+            <EmptyState 
+              message="Aucune œuvre en prévente trouvée"
+              action={
+                <ActionButton
+                  label="Ajouter une œuvre en prévente"
+                  onClick={handleAddNewArtwork}
+                  variant="primary"
+                />
+              }
+            />
+          }
+        />
+      </PageContent>
       
       <Modal
         isOpen={isDeleteModalOpen}
@@ -274,6 +319,6 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
           </div>
         </div>
       </Modal>
-    </div>
+    </PageContainer>
   )
 } 

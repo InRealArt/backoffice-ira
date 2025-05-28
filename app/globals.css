@@ -170,3 +170,318 @@ html.dark-theme [class*="page-layout"] {
 body.dark {
   background-color: #111827 !important;
 }
+
+/* ===== STYLES PAGINATION ===== */
+.pagination-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+  margin: 24px auto 0 auto;
+  border-top: 1px solid var(--color-border);
+  gap: 16px;
+  background-color: var(--color-background-white);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  width: fit-content;
+  min-width: 400px;
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  text-align: center;
+  width: 100%;
+}
+
+.pagination-info > span {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.items-per-page {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.items-per-page label {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.pagination-select {
+  padding: 6px 12px;
+  border: 2px solid var(--color-border-input);
+  border-radius: 6px;
+  background-color: var(--color-background-white);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 70px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-select:hover {
+  border-color: var(--color-primary);
+}
+
+.pagination-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 2px solid var(--color-border-input);
+  background-color: var(--color-background-white);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.pagination-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.pagination-btn:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.pagination-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: var(--color-background-light);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+}
+
+.pagination-btn-active {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  transform: translateY(-1px);
+}
+
+.pagination-btn-active:hover {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.5);
+  transform: translateY(-2px);
+}
+
+.pagination-btn-prev,
+.pagination-btn-next {
+  font-size: 18px;
+  font-weight: bold;
+  min-width: 44px;
+  background: linear-gradient(135deg, var(--color-background-white), var(--color-background-light));
+}
+
+.pagination-btn-prev:hover:not(:disabled),
+.pagination-btn-next:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+}
+
+.pagination-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  font-weight: bold;
+  user-select: none;
+}
+
+/* Styles responsifs pour la pagination */
+@media (max-width: 768px) {
+  .pagination-container {
+    padding: 20px 16px;
+    gap: 16px;
+    min-width: 300px;
+    margin: 20px auto 0 auto;
+  }
+  
+  .pagination-info {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .pagination-controls {
+    gap: 4px;
+  }
+  
+  .pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+  
+  .pagination-btn-prev,
+  .pagination-btn-next {
+    min-width: 40px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pagination-container {
+    padding: 16px 12px;
+    min-width: 280px;
+    margin: 16px auto 0 auto;
+  }
+  
+  .pagination-controls {
+    gap: 2px;
+  }
+  
+  .pagination-btn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 12px;
+    padding: 0 8px;
+  }
+  
+  .pagination-btn-prev,
+  .pagination-btn-next {
+    min-width: 36px;
+    font-size: 14px;
+  }
+  
+  .pagination-dots {
+    min-width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+}
+
+/* Styles pour le mode sombre */
+.dark-theme .pagination-container,
+body.dark .pagination-container {
+  background-color: var(--color-background-white);
+  border-color: var(--color-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .pagination-select,
+body.dark .pagination-select {
+  background-color: var(--color-background-white);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-input);
+}
+
+.dark-theme .pagination-select:hover,
+body.dark .pagination-select:hover {
+  border-color: var(--color-primary);
+}
+
+.dark-theme .pagination-select:focus,
+body.dark .pagination-select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.dark-theme .pagination-btn,
+body.dark .pagination-btn {
+  background-color: var(--color-background-white);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-input);
+}
+
+.dark-theme .pagination-btn:hover:not(:disabled),
+body.dark .pagination-btn:hover:not(:disabled) {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.dark-theme .pagination-btn:disabled,
+body.dark .pagination-btn:disabled {
+  background-color: var(--color-background-light);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+}
+
+.dark-theme .pagination-btn-active,
+body.dark .pagination-btn-active {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5);
+}
+
+.dark-theme .pagination-btn-active:hover,
+body.dark .pagination-btn-active:hover {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.6);
+}
+
+.dark-theme .pagination-btn-prev,
+.dark-theme .pagination-btn-next,
+body.dark .pagination-btn-prev,
+body.dark .pagination-btn-next {
+  background: linear-gradient(135deg, var(--color-background-white), var(--color-background-light));
+}
+
+.dark-theme .pagination-btn-prev:hover:not(:disabled),
+.dark-theme .pagination-btn-next:hover:not(:disabled),
+body.dark .pagination-btn-prev:hover:not(:disabled),
+body.dark .pagination-btn-next:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+}
+
+/* Wrapper pour DataTable avec pagination */
+.data-table-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
