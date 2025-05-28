@@ -6,7 +6,6 @@ import { Artist } from '@prisma/client'
 import Image from 'next/image'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { useToast } from '@/app/components/Toast/ToastContext' 
-import Modal from '@/app/components/Common/Modal'
 import { deletePresaleArtwork } from '@/lib/actions/presale-artwork-actions'
 import { Filters, FilterItem } from '@/app/components/Common'
 import {
@@ -16,18 +15,19 @@ import {
   DataTable,
   EmptyState,
   ActionButton,
+  DeleteActionButton,
   Column
 } from '../../../components/PageLayout/index'
+import styles from '../../../styles/list-components.module.scss'
 
 function ImageThumbnail({ url }: { url: string }) {
   return (
-    <div className="relative w-6 h-6">
+    <div className={styles.thumbnailContainer}>
       <Image
         src={url}
         alt="Miniature"
-        width={24}
-        height={24}
-        className="object-cover rounded-sm"
+        fill
+        className="object-cover"
         onError={(e) => {
           e.currentTarget.style.display = 'none'
         }}
@@ -53,9 +53,6 @@ interface PresaleArtworksClientProps {
 export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtworksClientProps) {
   const router = useRouter()
   const [loadingArtworkId, setLoadingArtworkId] = useState<number | null>(null)
-  const [deletingArtworkId, setDeletingArtworkId] = useState<number | null>(null)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [artworkToDelete, setArtworkToDelete] = useState<number | null>(null)
   const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null)
   const [sortColumn, setSortColumn] = useState<string>('order')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
@@ -75,20 +72,9 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
     router.push(`/landing/presaleArtworks/create`)
   }
 
-  const handleDeleteClick = (e: React.MouseEvent, artworkId: number) => {
-    e.stopPropagation()
-    setArtworkToDelete(artworkId)
-    setIsDeleteModalOpen(true)
-  }
-  
-  const handleDeleteConfirm = async () => {
-    if (!artworkToDelete) return
-    
-    setIsDeleteModalOpen(false)
-    setDeletingArtworkId(artworkToDelete)
-    
+  const handleDelete = async (artworkId: number) => {
     try {
-      const result = await deletePresaleArtwork(artworkToDelete)
+      const result = await deletePresaleArtwork(artworkId)
       
       if (result.success) {
         success('Œuvre en prévente supprimée avec succès')
@@ -96,18 +82,10 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
       } else {
         error(result.message || 'Une erreur est survenue lors de la suppression')
       }
-    } catch (error: any) {
-      console.error('Erreur lors de la suppression:', error)
+    } catch (err: any) {
+      console.error('Erreur lors de la suppression:', err)
       error('Une erreur est survenue lors de la suppression')
-    } finally {
-      setDeletingArtworkId(null)
-      setArtworkToDelete(null)
     }
-  }
-  
-  const handleDeleteCancel = () => {
-    setIsDeleteModalOpen(false)
-    setArtworkToDelete(null)
   }
   
   // Formater le prix en euros
@@ -180,7 +158,7 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
     {
       key: 'imageUrl',
       header: 'Image',
-      width: '60px',
+      width: '50px',
       render: (artwork) => <ImageThumbnail url={artwork.imageUrl} />
     },
     {
@@ -218,17 +196,12 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
       header: 'Actions',
       width: '120px',
       render: (artwork) => (
-        <button
-          onClick={(e) => handleDeleteClick(e, artwork.id)}
-          className="btn btn-danger btn-small"
-          disabled={loadingArtworkId !== null || deletingArtworkId !== null}
-        >
-          {deletingArtworkId === artwork.id ? (
-            <LoadingSpinner size="small" message="" inline />
-          ) : (
-            'Supprimer'
-          )}
-        </button>
+        <DeleteActionButton
+          onDelete={() => handleDelete(artwork.id)}
+          disabled={loadingArtworkId !== null}
+          itemName={`l'œuvre "${artwork.name}"`}
+          confirmMessage={`Êtes-vous sûr de vouloir supprimer l'œuvre "${artwork.name}" ? Cette action est irréversible.`}
+        />
       )
     }
   ]
@@ -298,27 +271,6 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
           }
         />
       </PageContent>
-      
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={handleDeleteCancel}
-        title="Confirmation de suppression"
-      >
-        <div className="modal-content">
-          <p className="text-danger">
-            Êtes-vous sûr de vouloir supprimer cette œuvre en prévente ? Cette action est irréversible.
-          </p>
-          
-          <div className="modal-actions">
-            <button className="btn btn-secondary" onClick={handleDeleteCancel}>
-              Annuler
-            </button>
-            <button className="btn btn-danger" onClick={handleDeleteConfirm}>
-              Confirmer la suppression
-            </button>
-          </div>
-        </div>
-      </Modal>
     </PageContainer>
   )
 } 

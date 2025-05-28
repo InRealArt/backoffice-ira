@@ -6,7 +6,16 @@ import { ItemCategory } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { deleteItemCategory } from '@/lib/actions/item-category-actions'
 import { useToast } from '@/app/components/Toast/ToastContext'
-import Modal from '@/app/components/Common/Modal'
+import {
+  PageContainer,
+  PageHeader,
+  PageContent,
+  DataTable,
+  EmptyState,
+  ActionButton,
+  DeleteActionButton,
+  Column
+} from '../../../components/PageLayout/index'
 
 interface ItemCategoriesClientProps {
   itemCategories: ItemCategory[]
@@ -16,33 +25,19 @@ export default function ItemCategoriesClient({ itemCategories }: ItemCategoriesC
   const router = useRouter()
   const { success, error } = useToast()
   const [loadingCategoryId, setLoadingCategoryId] = useState<number | null>(null)
-  const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(null)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null)
 
-  const handleCategoryClick = (categoryId: number) => {
-    setLoadingCategoryId(categoryId)
-    router.push(`/dataAdministration/itemCategories/${categoryId}/edit`)
+  const handleCategoryClick = (category: ItemCategory) => {
+    setLoadingCategoryId(category.id)
+    router.push(`/dataAdministration/itemCategories/${category.id}/edit`)
   }
 
   const handleAddNewCategory = () => {
     router.push(`/dataAdministration/itemCategories/new`)
   }
 
-  const handleDeleteClick = (e: React.MouseEvent, categoryId: number) => {
-    e.stopPropagation() // Empêche le déclenchement du click sur la ligne
-    setCategoryToDelete(categoryId)
-    setIsDeleteModalOpen(true)
-  }
-  
-  const handleDeleteConfirm = async () => {
-    if (!categoryToDelete) return
-    
-    setIsDeleteModalOpen(false)
-    setDeletingCategoryId(categoryToDelete)
-    
+  const handleDelete = async (categoryId: number) => {
     try {
-      const result = await deleteItemCategory(categoryToDelete)
+      const result = await deleteItemCategory(categoryId)
       
       if (result.success) {
         success('Catégorie supprimée avec succès')
@@ -53,117 +48,74 @@ export default function ItemCategoriesClient({ itemCategories }: ItemCategoriesC
     } catch (catchError) {
       console.error('Erreur lors de la suppression:', catchError)
       error('Une erreur est survenue lors de la suppression')
-    } finally {
-      setDeletingCategoryId(null)
-      setCategoryToDelete(null)
     }
   }
-  
-  const handleDeleteCancel = () => {
-    setIsDeleteModalOpen(false)
-    setCategoryToDelete(null)
-  }
+
+  // Définition des colonnes pour le DataTable
+  const columns: Column<ItemCategory>[] = [
+    {
+      key: 'name',
+      header: 'Nom',
+      render: (category) => (
+        <div className="d-flex align-items-center gap-sm">
+          {loadingCategoryId === category.id && <LoadingSpinner size="small" message="" inline />}
+          <span className={loadingCategoryId === category.id ? 'text-muted' : ''}>
+            {category.name}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      width: '120px',
+      render: (category) => (
+        <DeleteActionButton
+          onDelete={() => handleDelete(category.id)}
+          disabled={loadingCategoryId !== null}
+          itemName={`la catégorie "${category.name}"`}
+          confirmMessage={`Êtes-vous sûr de vouloir supprimer la catégorie "${category.name}" ? Cette action est irréversible.`}
+        />
+      )
+    }
+  ]
   
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="header-top-section">
-          <h1 className="page-title">Catégories d'œuvres</h1>
-          <button 
-            className="btn btn-primary btn-small"
+    <PageContainer>
+      <PageHeader 
+        title="Catégories d'œuvres"
+        subtitle="Liste des catégories d'œuvres enregistrées dans le système"
+        actions={
+          <ActionButton 
+            label="Ajouter une catégorie"
             onClick={handleAddNewCategory}
-          >
-            Ajouter une catégorie
-          </button>
-        </div>
-        <p className="page-subtitle">
-          Liste des catégories d'œuvres enregistrées dans le système
-        </p>
-      </div>
+            size="small"
+          />
+        }
+      />
       
-      <div className="page-content">
-        {itemCategories.length === 0 ? (
-          <div className="empty-state">
-            <p>Aucune catégorie trouvée</p>
-            <button 
-              className="btn btn-primary btn-medium mt-4"
-              onClick={handleAddNewCategory}
-            >
-              Ajouter une catégorie
-            </button>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {itemCategories.map((category) => {
-                  const isLoading = loadingCategoryId === category.id
-                  const isDeleting = deletingCategoryId === category.id
-                  const isDisabled = loadingCategoryId !== null || deletingCategoryId !== null
-                  
-                  return (
-                    <tr 
-                      key={category.id} 
-                      onClick={() => !isDisabled && handleCategoryClick(category.id)}
-                      className={`clickable-row ${isLoading || isDeleting ? 'loading-row' : ''} ${isDisabled && !isLoading && !isDeleting ? 'disabled-row' : ''}`}
-                    >
-                      <td>
-                        <div className="d-flex align-items-center gap-sm">
-                          {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? 'text-muted' : ''}>
-                            {category.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="text-right">
-                        <button
-                          onClick={(e) => handleDeleteClick(e, category.id)}
-                          className="btn btn-danger btn-small"
-                          disabled={isDisabled}
-                        >
-                          {isDeleting ? (
-                            <LoadingSpinner size="small" message="" inline />
-                          ) : (
-                            'Supprimer'
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-      
-      {/* Modal de confirmation de suppression */}
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={handleDeleteCancel}
-        title="Confirmation de suppression"
-      >
-        <div className="modal-content">
-          <p className="text-danger">
-            Êtes-vous sûr de vouloir supprimer cette catégorie ? Cette action est irréversible.
-          </p>
-          
-          <div className="modal-actions">
-            <button className="btn btn-secondary" onClick={handleDeleteCancel}>
-              Annuler
-            </button>
-            <button className="btn btn-danger" onClick={handleDeleteConfirm}>
-              Confirmer la suppression
-            </button>
-          </div>
-        </div>
-      </Modal>
-    </div>
+      <PageContent>
+        <DataTable
+          data={itemCategories}
+          columns={columns}
+          keyExtractor={(category) => category.id}
+          onRowClick={handleCategoryClick}
+          isLoading={false}
+          loadingRowId={loadingCategoryId}
+          emptyState={
+            <EmptyState 
+              message="Aucune catégorie trouvée"
+              action={
+                <ActionButton
+                  label="Ajouter une catégorie"
+                  onClick={handleAddNewCategory}
+                  variant="primary"
+                />
+              }
+            />
+          }
+        />
+      </PageContent>
+    </PageContainer>
   )
 } 

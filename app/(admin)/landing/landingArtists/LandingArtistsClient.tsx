@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Image from 'next/image'
 import { Plus } from 'lucide-react'
+import {
+  PageContainer,
+  PageHeader,
+  PageContent,
+  DataTable,
+  EmptyState,
+  ActionButton,
+  Badge,
+  Column
+} from '../../../components/PageLayout/index'
+import styles from '../../../styles/list-components.module.scss'
 
 interface LandingArtistWithArtist {
   id: number
@@ -49,9 +60,9 @@ export default function LandingArtistsClient({ landingArtists }: LandingArtistsC
     }
   }, [])
   
-  const handleArtistClick = (landingArtistId: number) => {
-    setLoadingArtistId(landingArtistId)
-    router.push(`/landing/landingArtists/${landingArtistId}/edit`)
+  const handleArtistClick = (landingArtist: LandingArtistWithArtist) => {
+    setLoadingArtistId(landingArtist.id)
+    router.push(`/landing/landingArtists/${landingArtist.id}/edit`)
   }
   
   const handleCreateArtist = () => {
@@ -59,99 +70,101 @@ export default function LandingArtistsClient({ landingArtists }: LandingArtistsC
     router.push('/landing/landingArtists/create')
   }
   
-  // Fonction pour déterminer si un artiste est visible sur la page d'accueil
-  const getArtistVisibilityBadge = (isVisible: boolean | null) => {
+  // Fonction pour déterminer le variant du badge de visibilité
+  const getVisibilityBadge = (isVisible: boolean | null) => {
     if (isVisible === true) {
-      return <span className="info-badge" style={{ backgroundColor: '#e0f2f1', color: '#00796b' }}>Visible</span>
+      return <Badge variant="success" text="Visible" />
     } else {
-      return <span className="info-badge" style={{ backgroundColor: '#ffebee', color: '#c62828' }}>Masqué</span>
+      return <Badge variant="danger" text="Masqué" />
     }
   }
   
-  return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="header-top-section">
-          <h1 className="page-title">Artistes de la page d'accueil</h1>
-          <button 
-            onClick={handleCreateArtist}
-            disabled={isCreating}
-            className="btn btn-primary btn-medium"
-          >
-            {isCreating ? (
-              <LoadingSpinner size="small" message="" inline />
-            ) : (
-              <div className="d-flex align-items-center gap-sm">
-                <Plus size={16} />
-                <span>Ajouter un artiste</span>
-              </div>
-            )}
-          </button>
+  // Définition des colonnes pour le DataTable
+  const columns: Column<LandingArtistWithArtist>[] = [
+    {
+      key: 'name',
+      header: 'Nom',
+      render: (landingArtist) => (
+        <div className="d-flex align-items-center gap-sm">
+          {loadingArtistId === landingArtist.id && <LoadingSpinner size="small" message="" inline />}
+          <span className={loadingArtistId === landingArtist.id ? 'text-muted' : ''}>
+            {landingArtist.artist.name} {landingArtist.artist.surname}
+          </span>
         </div>
-        <p className="page-subtitle">
-          Liste des artistes visibles sur la page d'accueil du site
-        </p>
-      </div>
+      )
+    },
+    {
+      key: 'pseudo',
+      header: 'Pseudo',
+      render: (landingArtist) => landingArtist.artist.pseudo
+    },
+    {
+      key: 'visibility',
+      header: 'Visibilité',
+      render: (landingArtist) => (
+        <div className="d-flex align-items-center">
+          {getVisibilityBadge(landingArtist.artistsPage)}
+        </div>
+      )
+    },
+    {
+      key: 'image',
+      header: 'Image',
+      className: 'hidden-mobile',
+      render: (landingArtist) => (
+        landingArtist.imageUrl ? (
+          <div className={styles.thumbnailContainer}>
+            <Image
+              src={landingArtist.imageUrl}
+              alt={`${landingArtist.artist.name} ${landingArtist.artist.surname}`}
+              fill
+              style={{ objectFit: 'cover' }}
+            />
+          </div>
+        ) : null
+      )
+    }
+  ]
+  
+  return (
+    <PageContainer>
+      <PageHeader 
+        title="Artistes de la page d'accueil"
+        subtitle="Liste des artistes visibles sur la page d'accueil du site"
+        actions={
+          <ActionButton 
+            label="Ajouter un artiste"
+            onClick={handleCreateArtist}
+            size="small"
+            disabled={isCreating}
+            icon={isCreating ? undefined : <Plus size={16} />}
+            isLoading={isCreating}
+          />
+        }
+      />
       
-      <div className="page-content">
-        {landingArtists.length === 0 ? (
-          <div className="empty-state">
-            <p>Aucun artiste trouvé</p>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th>Pseudo</th>
-                  <th>Visibilité</th>
-                  <th className="hidden-mobile">Image</th>
-                </tr>
-              </thead>
-              <tbody>
-                {landingArtists.map((landingArtist) => {
-                  const isLoading = loadingArtistId === landingArtist.id
-                  return (
-                    <tr 
-                      key={landingArtist.id} 
-                      onClick={() => !loadingArtistId && handleArtistClick(landingArtist.id)}
-                      className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingArtistId && !isLoading ? 'disabled-row' : ''}`}
-                    >
-                      <td>
-                        <div className="d-flex align-items-center gap-sm">
-                          {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? 'text-muted' : ''}>
-                            {landingArtist.artist.name} {landingArtist.artist.surname}
-                          </span>
-                        </div>
-                      </td>
-                      <td>{landingArtist.artist.pseudo}</td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          {getArtistVisibilityBadge(landingArtist.artistsPage)}
-                        </div>
-                      </td>
-                      <td className="hidden-mobile">
-                        {landingArtist.imageUrl && (
-                          <div className="thumbnail-container" style={{ width: '50px', height: '50px', position: 'relative', overflow: 'hidden', borderRadius: '4px' }}>
-                            <Image
-                              src={landingArtist.imageUrl}
-                              alt={`${landingArtist.artist.name} ${landingArtist.artist.surname}`}
-                              fill
-                              style={{ objectFit: 'cover' }}
-                            />
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+      <PageContent>
+        <DataTable
+          data={landingArtists}
+          columns={columns}
+          keyExtractor={(landingArtist) => landingArtist.id}
+          onRowClick={handleArtistClick}
+          isLoading={false}
+          loadingRowId={loadingArtistId}
+          emptyState={
+            <EmptyState 
+              message="Aucun artiste trouvé"
+              action={
+                <ActionButton
+                  label="Ajouter un premier artiste"
+                  onClick={handleCreateArtist}
+                  variant="primary"
+                />
+              }
+            />
+          }
+        />
+      </PageContent>
+    </PageContainer>
   )
 } 

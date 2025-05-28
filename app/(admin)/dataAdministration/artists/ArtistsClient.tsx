@@ -5,8 +5,16 @@ import { useRouter } from 'next/navigation'
 import { Artist } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
-import Image from 'next/image'
-import Link from 'next/link'
+import {
+  PageContainer,
+  PageHeader,
+  PageContent,
+  DataTable,
+  EmptyState,
+  ActionButton,
+  Badge,
+  Column
+} from '../../../components/PageLayout/index'
 
 interface ArtistsClientProps {
   artists: Artist[]
@@ -16,7 +24,6 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const [loadingArtistId, setLoadingArtistId] = useState<number | null>(null)
-  const [isRedirecting, setIsRedirecting] = useState(false)
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -35,122 +42,94 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
     }
   }, [])
   
-  const handleArtistClick = (artistId: number) => {
-    setLoadingArtistId(artistId)
-    router.push(`/dataAdministration/artists/${artistId}/edit`)
+  const handleArtistClick = (artist: Artist) => {
+    setLoadingArtistId(artist.id)
+    router.push(`/dataAdministration/artists/${artist.id}/edit`)
   }
 
-  const handleCreateClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    setIsRedirecting(true)
-    
-    try {
-      console.log('Redirection vers la page de création d\'artiste...')
-      router.push('/dataAdministration/artists/create')
-    } catch (error) {
-      console.error('Erreur lors de la redirection:', error)
-      setIsRedirecting(false)
-    }
+  const handleCreateArtist = () => {
+    router.push('/dataAdministration/artists/create')
   }
-  
-  // Fonction pour obtenir le badge en fonction du type d'artiste
-  const getArtistTypeBadge = (isGallery: boolean | null) => {
-    if (isGallery === true) {
-      return <span className="info-badge" style={{ backgroundColor: '#e8eaf6', color: '#3f51b5' }}>Galerie</span>
-    } else {
-      return <span className="info-badge" style={{ backgroundColor: '#e0f2f1', color: '#00796b' }}>Artiste</span>
+
+  // Définition des colonnes pour le DataTable
+  const columns: Column<Artist>[] = [
+    {
+      key: 'name',
+      header: 'Nom',
+      render: (artist) => (
+        <div className="d-flex align-items-center gap-sm">
+          {loadingArtistId === artist.id && <LoadingSpinner size="small" message="" inline />}
+          <span className={loadingArtistId === artist.id ? 'text-muted' : ''}>
+            {artist.name} {artist.surname}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'pseudo',
+      header: 'Pseudo'
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      width: '120px',
+      render: (artist) => (
+        <Badge 
+          variant={artist.isGallery ? 'info' : 'success'}
+          text={artist.isGallery ? 'Galerie' : 'Artiste'}
+        />
+      )
+    },
+    {
+      key: 'publicKey',
+      header: 'Clé publique',
+      className: 'hidden-mobile',
+      render: (artist) => (
+        <BlockchainAddress 
+          address={artist.publicKey} 
+          network="sepolia"
+        />
+      )
     }
-  }
+  ]
   
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="header-top-section">
-          <h1 className="page-title">Artistes</h1>
-          {/* Option 1: Utiliser un bouton avec click handler */}
-          <button
-            onClick={handleCreateClick}
-            className="btn btn-primary btn-medium"
-            disabled={isRedirecting}
-          >
-            {isRedirecting ? (
-              <>
-                <LoadingSpinner size="small" message="" inline />
-                Redirection...
-              </>
-            ) : (
-              '+ Créer un artiste'
-            )}
-          </button>
-          
-          {/* Option 2: Utiliser un Link direct */}
-          {/*
-          <Link href="/dataAdministration/artists/create" className="btn btn-primary btn-medium">
-            + Créer un artiste
-          </Link>
-          */}
-        </div>
-        <p className="page-subtitle">
-          Liste des artistes ou galleries enregistrés dans le système
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader 
+        title="Artistes"
+        subtitle="Liste des artistes ou galleries enregistrés dans le système"
+        actions={
+          <ActionButton 
+            label="+ Créer un artiste"
+            onClick={handleCreateArtist}
+            size="medium"
+          />
+        }
+      />
       
-      <div className="page-content">
-        {artists.length === 0 ? (
-          <div className="empty-state">
-            <p>Aucun artiste trouvé</p>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th>Pseudo</th>
-                  <th>Type</th>
-                  <th className="hidden-mobile">Clé publique</th>
-                </tr>
-              </thead>
-              <tbody>
-                {artists.map((artist) => {
-                  const isLoading = loadingArtistId === artist.id
-                  return (
-                    <tr 
-                      key={artist.id} 
-                      onClick={() => !loadingArtistId && handleArtistClick(artist.id)}
-                      className={`clickable-row ${isLoading ? 'loading-row' : ''} ${loadingArtistId && !isLoading ? 'disabled-row' : ''}`}
-                    >
-                      <td>
-                        <div className="d-flex align-items-center gap-sm">
-                          {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? 'text-muted' : ''}>
-                            {artist.name} {artist.surname}
-                          </span>
-                        </div>
-                      </td>
-                      <td>{artist.pseudo}</td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          {getArtistTypeBadge(artist.isGallery)}
-                        </div>
-                      </td>
-                      <td className="hidden-mobile">
-                        <BlockchainAddress 
-                          address={artist.publicKey} 
-                          network="sepolia" // Valeur par défaut, peut être ajustée si vous stockez le réseau préféré de l'artiste
-                        />
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+      <PageContent>
+        <DataTable
+          data={artists}
+          columns={columns}
+          keyExtractor={(artist) => artist.id}
+          onRowClick={handleArtistClick}
+          isLoading={false}
+          loadingRowId={loadingArtistId}
+          emptyState={
+            <EmptyState 
+              message="Aucun artiste trouvé"
+              action={
+                <ActionButton
+                  label="Créer un artiste"
+                  onClick={handleCreateArtist}
+                  variant="primary"
+                />
+              }
+            />
+          }
+        />
+      </PageContent>
+    </PageContainer>
   )
 }
 

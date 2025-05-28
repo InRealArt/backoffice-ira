@@ -5,10 +5,18 @@ import { useRouter } from 'next/navigation'
 import { DetailedFaqHeader } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { useToast } from '@/app/components/Toast/ToastContext'
-import Modal from '@/app/components/Common/Modal'
-import { deleteDetailedFaqHeader } from '@/lib/actions/faq-actions'
 import { deleteDetailedGlossaryHeader } from '@/lib/actions/glossary-actions'
-
+import {
+  PageContainer,
+  PageHeader,
+  PageContent,
+  DataTable,
+  EmptyState,
+  ActionButton,
+  DeleteActionButton,
+  Column
+} from '../../../components/PageLayout/index'
+import styles from '../../../styles/list-components.module.scss'
 
 interface DetailedGlossaryHeaderWithItems extends DetailedFaqHeader {
   glossaryItems: {
@@ -26,255 +34,165 @@ interface DetailedGlossaryClientProps {
 export default function DetailedGlossaryClient({ glossaryHeaders }: DetailedGlossaryClientProps) {
   const router = useRouter()
   const [loadingHeaderId, setLoadingHeaderId] = useState<number | null>(null)
-  const [deletingHeaderId, setDeletingHeaderId] = useState<number | null>(null)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [headerToDelete, setHeaderToDelete] = useState<number | null>(null)
   const [showItems, setShowItems] = useState<number | null>(null)
   const { success, error } = useToast()
 
-  const handleHeaderClick = (headerId: number) => {
-    setLoadingHeaderId(headerId)
-    router.push(`/landing/detailedGlossary/${headerId}/edit`)
+  const handleHeaderClick = (header: DetailedGlossaryHeaderWithItems) => {
+    setLoadingHeaderId(header.id)
+    router.push(`/landing/detailedGlossary/${header.id}/edit`)
   }
 
   const handleAddNewHeader = () => {
     router.push(`/landing/detailedGlossary/create`)
   }
 
-  const handleDeleteClick = (e: React.MouseEvent, headerId: number) => {
-    e.stopPropagation()
-    setHeaderToDelete(headerId)
-    setIsDeleteModalOpen(true)
-  }
-  
-  const handleDeleteConfirm = async () => {
-    if (!headerToDelete) return
-    
-    setIsDeleteModalOpen(false)
-    setDeletingHeaderId(headerToDelete)
-    
-    try {
-      console.log('headerToDelete :   ', headerToDelete)
-      const result = await deleteDetailedGlossaryHeader(headerToDelete)
-      
-      if (result.success) {
-        success('Glossary détaillée supprimée avec succès')
-        router.refresh()
-      } else {
-        error(result.message || 'Une erreur est survenue lors de la suppression')
-      }
-    } catch (error: any) {
-      console.error('Erreur lors de la suppression:', error)
-      error('Une erreur est survenue lors de la suppression')
-    } finally {
-      setDeletingHeaderId(null)
-      setHeaderToDelete(null)
-    }
-  }
-  
-  const handleDeleteCancel = () => {
-    setIsDeleteModalOpen(false)
-    setHeaderToDelete(null)
-  }
-
   const toggleShowItems = (e: React.MouseEvent, headerId: number) => {
     e.stopPropagation()
     setShowItems(showItems === headerId ? null : headerId)
   }
+
+  const handleDelete = async (headerId: number) => {
+    try {
+      const result = await deleteDetailedGlossaryHeader(headerId)
+      
+      if (result.success) {
+        success('Glossaire détaillé supprimé avec succès')
+        router.refresh()
+      } else {
+        error(result.message || 'Une erreur est survenue lors de la suppression')
+      }
+    } catch (err: any) {
+      console.error('Erreur lors de la suppression:', err)
+      error('Une erreur est survenue lors de la suppression')
+    }
+  }
+
+  // Définition des colonnes pour le DataTable
+  const columns: Column<DetailedGlossaryHeaderWithItems>[] = [
+    {
+      key: 'name',
+      header: 'Nom de la section',
+      render: (header) => (
+        <div className="d-flex align-items-center gap-sm">
+          {loadingHeaderId === header.id && <LoadingSpinner size="small" message="" inline />}
+          <span className={loadingHeaderId === header.id ? 'text-muted' : ''}>
+            {header.name}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'itemsCount',
+      header: 'Nombre de questions',
+      render: (header) => `${header.glossaryItems.length} question(s)`
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      className: 'text-right',
+      render: (header) => {
+        const isDisabled = loadingHeaderId !== null
+        const isShowingItems = showItems === header.id
+        
+        return (
+          <div className="d-flex align-items-center justify-content-end gap-sm">
+            <button
+              onClick={(e) => toggleShowItems(e, header.id)}
+              className="btn btn-secondary btn-small"
+              disabled={isDisabled}
+            >
+              {isShowingItems ? 'Masquer' : 'Voir les questions'}
+            </button>
+            <DeleteActionButton
+              onDelete={() => handleDelete(header.id)}
+              disabled={isDisabled}
+              itemName={`la section "${header.name}"`}
+              confirmMessage={`Êtes-vous sûr de vouloir supprimer la section "${header.name}" ? Cette action supprimera également toutes les questions associées. Cette action est irréversible.`}
+            />
+          </div>
+        )
+      }
+    }
+  ]
   
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="header-top-section">
-          <h1 className="page-title">Glossaire détaillé</h1>
-          <button 
-            className="btn btn-primary btn-small"
+    <PageContainer>
+      <PageHeader 
+        title="Glossaire détaillé"
+        subtitle="Gérez les sections de Glossaire détaillé du site"
+        actions={
+          <ActionButton 
+            label="Ajouter une section"
             onClick={handleAddNewHeader}
-          >
-            Ajouter une section
-          </button>
-        </div>
-        <p className="page-subtitle">
-          Gérez les sections de Glossaire détaillé du site
-        </p>
-      </div>
+            size="small"
+          />
+        }
+      />
       
-      <div className="page-content">
-        {glossaryHeaders.length === 0 ? (
-          <div className="empty-state">
-            <p>Aucune section de Glossaire détaillé trouvé</p>
-            <button 
-              className="btn btn-primary btn-medium mt-4"
-              onClick={handleAddNewHeader}
-            >
-              Ajouter une section
-            </button>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Nom de la section</th>
-                  <th>Nombre de questions</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {glossaryHeaders.map((header) => {
-                  const isLoading = loadingHeaderId === header.id
-                  const isDeleting = deletingHeaderId === header.id
-                  const isDisabled = loadingHeaderId !== null || deletingHeaderId !== null
-                  const isShowingItems = showItems === header.id
-                  
-                  return (
-                    <>
-                      <tr 
-                        key={header.id} 
-                        onClick={() => !isDisabled && handleHeaderClick(header.id)}
-                        className={`clickable-row ${isLoading || isDeleting ? 'loading-row' : ''} ${isDisabled && !isLoading && !isDeleting ? 'disabled-row' : ''}`}
-                      >
-                        <td>
-                          <div className="d-flex align-items-center gap-sm">
-                            {isLoading && <LoadingSpinner size="small" message="" inline />}
-                            <span className={isLoading ? 'text-muted' : ''}>
-                              {header.name}
-                            </span>
-                          </div>
-                        </td>
-                        <td>
-                          {header.glossaryItems.length} question(s)
-                        </td>
-                        <td className="text-right">
-                          <button
-                            onClick={(e) => toggleShowItems(e, header.id)}
-                            className="btn btn-secondary btn-small mr-2"
-                            disabled={isDisabled}
-                          >
-                            {isShowingItems ? 'Masquer' : 'Voir les questions'}
-                          </button>
-                          <button
-                            onClick={(e) => handleDeleteClick(e, header.id)}
-                            className="btn btn-danger btn-small"
-                            disabled={isDisabled}
-                          >
-                            {isDeleting ? (
-                              <LoadingSpinner size="small" message="" inline />
-                            ) : (
-                              'Supprimer'
-                            )}
-                          </button>
-                        </td>
-                      </tr>
-                      {isShowingItems && header.glossaryItems.length > 0 && (
-                        <tr className="items-row">
-                          <td colSpan={3}>
-                            <div className="items-container">
-                              <h4 className="items-title">Questions de la section {header.name}</h4>
-                              <table className="inner-table">
-                                <thead>
-                                  <tr>
-                                    <th>Question</th>
-                                    <th>Réponse</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {header.glossaryItems.map((item) => (
-                                    <tr key={item.id}>
-                                      <td>{item.question}</td>
-                                      <td>
-                                        <div className="answer-preview">
-                                          {item.answer.length > 50 ? `${item.answer.substring(0, 50)}...` : item.answer}
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </td>
+      <PageContent>
+        <DataTable
+          data={glossaryHeaders}
+          columns={columns}
+          keyExtractor={(header) => header.id}
+          onRowClick={handleHeaderClick}
+          isLoading={false}
+          loadingRowId={loadingHeaderId}
+          emptyState={
+            <EmptyState 
+              message="Aucune section de Glossaire détaillé trouvée"
+              action={
+                <ActionButton
+                  label="Ajouter une première section"
+                  onClick={handleAddNewHeader}
+                  variant="primary"
+                />
+              }
+            />
+          }
+        />
+
+        {/* Affichage des items en dehors du tableau */}
+        {showItems && (
+          <div className={styles.itemsSection}>
+            {(() => {
+              const header = glossaryHeaders.find(h => h.id === showItems)
+              if (!header) return null
+              
+              return (
+                <div className={styles.itemsContainer}>
+                  <h4 className={styles.itemsTitle}>Questions de la section {header.name}</h4>
+                  {header.glossaryItems.length > 0 ? (
+                    <table className={styles.innerTable}>
+                      <thead>
+                        <tr>
+                          <th>Question</th>
+                          <th>Réponse</th>
                         </tr>
-                      )}
-                      {isShowingItems && header.glossaryItems.length === 0 && (
-                        <tr className="items-row">
-                          <td colSpan={3}>
-                            <div className="empty-items">
-                              <p>Aucune question dans cette section</p>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </>
-                  )
-                })}
-              </tbody>
-            </table>
+                      </thead>
+                      <tbody>
+                        {header.glossaryItems.map((item) => (
+                          <tr key={item.id}>
+                            <td>{item.question}</td>
+                            <td>
+                              <div className={styles.answerPreview}>
+                                {item.answer.length > 50 ? `${item.answer.substring(0, 50)}...` : item.answer}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className={styles.emptyItems}>
+                      <p>Aucune question dans cette section</p>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
           </div>
         )}
-      </div>
-      
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={handleDeleteCancel}
-        title="Confirmation de suppression"
-      >
-        <div className="modal-content">
-          <p className="text-danger">
-            Êtes-vous sûr de vouloir supprimer cette section de FAQ détaillée ? Cette action supprimera également toutes les questions associées. Cette action est irréversible.
-          </p>
-          
-          <div className="modal-actions">
-            <button className="btn btn-secondary" onClick={handleDeleteCancel}>
-              Annuler
-            </button>
-            <button className="btn btn-danger btn-medium" onClick={handleDeleteConfirm}>
-              Confirmer la suppression
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      <style jsx>{`
-        .items-container {
-          padding: 1rem;
-          background-color: #f8f9fa;
-          border-radius: 0.25rem;
-          margin-bottom: 1rem;
-        }
-        
-        .items-title {
-          margin-bottom: 0.5rem;
-          font-size: 1rem;
-        }
-        
-        .inner-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        
-        .inner-table th,
-        .inner-table td {
-          padding: 0.5rem;
-          border: 1px solid #dee2e6;
-        }
-        
-        .inner-table th {
-          background-color: #e9ecef;
-        }
-        
-        .answer-preview {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 300px;
-        }
-        
-        .empty-items {
-          padding: 1rem;
-          text-align: center;
-          color: #6c757d;
-        }
-      `}</style>
-    </div>
+      </PageContent>
+    </PageContainer>
   )
 } 

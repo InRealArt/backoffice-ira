@@ -4,10 +4,19 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Translation } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { useToast } from '@/app/components/Toast/ToastContext' 
-import Modal from '@/app/components/Common/Modal'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { deleteTranslation } from '@/lib/actions/translation-actions'
 import { Filters, FilterItem } from '@/app/components/Common'
+import {
+  PageContainer,
+  PageHeader,
+  PageContent,
+  DataTable,
+  EmptyState,
+  ActionButton,
+  DeleteActionButton,
+  Column
+} from '../../../components/PageLayout/index'
 
 interface TranslationWithLanguage extends Translation {
   language: {
@@ -24,35 +33,22 @@ interface TranslationsClientProps {
 export default function TranslationsClient({ translations }: TranslationsClientProps) {
   const router = useRouter()
   const [loadingTranslationId, setLoadingTranslationId] = useState<number | null>(null)
-  const [deletingTranslationId, setDeletingTranslationId] = useState<number | null>(null)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [translationToDelete, setTranslationToDelete] = useState<number | null>(null)
   const [selectedEntityType, setSelectedEntityType] = useState<string>('')
   const [selectedLanguageId, setSelectedLanguageId] = useState<number | null>(null)
   const { success, error } = useToast()
-  const handleTranslationClick = (translationId: number) => {
-    setLoadingTranslationId(translationId)
-    router.push(`/landing/translations/${translationId}/edit`)
+
+  const handleTranslationClick = (translation: TranslationWithLanguage) => {
+    setLoadingTranslationId(translation.id)
+    router.push(`/landing/translations/${translation.id}/edit`)
   }
 
   const handleAddNewTranslation = () => {
     router.push(`/landing/translations/new`)
   }
 
-  const handleDeleteClick = (e: React.MouseEvent, translationId: number) => {
-    e.stopPropagation() // Empêche le déclenchement du click sur la ligne
-    setTranslationToDelete(translationId)
-    setIsDeleteModalOpen(true)
-  }
-  
-  const handleDeleteConfirm = async () => {
-    if (!translationToDelete) return
-    
-    setIsDeleteModalOpen(false)
-    setDeletingTranslationId(translationToDelete)
-    
+  const handleDelete = async (translationId: number) => {
     try {
-      const result = await deleteTranslation(translationToDelete)
+      const result = await deleteTranslation(translationId)
       
       if (result.success) {
         success('Traduction supprimée avec succès')
@@ -60,18 +56,10 @@ export default function TranslationsClient({ translations }: TranslationsClientP
       } else {
         error(result.message || 'Une erreur est survenue lors de la suppression')
       }
-    } catch (error: any) {
-      console.error('Erreur lors de la suppression:', error)
+    } catch (err: any) {
+      console.error('Erreur lors de la suppression:', err)
       error('Une erreur est survenue lors de la suppression')
-    } finally {
-      setDeletingTranslationId(null)
-      setTranslationToDelete(null)
     }
-  }
-  
-  const handleDeleteCancel = () => {
-    setIsDeleteModalOpen(false)
-    setTranslationToDelete(null)
   }
   
   // Extraire les types d'entités uniques pour les filtres
@@ -88,23 +76,63 @@ export default function TranslationsClient({ translations }: TranslationsClientP
     const matchesLanguage = selectedLanguageId ? translation.languageId === selectedLanguageId : true
     return matchesEntityType && matchesLanguage
   })
+
+  // Définition des colonnes pour le DataTable
+  const columns: Column<TranslationWithLanguage>[] = [
+    {
+      key: 'entityType',
+      header: 'Type d\'entité',
+      render: (translation) => (
+        <div className="d-flex align-items-center gap-sm">
+          {loadingTranslationId === translation.id && <LoadingSpinner size="small" message="" inline />}
+          <span className={loadingTranslationId === translation.id ? 'text-muted' : ''}>
+            {translation.entityType}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'entityId',
+      header: 'ID Entité',
+      width: '100px'
+    },
+    {
+      key: 'field',
+      header: 'Champ'
+    },
+    {
+      key: 'language',
+      header: 'Langue',
+      render: (translation) => `${translation.language.name} (${translation.language.code})`
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      width: '120px',
+      render: (translation) => (
+        <DeleteActionButton
+          onDelete={() => handleDelete(translation.id)}
+          disabled={loadingTranslationId !== null}
+          itemName={`la traduction ${translation.entityType}#${translation.entityId}.${translation.field}`}
+          confirmMessage={`Êtes-vous sûr de vouloir supprimer cette traduction ? Cette action est irréversible.`}
+        />
+      )
+    }
+  ]
   
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="header-top-section">
-          <h1 className="page-title">Traductions</h1>
-          <button 
-            className="btn btn-primary btn-small"
+    <PageContainer>
+      <PageHeader 
+        title="Traductions"
+        subtitle="Gestion des traductions pour le contenu du site"
+        actions={
+          <ActionButton 
+            label="Ajouter une traduction"
             onClick={handleAddNewTranslation}
-          >
-            Ajouter une traduction
-          </button>
-        </div>
-        <p className="page-subtitle">
-          Gestion des traductions pour le contenu du site
-        </p>
-      </div>
+            size="small"
+          />
+        }
+      />
       
       <Filters>
         <FilterItem
@@ -135,95 +163,28 @@ export default function TranslationsClient({ translations }: TranslationsClientP
         />
       </Filters>
       
-      <div className="page-content">
-        {filteredTranslations.length === 0 ? (
-          <div className="empty-state">
-            <p>Aucune traduction trouvée</p>
-            <button 
-              className="btn btn-primary btn-medium mt-4"
-              onClick={handleAddNewTranslation}
-            >
-              Ajouter une traduction
-            </button>
-          </div>
-        ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Type d'entité</th>
-                  <th>ID Entité</th>
-                  <th>Champ</th>
-                  <th>Langue</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredTranslations.map((translation) => {
-                  const isLoading = loadingTranslationId === translation.id
-                  const isDeleting = deletingTranslationId === translation.id
-                  const isDisabled = loadingTranslationId !== null || deletingTranslationId !== null
-                  
-                  return (
-                    <tr 
-                      key={translation.id} 
-                      onClick={() => !isDisabled && handleTranslationClick(translation.id)}
-                      className={`clickable-row ${isLoading || isDeleting ? 'loading-row' : ''} ${isDisabled && !isLoading && !isDeleting ? 'disabled-row' : ''}`}
-                    >
-                      <td>
-                        <div className="d-flex align-items-center gap-sm">
-                          {isLoading && <LoadingSpinner size="small" message="" inline />}
-                          <span className={isLoading ? 'text-muted' : ''}>
-                            {translation.entityType}
-                          </span>
-                        </div>
-                      </td>
-                      <td>{translation.entityId}</td>
-                      <td>{translation.field}</td>
-                      <td>{translation.language.name} ({translation.language.code})</td>
-                      <td className="text-right">
-                        <button
-                          onClick={(e) => handleDeleteClick(e, translation.id)}
-                          className="btn btn-danger btn-small"
-                          disabled={isDisabled}
-                        >
-                          {isDeleting ? (
-                            <LoadingSpinner size="small" message="" inline />
-                          ) : (
-                            'Supprimer'
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-      
-      {/* Modal de confirmation de suppression */}
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={handleDeleteCancel}
-        title="Confirmation de suppression"
-      >
-        <div className="modal-content">
-          <p className="text-danger">
-            Êtes-vous sûr de vouloir supprimer cette traduction ? Cette action est irréversible.
-          </p>
-          
-          <div className="modal-actions">
-            <button className="btn btn-secondary" onClick={handleDeleteCancel}>
-              Annuler
-            </button>
-            <button className="btn btn-danger" onClick={handleDeleteConfirm}>
-              Confirmer la suppression
-            </button>
-          </div>
-        </div>
-      </Modal>
-    </div>
+      <PageContent>
+        <DataTable
+          data={filteredTranslations}
+          columns={columns}
+          keyExtractor={(translation) => translation.id}
+          onRowClick={handleTranslationClick}
+          isLoading={false}
+          loadingRowId={loadingTranslationId}
+          emptyState={
+            <EmptyState 
+              message="Aucune traduction trouvée"
+              action={
+                <ActionButton
+                  label="Ajouter une traduction"
+                  onClick={handleAddNewTranslation}
+                  variant="primary"
+                />
+              }
+            />
+          }
+        />
+      </PageContent>
+    </PageContainer>
   )
 } 

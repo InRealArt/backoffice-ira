@@ -1,5 +1,5 @@
 import { getBackofficeUsers } from '@/lib/actions/prisma-actions'
-import BackofficeUsersClient from './ShopifyUsersClient'
+import BackofficeUsersClient from './BackofficeUsersClient'
 
 // Désactive le cache pour cette route afin de toujours avoir les données à jour
 export const dynamic = 'force-dynamic'
