@@ -8,6 +8,19 @@ export enum ElementType {
     ACCORDION = 'accordion'
 }
 
+// Types pour le contenu riche avec liens
+export interface TextSegment {
+    id: string
+    text: string
+    isLink: boolean
+    linkUrl?: string
+    linkText?: string
+}
+
+export interface RichContent {
+    segments: TextSegment[]
+}
+
 export interface BaseElement {
     id: string
     type: ElementType
@@ -15,6 +28,11 @@ export interface BaseElement {
 
 export interface TextElement extends BaseElement {
     content: string
+}
+
+// Nouveau type pour les paragraphes avec contenu riche
+export interface RichTextElement extends BaseElement {
+    richContent: RichContent
 }
 
 export interface H2Element extends TextElement {
@@ -25,8 +43,11 @@ export interface H3Element extends TextElement {
     type: ElementType.H3
 }
 
-export interface ParagraphElement extends TextElement {
+// Mise à jour du ParagraphElement pour supporter le contenu riche
+export interface ParagraphElement extends BaseElement {
     type: ElementType.PARAGRAPH
+    content: string
+    richContent?: RichContent // Optionnel pour la rétrocompatibilité
 }
 
 export interface ImageElement extends BaseElement {

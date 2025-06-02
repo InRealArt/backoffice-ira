@@ -2,6 +2,7 @@
 
 import { BlogContent, ElementType } from '../BlogEditor/types'
 import { FormData } from './htmlGenerator'
+import RichContentRenderer from '../BlogEditor/RichContentRenderer'
 import styles from '../SeoGuide/SeoGuideModal.module.scss'
 import { calculateReadingTimeFromBlogContent } from '@/lib/utils/reading-time-calculator'
 
@@ -51,7 +52,10 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
             case ElementType.PARAGRAPH:
               return (
                 <p key={element.id || elementIndex} className={styles.previewParagraph}>
-                  {element.content || 'Contenu du paragraphe...'}
+                  <RichContentRenderer 
+                    content={element.content || 'Contenu du paragraphe...'}
+                    richContent={element.richContent}
+                  />
                 </p>
               )
             case ElementType.IMAGE:

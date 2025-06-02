@@ -254,7 +254,10 @@ function createNewElement(type: ElementType): ContentElement {
       return {
         id,
         type,
-        content: ''
+        content: '',
+        richContent: {
+          segments: []
+        }
       }
     case ElementType.IMAGE:
       return {

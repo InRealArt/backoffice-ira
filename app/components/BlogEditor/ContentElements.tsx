@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { ElementType, ContentElement, H2Element, H3Element, ParagraphElement, ImageElement, VideoElement, ListElement, AccordionElement, AccordionItemData } from './types'
+import { ElementType, ContentElement, H2Element, H3Element, ParagraphElement, ImageElement, VideoElement, ListElement, AccordionElement, AccordionItemData, RichContent } from './types'
 import { v4 as uuidv4 } from 'uuid'
+import RichTextEditor from './RichTextEditor'
 import styles from './BlogSection.module.scss'
 
 interface ElementProps {
@@ -60,13 +61,21 @@ export function H3ElementComponent({ element, onUpdate, onDelete }: ElementProps
 export function ParagraphElementComponent({ element, onUpdate, onDelete }: ElementProps) {
   const paragraphElement = element as ParagraphElement
   
+  const handleRichContentChange = (content: string, richContent: RichContent) => {
+    onUpdate({ 
+      ...paragraphElement, 
+      content,
+      richContent 
+    })
+  }
+  
   return (
     <div className={styles.elementItem}>
-      <textarea
-        value={paragraphElement.content}
-        onChange={(e) => onUpdate({ ...paragraphElement, content: e.target.value })}
+      <RichTextEditor
+        content={paragraphElement.content}
+        richContent={paragraphElement.richContent}
+        onChange={handleRichContentChange}
         placeholder="Contenu du paragraphe"
-        className="form-textarea w-full"
         rows={4}
       />
       <button 
