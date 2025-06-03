@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import ArtworkForm from '@/app/(protected)/art/components/ArtworkForm'
-import { getAuthCertificateByItemId, getItemById } from '@/lib/actions/prisma-actions'
+import { getAuthCertificateByItemId, getItemById, getBackofficeUserAddresses } from '@/lib/actions/prisma-actions'
 import { use } from 'react'
 import styles from './editArtwork.module.scss'
 import { normalizeString } from '@/lib/utils'
 import Button from '@/app/components/Button/Button'
+import { Address } from '@/app/(protected)/art/components/ArtworkForm/types'
 
 export default function EditArtworkPage({ params }: { params: Promise<{ id: string }> }) {
   // Utiliser React.use pour extraire les paramètres de la promesse
@@ -20,6 +21,7 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
   const [item, setItem] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [certificate, setCertificate] = useState<any>(null)
+  const [addresses, setAddresses] = useState<Address[]>([])
 
   useEffect(() => {
     if (!user?.email) {
@@ -38,12 +40,16 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
           throw new Error('ID d\'item invalide')
         }
 
-        // Récupérer l'item par son ID
-        const itemData = await getItemById(itemId)
+        // Récupérer l'item et les adresses en parallèle
+        const [itemData, userAddresses] = await Promise.all([
+          getItemById(itemId),
+          getBackofficeUserAddresses(user.email!)
+        ])
 
         if (isMounted) {
           if (itemData) {
             setItem(itemData)
+            setAddresses(userAddresses)
 
             // Vérifier les valeurs reçues
             console.log('Item chargé pour l\'édition:', {
@@ -117,6 +123,7 @@ export default function EditArtworkPage({ params }: { params: Promise<{ id: stri
         ) : (
           <ArtworkForm
             mode="edit"
+            addresses={addresses}
             initialData={{
               id: item.id,
               title: item.name,

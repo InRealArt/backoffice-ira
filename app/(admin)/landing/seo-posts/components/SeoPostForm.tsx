@@ -81,7 +81,7 @@ export default function SeoPostForm({
   isEditing = false 
 }: SeoPostFormProps) {
   const router = useRouter()
-  const toast = useToast()
+  const { success: successToast, error: errorToast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isChangingStatus, setIsChangingStatus] = useState(false)
   const [isPinning, setIsPinning] = useState(false)
@@ -324,7 +324,7 @@ export default function SeoPostForm({
       })
       
       if (result.success) {
-        toast.success(
+        successToast(
           newStatus === 'PUBLISHED' 
             ? 'Article publié avec succès' 
             : 'Article dépublié avec succès'
@@ -335,10 +335,10 @@ export default function SeoPostForm({
           window.location.href = '/landing/seo-posts'
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        errorToast(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors du changement de statut')
+      errorToast('Une erreur est survenue lors du changement de statut')
       console.error(error)
     } finally {
       setIsChangingStatus(false)
@@ -355,17 +355,17 @@ export default function SeoPostForm({
       const result = await pinSeoPost(seoPost.id)
       
       if (result.success) {
-        toast.success('Article épinglé avec succès')
+        successToast('Article épinglé avec succès')
         
         // Redirection pour actualiser les données
         setTimeout(() => {
           window.location.href = '/landing/seo-posts'
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        errorToast(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue lors de l\'épinglage')
+      errorToast('Une erreur est survenue lors de l\'épinglage')
       console.error(error)
     } finally {
       setIsPinning(false)
@@ -378,14 +378,14 @@ export default function SeoPostForm({
     try {
       // Validation des keywords et tags avant soumission
       if (keywords.length === 0) {
-        toast.error('Au moins un mot-clé est requis')
+        errorToast('Au moins un mot-clé est requis')
         setKeywordsOpen(true)
         setIsSubmitting(false)
         return
       }
       
       if (tags.length === 0) {
-        toast.error('Au moins un tag est requis')
+        errorToast('Au moins un tag est requis')
         setTagsOpen(true)
         setIsSubmitting(false)
         return
@@ -417,17 +417,17 @@ export default function SeoPostForm({
         if (!isEditing && availableLanguages.length > 0) {
           successMessage += ` et traductions en cours pour ${availableLanguages.length} langue(s)`
         }
-        toast.success(successMessage)
+        successToast(successMessage)
         
         // Redirection
         setTimeout(() => {
           window.location.href = '/landing/seo-posts'
         }, 1000)
       } else {
-        toast.error(result.message || 'Une erreur est survenue')
+        errorToast(result.message || 'Une erreur est survenue')
       }
     } catch (error: any) {
-      toast.error('Une erreur est survenue')
+      errorToast('Une erreur est survenue')
       console.error(error)
     } finally {
       setIsSubmitting(false)

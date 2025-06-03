@@ -11,7 +11,7 @@ import { artistRoyaltiesAbi } from '@/lib/contracts/ArtistRoyaltiesAbi'
 import { InRealArtSmartContractConstants, InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
 import { createRoyaltyBeneficiary, updateNftResourceStatusToRoyaltySet, updateNftResourceTxHash } from '@/lib/actions/prisma-actions'
 import { publicClient } from '@/lib/providers'
-import { toast } from 'react-hot-toast'
+
 
 interface RoyaltyParams {
     nftResource: {
@@ -206,13 +206,13 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
             const updateResult = await updateNftResourceTxHash(Number(nftResource.id), hash)
 
             if (updateResult.success) {
-                toast.success('Tx hash mise à jour dans la database...')
+                successToast('Tx hash mise à jour dans la database...')
             } else {
-                toast.error(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
+                errorToast(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
             }
         } catch (updateError) {
             console.error('Erreur lors de la mise à jour du txHash:', updateError)
-            toast.error('NFT minté, mais erreur lors de la mise à jour des informations')
+            errorToast('NFT minté, mais erreur lors de la mise à jour des informations')
         }
 
     }
@@ -223,13 +223,13 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
             const updateResult = await updateNftResourceStatusToRoyaltySet(Number(nftResource.id))
 
             if (updateResult.success) {
-                toast.success('Statut du NFT mis à jour dans la database à ROYALTYSET...')
+                successToast('Statut du NFT mis à jour dans la database à ROYALTYSET...')
             } else {
-                toast.error(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
+                errorToast(`Erreur lors de la mise à jour du txHash: ${updateResult.error}`)
             }
         } catch (updateError) {
             console.error('Erreur lors de la mise à jour du txHash:', updateError)
-            toast.error('NFT minté, mais erreur lors de la mise à jour des informations')
+            errorToast('NFT minté, mais erreur lors de la mise à jour des informations')
         }
     }
 
@@ -240,7 +240,7 @@ export function useRoyaltySettings(): UseRoyaltySettingsReturn {
                 const createdRoyalty = await createRoyaltyBeneficiary(Number(nftResource.id), recipient, percentages[i], totalPercentage, txHash)
             } catch (updateError) {
                 console.error('Erreur lors de la création du beneficiaire:', updateError)
-                toast.error('NFT minté, mais erreur lors de la création du beneficiaire')
+                errorToast('NFT minté, mais erreur lors de la création du beneficiaire')
                 break
             }
             i++

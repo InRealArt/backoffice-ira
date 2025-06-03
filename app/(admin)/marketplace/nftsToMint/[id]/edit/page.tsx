@@ -18,7 +18,7 @@ import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
 import Image from 'next/image'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
-import { toast } from 'react-hot-toast'
+
 
 type ParamsType = Promise<{ id: string }>
 
@@ -48,7 +48,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   const [isMinter, setIsMinter] = useState<boolean>(false)
   const [isCheckingMinter, setIsCheckingMinter] = useState<boolean>(false)
   const { data: walletClient } = useWalletClient()
-  const { success, error: errorToast, info, dismiss } = useToast()
+  const { success: successToast, error: errorToast, info: infoToast, dismiss } = useToast()
   const unwrappedParams = React.use(params)
   const id = unwrappedParams.id
   const { mintNFT, isLoading: isMinting, error: mintingError, success: mintingSuccess } = useNftMinting()
@@ -229,7 +229,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
       }
       
       // Vérifier l'unicité du nom NFT
-      const nameCheckToast = info('Vérification du nom du NFT...')
+      const nameCheckToast = infoToast('Vérification du nom du NFT...')
       const nameExists = await checkNftResourceNameExists(formData.name)
       dismiss(nameCheckToast as any)
       
@@ -243,7 +243,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
       }
       
       // Afficher un toast de chargement
-      const loadingToast = info('Upload des fichiers sur IPFS en cours...')
+      const loadingToast = infoToast('Upload des fichiers sur IPFS en cours...')
       
       // Appel du server action pour upload les fichiers
       const response = await uploadFilesToIpfs(
@@ -266,7 +266,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
       }
       
       // Upload des métadonnées sur IPFS via la Server Action
-      const metadataToast = info('Upload des métadonnées NFT sur IPFS...');
+      const metadataToast = infoToast('Upload des métadonnées NFT sur IPFS...');
       
       try {
         const metadataResponse = await uploadMetadataToIpfs({
@@ -287,7 +287,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
         dismiss(metadataToast as any);
         
         // Création d'un enregistrement dans la table NftResource
-        const nftResourceToast = info('Enregistrement des ressources NFT...')
+        const nftResourceToast = infoToast('Enregistrement des ressources NFT...')
         
         try {
           if (!item || !item.id) {
@@ -319,7 +319,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
             return;
           }
           
-          success('Ressources NFT enregistrées avec succès');
+          successToast('Ressources NFT enregistrées avec succès');
           setShowUploadIpfsForm(false);
           
           // Rediriger vers la liste des NFTs à minter
@@ -336,7 +336,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
       }
     } catch (error) {
       console.error('Erreur lors de l\'upload sur IPFS:', error);
-      toast.error('Une erreur est survenue lors de l\'upload');
+      errorToast('Une erreur est survenue lors de l\'upload');
     }
   }
 
@@ -403,7 +403,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   //---------------------------------------------------------------- handleMintNFT
   const handleMintNFT = async (): Promise<void> => {
     if (!nftResource || !publicClient || !minterWallet) {
-      toast.error('Données manquantes pour le minting')
+      errorToast('Données manquantes pour le minting')
       return
     }
 

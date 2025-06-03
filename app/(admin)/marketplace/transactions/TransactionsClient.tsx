@@ -52,7 +52,7 @@ export default function TransactionsClient({
   const [selectedSmartContractId, setSelectedSmartContractId] = useState<number | null>(null)
   const [collectionFilter, setCollectionFilter] = useState<string>('')
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const toast = useToast()
+  const { success: successToast, error: errorToast } = useToast()
   
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -108,22 +108,21 @@ export default function TransactionsClient({
       const result = await refreshTransactionsData()
       
       if (result.success) {
-        toast.success(`Données rafraîchies avec succès à ${result.timestamp}`, {
-          duration: 5000, // Augmenter la durée pour plus de visibilité
-          position: 'top-center' // Position en haut au centre
+        successToast(`Données rafraîchies avec succès à ${result.timestamp}`, {
+          duration: 4000,
+          position: 'top-center',
         })
       } else {
-        toast.error(result.error || 'Erreur lors du rafraîchissement', {
-          duration: 5000,
-          position: 'top-center'
+        errorToast(result.error || 'Erreur lors du rafraîchissement', {
+          duration: 4000,
+          position: 'top-center',
         })
       }
     } catch (error) {
-      toast.error('Erreur lors du rafraîchissement des données', {
-        duration: 5000,
-        position: 'top-center'
+      errorToast('Erreur lors du rafraîchissement des données', {
+        duration: 4000,
+        position: 'top-center',
       })
-      console.error('Erreur de rafraîchissement:', error)
     } finally {
       setIsRefreshing(false)
     }

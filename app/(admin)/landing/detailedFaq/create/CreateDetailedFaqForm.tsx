@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createDetailedFaqHeader } from '@/lib/actions/faq-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
-import toast from 'react-hot-toast'
+
 
 // Schéma de validation pour le formulaire principal
 const formSchema = z.object({

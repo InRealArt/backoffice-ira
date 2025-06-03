@@ -3,7 +3,7 @@ import { z } from 'zod'
 // Validation pour le prix (nombre positif avec ou sans décimales)
 const priceRegex = /^\d+(\.\d{1,2})?$/
 
-// Schéma de base pour la création d'œuvres d'art (image principale obligatoire)
+// Schéma principal pour la création d'œuvres d'art
 export const artworkSchema = z.object({
     title: z.string().optional(),
     name: z.string()
@@ -58,11 +58,18 @@ export const artworkSchema = z.object({
         .refine(val => val !== null && val !== undefined && val.length > 0, {
             message: "L'image principale est requise"
         }),
-    certificate: z.union([
-        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat d\'authenticité est requis' }),
+    physicalCertificate: z.union([
+        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat d\'œuvre physique est requis' }),
         z.null()
-    ]),
-    artworkSupport: z.string().optional()
+    ]).optional(),
+    nftCertificate: z.union([
+        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat NFT est requis' }),
+        z.null()
+    ]).optional(),
+    artworkSupport: z.string().optional(),
+    shippingAddressId: z.string()
+        .optional()
+        .refine(val => !val || val !== '', "L'adresse d'expédition doit être sélectionnée si renseignée")
 })
     // Validation qu'au moins une option de tarification est sélectionnée
     .refine((data) => {
@@ -110,6 +117,36 @@ export const artworkSchema = z.object({
     }, {
         message: "Les dimensions (largeur, hauteur) et le poids sont obligatoires pour une œuvre physique",
         path: ["physicalDimensions"]
+    })
+    // Validation de l'adresse d'expédition pour les options avec œuvre physique
+    .refine((data) => {
+        if (data.hasPhysicalOnly) {
+            return !!data.shippingAddressId && data.shippingAddressId !== '';
+        }
+        return true;
+    }, {
+        message: "L'adresse d'expédition est obligatoire pour une œuvre physique",
+        path: ["shippingAddressId"]
+    })
+    // Validation du certificat pour l'option Œuvre physique
+    .refine((data) => {
+        if (data.hasPhysicalOnly) {
+            return data.physicalCertificate && data.physicalCertificate instanceof FileList && data.physicalCertificate.length > 0;
+        }
+        return true;
+    }, {
+        message: "Le certificat d'œuvre physique est obligatoire",
+        path: ["physicalCertificate"]
+    })
+    // Validation du certificat pour l'option NFT
+    .refine((data) => {
+        if (data.hasNftOnly) {
+            return data.nftCertificate && data.nftCertificate instanceof FileList && data.nftCertificate.length > 0;
+        }
+        return true;
+    }, {
+        message: "Le certificat NFT est obligatoire",
+        path: ["nftCertificate"]
     });
 
 // Schéma alternatif pour l'édition d'œuvres d'art (image principale optionnelle)
@@ -165,11 +202,18 @@ export const artworkEditSchema = z.object({
     edition: z.string().optional(),
     // En mode édition, l'image est optionnelle
     images: z.instanceof(FileList).nullable().optional(),
-    certificate: z.union([
-        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat d\'authenticité est requis' }),
+    physicalCertificate: z.union([
+        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat d\'œuvre physique est requis' }),
         z.null()
-    ]),
-    artworkSupport: z.string().optional()
+    ]).optional(),
+    nftCertificate: z.union([
+        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat NFT est requis' }),
+        z.null()
+    ]).optional(),
+    artworkSupport: z.string().optional(),
+    shippingAddressId: z.string()
+        .optional()
+        .refine(val => !val || val !== '', "L'adresse d'expédition doit être sélectionnée si renseignée")
 })
     // Validation qu'au moins une option de tarification est sélectionnée
     .refine((data) => {
@@ -217,6 +261,16 @@ export const artworkEditSchema = z.object({
     }, {
         message: "Les dimensions (largeur, hauteur) et le poids sont obligatoires pour une œuvre physique",
         path: ["physicalDimensions"]
+    })
+    // Validation de l'adresse d'expédition pour les options avec œuvre physique
+    .refine((data) => {
+        if (data.hasPhysicalOnly) {
+            return !!data.shippingAddressId && data.shippingAddressId !== '';
+        }
+        return true;
+    }, {
+        message: "L'adresse d'expédition est obligatoire pour une œuvre physique",
+        path: ["shippingAddressId"]
     });
 
 // Type unifié pour représenter les données du formulaire, compatible avec les deux schémas
@@ -241,8 +295,10 @@ export type ArtworkFormData = {
     intellectualPropertyEndDate?: string;
     edition?: string;
     images: FileList | null | undefined;
-    certificate: FileList | null;
+    physicalCertificate?: FileList | null;
+    nftCertificate?: FileList | null;
     artworkSupport?: string;
     certificateUrl?: string;
     secondaryImagesFiles?: FileList;
+    shippingAddressId?: string;
 }

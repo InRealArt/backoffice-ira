@@ -8,6 +8,8 @@ $color-light: #f8fafc; // Slate-50
 $color-physical: #c084fc; // Violet
 $color-nft: #ec4899; // Rose
 
+@use "sass:color";
+
 .productSpecificCard {
   display: flex;
   align-items: center;
@@ -181,7 +183,7 @@ $color-nft: #ec4899; // Rose
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   
   &:hover:not(:disabled) {
-    background: darken($color-secondary, 5%);
+    background: color.adjust($color-secondary, $lightness: -5%);
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }

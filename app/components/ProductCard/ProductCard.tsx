@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { updateItemStatus } from '@/lib/actions/prisma-actions'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import styles from './ProductCard.module.scss'
-import toast from 'react-hot-toast'
+
 
 type ProductCardProps = {
   id: number

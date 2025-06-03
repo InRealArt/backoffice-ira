@@ -2,9 +2,23 @@
 import { ArtworkFormData } from '../../createArtwork/schema'
 import { Control, FieldErrors, UseFormRegister, UseFormSetValue, UseFormGetValues } from 'react-hook-form'
 
+// Ré-export du type ArtworkFormData pour qu'il soit disponible
+export type { ArtworkFormData }
+
+export interface Address {
+    id: number
+    name: string
+    firstName: string
+    lastName: string
+    streetAddress: string
+    postalCode: string
+    city: string
+    country: string
+}
 
 export interface ArtworkFormProps {
     mode: 'create' | 'edit'
+    addresses?: Address[]
     initialData?: {
         id?: number
         title?: string
@@ -31,6 +45,7 @@ export interface ArtworkFormProps {
         certificateUrl?: string
         secondaryImagesUrl?: string[]
         initialQty?: number
+        shippingAddressId?: number
         // Nouvelles propriétés pour les entités liées
         physicalItem?: {
             id?: number
@@ -43,6 +58,7 @@ export interface ArtworkFormProps {
             creationYear?: number | string
             artworkSupport?: string
             status?: string
+            shippingAddressId?: number
         } | null
         nftItem?: {
             id?: number
@@ -118,6 +134,8 @@ export type UseArtworkFormReturn = {
     isSubmitting: boolean
     previewImages: string[]
     previewCertificate: string | null
+    previewPhysicalCertificate: string | null
+    previewNftCertificate: string | null
     numPages: number | null
     tags: string[]
     setTags: (tags: string[]) => void
@@ -130,11 +148,15 @@ export type UseArtworkFormReturn = {
     hasExistingMainImage: boolean
     fileInputRef: React.RefObject<HTMLInputElement>
     certificateInputRef: React.RefObject<HTMLInputElement>
+    physicalCertificateInputRef: React.RefObject<HTMLInputElement>
+    nftCertificateInputRef: React.RefObject<HTMLInputElement>
     secondaryImagesInputRef: React.RefObject<HTMLInputElement>
     handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     handleSecondaryImagesChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     removeSecondaryImage: (index: number) => Promise<void>
     handleCertificateChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    handlePhysicalCertificateChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    handleNftCertificateChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     onDocumentLoadSuccess: ({ numPages }: { numPages: number }) => void
     handleResetForm: () => void
     onSubmit: (data: ArtworkFormData) => Promise<void>
@@ -167,11 +189,25 @@ export interface TagsSectionProps extends FormFields {
 export interface MediaFilesSectionProps extends FormFields {
     isEditMode: boolean
     initialImageUrl?: string
-    certificateUrl?: string
     fileInputRef: React.RefObject<HTMLInputElement>
-    certificateInputRef: React.RefObject<HTMLInputElement>
     secondaryImagesInputRef: React.RefObject<HTMLInputElement>
     handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     handleSecondaryImagesChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    isFormReadOnly?: boolean
+}
+
+export interface PhysicalCertificateSectionProps extends FormFields {
+    isEditMode: boolean
+    certificateUrl?: string
+    fileInputRef: React.RefObject<HTMLInputElement>
     handleCertificateChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    isFormReadOnly?: boolean
+}
+
+export interface NftCertificateSectionProps extends FormFields {
+    isEditMode: boolean
+    certificateUrl?: string
+    fileInputRef: React.RefObject<HTMLInputElement>
+    handleCertificateChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+    isFormReadOnly?: boolean
 } 

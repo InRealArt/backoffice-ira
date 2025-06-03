@@ -24,7 +24,7 @@ import { useRoyaltySettings } from '@/app/(admin)/marketplace/hooks/useRoyaltySe
 import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
 import { NetworkType } from '@prisma/client'
 import { getBlockExplorerUrl } from '@/lib/blockchain/explorerUtils'
-import { toast } from 'react-hot-toast'
+
 
 type ParamsType = Promise<{
   id: string
@@ -339,7 +339,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
       }
       
       if (addresses.length !== percentages.length) {
-        toast.error('Le nombre d\'adresses et de pourcentages ne correspond pas')
+        errorToast('Le nombre d\'adresses et de pourcentages ne correspond pas')
         return
       }
       
@@ -387,11 +387,11 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
         }
       } catch (error: any) {
         console.error('Erreur lors de la simulation ou exécution:', error.message)
-        toast.error(`Erreur: ${error.message}`)
+        errorToast(`Erreur: ${error.message}`)
       }
     } catch (error: any) {
       console.error('Erreur générale:', error)
-      toast.error(`Erreur: ${error.message}`)
+      errorToast(`Erreur: ${error.message}`)
     }
   }
 

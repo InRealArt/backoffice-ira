@@ -365,6 +365,89 @@ export async function getBackofficeUserByEmail(email: string) {
   }
 }
 
+// Fonction pour récupérer les adresses d'un utilisateur backoffice
+export async function getBackofficeUserAddresses(email: string) {
+  try {
+    // Récupérer le BackofficeUser
+    const backofficeUser = await prisma.backofficeUser.findUnique({
+      where: { email }
+    })
+
+    if (!backofficeUser) {
+      return []
+    }
+
+    // Récupérer les adresses associées à ce BackofficeUser
+    const addresses = await prisma.address.findMany({
+      where: {
+        backofficeUserId: backofficeUser.id
+      },
+      select: {
+        id: true,
+        name: true,
+        firstName: true,
+        lastName: true,
+        streetAddress: true,
+        postalCode: true,
+        city: true,
+        country: true
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    })
+
+    return addresses
+  } catch (error) {
+    console.error('Erreur lors de la récupération des adresses:', error)
+    return []
+  }
+}
+
+/**
+ * Génère un slug unique pour un item
+ */
+async function generateUniqueSlug(baseSlug: string): Promise<string> {
+  // Si le slug de base est vide, null ou undefined, générer un slug par défaut
+  if (!baseSlug || baseSlug.trim() === '') {
+    baseSlug = `item-${Date.now()}`
+  }
+
+  // Nettoyer le slug de base
+  baseSlug = baseSlug.trim()
+
+  // Vérifier si le slug de base est disponible
+  const existingItem = await prisma.item.findUnique({
+    where: { slug: baseSlug }
+  })
+
+  if (!existingItem) {
+    return baseSlug
+  }
+
+  // Si le slug existe déjà, ajouter un suffix numérique
+  let counter = 1
+  let uniqueSlug = `${baseSlug}-${counter}`
+
+  while (true) {
+    const conflictingItem = await prisma.item.findUnique({
+      where: { slug: uniqueSlug }
+    })
+
+    if (!conflictingItem) {
+      return uniqueSlug
+    }
+
+    counter++
+    uniqueSlug = `${baseSlug}-${counter}`
+
+    // Limite de sécurité pour éviter une boucle infinie
+    if (counter > 1000) {
+      return `${baseSlug}-${Date.now()}`
+    }
+  }
+}
+
 export async function createItemRecord(
   userId: number,
   status: string,
@@ -396,7 +479,10 @@ export async function createItemRecord(
       ? tags.filter(tag => tag && typeof tag === 'string')
       : []
 
-    // Créer l'Item principal
+    // Générer un slug unique
+    const uniqueSlug = await generateUniqueSlug(itemData?.slug || '')
+
+    // Créer l'Item principal sans spécifier d'ID (laisser Prisma générer l'autoincrement)
     const newItem = await prisma.item.create({
       data: {
         idUser: userId,
@@ -405,7 +491,7 @@ export async function createItemRecord(
         metaTitle: itemData?.metaTitle || '',
         metaDescription: itemData?.metaDescription || '',
         description: itemData?.description || '',
-        slug: itemData?.slug || '',
+        slug: uniqueSlug,
         mainImageUrl: itemData?.mainImageUrl || null
       },
       include: {
@@ -445,7 +531,30 @@ export async function createItemRecord(
     return serializeData({ success: true, item: newItem })
   } catch (error) {
     console.error('Erreur lors de la création de l\'item:', error)
-    return { success: false, error }
+
+    // Analyser l'erreur pour identifier quelle contrainte unique a échoué
+    let errorMessage = 'Une erreur est survenue lors de la création de l\'item'
+
+    if (error instanceof Error) {
+      const errorText = error.message
+
+      if (errorText.includes('Unique constraint failed')) {
+        if (errorText.includes('slug')) {
+          errorMessage = 'Un item avec ce slug existe déjà. Veuillez choisir un nom différent.'
+        } else if (errorText.includes('id')) {
+          errorMessage = 'Erreur de génération d\'identifiant unique. Veuillez réessayer.'
+        } else {
+          errorMessage = `Contrainte d'unicité échouée: ${errorText}`
+        }
+      } else {
+        errorMessage = error.message
+      }
+    }
+
+    return {
+      success: false,
+      error: errorMessage
+    }
   }
 }
 
@@ -562,7 +671,8 @@ export async function saveAuthCertificate(itemId: number, fileData: Uint8Array) 
     })
 
     if (!nftItem) {
-      throw new Error(`Aucun NftItem trouvé pour l'itemId ${itemId}`)
+      console.warn(`Aucun NftItem trouvé pour l'itemId ${itemId}. Le certificat ne peut être sauvegardé que pour des œuvres NFT.`)
+      return null
     }
 
     // Maintenant créer le certificat avec la référence correcte au nftItemId
@@ -577,6 +687,66 @@ export async function saveAuthCertificate(itemId: number, fileData: Uint8Array) 
   } catch (error) {
     console.error('Erreur lors de la sauvegarde du certificat d\'authenticité:', error)
     throw new Error('Échec de la sauvegarde du certificat d\'authenticité')
+  }
+}
+
+/**
+ * Sauvegarde un certificat d'œuvre physique pour un item spécifique
+ */
+export async function savePhysicalCertificate(itemId: number, fileData: Uint8Array) {
+  try {
+    // D'abord récupérer l'item pour obtenir le PhysicalItem associé
+    const physicalItem = await prisma.physicalItem.findUnique({
+      where: { itemId }
+    })
+
+    if (!physicalItem) {
+      console.warn(`Aucun PhysicalItem trouvé pour l'itemId ${itemId}. Le certificat ne peut être sauvegardé que pour des œuvres physiques.`)
+      return null
+    }
+
+    // Maintenant créer le certificat avec la référence correcte au physicalItemId
+    const certificate = await prisma.authCertificate.create({
+      data: {
+        physicalItemId: physicalItem.id,
+        file: fileData
+      }
+    })
+
+    return certificate
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde du certificat d\'œuvre physique:', error)
+    throw new Error('Échec de la sauvegarde du certificat d\'œuvre physique')
+  }
+}
+
+/**
+ * Sauvegarde un certificat NFT pour un item spécifique
+ */
+export async function saveNftCertificate(itemId: number, fileData: Uint8Array) {
+  try {
+    // D'abord récupérer l'item pour obtenir le NftItem associé
+    const nftItem = await prisma.nftItem.findUnique({
+      where: { itemId }
+    })
+
+    if (!nftItem) {
+      console.warn(`Aucun NftItem trouvé pour l'itemId ${itemId}. Le certificat ne peut être sauvegardé que pour des NFT.`)
+      return null
+    }
+
+    // Maintenant créer le certificat avec la référence correcte au nftItemId
+    const certificate = await prisma.authCertificate.create({
+      data: {
+        nftItemId: nftItem.id,
+        file: fileData
+      }
+    })
+
+    return certificate
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde du certificat NFT:', error)
+    throw new Error('Échec de la sauvegarde du certificat NFT')
   }
 }
 
@@ -616,6 +786,86 @@ export async function getAuthCertificateByItemId(itemId: number) {
     }
   } catch (error) {
     console.error('Erreur lors de la récupération du certificat:', error)
+    return null
+  }
+}
+
+/**
+ * Récupère le certificat d'œuvre physique pour un item spécifique
+ */
+export async function getPhysicalCertificateByItemId(itemId: number) {
+  try {
+    // D'abord récupérer le PhysicalItem associé à l'item
+    const physicalItem = await prisma.physicalItem.findUnique({
+      where: { itemId }
+    })
+
+    if (!physicalItem) {
+      console.log(`Aucun PhysicalItem trouvé pour l'itemId ${itemId}`)
+      return null
+    }
+
+    // Ensuite récupérer le certificat associé au PhysicalItem
+    const certificate = await prisma.authCertificate.findFirst({
+      where: {
+        physicalItemId: physicalItem.id
+      }
+    })
+
+    if (!certificate) {
+      console.log(`Aucun certificat trouvé pour le PhysicalItem ${physicalItem.id}`)
+      return null
+    }
+
+    // Créer une URL temporaire pour le fichier PDF
+    const fileUrl = `/api/certificates/${certificate.id}`
+
+    return {
+      id: certificate.id,
+      fileUrl
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération du certificat d\'œuvre physique:', error)
+    return null
+  }
+}
+
+/**
+ * Récupère le certificat NFT pour un item spécifique
+ */
+export async function getNftCertificateByItemId(itemId: number) {
+  try {
+    // D'abord récupérer le NftItem associé à l'item
+    const nftItem = await prisma.nftItem.findUnique({
+      where: { itemId }
+    })
+
+    if (!nftItem) {
+      console.log(`Aucun NftItem trouvé pour l'itemId ${itemId}`)
+      return null
+    }
+
+    // Ensuite récupérer le certificat associé au NftItem
+    const certificate = await prisma.authCertificate.findFirst({
+      where: {
+        nftItemId: nftItem.id
+      }
+    })
+
+    if (!certificate) {
+      console.log(`Aucun certificat trouvé pour le NftItem ${nftItem.id}`)
+      return null
+    }
+
+    // Créer une URL temporaire pour le fichier PDF
+    const fileUrl = `/api/certificates/${certificate.id}`
+
+    return {
+      id: certificate.id,
+      fileUrl
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération du certificat NFT:', error)
     return null
   }
 }

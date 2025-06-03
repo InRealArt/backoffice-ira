@@ -5,16 +5,16 @@ import { useToast } from '../Toast/ToastContext'
 import Button from '../Button/Button'
 import { RefreshCw } from 'lucide-react'
 import { syncCollection } from '@/lib/actions/collection-actions'
-import toast from 'react-hot-toast'
+
 
 export default function CollectionSyncButton({ collectionId }: { collectionId: number }) {
   const [isSyncing, setIsSyncing] = useState(false)
-  const { success, error: errorToast } = useToast()
+  const { success, error: errorToast, info: infoToast } = useToast()
   const handleSync = async () => {
     if (isSyncing) return
     
     setIsSyncing(true)
-    toast.loading('Synchronisation avec la blockchain en cours...')
+    infoToast('Synchronisation avec la blockchain en cours...')
     
     try {
       const result = await syncCollection(collectionId)

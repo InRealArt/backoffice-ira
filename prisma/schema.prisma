@@ -216,6 +216,7 @@ model Address {
 
   orders              Order[]
   thirdPartyAddresses ThirdPartyAddress[]
+  physicalItems       PhysicalItem[]      @relation("PhysicalItemShipping")
 
   @@map("Address")
   @@schema("public")
@@ -250,6 +251,7 @@ model Artist {
 
   @@schema("public")
 }
+
 
 model NftCollection {
   id              Int              @id @default(autoincrement())
@@ -451,14 +453,14 @@ model Item {
 }
 
 model NftItem {
-  id              Int               @id @default(autoincrement())
-  itemId          Int               @unique
-  item            Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  id              Int              @id @default(autoincrement())
+  itemId          Int              @unique
+  item            Item             @relation(fields: [itemId], references: [id], onDelete: Cascade)
   idNftResource   Int?
-  nftResource     NftResource?      @relation(fields: [idNftResource], references: [id])
-  price           Int               @default(0)
-  status          NftItemStatus     @default(created)
-  authCertificate AuthCertificate[]
+  nftResource     NftResource?     @relation(fields: [idNftResource], references: [id])
+  price           Int              @default(0)
+  status          NftItemStatus    @default(created)
+  authCertificate AuthCertificate?
   orderItems      OrderItem[]
   invoiceItems    InvoiceItem[]
 
@@ -468,28 +470,32 @@ model NftItem {
 }
 
 model PhysicalItem {
-  id             Int                @id @default(autoincrement())
-  itemId         Int                @unique
-  item           Item               @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  price          Int                @default(0)
-  status         PhysicalItemStatus @default(created)
-  stockQty       Int                @default(0)
-  initialQty     Int                @default(1)
-  categoryId     Int?
-  category       ItemCategory?      @relation(fields: [categoryId], references: [id])
-  height         Decimal?           @db.Decimal(10, 2)
-  width          Decimal?           @db.Decimal(10, 2)
-  weight         Decimal?           @db.Decimal(10, 2)
-  unitHeight     String?
-  unitWidth      String?
-  unitWeight     String?
-  creationYear   Int?
-  artworkSupport String?
-  orderItems     OrderItem[]
-  invoiceItems   InvoiceItem[]
+  id                Int                @id @default(autoincrement())
+  itemId            Int                @unique
+  item              Item               @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  price             Int                @default(0)
+  status            PhysicalItemStatus @default(created)
+  stockQty          Int                @default(0)
+  initialQty        Int                @default(1)
+  categoryId        Int?
+  category          ItemCategory?      @relation(fields: [categoryId], references: [id])
+  height            Decimal?           @db.Decimal(10, 2)
+  width             Decimal?           @db.Decimal(10, 2)
+  weight            Decimal?           @db.Decimal(10, 2)
+  unitHeight        String?
+  unitWidth         String?
+  unitWeight        String?
+  creationYear      Int?
+  artworkSupport    String?
+  shippingAddressId Int?
+  shippingAddress   Address?           @relation("PhysicalItemShipping", fields: [shippingAddressId], references: [id])
+  orderItems        OrderItem[]
+  invoiceItems      InvoiceItem[]
+  authCertificate   AuthCertificate?
 
   @@index([itemId])
   @@index([categoryId])
+  @@index([shippingAddressId])
   @@schema("public")
 }
 
@@ -531,12 +537,15 @@ enum ItemStatus {
 }
 
 model AuthCertificate {
-  id        Int     @id @default(autoincrement())
-  nftItemId Int
-  nftItem   NftItem @relation(fields: [nftItemId], references: [id], onDelete: Cascade)
-  file      Bytes
+  id             Int           @id @default(autoincrement())
+  nftItemId      Int?          @unique
+  nftItem        NftItem?      @relation(fields: [nftItemId], references: [id], onDelete: Cascade)
+  physicalItemId Int?          @unique
+  physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+  file           Bytes
 
   @@index([nftItemId])
+  @@index([physicalItemId])
   @@schema("public")
 }
 

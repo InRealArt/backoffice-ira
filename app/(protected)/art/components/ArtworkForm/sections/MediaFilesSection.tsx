@@ -12,13 +12,11 @@ function MediaFilesSection({
   getValues,
   isEditMode,
   initialImageUrl,
-  certificateUrl,
   fileInputRef,
-  certificateInputRef,
   secondaryImagesInputRef,
   handleImageChange,
   handleSecondaryImagesChange,
-  handleCertificateChange
+  isFormReadOnly
 }: MediaFilesSectionProps) {
   return (
     <FormSection title="Fichiers Media">
@@ -44,6 +42,7 @@ function MediaFilesSection({
             }
           }}
           ref={fileInputRef}
+          disabled={isFormReadOnly}
           className={`${styles.formFileInput} ${errors.images && (!isEditMode || !initialImageUrl) ? styles.formInputError : ''}`}
         />
         {errors.images && (!isEditMode || !initialImageUrl) && (
@@ -66,36 +65,9 @@ function MediaFilesSection({
           multiple
           onChange={handleSecondaryImagesChange}
           ref={secondaryImagesInputRef}
+          disabled={isFormReadOnly}
           className={styles.formFileInput}
         />
-      </div>
-      
-      {/* Certificat d'authenticité */}
-      <div className={styles.formGroup}>
-        <label htmlFor="certificate" className={styles.formLabel} data-required={!isEditMode || !certificateUrl}>
-          Certificat d'authenticité (PDF) {isEditMode && certificateUrl ? '(optionnel)' : ''}
-        </label>
-        {isEditMode && certificateUrl && (
-          <p className={styles.formHelp}>
-            Un certificat existe déjà. Vous pouvez le remplacer en sélectionnant un nouveau fichier.
-          </p>
-        )}
-        <input
-          id="certificate"
-          type="file"
-          accept="application/pdf"
-          onChange={(e) => {
-            handleCertificateChange(e)
-            if (e.target.files) {
-              setValue('certificate', e.target.files as unknown as FileList, { shouldValidate: true })
-            }
-          }}
-          ref={certificateInputRef}
-          className={`${styles.formFileInput} ${errors.certificate ? styles.formInputError : ''}`}
-        />
-        {errors.certificate && (
-          <p className={styles.formError}>{errors.certificate?.message ? String(errors.certificate.message) : 'Le certificat est requis'}</p>
-        )}
       </div>
     </FormSection>
   )

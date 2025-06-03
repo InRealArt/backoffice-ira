@@ -15,13 +15,16 @@ import {
   NftPropertiesSection,
   MediaFilesSection,
   TagsSection,
-  FormActions
+  ShippingAddressSection,
+  FormActions,
+  PhysicalCertificateSection,
+  NftCertificateSection
 } from './sections'
 import { useRouter } from 'next/navigation'
 import { deletePhysicalItem, deleteNftItem } from '@/lib/actions/prisma-actions'
 import { useToast } from '@/app/components/Toast/ToastContext'
 
-export default function ArtworkForm({ mode = 'create', initialData = {}, onSuccess }: ArtworkFormProps) {
+export default function ArtworkForm({ mode = 'create', addresses = [], initialData = {}, onSuccess }: ArtworkFormProps) {
   // État local pour le slug et le titre/nom
   const [localTitle, setLocalTitle] = useState(initialData?.title || '')
   const [localSlug, setLocalSlug] = useState(initialData?.slug || '')
@@ -61,17 +64,23 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
     isSubmitting,
     previewImages,
     previewCertificate,
+    previewPhysicalCertificate,
+    previewNftCertificate,
     tags,
     setTags,
     secondaryImages,
     isEditMode,
     fileInputRef,
     certificateInputRef,
+    physicalCertificateInputRef,
+    nftCertificateInputRef,
     secondaryImagesInputRef,
     handleImageChange,
     handleSecondaryImagesChange,
     removeSecondaryImage,
     handleCertificateChange,
+    handlePhysicalCertificateChange,
+    handleNftCertificateChange,
     onSubmit: originalOnSubmit,
     isExistingImage,
     handleSubmit,
@@ -167,6 +176,9 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         }
         if (initialData.physicalItem.artworkSupport) {
           setValue('medium', initialData.physicalItem.artworkSupport)
+        }
+        if (initialData.physicalItem.shippingAddressId) {
+          setValue('shippingAddressId', initialData.physicalItem.shippingAddressId.toString())
         }
       }
       
@@ -325,6 +337,19 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         />
       )}
       
+      {/* Section adresse d'expédition pour les œuvres physiques */}
+      {hasPhysicalOnly && (
+        <ShippingAddressSection 
+          register={register} 
+          errors={errors}
+          setValue={setValue} 
+          control={control}
+          getValues={getValues}
+          isFormReadOnly={isFormReadOnly}
+          addresses={addresses}
+        />
+      )}
+      
       {/* Conditionnellement afficher la section des propriétés NFT basé uniquement sur l'état de la checkbox */}
       {hasNftOnly && (
         <NftPropertiesSection 
@@ -349,7 +374,7 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         isFormReadOnly={isFormReadOnly}
       />
       
-      {/* Section pour les médias et certificats */}
+      {/* Section pour les médias */}
       <MediaFilesSection 
         register={register} 
         errors={errors}
@@ -358,15 +383,44 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         getValues={getValues}
         isEditMode={isEditMode}
         initialImageUrl={initialData?.imageUrl}
-        certificateUrl={initialData?.certificateUrl}
         fileInputRef={fileInputRef}
-        certificateInputRef={certificateInputRef}
         secondaryImagesInputRef={secondaryImagesInputRef}
         handleImageChange={handleImageChange}
         handleSecondaryImagesChange={handleSecondaryImagesChange}
-        handleCertificateChange={handleCertificateChange}
         isFormReadOnly={isFormReadOnly}
       />
+
+      {/* Section certificat pour œuvre physique */}
+      {hasPhysicalOnly && (
+        <PhysicalCertificateSection 
+          register={register} 
+          errors={errors}
+          setValue={setValue}
+          control={control}
+          getValues={getValues}
+          isEditMode={isEditMode}
+          certificateUrl={undefined}
+          fileInputRef={physicalCertificateInputRef}
+          handleCertificateChange={handlePhysicalCertificateChange}
+          isFormReadOnly={isFormReadOnly}
+        />
+      )}
+
+      {/* Section certificat pour NFT */}
+      {hasNftOnly && (
+        <NftCertificateSection 
+          register={register} 
+          errors={errors}
+          setValue={setValue}
+          control={control}
+          getValues={getValues}
+          isEditMode={isEditMode}
+          certificateUrl={undefined}
+          fileInputRef={nftCertificateInputRef}
+          handleCertificateChange={handleNftCertificateChange}
+          isFormReadOnly={isFormReadOnly}
+        />
+      )}
       
       {/* Prévisualisations des images */}
       {previewImages.length > 0 && (
@@ -386,7 +440,33 @@ export default function ArtworkForm({ mode = 'create', initialData = {}, onSucce
         />
       )}
       
-      {/* Prévisualisation du certificat d'authenticité */}
+      {/* Prévisualisation du certificat d'œuvre physique */}
+      {hasPhysicalOnly && previewPhysicalCertificate && (
+        <div className={styles.certificatePreviewContainer}>
+          <h4>Certificat d'œuvre physique</h4>
+          <div className={styles.pdfPreview}>
+            <PdfPreview 
+              url={previewPhysicalCertificate}
+              certificateFile={physicalCertificateInputRef.current?.files?.[0] || null}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Prévisualisation du certificat NFT */}
+      {hasNftOnly && previewNftCertificate && (
+        <div className={styles.certificatePreviewContainer}>
+          <h4>Certificat NFT</h4>
+          <div className={styles.pdfPreview}>
+            <PdfPreview 
+              url={previewNftCertificate}
+              certificateFile={nftCertificateInputRef.current?.files?.[0] || null}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Prévisualisation du certificat d'authenticité existant (pour la rétrocompatibilité) */}
       {(previewCertificate || initialData?.certificateUrl) && (
         <div className={styles.certificatePreviewContainer}>
           <h4>Certificat d'authenticité</h4>

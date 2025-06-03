@@ -5,4 +5,7 @@ export { default as PhysicalPropertiesSection } from './PhysicalPropertiesSectio
 export { default as NftPropertiesSection } from './NftPropertiesSection'
 export { default as MediaFilesSection } from './MediaFilesSection'
 export { default as TagsSection } from './TagsSection'
-export { default as FormActions } from './FormActions' 
+export { default as ShippingAddressSection } from './ShippingAddressSection'
+export { default as FormActions } from './FormActions'
+export { default as PhysicalCertificateSection } from './PhysicalCertificateSection'
+export { default as NftCertificateSection } from './NftCertificateSection' 

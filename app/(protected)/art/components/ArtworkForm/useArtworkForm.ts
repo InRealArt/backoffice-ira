@@ -6,11 +6,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { artworkSchema, artworkEditSchema, ArtworkFormData } from '../../createArtwork/schema'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
-import { getBackofficeUserByEmail, createItemRecord, updateItemRecord, saveAuthCertificate } from '@/lib/actions/prisma-actions'
+import { getBackofficeUserByEmail, createItemRecord, updateItemRecord, savePhysicalCertificate, saveNftCertificate } from '@/lib/actions/prisma-actions'
 import { useRouter } from 'next/navigation'
 import { normalizeString } from '@/lib/utils'
 import { ArtworkFormProps, UseArtworkFormReturn } from './types'
-import { toast } from 'react-hot-toast'
+
 
 export function useArtworkForm({
     mode = 'create',
@@ -22,12 +22,16 @@ export function useArtworkForm({
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [previewImages, setPreviewImages] = useState<string[]>([])
     const [previewCertificate, setPreviewCertificate] = useState<string | null>(null)
+    const [previewPhysicalCertificate, setPreviewPhysicalCertificate] = useState<string | null>(null)
+    const [previewNftCertificate, setPreviewNftCertificate] = useState<string | null>(null)
     const [numPages, setNumPages] = useState<number | null>(null)
     const [tags, setTags] = useState<string[]>([])
     const [hasIntellectualProperty, setHasIntellectualProperty] = useState(initialData?.intellectualProperty || false)
     const [slug, setSlug] = useState(initialData?.slug || '')
     const fileInputRef = useRef<HTMLInputElement>(null)
     const certificateInputRef = useRef<HTMLInputElement>(null)
+    const physicalCertificateInputRef = useRef<HTMLInputElement>(null)
+    const nftCertificateInputRef = useRef<HTMLInputElement>(null)
     const secondaryImagesInputRef = useRef<HTMLInputElement>(null)
     const [secondaryImages, setSecondaryImages] = useState<string[]>([])
     const [secondaryImagesFiles, setSecondaryImagesFiles] = useState<File[]>([])
@@ -36,7 +40,11 @@ export function useArtworkForm({
     const isEditMode = mode === 'edit'
     const router = useRouter()
     const [hasExistingMainImage, setHasExistingMainImage] = useState(false)
-    const { error: errorToast } = useToast()
+
+    // Récupérer les fonctions toast et les stocker dans des variables pour éviter les problèmes de portée
+    const toastContext = useToast()
+    const { error: errorToast, success: successToast, info: infoToast, warning: warningToast, dismiss } = toastContext
+
     // Toast styling for errors
     const toastErrorOptions = {
         duration: 5000,
@@ -80,13 +88,15 @@ export function useArtworkForm({
             intellectualProperty: initialData?.intellectualProperty || false,
             intellectualPropertyEndDate: initialData?.intellectualPropertyEndDate || '',
             images: undefined,
-            certificate: undefined,
+            physicalCertificate: undefined,
+            nftCertificate: undefined,
             hasPhysicalOnly: initialData?.hasPhysicalOnly || false,
             hasNftOnly: initialData?.hasNftOnly || false,
             pricePhysicalBeforeTax: initialData?.pricePhysicalBeforeTax || '',
             priceNftBeforeTax: initialData?.priceNftBeforeTax || '',
             certificateUrl: initialData?.certificateUrl || '',
             initialQty: initialData?.initialQty?.toString() || '1',
+            shippingAddressId: initialData?.shippingAddressId?.toString() || initialData?.physicalItem?.shippingAddressId?.toString() || '',
         }
     })
 
@@ -194,7 +204,7 @@ export function useArtworkForm({
         }
 
         if (isEditMode && initialData?.certificateUrl) {
-            setValue('certificate', null as any, { shouldValidate: false })
+            setValue('physicalCertificate', null as any, { shouldValidate: false })
         }
     }, [isEditMode, initialData, previewImages, setValue])
 
@@ -219,7 +229,8 @@ export function useArtworkForm({
                 pricingOption: 'Option de tarification',
                 medium: 'Support/Medium',
                 images: 'Image Principale',
-                certificate: 'Certificat d\'authenticité',
+                physicalCertificate: 'Certificat d\'authenticité physique',
+                nftCertificate: 'Certificat d\'authenticité NFT',
                 width: 'Largeur',
                 height: 'Hauteur',
                 weight: 'Poids',
@@ -268,7 +279,7 @@ export function useArtworkForm({
         } else {
             setFormErrors(null)
         }
-    }, [errors, isEditMode, initialData?.imageUrl, previewImages.length, toastErrorOptions])
+    }, [errors, isEditMode, initialData?.imageUrl, previewImages.length, errorToast])
 
     // Handle main image change
     const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -308,26 +319,78 @@ export function useArtworkForm({
         const files = e.target.files
         if (!files || files.length === 0) {
             setPreviewCertificate(null)
-            setValue('certificate', null as any, { shouldValidate: true })
+            setValue('physicalCertificate', null as any, { shouldValidate: true })
             return
         }
 
         const file = files[0]
         if (file.type !== 'application/pdf') {
-            toast.error('Seuls les fichiers PDF sont acceptés pour le certificat d\'authenticité')
+            errorToast('Seuls les fichiers PDF sont acceptés pour le certificat d\'authenticité')
             if (certificateInputRef.current) {
                 certificateInputRef.current.value = ''
             }
             setPreviewCertificate(null)
-            setValue('certificate', null as any, { shouldValidate: true })
+            setValue('physicalCertificate', null as any, { shouldValidate: true })
             return
         }
 
         const url = URL.createObjectURL(file)
         setPreviewCertificate(url)
 
-        setValue('certificate', e.target.files as unknown as FileList, { shouldValidate: true })
-    }, [setValue])
+        setValue('physicalCertificate', e.target.files as unknown as FileList, { shouldValidate: true })
+    }, [setValue, errorToast])
+
+    // Handle physical certificate change
+    const handlePhysicalCertificateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files
+        if (!files || files.length === 0) {
+            setPreviewPhysicalCertificate(null)
+            setValue('physicalCertificate', null as any, { shouldValidate: true })
+            return
+        }
+
+        const file = files[0]
+        if (file.type !== 'application/pdf') {
+            errorToast('Seuls les fichiers PDF sont acceptés pour le certificat d\'œuvre physique')
+            if (physicalCertificateInputRef.current) {
+                physicalCertificateInputRef.current.value = ''
+            }
+            setPreviewPhysicalCertificate(null)
+            setValue('physicalCertificate', null as any, { shouldValidate: true })
+            return
+        }
+
+        const url = URL.createObjectURL(file)
+        setPreviewPhysicalCertificate(url)
+
+        setValue('physicalCertificate', e.target.files as unknown as FileList, { shouldValidate: true })
+    }, [setValue, errorToast])
+
+    // Handle NFT certificate change
+    const handleNftCertificateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files
+        if (!files || files.length === 0) {
+            setPreviewNftCertificate(null)
+            setValue('nftCertificate', null as any, { shouldValidate: true })
+            return
+        }
+
+        const file = files[0]
+        if (file.type !== 'application/pdf') {
+            errorToast('Seuls les fichiers PDF sont acceptés pour le certificat NFT')
+            if (nftCertificateInputRef.current) {
+                nftCertificateInputRef.current.value = ''
+            }
+            setPreviewNftCertificate(null)
+            setValue('nftCertificate', null as any, { shouldValidate: true })
+            return
+        }
+
+        const url = URL.createObjectURL(file)
+        setPreviewNftCertificate(url)
+
+        setValue('nftCertificate', e.target.files as unknown as FileList, { shouldValidate: true })
+    }, [setValue, errorToast])
 
     // Remove secondary image
     const removeSecondaryImage = useCallback(async (index: number) => {
@@ -338,7 +401,7 @@ export function useArtworkForm({
                 if (isExistingImage(imageUrl)) {
                     setIsSubmitting(true)
 
-                    const loadingToast = toast.loading('Suppression de l\'image en cours...')
+                    const loadingToast = infoToast('Suppression de l\'image en cours...')
 
                     try {
                         const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
@@ -351,15 +414,15 @@ export function useArtworkForm({
                         const { removeSecondaryImage: deleteImageFromDb } = await import('@/lib/actions/prisma-actions')
                         await deleteImageFromDb(initialData.id, imageUrl)
 
-                        toast.dismiss(loadingToast)
-                        toast.success('Image supprimée avec succès')
+                        dismiss(loadingToast as any)
+                        successToast('Image supprimée avec succès')
 
                         setSecondaryImages(prev => prev.filter((_, i) => i !== index))
                         setSecondaryImagesFiles(prev => prev.filter((_, i) => i !== index))
                     } catch (error) {
-                        toast.dismiss(loadingToast)
+                        dismiss(loadingToast as any)
                         console.error('Erreur lors de la suppression de l\'image:', error)
-                        toast.error('Erreur lors de la suppression de l\'image')
+                        errorToast('Erreur lors de la suppression de l\'image')
                     } finally {
                         setIsSubmitting(false)
                     }
@@ -373,9 +436,9 @@ export function useArtworkForm({
             }
         } catch (error) {
             console.error('Erreur lors de la suppression de l\'image:', error)
-            toast.error('Erreur lors de la suppression de l\'image')
+            errorToast('Erreur lors de la suppression de l\'image')
         }
-    }, [isEditMode, initialData, secondaryImages, isExistingImage])
+    }, [isEditMode, initialData, secondaryImages, isExistingImage, infoToast, successToast, errorToast, dismiss])
 
     // Handle PDF document load
     const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
@@ -403,6 +466,9 @@ export function useArtworkForm({
 
     // Async function to handle uploads
     const handleUpload = async (data: ArtworkFormData, backofficeUser: any, isRealNewImage: boolean) => {
+        // S'assurer que les fonctions toast sont disponibles dans cette portée
+        const { error: errorToastFn, success: successToastFn, info: infoToastFn } = toastContext
+
         let mainImageUrl = initialData?.imageUrl || ''
         let newSecondaryImageUrls: string[] = []
 
@@ -429,7 +495,7 @@ export function useArtworkForm({
 
                 if (isRealNewImage && fileInputRef.current && fileInputRef.current.files && fileInputRef.current.files.length > 0) {
                     if (initialData?.imageUrl) {
-                        toast.loading('Remplacement de l\'image principale en cours...', { id: 'replace-image' })
+                        infoToastFn('Remplacement de l\'image principale en cours...')
 
                         try {
                             await deleteImageFromFirebase(initialData.imageUrl)
@@ -444,7 +510,7 @@ export function useArtworkForm({
                         isMain: true
                     })
 
-                    toast.success('Nouvelle image uploadée avec succès', { id: 'replace-image' })
+                    successToastFn('Nouvelle image uploadée avec succès')
                 }
 
                 if (hasNewSecondaryImages && secondaryImagesFiles.length > 0) {
@@ -491,7 +557,7 @@ export function useArtworkForm({
                 return { mainImageUrl, allSecondaryImageUrls }
             } catch (uploadError) {
                 console.error('Erreur lors de l\'upload des images:', uploadError)
-                toast.error('Erreur lors de l\'upload des images')
+                errorToastFn('Erreur lors de l\'upload des images')
                 throw uploadError
             }
         }
@@ -518,7 +584,7 @@ export function useArtworkForm({
                 try {
                     setIsSubmitting(true)
 
-                    const loadingToast = toast.loading('Mise à jour de l\'œuvre en cours...')
+                    const loadingToast = infoToast('Mise à jour de l\'œuvre en cours...')
 
                     const isRealNewImage = fileInputRef.current &&
                         fileInputRef.current.files &&
@@ -529,8 +595,6 @@ export function useArtworkForm({
                     // Données de base de l'Item
                     const updateData: any = {
                         name: data.name,
-                        intellectualProperty: data.intellectualProperty,
-                        intellectualPropertyEndDate: data.intellectualPropertyEndDate ? new Date(data.intellectualPropertyEndDate) : null,
                         metaTitle: data.metaTitle,
                         metaDescription: data.metaDescription,
                         description: data.description || '',
@@ -567,26 +631,35 @@ export function useArtworkForm({
                     )
 
                     if (result.success) {
-                        if (data.certificate && data.certificate instanceof FileList && data.certificate.length > 0) {
-                            const certificateFile = data.certificate[0]
+                        // Sauvegarder le certificat d'œuvre physique
+                        if (data.hasPhysicalOnly && data.physicalCertificate && data.physicalCertificate instanceof FileList && data.physicalCertificate.length > 0) {
+                            const certificateFile = data.physicalCertificate[0]
                             const arrayBuffer = await certificateFile.arrayBuffer()
                             const buffer = new Uint8Array(arrayBuffer)
-                            await saveAuthCertificate(initialData.id, buffer)
+                            await savePhysicalCertificate(initialData.id, buffer)
                         }
 
-                        toast.dismiss(loadingToast)
-                        toast.success(`L'œuvre "${data.name}" a été mise à jour avec succès!`)
+                        // Sauvegarder le certificat NFT
+                        if (data.hasNftOnly && data.nftCertificate && data.nftCertificate instanceof FileList && data.nftCertificate.length > 0) {
+                            const certificateFile = data.nftCertificate[0]
+                            const arrayBuffer = await certificateFile.arrayBuffer()
+                            const buffer = new Uint8Array(arrayBuffer)
+                            await saveNftCertificate(initialData.id, buffer)
+                        }
+
+                        dismiss(loadingToast as any)
+                        successToast(`L'œuvre "${data.name}" a été mise à jour avec succès!`)
 
                         if (onSuccess) {
                             onSuccess()
                         }
                     } else {
-                        toast.dismiss(loadingToast)
-                        toast.error(`Erreur lors de la mise à jour: ${result.message || 'Une erreur est survenue'}`)
+                        dismiss(loadingToast as any)
+                        errorToast(`Erreur lors de la mise à jour: ${result.message || 'Une erreur est survenue'}`)
                     }
                 } catch (error: any) {
                     console.error('Erreur lors de la mise à jour de l\'œuvre:', error)
-                    toast.error(error.message || 'Une erreur est survenue lors de la mise à jour')
+                    errorToast(error.message || 'Une erreur est survenue lors de la mise à jour')
                 }
             } else {
                 try {
@@ -600,8 +673,6 @@ export function useArtworkForm({
                     // Données de base pour la création d'Item
                     const itemBaseData = {
                         name: data.name,
-                        intellectualProperty: data.intellectualProperty,
-                        intellectualPropertyEndDate: data.intellectualPropertyEndDate ? new Date(data.intellectualPropertyEndDate) : null,
                         metaTitle: data.metaTitle,
                         metaDescription: data.metaDescription,
                         description: data.description || '',
@@ -636,11 +707,20 @@ export function useArtworkForm({
                     )
 
                     if (newItem && newItem.item && newItem.item.id) {
-                        if (data.certificate && data.certificate instanceof FileList && data.certificate.length > 0) {
-                            const certificateFile = data.certificate[0]
+                        // Sauvegarder le certificat d'œuvre physique
+                        if (data.hasPhysicalOnly && data.physicalCertificate && data.physicalCertificate instanceof FileList && data.physicalCertificate.length > 0) {
+                            const certificateFile = data.physicalCertificate[0]
                             const arrayBuffer = await certificateFile.arrayBuffer()
                             const buffer = new Uint8Array(arrayBuffer)
-                            await saveAuthCertificate(newItem.item.id, buffer)
+                            await savePhysicalCertificate(newItem.item.id, buffer)
+                        }
+
+                        // Sauvegarder le certificat NFT
+                        if (data.hasNftOnly && data.nftCertificate && data.nftCertificate instanceof FileList && data.nftCertificate.length > 0) {
+                            const certificateFile = data.nftCertificate[0]
+                            const arrayBuffer = await certificateFile.arrayBuffer()
+                            const buffer = new Uint8Array(arrayBuffer)
+                            await saveNftCertificate(newItem.item.id, buffer)
                         }
 
                         if (mainImageUrl || allSecondaryImageUrls.length > 0) {
@@ -649,7 +729,7 @@ export function useArtworkForm({
                         }
                     }
 
-                    toast.success(`L'œuvre "${data.name}" a été créée avec succès!`)
+                    successToast(`L'œuvre "${data.name}" a été créée avec succès!`)
 
                     if (onSuccess) {
                         onSuccess()
@@ -658,12 +738,12 @@ export function useArtworkForm({
                     }
                 } catch (error: any) {
                     console.error('Erreur lors de la création de l\'œuvre:', error)
-                    toast.error(error.message || 'Une erreur est survenue lors de la création')
+                    errorToast(error.message || 'Une erreur est survenue lors de la création')
                 }
             }
         } catch (error: any) {
             console.error('Erreur lors de la soumission du formulaire:', error)
-            toast.error(error.message || 'Une erreur est survenue')
+            errorToast(error.message || 'Une erreur est survenue')
         } finally {
             setIsSubmitting(false)
         }
@@ -673,6 +753,8 @@ export function useArtworkForm({
         isSubmitting,
         previewImages,
         previewCertificate,
+        previewPhysicalCertificate,
+        previewNftCertificate,
         numPages,
         tags,
         hasIntellectualProperty,
@@ -684,11 +766,15 @@ export function useArtworkForm({
         hasExistingMainImage,
         fileInputRef: fileInputRef as RefObject<HTMLInputElement>,
         certificateInputRef: certificateInputRef as RefObject<HTMLInputElement>,
+        physicalCertificateInputRef: physicalCertificateInputRef as RefObject<HTMLInputElement>,
+        nftCertificateInputRef: nftCertificateInputRef as RefObject<HTMLInputElement>,
         secondaryImagesInputRef: secondaryImagesInputRef as RefObject<HTMLInputElement>,
         handleImageChange,
         handleSecondaryImagesChange,
         removeSecondaryImage,
         handleCertificateChange,
+        handlePhysicalCertificateChange,
+        handleNftCertificateChange,
         onDocumentLoadSuccess,
         handleResetForm,
         onSubmit,
