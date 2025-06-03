@@ -252,7 +252,6 @@ model Artist {
   @@schema("public")
 }
 
-
 model NftCollection {
   id              Int              @id @default(autoincrement())
   name            String
@@ -866,4 +865,11 @@ enum PostStatus {
   PUBLISHED
 
   @@schema("landing")
+}
+
+model ArtworkMedium {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  @@schema("public")
 }

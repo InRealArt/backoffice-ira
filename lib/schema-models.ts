@@ -73,6 +73,12 @@ export async function getSchemaModels() {
                 { name: 'longDescription', type: 'String' },
                 { name: 'textCTA', type: 'String' }
             ]
+        },
+        {
+            name: 'ArtworkMedium',
+            fields: [
+                { name: 'name', type: 'String' }
+            ]
         }
     ]
 

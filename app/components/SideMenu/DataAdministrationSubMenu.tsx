@@ -35,6 +35,11 @@ export default function DataAdministrationSubMenu({ isActive, isOpen, toggleSubm
             isSubmenuItem={true}
             onClick={() => onNavigate('/dataAdministration/artists', 'artists')}
           />
+          <SideMenuItem
+            label="Mediums d'œuvres"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/dataAdministration/artwork-mediums', 'artwork-mediums')}
+          />
         </ul>
       )}
       
@@ -49,6 +54,11 @@ export default function DataAdministrationSubMenu({ isActive, isOpen, toggleSubm
             label="Artistes" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/dataAdministration/artists', 'artists')}
+          />
+          <SideMenuItem
+            label="Mediums d'œuvres"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/dataAdministration/artwork-mediums', 'artwork-mediums')}
           />
         </ul>
       )}
