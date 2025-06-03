@@ -45,6 +45,11 @@ export default function DataAdministrationSubMenu({ isActive, isOpen, toggleSubm
             isSubmenuItem={true}
             onClick={() => onNavigate('/dataAdministration/artwork-styles', 'artwork-styles')}
           />
+          <SideMenuItem
+            label="Techniques d'œuvres"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/dataAdministration/artwork-techniques', 'artwork-techniques')}
+          />
         </ul>
       )}
       
@@ -69,6 +74,11 @@ export default function DataAdministrationSubMenu({ isActive, isOpen, toggleSubm
             label="Styles d'œuvres"
             isSubmenuItem={true}
             onClick={() => onNavigate('/dataAdministration/artwork-styles', 'artwork-styles')}
+          />
+          <SideMenuItem
+            label="Techniques d'œuvres"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/dataAdministration/artwork-techniques', 'artwork-techniques')}
           />
         </ul>
       )}

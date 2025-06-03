@@ -85,7 +85,13 @@ export async function getSchemaModels() {
             fields: [
                 { name: 'name', type: 'String' }
             ]
-        }
+        },
+        {
+            name: 'ArtworkTechnique',
+            fields: [
+                { name: 'image', type: 'String' }
+            ]
+        },
     ]
 
     return landingModels

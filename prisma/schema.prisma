@@ -880,3 +880,10 @@ model ArtworkStyle {
 
   @@schema("public")
 }
+
+model ArtworkTechnique {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  @@schema("public")
+}
