@@ -441,6 +441,14 @@ model Item {
   realViewCount      Int            @default(0)
   fakeViewCount      Int            @default(0)
 
+  // Nouvelles relations pour les caractéristiques artistiques
+  mediumId    Int?
+  medium      ArtworkMedium?    @relation(fields: [mediumId], references: [id])
+  styleId     Int?
+  style       ArtworkStyle?     @relation(fields: [styleId], references: [id])
+  techniqueId Int?
+  technique   ArtworkTechnique? @relation(fields: [techniqueId], references: [id])
+
   // Relations
   nftItem        NftItem?
   physicalItem   PhysicalItem?
@@ -448,6 +456,9 @@ model Item {
   itemCategoryId Int?
 
   @@index([idUser])
+  @@index([mediumId])
+  @@index([styleId])
+  @@index([techniqueId])
   @@schema("public")
 }
 
@@ -485,7 +496,6 @@ model PhysicalItem {
   unitWidth         String?
   unitWeight        String?
   creationYear      Int?
-  artworkSupport    String?
   shippingAddressId Int?
   shippingAddress   Address?           @relation("PhysicalItemShipping", fields: [shippingAddressId], references: [id])
   orderItems        OrderItem[]
@@ -868,22 +878,25 @@ enum PostStatus {
 }
 
 model ArtworkMedium {
-  id   Int    @id @default(autoincrement())
-  name String
+  id    Int    @id @default(autoincrement())
+  name  String
+  items Item[]
 
   @@schema("public")
 }
 
 model ArtworkStyle {
-  id   Int    @id @default(autoincrement())
-  name String
+  id    Int    @id @default(autoincrement())
+  name  String
+  items Item[]
 
   @@schema("public")
 }
 
 model ArtworkTechnique {
-  id   Int    @id @default(autoincrement())
-  name String
+  id    Int    @id @default(autoincrement())
+  name  String
+  items Item[]
 
   @@schema("public")
 }

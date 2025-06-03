@@ -536,7 +536,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
       console.error('Erreur lors de l\'approbation du NFT:', error);
       
       // Analyse détaillée de l'erreur
-      let errorMessage = error.message || 'Erreur inconnue';
+      const errorMessage = error.message || 'Erreur inconnue';
       let verboseError = 'Impossible d\'analyser la raison exacte';
       
       console.log('[DEBUG] Erreur complète:', error);

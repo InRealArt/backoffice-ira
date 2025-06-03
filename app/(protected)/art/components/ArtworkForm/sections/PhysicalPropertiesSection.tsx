@@ -2,7 +2,18 @@ import { FormFields } from '../types'
 import FormSection from '../FormSection'
 import styles from '../../ArtworkForm.module.scss'
 
-function PhysicalPropertiesSection({ register, errors, control, setValue, getValues }: FormFields) {
+interface PhysicalPropertiesSectionProps extends FormFields {
+  isFormReadOnly?: boolean
+}
+
+function PhysicalPropertiesSection({ 
+  register, 
+  errors, 
+  control, 
+  setValue, 
+  getValues,
+  isFormReadOnly = false
+}: PhysicalPropertiesSectionProps) {
   return (
     <FormSection title="Caractéristiques physiques">
       <div className={styles.formGrid}>
@@ -23,6 +34,7 @@ function PhysicalPropertiesSection({ register, errors, control, setValue, getVal
             })}
             className={`${styles.formInput} ${errors.pricePhysicalBeforeTax ? styles.formInputError : ''}`}
             placeholder="Prix HT en euros"
+            disabled={isFormReadOnly}
           />
           {errors.pricePhysicalBeforeTax && <p className={styles.formError}>{String(errors.pricePhysicalBeforeTax?.message || "Le prix est requis")}</p>}
         </div>
@@ -44,6 +56,7 @@ function PhysicalPropertiesSection({ register, errors, control, setValue, getVal
             })}
             className={`${styles.formInput} ${errors.initialQty ? styles.formInputError : ''}`}
             placeholder="Quantité disponible"
+            disabled={isFormReadOnly}
           />
           {errors.initialQty && <p className={styles.formError}>{String(errors.initialQty?.message || "La quantité est requise")}</p>}
         </div>
@@ -65,6 +78,7 @@ function PhysicalPropertiesSection({ register, errors, control, setValue, getVal
             })}
             className={`${styles.formInput} ${errors.width ? styles.formInputError : ''}`}
             placeholder="Largeur en cm"
+            disabled={isFormReadOnly}
           />
           {errors.width && <p className={styles.formError}>{String(errors.width?.message || "La largeur est requise")}</p>}
         </div>
@@ -84,6 +98,7 @@ function PhysicalPropertiesSection({ register, errors, control, setValue, getVal
             })}
             className={`${styles.formInput} ${errors.height ? styles.formInputError : ''}`}
             placeholder="Hauteur en cm"
+            disabled={isFormReadOnly}
           />
           {errors.height && <p className={styles.formError}>{String(errors.height?.message || "La hauteur est requise")}</p>}
         </div>
@@ -104,43 +119,30 @@ function PhysicalPropertiesSection({ register, errors, control, setValue, getVal
             })}
             className={`${styles.formInput} ${errors.weight ? styles.formInputError : ''}`}
             placeholder="Poids en kg"
+            disabled={isFormReadOnly}
           />
           {errors.weight && <p className={styles.formError}>{String(errors.weight?.message || "Le poids est requis")}</p>}
         </div>
 
-        {/* Support/Medium */}
+        {/* Année de création */}
         <div className={styles.formGroup}>
-          <label htmlFor="medium" className={styles.formLabel}>
-            Support/Medium
+          <label htmlFor="creationYear" className={styles.formLabel}>
+            Année de création
           </label>
           <input
-            id="medium"
-            type="text"
-            {...register("medium")}
-            className={styles.formInput}
-            placeholder="Ex: Huile sur toile, Acrylique, etc."
+            id="creationYear"
+            type="number"
+            max={new Date().getFullYear()}
+            {...register("creationYear")}
+            className={`${styles.formInput} ${errors.creationYear ? styles.formInputError : ''}`}
+            placeholder="Année de création"
+            disabled={isFormReadOnly}
           />
-          {errors.medium && <p className={styles.formError}>{String(errors.medium?.message)}</p>}
+          {errors.creationYear && <p className={styles.formError}>{String(errors.creationYear?.message)}</p>}
         </div>
-      </div>
-
-      {/* Année de création */}
-      <div className={styles.formGroup}>
-        <label htmlFor="creationYear" className={styles.formLabel}>
-          Année de création
-        </label>
-        <input
-          id="creationYear"
-          type="number"
-          max={new Date().getFullYear()}
-          {...register("creationYear")}
-          className={`${styles.formInput} ${errors.creationYear ? styles.formInputError : ''}`}
-          placeholder="Année de création"
-        />
-        {errors.creationYear && <p className={styles.formError}>{String(errors.creationYear?.message)}</p>}
       </div>
     </FormSection>
   )
 }
 
-export default PhysicalPropertiesSection 
+export default PhysicalPropertiesSection

@@ -1,6 +1,7 @@
 // Types pour les formulaires et composants d'artwork
 import { ArtworkFormData } from '../../createArtwork/schema'
 import { Control, FieldErrors, UseFormRegister, UseFormSetValue, UseFormGetValues } from 'react-hook-form'
+import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from '@prisma/client'
 
 // Ré-export du type ArtworkFormData pour qu'il soit disponible
 export type { ArtworkFormData }
@@ -19,6 +20,9 @@ export interface Address {
 export interface ArtworkFormProps {
     mode: 'create' | 'edit'
     addresses?: Address[]
+    mediums?: ArtworkMedium[]
+    styles?: ArtworkStyle[]
+    techniques?: ArtworkTechnique[]
     initialData?: {
         id?: number
         title?: string
@@ -43,9 +47,14 @@ export interface ArtworkFormProps {
         priceNftPlusPhysicalBeforeTax?: string
         slug?: string
         certificateUrl?: string
+        physicalCertificateUrl?: string
+        nftCertificateUrl?: string
         secondaryImagesUrl?: string[]
         initialQty?: number
         shippingAddressId?: number
+        mediumId?: number
+        styleId?: number
+        techniqueId?: number
         // Nouvelles propriétés pour les entités liées
         physicalItem?: {
             id?: number
@@ -56,7 +65,6 @@ export interface ArtworkFormProps {
             width?: number | string
             weight?: number | string
             creationYear?: number | string
-            artworkSupport?: string
             status?: string
             shippingAddressId?: number
         } | null
@@ -128,6 +136,9 @@ export type FormFields = {
     slug?: string
     title?: string
     isFormReadOnly?: boolean
+    mediums?: ArtworkMedium[]
+    styles?: ArtworkStyle[]
+    techniques?: ArtworkTechnique[]
 }
 
 export type UseArtworkFormReturn = {

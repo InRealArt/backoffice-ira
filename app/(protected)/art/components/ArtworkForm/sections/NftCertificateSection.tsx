@@ -16,14 +16,16 @@ function NftCertificateSection({
   handleCertificateChange,
   isFormReadOnly
 }: NftCertificateSectionProps) {
+  const hasExistingCertificate = isEditMode && certificateUrl
+
   return (
     <FormSection title="Certificat NFT">
       {/* Certificat NFT */}
       <div className={styles.formGroup}>
-        <label htmlFor="nftCertificate" className={styles.formLabel} data-required={!isEditMode || !certificateUrl}>
-          Certificat NFT (PDF) {isEditMode && certificateUrl ? '(optionnel)' : ''}
+        <label htmlFor="nftCertificate" className={styles.formLabel} data-required={!hasExistingCertificate}>
+          Certificat NFT (PDF) {hasExistingCertificate ? '(optionnel - remplacer le fichier existant)' : '(obligatoire)'}
         </label>
-        {isEditMode && certificateUrl && (
+        {hasExistingCertificate && (
           <p className={styles.formHelp}>
             Un certificat existe déjà. Vous pouvez le remplacer en sélectionnant un nouveau fichier.
           </p>

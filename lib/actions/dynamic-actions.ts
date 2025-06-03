@@ -27,7 +27,7 @@ export async function updateLinkedWallets(
         }
 
         // Récupérer les wallets déjà liés
-        let currentWallets = user.linkedWallets as WalletInfo[] || []
+        const currentWallets = user.linkedWallets as WalletInfo[] || []
 
         // Vérifier si le wallet est déjà présent pour éviter les doublons
         const walletExists = currentWallets.some(

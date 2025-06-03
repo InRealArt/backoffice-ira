@@ -458,7 +458,10 @@ export async function createItemRecord(
     metaDescription?: string,
     description?: string,
     slug?: string,
-    mainImageUrl?: string | null
+    mainImageUrl?: string | null,
+    mediumId?: number,
+    styleId?: number,
+    techniqueId?: number
   },
   physicalItemData?: {
     price?: number,
@@ -467,7 +470,7 @@ export async function createItemRecord(
     width?: number,
     weight?: number,
     creationYear?: number | null,
-    artworkSupport?: string | null,
+    shippingAddressId?: number
   } | null,
   nftItemData?: {
     price?: number,
@@ -492,10 +495,16 @@ export async function createItemRecord(
         metaDescription: itemData?.metaDescription || '',
         description: itemData?.description || '',
         slug: uniqueSlug,
-        mainImageUrl: itemData?.mainImageUrl || null
+        mainImageUrl: itemData?.mainImageUrl || null,
+        mediumId: itemData?.mediumId || null,
+        styleId: itemData?.styleId || null,
+        techniqueId: itemData?.techniqueId || null
       },
       include: {
-        user: true
+        user: true,
+        medium: true,
+        style: true,
+        technique: true
       }
     })
 
@@ -511,7 +520,7 @@ export async function createItemRecord(
           width: physicalItemData.width ? new Decimal(physicalItemData.width) : null,
           weight: physicalItemData.weight ? new Decimal(physicalItemData.weight) : null,
           creationYear: physicalItemData.creationYear || null,
-          artworkSupport: physicalItemData.artworkSupport || null,
+          shippingAddressId: physicalItemData.shippingAddressId || null,
           status: status as PhysicalItemStatus // Utiliser status comme enum pour PhysicalItem
         }
       })
@@ -908,7 +917,29 @@ export async function getItemById(itemId: number) {
         realViewCount: true,
         fakeViewCount: true,
         itemCategoryId: true,
+        // Nouveaux champs pour les caractéristiques artistiques
+        mediumId: true,
+        styleId: true,
+        techniqueId: true,
         // Inclure les relations
+        medium: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        style: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        technique: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
         nftItem: {
           select: {
             id: true,
@@ -919,15 +950,15 @@ export async function getItemById(itemId: number) {
         physicalItem: {
           select: {
             id: true,
-            status: true,
             price: true,
+            status: true,
             initialQty: true,
             stockQty: true,
             height: true,
             width: true,
             weight: true,
             creationYear: true,
-            artworkSupport: true
+            shippingAddressId: true
           }
         },
         // Inclure l'utilisateur associé
@@ -2089,6 +2120,9 @@ export async function updateItemRecord(
     slug?: string,
     tags?: string[],
     mainImageUrl?: string | null,
+    mediumId?: number,
+    styleId?: number,
+    techniqueId?: number,
     physicalItemData?: {
       price?: number,
       initialQty?: number,
@@ -2096,7 +2130,7 @@ export async function updateItemRecord(
       width?: number,
       weight?: number,
       creationYear?: number | null,
-      artworkSupport?: string | null
+      shippingAddressId?: number
     },
     nftItemData?: {
       price?: number
@@ -2135,6 +2169,9 @@ export async function updateItemRecord(
     if (data?.slug !== undefined) updateData.slug = data.slug
     if (data?.tags) updateData.tags = data.tags
     if (data?.mainImageUrl !== undefined) updateData.mainImageUrl = data.mainImageUrl
+    if (data?.mediumId !== undefined) updateData.mediumId = data.mediumId
+    if (data?.styleId !== undefined) updateData.styleId = data.styleId
+    if (data?.techniqueId !== undefined) updateData.techniqueId = data.techniqueId
 
     // Mise à jour transaction avec Prisma pour assurer la cohérence des données
     const result = await prisma.$transaction(async (tx) => {
@@ -2168,7 +2205,7 @@ export async function updateItemRecord(
         if (physicalData.width !== undefined) physicalUpdateData.width = new Decimal(physicalData.width)
         if (physicalData.weight !== undefined) physicalUpdateData.weight = new Decimal(physicalData.weight)
         if (physicalData.creationYear !== undefined) physicalUpdateData.creationYear = physicalData.creationYear
-        if (physicalData.artworkSupport !== undefined) physicalUpdateData.artworkSupport = physicalData.artworkSupport
+        if (physicalData.shippingAddressId !== undefined) physicalUpdateData.shippingAddressId = physicalData.shippingAddressId
 
         if (existingPhysicalItem) {
           await tx.physicalItem.update({
@@ -2186,7 +2223,7 @@ export async function updateItemRecord(
               width: physicalData.width ? new Decimal(physicalData.width) : null,
               weight: physicalData.weight ? new Decimal(physicalData.weight) : null,
               creationYear: physicalData.creationYear || null,
-              artworkSupport: physicalData.artworkSupport || null,
+              shippingAddressId: physicalData.shippingAddressId || null,
               status: PhysicalItemStatus.created
             }
           })

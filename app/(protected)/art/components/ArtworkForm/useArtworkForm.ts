@@ -81,6 +81,9 @@ export function useArtworkForm({
             metaTitle: initialData?.metaTitle || '',
             metaDescription: initialData?.metaDescription || '',
             medium: initialData?.medium || '',
+            mediumId: initialData?.mediumId?.toString() || '',
+            styleId: initialData?.styleId?.toString() || '',
+            techniqueId: initialData?.techniqueId?.toString() || '',
             width: initialData?.width || '',
             height: initialData?.height || '',
             weight: initialData?.weight || '',
@@ -95,6 +98,8 @@ export function useArtworkForm({
             pricePhysicalBeforeTax: initialData?.pricePhysicalBeforeTax || '',
             priceNftBeforeTax: initialData?.priceNftBeforeTax || '',
             certificateUrl: initialData?.certificateUrl || '',
+            physicalCertificateUrl: initialData?.physicalCertificateUrl || '',
+            nftCertificateUrl: initialData?.nftCertificateUrl || '',
             initialQty: initialData?.initialQty?.toString() || '1',
             shippingAddressId: initialData?.shippingAddressId?.toString() || initialData?.physicalItem?.shippingAddressId?.toString() || '',
         }
@@ -105,6 +110,8 @@ export function useArtworkForm({
     const hasPhysicalOnly = watch('hasPhysicalOnly')
     const hasNftOnly = watch('hasNftOnly')
     const name = watch('name')
+    const physicalCertificateUrl = watch('physicalCertificateUrl')
+    const nftCertificateUrl = watch('nftCertificateUrl')
 
     // Callback for pricing option changes
     useEffect(() => {
@@ -194,6 +201,17 @@ export function useArtworkForm({
             setPreviewCertificate(initialData.certificateUrl)
             setValue('certificateUrl', initialData.certificateUrl)
         }
+
+        // Initialiser les certificats physiques et NFT existants
+        if (isEditMode && initialData?.physicalCertificateUrl) {
+            setPreviewPhysicalCertificate(initialData.physicalCertificateUrl)
+            setValue('physicalCertificateUrl', initialData.physicalCertificateUrl)
+        }
+
+        if (isEditMode && initialData?.nftCertificateUrl) {
+            setPreviewNftCertificate(initialData.nftCertificateUrl)
+            setValue('nftCertificateUrl', initialData.nftCertificateUrl)
+        }
     }, [isEditMode, initialData, setValue])
 
     // Disable image validation if existing image in edit mode
@@ -201,10 +219,6 @@ export function useArtworkForm({
         if (isEditMode && initialData?.imageUrl && previewImages.length > 0) {
             setValue('images', null as any, { shouldValidate: false })
             setHasExistingMainImage(true)
-        }
-
-        if (isEditMode && initialData?.certificateUrl) {
-            setValue('physicalCertificate', null as any, { shouldValidate: false })
         }
     }, [isEditMode, initialData, previewImages, setValue])
 
@@ -581,6 +595,25 @@ export function useArtworkForm({
             }
 
             if (isEditMode && initialData?.id) {
+                // En mode édition : validation côté serveur pour les certificats
+                const hasNewPhysicalCertificate = data.physicalCertificate && data.physicalCertificate instanceof FileList && data.physicalCertificate.length > 0
+                const hasNewNftCertificate = data.nftCertificate && data.nftCertificate instanceof FileList && data.nftCertificate.length > 0
+                const hasExistingPhysicalCertificate = !!initialData?.physicalCertificateUrl
+                const hasExistingNftCertificate = !!initialData?.nftCertificateUrl
+
+                // Validation côté serveur pour les certificats
+                if (data.hasPhysicalOnly && !hasNewPhysicalCertificate && !hasExistingPhysicalCertificate) {
+                    errorToast('Le certificat d\'œuvre physique est obligatoire')
+                    setIsSubmitting(false)
+                    return
+                }
+
+                if (data.hasNftOnly && !hasNewNftCertificate && !hasExistingNftCertificate) {
+                    errorToast('Le certificat NFT est obligatoire')
+                    setIsSubmitting(false)
+                    return
+                }
+
                 try {
                     setIsSubmitting(true)
 
@@ -611,7 +644,7 @@ export function useArtworkForm({
                             width: data.width ? parseFloat(data.width) : undefined,
                             weight: data.weight ? parseFloat(data.weight) : undefined,
                             creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
-                            artworkSupport: data.medium || null,
+                            shippingAddressId: data.shippingAddressId ? parseInt(data.shippingAddressId, 10) : undefined,
                         }
                     }
 
@@ -620,6 +653,11 @@ export function useArtworkForm({
                             price: data.priceNftBeforeTax ? parseInt(data.priceNftBeforeTax, 10) : 0,
                         }
                     }
+
+                    // Ajouter les caractéristiques artistiques à l'Item principal
+                    if (data.mediumId) updateData.mediumId = parseInt(data.mediumId, 10)
+                    if (data.styleId) updateData.styleId = parseInt(data.styleId, 10)
+                    if (data.techniqueId) updateData.techniqueId = parseInt(data.techniqueId, 10)
 
                     if (isRealNewImage && mainImageUrl && mainImageUrl !== initialData.imageUrl) {
                         updateData.mainImageUrl = mainImageUrl
@@ -631,17 +669,17 @@ export function useArtworkForm({
                     )
 
                     if (result.success) {
-                        // Sauvegarder le certificat d'œuvre physique
-                        if (data.hasPhysicalOnly && data.physicalCertificate && data.physicalCertificate instanceof FileList && data.physicalCertificate.length > 0) {
-                            const certificateFile = data.physicalCertificate[0]
+                        // Sauvegarder le certificat d'œuvre physique seulement si un nouveau fichier est fourni
+                        if (data.hasPhysicalOnly && hasNewPhysicalCertificate) {
+                            const certificateFile = data.physicalCertificate![0]
                             const arrayBuffer = await certificateFile.arrayBuffer()
                             const buffer = new Uint8Array(arrayBuffer)
                             await savePhysicalCertificate(initialData.id, buffer)
                         }
 
-                        // Sauvegarder le certificat NFT
-                        if (data.hasNftOnly && data.nftCertificate && data.nftCertificate instanceof FileList && data.nftCertificate.length > 0) {
-                            const certificateFile = data.nftCertificate[0]
+                        // Sauvegarder le certificat NFT seulement si un nouveau fichier est fourni
+                        if (data.hasNftOnly && hasNewNftCertificate) {
+                            const certificateFile = data.nftCertificate![0]
                             const arrayBuffer = await certificateFile.arrayBuffer()
                             const buffer = new Uint8Array(arrayBuffer)
                             await saveNftCertificate(initialData.id, buffer)
@@ -662,6 +700,17 @@ export function useArtworkForm({
                     errorToast(error.message || 'Une erreur est survenue lors de la mise à jour')
                 }
             } else {
+                // Mode création : utiliser la validation Zod côté client (comportement existant)
+                const validationResult = artworkSchema.safeParse(data)
+
+                if (!validationResult.success) {
+                    console.error('Erreurs de validation:', validationResult.error.errors)
+                    const firstError = validationResult.error.errors[0]
+                    errorToast(firstError.message)
+                    setIsSubmitting(false)
+                    return
+                }
+
                 try {
                     // Upload des images vers Firebase Storage
                     const isRealNewImage = fileInputRef.current &&
@@ -678,6 +727,9 @@ export function useArtworkForm({
                         description: data.description || '',
                         slug: slug || normalizeString(data.name),
                         mainImageUrl: mainImageUrl || null,
+                        mediumId: data.mediumId ? parseInt(data.mediumId, 10) : undefined,
+                        styleId: data.styleId ? parseInt(data.styleId, 10) : undefined,
+                        techniqueId: data.techniqueId ? parseInt(data.techniqueId, 10) : undefined,
                     }
 
                     // Données pour PhysicalItem, si applicable
@@ -688,7 +740,7 @@ export function useArtworkForm({
                         width: data.width ? parseFloat(data.width) : undefined,
                         weight: data.weight ? parseFloat(data.weight) : undefined,
                         creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
-                        artworkSupport: data.medium || null,
+                        shippingAddressId: data.shippingAddressId ? parseInt(data.shippingAddressId, 10) : undefined,
                     } : null
 
                     // Données pour NftItem, si applicable

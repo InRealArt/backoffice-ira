@@ -40,7 +40,7 @@ function parseHtmlForTranslation(html: string): { textNodes: string[], structure
     ]
 
     const textNodes: string[] = []
-    let structure = html
+    const structure = html
 
     // Extraire tous les textes à traduire
     const allMatches: Array<{ text: string, fullMatch: string, index: number }> = []

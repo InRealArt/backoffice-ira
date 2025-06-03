@@ -308,7 +308,7 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
         title: cleanValue(subsection.title),
         content: cleanValue(subsection.content),
         elements: subsection.elements ? subsection.elements.map(element => {
-          let cleanedElement = { ...element };
+          const cleanedElement = { ...element };
           
           if (element.type === 'quote') {
             cleanedElement.text = cleanValue(element.text);

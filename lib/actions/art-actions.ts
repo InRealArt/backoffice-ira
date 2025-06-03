@@ -592,7 +592,7 @@ export async function createArtwork(formData: FormData): Promise<CreateArtworkRe
 
     // Collecter les images
     const images = []
-    for (let pair of formData.entries()) {
+    for (const pair of formData.entries()) {
       if (pair[0].startsWith('image-') && pair[1] instanceof File) {
         images.push(pair[1] as File)
       }

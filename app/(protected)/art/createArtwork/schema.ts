@@ -33,6 +33,12 @@ export const artworkSchema = z.object({
     medium: z.string()
         .max(100, "Le support/medium ne doit pas dépasser 100 caractères")
         .optional(),
+    mediumId: z.string()
+        .min(1, "Le support/medium est requis"),
+    styleId: z.string()
+        .min(1, "Le style est requis"),
+    techniqueId: z.string()
+        .min(1, "La technique est requise"),
     width: z.string()
         .optional()
         .refine((val) => !val || !isNaN(parseFloat(val)), "La largeur doit être un nombre valide"),
@@ -179,6 +185,12 @@ export const artworkEditSchema = z.object({
     medium: z.string()
         .max(100, "Le support/medium ne doit pas dépasser 100 caractères")
         .optional(),
+    mediumId: z.string()
+        .min(1, "Le support/medium est requis"),
+    styleId: z.string()
+        .min(1, "Le style est requis"),
+    techniqueId: z.string()
+        .min(1, "La technique est requise"),
     width: z.string()
         .optional()
         .refine((val) => !val || !isNaN(parseFloat(val)), "La largeur doit être un nombre valide"),
@@ -200,14 +212,13 @@ export const artworkEditSchema = z.object({
             "La date de fin des droits doit être dans le futur"
         ),
     edition: z.string().optional(),
-    // En mode édition, l'image est optionnelle
     images: z.instanceof(FileList).nullable().optional(),
     physicalCertificate: z.union([
-        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat d\'œuvre physique est requis' }),
+        z.instanceof(FileList),
         z.null()
     ]).optional(),
     nftCertificate: z.union([
-        z.instanceof(FileList).refine(fileList => fileList.length > 0, { message: 'Un certificat NFT est requis' }),
+        z.instanceof(FileList),
         z.null()
     ]).optional(),
     artworkSupport: z.string().optional(),
@@ -287,6 +298,9 @@ export type ArtworkFormData = {
     hasPhysicalOnly?: boolean;
     hasNftOnly?: boolean;
     medium?: string;
+    mediumId?: string;
+    styleId?: string;
+    techniqueId?: string;
     width?: string;
     height?: string;
     weight?: string;
@@ -299,6 +313,8 @@ export type ArtworkFormData = {
     nftCertificate?: FileList | null;
     artworkSupport?: string;
     certificateUrl?: string;
+    physicalCertificateUrl?: string;
+    nftCertificateUrl?: string;
     secondaryImagesFiles?: FileList;
     shippingAddressId?: string;
 }

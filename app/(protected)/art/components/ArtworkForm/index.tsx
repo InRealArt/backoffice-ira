@@ -13,6 +13,7 @@ import {
   PricingSection,
   PhysicalPropertiesSection,
   NftPropertiesSection,
+  ArtworkCharacteristicsSection,
   MediaFilesSection,
   TagsSection,
   ShippingAddressSection,
@@ -24,7 +25,7 @@ import { useRouter } from 'next/navigation'
 import { deletePhysicalItem, deleteNftItem } from '@/lib/actions/prisma-actions'
 import { useToast } from '@/app/components/Toast/ToastContext'
 
-export default function ArtworkForm({ mode = 'create', addresses = [], initialData = {}, onSuccess }: ArtworkFormProps) {
+export default function ArtworkForm({ mode = 'create', addresses = [], mediums = [], styles: artStyles = [], techniques = [], initialData = {}, onSuccess }: ArtworkFormProps) {
   // État local pour le slug et le titre/nom
   const [localTitle, setLocalTitle] = useState(initialData?.title || '')
   const [localSlug, setLocalSlug] = useState(initialData?.slug || '')
@@ -174,12 +175,20 @@ export default function ArtworkForm({ mode = 'create', addresses = [], initialDa
         if (initialData.physicalItem.creationYear) {
           setValue('creationYear', initialData.physicalItem.creationYear.toString())
         }
-        if (initialData.physicalItem.artworkSupport) {
-          setValue('medium', initialData.physicalItem.artworkSupport)
-        }
         if (initialData.physicalItem.shippingAddressId) {
           setValue('shippingAddressId', initialData.physicalItem.shippingAddressId.toString())
         }
+      }
+      
+      // Initialiser les caractéristiques artistiques depuis Item
+      if (initialData.mediumId) {
+        setValue('mediumId', initialData.mediumId.toString())
+      }
+      if (initialData.styleId) {
+        setValue('styleId', initialData.styleId.toString())
+      }
+      if (initialData.techniqueId) {
+        setValue('techniqueId', initialData.techniqueId.toString())
       }
       
       // Détection du NftItem
@@ -325,6 +334,19 @@ export default function ArtworkForm({ mode = 'create', addresses = [], initialDa
         isFormReadOnly={isFormReadOnly}
       />
       
+      {/* Section des caractéristiques artistiques (Support, Style, Technique) */}
+      <ArtworkCharacteristicsSection 
+        register={register} 
+        errors={errors}
+        setValue={setValue} 
+        control={control}
+        getValues={getValues}
+        isFormReadOnly={isFormReadOnly}
+        mediums={mediums}
+        styles={artStyles}
+        techniques={techniques}
+      />
+      
       {/* Conditionnellement afficher la section des propriétés physiques basé uniquement sur l'état de la checkbox */}
       {hasPhysicalOnly && (
         <PhysicalPropertiesSection 
@@ -399,7 +421,7 @@ export default function ArtworkForm({ mode = 'create', addresses = [], initialDa
           control={control}
           getValues={getValues}
           isEditMode={isEditMode}
-          certificateUrl={undefined}
+          certificateUrl={initialData?.physicalCertificateUrl}
           fileInputRef={physicalCertificateInputRef}
           handleCertificateChange={handlePhysicalCertificateChange}
           isFormReadOnly={isFormReadOnly}
@@ -415,7 +437,7 @@ export default function ArtworkForm({ mode = 'create', addresses = [], initialDa
           control={control}
           getValues={getValues}
           isEditMode={isEditMode}
-          certificateUrl={undefined}
+          certificateUrl={initialData?.nftCertificateUrl}
           fileInputRef={nftCertificateInputRef}
           handleCertificateChange={handleNftCertificateChange}
           isFormReadOnly={isFormReadOnly}
@@ -441,44 +463,49 @@ export default function ArtworkForm({ mode = 'create', addresses = [], initialDa
       )}
       
       {/* Prévisualisation du certificat d'œuvre physique */}
-      {hasPhysicalOnly && previewPhysicalCertificate && (
+      {hasPhysicalOnly && (previewPhysicalCertificate || initialData?.physicalCertificateUrl) && (
         <div className={styles.certificatePreviewContainer}>
           <h4>Certificat d'œuvre physique</h4>
           <div className={styles.pdfPreview}>
-            <PdfPreview 
-              url={previewPhysicalCertificate}
-              certificateFile={physicalCertificateInputRef.current?.files?.[0] || null}
-            />
+            {previewPhysicalCertificate ? (
+              <PdfPreview 
+                url={previewPhysicalCertificate}
+                certificateFile={physicalCertificateInputRef.current?.files?.[0] || null}
+              />
+            ) : initialData?.physicalCertificateUrl ? (
+              <a 
+                href={initialData.physicalCertificateUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className={styles.viewPdfLink}
+              >
+                Voir le certificat d'œuvre physique existant
+              </a>
+            ) : null}
           </div>
         </div>
       )}
 
       {/* Prévisualisation du certificat NFT */}
-      {hasNftOnly && previewNftCertificate && (
+      {hasNftOnly && (previewNftCertificate || initialData?.nftCertificateUrl) && (
         <div className={styles.certificatePreviewContainer}>
           <h4>Certificat NFT</h4>
           <div className={styles.pdfPreview}>
-            <PdfPreview 
-              url={previewNftCertificate}
-              certificateFile={nftCertificateInputRef.current?.files?.[0] || null}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Prévisualisation du certificat d'authenticité existant (pour la rétrocompatibilité) */}
-      {(previewCertificate || initialData?.certificateUrl) && (
-        <div className={styles.certificatePreviewContainer}>
-          <h4>Certificat d'authenticité</h4>
-          <div className={styles.pdfPreview}>
-            <a 
-              href={previewCertificate || initialData?.certificateUrl} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className={styles.viewPdfLink}
-            >
-              Voir le certificat d'authenticité existant
-            </a>
+            {previewNftCertificate ? (
+              <PdfPreview 
+                url={previewNftCertificate}
+                certificateFile={nftCertificateInputRef.current?.files?.[0] || null}
+              />
+            ) : initialData?.nftCertificateUrl ? (
+              <a 
+                href={initialData.nftCertificateUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className={styles.viewPdfLink}
+              >
+                Voir le certificat NFT existant
+              </a>
+            ) : null}
           </div>
         </div>
       )}

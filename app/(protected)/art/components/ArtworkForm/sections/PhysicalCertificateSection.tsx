@@ -16,14 +16,16 @@ function PhysicalCertificateSection({
   handleCertificateChange,
   isFormReadOnly
 }: PhysicalCertificateSectionProps) {
+  const hasExistingCertificate = isEditMode && certificateUrl
+
   return (
     <FormSection title="Certificat Œuvre Physique">
       {/* Certificat d'œuvre physique */}
       <div className={styles.formGroup}>
-        <label htmlFor="physicalCertificate" className={styles.formLabel} data-required={!isEditMode || !certificateUrl}>
-          Certificat d'œuvre physique (PDF) {isEditMode && certificateUrl ? '(optionnel)' : ''}
+        <label htmlFor="physicalCertificate" className={styles.formLabel} data-required={!hasExistingCertificate}>
+          Certificat d'œuvre physique (PDF) {hasExistingCertificate ? '(optionnel - remplacer le fichier existant)' : '(obligatoire)'}
         </label>
-        {isEditMode && certificateUrl && (
+        {hasExistingCertificate && (
           <p className={styles.formHelp}>
             Un certificat existe déjà. Vous pouvez le remplacer en sélectionnant un nouveau fichier.
           </p>
