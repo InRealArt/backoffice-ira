@@ -873,3 +873,10 @@ model ArtworkMedium {
 
   @@schema("public")
 }
+
+model ArtworkStyle {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  @@schema("public")
+}

@@ -79,6 +79,12 @@ export async function getSchemaModels() {
             fields: [
                 { name: 'name', type: 'String' }
             ]
+        },
+        {
+            name: 'ArtworkStyle',
+            fields: [
+                { name: 'name', type: 'String' }
+            ]
         }
     ]
 
