@@ -1,6 +1,7 @@
 'use server'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { unstable_noStore as noStore } from 'next/cache'
 
 export interface LandingArtistData {
     intro?: string | null
@@ -140,6 +141,9 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
  * Récupère tous les artistes qui n'ont pas encore d'entrée dans la table LandingArtist
  */
 export async function getArtistsNotInLanding() {
+    // Forcer la récupération des données en temps réel sans cache
+    noStore()
+
     return prisma.artist.findMany({
         where: {
             LandingArtist: {
@@ -231,8 +235,9 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
         // Créer le nouvel artiste
         const result = await createLandingArtist(formData)
 
-        // Revalider le chemin pour mettre à jour les données
+        // Revalider les chemins pour mettre à jour les données dans toutes les pages concernées
         revalidatePath('/landing/landingArtists')
+        revalidatePath('/landing/landingArtists/create')
 
         return result
     } catch (error: any) {

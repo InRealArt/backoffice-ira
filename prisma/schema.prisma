@@ -243,6 +243,8 @@ model Artist {
   imageUrl        String           @unique
   isGallery       Boolean          @default(false)
   backgroundImage String?
+  slug            String?          @unique
+  featuredArtwork String?
   collections     NftCollection[]
   Profile         Profile[]
   BackofficeUser  BackofficeUser[]
@@ -440,7 +442,7 @@ model Item {
   secondaryImagesUrl String[]       @default([])
   realViewCount      Int            @default(0)
   fakeViewCount      Int            @default(0)
-
+  featured    Boolean?            @default(false)
   // Nouvelles relations pour les caractéristiques artistiques
   mediumId    Int?
   medium      ArtworkMedium?    @relation(fields: [mediumId], references: [id])

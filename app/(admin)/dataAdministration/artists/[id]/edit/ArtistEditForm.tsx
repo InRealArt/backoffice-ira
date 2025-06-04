@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Artist } from '@prisma/client'
 import { updateArtist } from '@/lib/actions/artist-actions'
@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { X, Plus } from 'lucide-react'
+import { generateSlug } from '@/lib/utils'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -22,6 +23,8 @@ const formSchema = z.object({
   imageUrl: z.string().url('URL d\'image invalide'),
   isGallery: z.boolean().default(false),
   backgroundImage: z.string().url('URL d\'image d\'arrière-plan invalide').nullable().optional(),
+  slug: z.string().min(1, 'Le slug est requis'),
+  featuredArtwork: z.string().url('URL d\'image de l\'œuvre vedette invalide'),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -41,6 +44,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors }
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -54,11 +58,26 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
       imageUrl: artist.imageUrl,
       isGallery: artist.isGallery || false,
       backgroundImage: artist.backgroundImage || null,
+      slug: artist.slug || '',
+      featuredArtwork: artist.featuredArtwork || '',
     }
   })
 
   const isGallery = watch('isGallery')
   const imageUrl = watch('imageUrl')
+  const watchedName = watch('name')
+  const watchedSurname = watch('surname')
+  const currentSlug = watch('slug')
+  
+  // Génération automatique du slug
+  useEffect(() => {
+    if (watchedName && watchedSurname) {
+      const newSlug = generateSlug(watchedName + ' ' + watchedSurname)
+      if (newSlug !== currentSlug) {
+        setValue('slug', newSlug, { shouldValidate: true })
+      }
+    }
+  }, [watchedName, watchedSurname, setValue, currentSlug])
   
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
@@ -69,7 +88,6 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
         ...data,
         artworkStyle: data.artworkStyle || null,
         backgroundImage: data.backgroundImage || null,
-        // Ne pas inclure artworkImages ici car ce n'est pas un champ standard du modèle Artist
       }
       
       const result = await updateArtist(artist.id, formattedData)
@@ -200,6 +218,21 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                     <p className="form-error">{errors.pseudo.message}</p>
                   )}
                 </div>
+
+                <div className="form-group">
+                  <label htmlFor="slug" className="form-label">Slug (généré automatiquement)</label>
+                  <input
+                    id="slug"
+                    type="text"
+                    {...register('slug')}
+                    className={`form-input ${errors.slug ? 'input-error' : ''}`}
+                    readOnly
+                    style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                  />
+                  {errors.slug && (
+                    <p className="form-error">{errors.slug.message}</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -231,6 +264,21 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
               {errors.artworkStyle && (
                 <p className="form-error">{errors.artworkStyle.message}</p>
               )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="featuredArtwork" className="form-label">Œuvre vedette (URL)</label>
+              <input
+                id="featuredArtwork"
+                type="text"
+                {...register('featuredArtwork')}
+                className={`form-input ${errors.featuredArtwork ? 'input-error' : ''}`}
+                placeholder="https://example.com/featured-artwork.jpg"
+              />
+              {errors.featuredArtwork && (
+                <p className="form-error">{errors.featuredArtwork.message}</p>
+              )}
+              <p className="form-help-text">Cette image sera utilisée comme carte de l'artiste sur la marketplace</p>
             </div>
             
             <div className="form-group">
