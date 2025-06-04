@@ -12,11 +12,25 @@ import Button from '@/app/components/Button/Button'
 import { useRouter } from 'next/navigation'
 import { Artist } from '@prisma/client'
 
+// Type spécifique pour les artistes/galeries retournés par getAllArtists/getAllGalleries
+type ArtistSelectData = {
+  id: number
+  name: string
+  surname: string
+  pseudo: string
+  description: string
+  publicKey: string
+  imageUrl: string
+  isGallery: boolean
+  backgroundImage: string | null
+  artworkStyle: string | null
+}
+
 export default function CreateMemberForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uniqueError, setUniqueError] = useState<string | null>(null)
-  const [artists, setArtists] = useState<Artist[]>([])
-  const [galleries, setGalleries] = useState<Artist[]>([])
+  const [artists, setArtists] = useState<ArtistSelectData[]>([])
+  const [galleries, setGalleries] = useState<ArtistSelectData[]>([])
   const [isLoadingArtists, setIsLoadingArtists] = useState(true)
   const [isLoadingGalleries, setIsLoadingGalleries] = useState(true)
   const router = useRouter()

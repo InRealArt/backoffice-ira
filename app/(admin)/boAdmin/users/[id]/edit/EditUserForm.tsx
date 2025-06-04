@@ -43,6 +43,20 @@ interface EditUserFormProps {
   user: BackofficeUser
 }
 
+// Type spécifique pour les artistes retournés par getAllArtists
+type ArtistSelectData = {
+  id: number
+  name: string
+  surname: string
+  pseudo: string
+  description: string
+  publicKey: string
+  imageUrl: string
+  isGallery: boolean
+  backgroundImage: string | null
+  artworkStyle: string | null
+}
+
 export default function EditUserForm({ user }: EditUserFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -52,7 +66,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
   const [initialDescription, setInitialDescription] = useState<string | null>(null)
   const [isLoadingCollection, setIsLoadingCollection] = useState(true)
   const [hasDescriptionChanged, setHasDescriptionChanged] = useState(false)
-  const [artists, setArtists] = useState<Artist[]>([])
+  const [artists, setArtists] = useState<ArtistSelectData[]>([])
   const [isLoadingArtists, setIsLoadingArtists] = useState(true)
   const { success, error } = useToast()
   // Déterminer si l'utilisateur est un administrateur
