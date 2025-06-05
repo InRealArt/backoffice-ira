@@ -12,7 +12,7 @@ interface SeoGuideModalProps {
 
 export default function SeoGuideModal({ isOpen, onClose }: SeoGuideModalProps) {
   // State pour stocker l'URL de l'image extraite du code HTML
-  const [imageUrl, setImageUrl] = useState<string>('https://via.placeholder.com/800x500')
+  const [imageUrl, setImageUrl] = useState<string>('')
   const [imageCaption, setImageCaption] = useState<string>('Légende explicative de l\'image qui ajoute du contexte')
   const [isImageLoading, setIsImageLoading] = useState<boolean>(true)
 
@@ -192,7 +192,7 @@ export default function SeoGuideModal({ isOpen, onClose }: SeoGuideModalProps) {
                 onLoad={() => setIsImageLoading(false)}
                 onError={(e) => {
                   // Fallback vers une image placeholder en cas d'erreur de chargement
-                  e.currentTarget.src = "https://via.placeholder.com/800x500";
+                  e.currentTarget.src = "";
                   setIsImageLoading(false);
                 }}
               />

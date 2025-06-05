@@ -86,7 +86,7 @@ export async function createArtist(data: CreateArtistData): Promise<{ success: b
         const prismaData = {
             ...prismaDataPartial,
             publicKey: data.publicKey || `default-${Date.now()}`,
-            imageUrl: data.imageUrl || `https://via.placeholder.com/200x200?text=${data.name.charAt(0)}${data.surname.charAt(0)}`,
+            imageUrl: data.imageUrl || '',
             isGallery: data.isGallery || false,
             backgroundImage: data.backgroundImage || null
         }

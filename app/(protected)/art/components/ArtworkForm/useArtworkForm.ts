@@ -301,7 +301,19 @@ export function useArtworkForm({
         if (!files) return
 
         const imageFiles = Array.from(files)
+        const maxSizeInBytes = 800 * 1024 // 800 KB pour l'image principale
         const imageUrls: string[] = []
+
+        // Vérifier la taille de chaque fichier
+        for (const file of imageFiles) {
+            if (file.size > maxSizeInBytes) {
+                errorToast(`L'image "${file.name}" dépasse la taille maximale autorisée de 800 KB (taille actuelle: ${(file.size / (1024 * 1024)).toFixed(2)} MB)`)
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = ''
+                }
+                return
+            }
+        }
 
         imageFiles.forEach(file => {
             const url = URL.createObjectURL(file)
@@ -309,7 +321,7 @@ export function useArtworkForm({
         })
 
         setPreviewImages(imageUrls)
-    }, [])
+    }, [errorToast])
 
     // Handle secondary images change
     const handleSecondaryImagesChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -317,7 +329,19 @@ export function useArtworkForm({
         if (!files) return
 
         const newImageFiles = Array.from(files)
+        const maxSizeInBytes = 500 * 1024 // 500 KB pour les images secondaires  
         const newImageUrls: string[] = []
+
+        // Vérifier la taille de chaque fichier
+        for (const file of newImageFiles) {
+            if (file.size > maxSizeInBytes) {
+                errorToast(`L'image "${file.name}" dépasse la taille maximale autorisée de 500 KB (taille actuelle: ${(file.size / (1024 * 1024)).toFixed(2)} MB)`)
+                if (secondaryImagesInputRef.current) {
+                    secondaryImagesInputRef.current.value = ''
+                }
+                return
+            }
+        }
 
         newImageFiles.forEach(file => {
             const url = URL.createObjectURL(file)
@@ -326,7 +350,7 @@ export function useArtworkForm({
 
         setSecondaryImages(prev => [...prev, ...newImageUrls])
         setSecondaryImagesFiles(prev => [...prev, ...newImageFiles])
-    }, [])
+    }, [errorToast])
 
     // Handle certificate change
     const handleCertificateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -364,8 +388,20 @@ export function useArtworkForm({
         }
 
         const file = files[0]
+        const maxPdfSizeInBytes = 2 * 1024 * 1024 // 2 MB pour les PDFs
+
         if (file.type !== 'application/pdf') {
             errorToast('Seuls les fichiers PDF sont acceptés pour le certificat d\'œuvre physique')
+            if (physicalCertificateInputRef.current) {
+                physicalCertificateInputRef.current.value = ''
+            }
+            setPreviewPhysicalCertificate(null)
+            setValue('physicalCertificate', null as any, { shouldValidate: true })
+            return
+        }
+
+        if (file.size > maxPdfSizeInBytes) {
+            errorToast(`Le certificat PDF "${file.name}" dépasse la taille maximale autorisée de 2 MB (taille actuelle: ${(file.size / (1024 * 1024)).toFixed(2)} MB)`)
             if (physicalCertificateInputRef.current) {
                 physicalCertificateInputRef.current.value = ''
             }
@@ -390,8 +426,20 @@ export function useArtworkForm({
         }
 
         const file = files[0]
+        const maxPdfSizeInBytes = 2 * 1024 * 1024 // 2 MB pour les PDFs
+
         if (file.type !== 'application/pdf') {
             errorToast('Seuls les fichiers PDF sont acceptés pour le certificat NFT')
+            if (nftCertificateInputRef.current) {
+                nftCertificateInputRef.current.value = ''
+            }
+            setPreviewNftCertificate(null)
+            setValue('nftCertificate', null as any, { shouldValidate: true })
+            return
+        }
+
+        if (file.size > maxPdfSizeInBytes) {
+            errorToast(`Le certificat PDF "${file.name}" dépasse la taille maximale autorisée de 2 MB (taille actuelle: ${(file.size / (1024 * 1024)).toFixed(2)} MB)`)
             if (nftCertificateInputRef.current) {
                 nftCertificateInputRef.current.value = ''
             }
@@ -594,6 +642,14 @@ export function useArtworkForm({
                 throw new Error('Utilisateur non trouvé dans le backoffice')
             }
 
+            // Debug: vérifier la valeur de artistId
+            console.log('DEBUG backofficeUser:', {
+                id: backofficeUser.id,
+                email: backofficeUser.email,
+                artistId: backofficeUser.artistId,
+                artist: backofficeUser.artist
+            })
+
             if (isEditMode && initialData?.id) {
                 // En mode édition : validation côté serveur pour les certificats
                 const hasNewPhysicalCertificate = data.physicalCertificate && data.physicalCertificate instanceof FileList && data.physicalCertificate.length > 0
@@ -633,6 +689,7 @@ export function useArtworkForm({
                         description: data.description || '',
                         slug: slug || normalizeString(data.name),
                         tags: tags,
+                        artistId: backofficeUser.artistId || null,
                     }
 
                     // Mise à jour des propriétés spécifiques selon le type d'œuvre
@@ -727,10 +784,14 @@ export function useArtworkForm({
                         description: data.description || '',
                         slug: slug || normalizeString(data.name),
                         mainImageUrl: mainImageUrl || null,
+                        artistId: backofficeUser.artistId || null,
                         mediumId: data.mediumId ? parseInt(data.mediumId, 10) : undefined,
                         styleId: data.styleId ? parseInt(data.styleId, 10) : undefined,
                         techniqueId: data.techniqueId ? parseInt(data.techniqueId, 10) : undefined,
                     }
+
+                    // Debug: vérifier les données envoyées
+                    console.log('DEBUG itemBaseData:', itemBaseData)
 
                     // Données pour PhysicalItem, si applicable
                     const physicalItemData = data.hasPhysicalOnly ? {

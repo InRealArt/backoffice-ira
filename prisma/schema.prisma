@@ -250,6 +250,7 @@ model Artist {
   BackofficeUser  BackofficeUser[]
   LandingArtist   LandingArtist[]
   PresaleArtworks PresaleArtwork[]
+  items           Item[]
 
   @@schema("public")
 }
@@ -429,27 +430,29 @@ enum CollectionStatus {
 }
 
 model Item {
-  id                 Int            @id @default(autoincrement())
+  id                 Int               @id @default(autoincrement())
   name               String
   description        String
   idUser             Int
-  user               BackofficeUser @relation(fields: [idUser], references: [id])
-  tags               String[]       @default([])
-  slug               String?        @unique
+  user               BackofficeUser    @relation(fields: [idUser], references: [id])
+  artistId           Int?
+  artist             Artist?           @relation(fields: [artistId], references: [id])
+  tags               String[]          @default([])
+  slug               String?           @unique
   metaDescription    String
   metaTitle          String
   mainImageUrl       String?
-  secondaryImagesUrl String[]       @default([])
-  realViewCount      Int            @default(0)
-  fakeViewCount      Int            @default(0)
-  featured    Boolean?            @default(false)
+  secondaryImagesUrl String[]          @default([])
+  realViewCount      Int               @default(0)
+  fakeViewCount      Int               @default(0)
+  featured           Boolean?          @default(false)
   // Nouvelles relations pour les caractéristiques artistiques
-  mediumId    Int?
-  medium      ArtworkMedium?    @relation(fields: [mediumId], references: [id])
-  styleId     Int?
-  style       ArtworkStyle?     @relation(fields: [styleId], references: [id])
-  techniqueId Int?
-  technique   ArtworkTechnique? @relation(fields: [techniqueId], references: [id])
+  mediumId           Int?
+  medium             ArtworkMedium?    @relation(fields: [mediumId], references: [id])
+  styleId            Int?
+  style              ArtworkStyle?     @relation(fields: [styleId], references: [id])
+  techniqueId        Int?
+  technique          ArtworkTechnique? @relation(fields: [techniqueId], references: [id])
 
   // Relations
   nftItem        NftItem?
@@ -458,6 +461,7 @@ model Item {
   itemCategoryId Int?
 
   @@index([idUser])
+  @@index([artistId])
   @@index([mediumId])
   @@index([styleId])
   @@index([techniqueId])

@@ -67,7 +67,7 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
                       alt={element.alt || 'Image'} 
                       className={styles.previewImage}
                       onError={(e) => {
-                        e.currentTarget.src = "https://via.placeholder.com/600x400";
+                        e.currentTarget.src = "";
                       }}
                     />
                     {element.caption && (
@@ -186,7 +186,7 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
               alt={mainImageAlt || 'Image principale'} 
               className={styles.previewImage}
               onError={(e) => {
-                e.currentTarget.src = "https://via.placeholder.com/800x500";
+                e.currentTarget.src = "";
               }}
             />
             {mainImageCaption && (

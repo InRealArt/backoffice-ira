@@ -459,6 +459,7 @@ export async function createItemRecord(
     description?: string,
     slug?: string,
     mainImageUrl?: string | null,
+    artistId?: number | null,
     mediumId?: number,
     styleId?: number,
     techniqueId?: number
@@ -496,6 +497,7 @@ export async function createItemRecord(
         description: itemData?.description || '',
         slug: uniqueSlug,
         mainImageUrl: itemData?.mainImageUrl || null,
+        artistId: itemData?.artistId || null,
         mediumId: itemData?.mediumId || null,
         styleId: itemData?.styleId || null,
         techniqueId: itemData?.techniqueId || null
@@ -2120,6 +2122,7 @@ export async function updateItemRecord(
     slug?: string,
     tags?: string[],
     mainImageUrl?: string | null,
+    artistId?: number | null,
     mediumId?: number,
     styleId?: number,
     techniqueId?: number,
@@ -2169,6 +2172,7 @@ export async function updateItemRecord(
     if (data?.slug !== undefined) updateData.slug = data.slug
     if (data?.tags) updateData.tags = data.tags
     if (data?.mainImageUrl !== undefined) updateData.mainImageUrl = data.mainImageUrl
+    if (data?.artistId !== undefined) updateData.artistId = data.artistId
     if (data?.mediumId !== undefined) updateData.mediumId = data.mediumId
     if (data?.styleId !== undefined) updateData.styleId = data.styleId
     if (data?.techniqueId !== undefined) updateData.techniqueId = data.techniqueId

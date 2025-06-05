@@ -76,7 +76,7 @@ export default function CreateArtistForm() {
         artworkStyle: data.artworkStyle || null,
         backgroundImage: data.backgroundImage || null,
         publicKey: data.publicKey || `default-${Date.now()}`,
-        imageUrl: data.imageUrl || `https://via.placeholder.com/200x200?text=${data.name.charAt(0)}${data.surname.charAt(0)}`
+        imageUrl: data.imageUrl
       }
       
       // Log pour débogage
