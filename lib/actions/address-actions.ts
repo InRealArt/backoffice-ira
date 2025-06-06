@@ -26,6 +26,39 @@ export async function getAddresses(backofficeUserId: number) {
     }
 }
 
+// Récupérer toutes les adresses pour l'administration
+export async function getAllAddressesForAdmin() {
+    try {
+        const addresses = await prisma.address.findMany({
+            select: {
+                id: true,
+                name: true,
+                firstName: true,
+                lastName: true,
+                streetAddress: true,
+                postalCode: true,
+                city: true,
+                country: true,
+                backofficeUser: {
+                    select: {
+                        firstName: true,
+                        lastName: true,
+                        email: true
+                    }
+                }
+            },
+            orderBy: {
+                name: 'asc'
+            }
+        })
+
+        return addresses
+    } catch (error) {
+        console.error('Erreur lors de la récupération de toutes les adresses:', error)
+        return []
+    }
+}
+
 // Récupérer une adresse par son ID
 export async function getAddressById(id: number) {
     try {

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import ArtworkForm from '@/app/(protected)/art/components/ArtworkForm'
-import { getAuthCertificateByItemId, getBackofficeUserAddresses, getPhysicalCertificateByItemId, getNftCertificateByItemId } from '@/lib/actions/prisma-actions'
+import { getAuthCertificateByItemId, getPhysicalCertificateByItemId, getNftCertificateByItemId } from '@/lib/actions/prisma-actions'
+import { getAllAddressesForAdmin } from '@/lib/actions/address-actions'
 import styles from './editArtworkAdmin.module.scss'
 import { normalizeString } from '@/lib/utils'
 import FormSection from '@/app/(protected)/art/components/ArtworkForm/FormSection'
@@ -35,8 +36,8 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
 
     const fetchData = async () => {
       try {
-        // Récupérer les adresses pour l'administration
-        const userAddresses = await getBackofficeUserAddresses('admin@example.com')
+        // Récupérer toutes les adresses pour l'administration
+        const userAddresses = await getAllAddressesForAdmin()
 
         if (isMounted) {
           setAddresses(userAddresses)
@@ -211,6 +212,8 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
               mediumId: item.mediumId,
               styleId: item.styleId,
               techniqueId: item.techniqueId,
+              // Adresse d'expédition depuis PhysicalItem
+              shippingAddressId: item.physicalItem?.shippingAddressId,
               // Transmettre les données du physicalItem s'il existe
               physicalItem: item.physicalItem ? {
                 id: item.physicalItem.id,
