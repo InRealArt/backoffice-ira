@@ -84,7 +84,7 @@ a {
 [class*="page-layout"] {
   display: flex;
   min-height: calc(100vh - var(--navbar-height));
-  margin-top: var(--navbar-height);
+  margin-top: 0;
   background-color: var(--color-background-main);
   transition: background-color 0.3s ease;
 }

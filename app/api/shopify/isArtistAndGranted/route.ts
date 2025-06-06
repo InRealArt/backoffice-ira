@@ -18,14 +18,12 @@ export async function POST(request: Request) {
         walletAddress: walletAddress,
       },
       select: {
-        isShopifyGranted: true,
         role: true,
       },
     });
     
     // Vérifier si l'utilisateur a accès
-    const hasAccess = userData?.isShopifyGranted && 
-      (userData?.role === 'artist' || userData?.role === 'galleryManager');
+    const hasAccess = (userData?.role === 'artist' || userData?.role === 'galleryManager');
     
     // Retourner les données trouvées
     return NextResponse.json({ 

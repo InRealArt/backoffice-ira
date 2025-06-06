@@ -14,8 +14,7 @@ export const userEditSchema = z.object({
     email: z.string()
         .email({ message: 'Format d\'email invalide' }),
     role: ShopifyUserRolesEnum.nullable(),
-    walletAddress: z.string().optional(),
-    isShopifyGranted: z.boolean().default(false),
+    walletAddress: z.string().optional()
 })
 
 export type UserEditFormData = z.infer<typeof userEditSchema> 

@@ -18,6 +18,7 @@ export function useSideMenuLogic() {
   const [showMarketplaceSubmenu, setShowMarketplaceSubmenu] = useState(false)
   const [showDataAdministrationSubmenu, setShowDataAdministrationSubmenu] = useState(false)
   const [showLandingSubmenu, setShowLandingSubmenu] = useState(false)
+
   // État pour le menu plié/déplié
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false)
 
@@ -41,6 +42,7 @@ export function useSideMenuLogic() {
     if (menuToKeepOpen !== 'marketplace') setShowMarketplaceSubmenu(false)
     if (menuToKeepOpen !== 'dataAdministration') setShowDataAdministrationSubmenu(false)
     if (menuToKeepOpen !== 'landing') setShowLandingSubmenu(false)
+
   }, [])
 
   // Fonction pour basculer l'état du sous-menu Shopify
@@ -88,6 +90,8 @@ export function useSideMenuLogic() {
     })
   }, [closeAllSubmenusExcept])
 
+
+
   // Fonction pour plier/déplier le menu latéral
   const toggleMenuCollapse = useCallback(() => {
     setIsMenuCollapsed(prev => !prev)
@@ -118,6 +122,12 @@ export function useSideMenuLogic() {
         setActiveItem('collection')
       } else if (pathname.includes('/art/createArtwork')) {
         setActiveItem('createArtwork')
+      } else if (pathname.includes('/admin-art/createArtwork')) {
+        setActiveItem('adminMarketplace')
+        setShowMarketplaceSubmenu(true)
+      } else if (pathname.includes('/admin-art/collection') || pathname.includes('/admin-art/editArtwork')) {
+        setActiveItem('adminMarketplace')
+        setShowMarketplaceSubmenu(true)
       } else if (pathname.includes('/shopify')) {
         setActiveItem('adminBackofficeAdmin')
         setShowBackofficeAdminSubmenu(true)
@@ -242,6 +252,7 @@ export function useSideMenuLogic() {
     showMarketplaceSubmenu,
     showDataAdministrationSubmenu,
     showLandingSubmenu,
+
     isMenuCollapsed,
     handleNavigation,
     toggleBackofficeAdminSubmenu,
@@ -249,6 +260,7 @@ export function useSideMenuLogic() {
     toggleMarketplaceSubmenu,
     toggleDataAdministrationSubmenu,
     toggleLandingSubmenu,
+
     toggleMenuCollapse
   }
 }

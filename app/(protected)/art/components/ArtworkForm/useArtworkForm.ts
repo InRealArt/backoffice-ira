@@ -681,6 +681,14 @@ export function useArtworkForm({
 
                     const { mainImageUrl } = await handleUpload(data, backofficeUser, isRealNewImage as boolean)
 
+                    // Récupérer l'artistId admin si l'utilisateur est admin
+                    const adminSelectedArtistId = typeof window !== 'undefined'
+                        ? localStorage.getItem('adminSelectedArtistId')
+                        : null
+                    const finalArtistId = adminSelectedArtistId
+                        ? parseInt(adminSelectedArtistId)
+                        : (backofficeUser.artistId || null)
+
                     // Données de base de l'Item
                     const updateData: any = {
                         name: data.name,
@@ -689,7 +697,7 @@ export function useArtworkForm({
                         description: data.description || '',
                         slug: slug || normalizeString(data.name),
                         tags: tags,
-                        artistId: backofficeUser.artistId || null,
+                        artistId: finalArtistId,
                     }
 
                     // Mise à jour des propriétés spécifiques selon le type d'œuvre
@@ -776,6 +784,14 @@ export function useArtworkForm({
 
                     const { mainImageUrl, allSecondaryImageUrls } = await handleUpload(data, backofficeUser, isRealNewImage as boolean)
 
+                    // Récupérer l'artistId admin si l'utilisateur est admin
+                    const adminSelectedArtistId = typeof window !== 'undefined'
+                        ? localStorage.getItem('adminSelectedArtistId')
+                        : null
+                    const finalArtistId = adminSelectedArtistId
+                        ? parseInt(adminSelectedArtistId)
+                        : (backofficeUser.artistId || null)
+
                     // Données de base pour la création d'Item
                     const itemBaseData = {
                         name: data.name,
@@ -784,7 +800,7 @@ export function useArtworkForm({
                         description: data.description || '',
                         slug: slug || normalizeString(data.name),
                         mainImageUrl: mainImageUrl || null,
-                        artistId: backofficeUser.artistId || null,
+                        artistId: finalArtistId,
                         mediumId: data.mediumId ? parseInt(data.mediumId, 10) : undefined,
                         styleId: data.styleId ? parseInt(data.styleId, 10) : undefined,
                         techniqueId: data.techniqueId ? parseInt(data.techniqueId, 10) : undefined,

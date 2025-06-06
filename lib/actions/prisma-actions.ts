@@ -320,7 +320,6 @@ export async function updateBackofficeUser(
         email: data.email,
         role: data.role || null,
         walletAddress: data.walletAddress || '',
-        isShopifyGranted: data.isShopifyGranted,
         artistId: artistId
       }
     })
@@ -919,6 +918,7 @@ export async function getItemById(itemId: number) {
         realViewCount: true,
         fakeViewCount: true,
         itemCategoryId: true,
+        artistId: true,
         // Nouveaux champs pour les caractéristiques artistiques
         mediumId: true,
         styleId: true,
@@ -1985,17 +1985,23 @@ export async function getAllArtists() {
         imageUrl: true,
         isGallery: true,
         backgroundImage: true,
-        artworkStyle: true
+        artworkStyle: true,
+        BackofficeUser: {
+          select: {
+            id: true
+          }
+        }
       },
       orderBy: {
         name: 'asc'
       }
     })
 
-    // Garantir que artworkStyle est défini, même si null
+    // Garantir que artworkStyle est défini, même si null et inclure backofficeUserId
     return artists.map(artist => ({
       ...artist,
-      artworkStyle: artist.artworkStyle || null
+      artworkStyle: artist.artworkStyle || null,
+      backofficeUserId: artist.BackofficeUser.length > 0 ? artist.BackofficeUser[0].id : null
     }))
   } catch (error) {
     console.error('Erreur lors de la récupération des artistes:', error)
@@ -2106,6 +2112,93 @@ export async function getArtistById(id: number) {
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'artiste:', error)
     return null
+  }
+}
+
+/**
+ * Récupère tous les Items avec leurs relations pour l'admin
+ */
+export async function getAllItemsForAdmin() {
+  try {
+    const items = await prisma.item.findMany({
+      include: {
+        artist: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+            pseudo: true,
+            imageUrl: true,
+            BackofficeUser: {
+              select: {
+                id: true
+              }
+            }
+          }
+        },
+        physicalItem: {
+          select: {
+            id: true,
+            price: true,
+            initialQty: true,
+            stockQty: true,
+            height: true,
+            width: true,
+            weight: true,
+            creationYear: true,
+            status: true
+          }
+        },
+        nftItem: {
+          select: {
+            id: true,
+            price: true,
+            status: true,
+            nftResource: {
+              select: {
+                id: true,
+                name: true,
+                status: true,
+                tokenId: true
+              }
+            }
+          }
+        },
+        medium: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        style: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        technique: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      },
+      orderBy: {
+        id: 'desc'
+      }
+    })
+
+    return items.map(item => ({
+      ...item,
+      // Ajouter le backofficeUserId de l'artiste pour la cohérence
+      artist: item.artist ? {
+        ...item.artist,
+        backofficeUserId: item.artist.BackofficeUser.length > 0 ? item.artist.BackofficeUser[0].id : null
+      } : null
+    }))
+  } catch (error) {
+    console.error('Erreur lors de la récupération des items:', error)
+    return []
   }
 }
 

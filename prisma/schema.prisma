@@ -347,7 +347,6 @@ model BackofficeUser {
   role             BackofficeUserRoles?
   firstName        String?
   lastName         String?
-  isShopifyGranted Boolean              @default(false)
   createdAt        DateTime             @default(now()) @db.Timestamp(6)
   artistId         Int?
   artist           Artist?              @relation(fields: [artistId], references: [id]) // Nouvelle relation

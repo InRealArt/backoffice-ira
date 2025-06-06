@@ -26,6 +26,18 @@ export default function MarketplaceSubMenu({ isActive, isOpen, toggleSubmenu, on
       {isOpen && !isCollapsed && (
         <ul className="submenu">
           <SideMenuItem 
+            label="Créer une œuvre" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/admin-art/createArtwork', 'adminCreateArtwork')}
+            icon={<span>➕</span>}
+          />
+          <SideMenuItem 
+            label="Collection d'œuvres" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/admin-art/collection', 'adminArtCollection')}
+            icon={<span>🎨</span>}
+          />
+          <SideMenuItem 
             label="NFTs à minter" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/nftsToMint', 'nftsToMint')}
@@ -55,6 +67,18 @@ export default function MarketplaceSubMenu({ isActive, isOpen, toggleSubmenu, on
       
       {isOpen && isCollapsed && (
         <ul className="submenu visible">
+          <SideMenuItem 
+            label="Créer une œuvre" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/admin-art/createArtwork', 'adminCreateArtwork')}
+            icon={<span>➕</span>}
+          />
+          <SideMenuItem 
+            label="Collection d'œuvres" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/admin-art/collection', 'adminArtCollection')}
+            icon={<span>🎨</span>}
+          />
           <SideMenuItem 
             label="NFTs à minter" 
             isSubmenuItem={true}

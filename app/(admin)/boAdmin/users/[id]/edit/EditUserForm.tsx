@@ -23,7 +23,6 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Le nom est requis'),
   email: z.string().email('Format d\'email invalide'),
   role: z.string().nullable().optional(),
-  isShopifyGranted: z.boolean().default(false),
   collectionDescription: z.string().optional(),
   artistId: z.number().nullable().optional()
 }).refine((data) => {
@@ -86,15 +85,11 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       lastName: user.lastName || '',
       email: user.email || '',
       role: user.role || null,
-      // Pour les admins, on force toujours l'accès Shopify à true
-      isShopifyGranted: isAdmin ? true : user.isShopifyGranted || false,
       collectionDescription: '',
       artistId: user.artistId || null
     }
   })
 
-  // Surveiller la valeur de isShopifyGranted pour l'affichage conditionnel
-  const isShopifyGranted = isAdmin ? true : watch('isShopifyGranted')
   const currentDescription = watch('collectionDescription')
   const selectedRole = watch('role')
 
@@ -195,8 +190,6 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         lastName: data.lastName || '',
         email: data.email || '',
         role: data.role || null,
-        // Pour les admins, on force toujours l'accès Shopify à true
-        isShopifyGranted: isAdmin ? true : data.isShopifyGranted,
         walletAddress: user.walletAddress || '',
         artistId: data.artistId || null
       }
@@ -210,8 +203,8 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         throw new Error(userResult.message)
       }
 
-      // Si l'accès Shopify est accordé ET que l'utilisateur n'est PAS un administrateur, vérifier/gérer la collection
-      if (data.isShopifyGranted && !isAdmin) {
+      // Si l'utilisateur n'est PAS un administrateur, vérifier/gérer la collection
+      if (!isAdmin) {
         const collectionTitle = `${data.firstName} ${data.lastName}`.trim()
         
         if (!collectionId) {
@@ -388,21 +381,6 @@ export default function EditUserForm({ user }: EditUserFormProps) {
           </div>
         )}
 
-        {/* Afficher la checkbox uniquement si l'utilisateur n'est pas un administrateur */}
-        {!isAdmin && (
-          <div className={styles.formCheckboxGroup}>
-            <input
-              type="checkbox"
-              id="isShopifyGranted"
-              {...register('isShopifyGranted')}
-              className={styles.formCheckbox}
-            />
-            <label htmlFor="isShopifyGranted" className={styles.formCheckboxLabel}>
-              Accès Shopify accordé
-            </label>
-          </div>
-        )}
-
         {/* Informations administrateur si l'utilisateur est admin */}
         {isAdmin && (
           <div className={styles.adminInfoBox}>
@@ -411,59 +389,6 @@ export default function EditUserForm({ user }: EditUserFormProps) {
               Aucune collection personnelle n'est créée pour les administrateurs.
             </p>
           </div>
-        )}
-
-        {/* Section d'information sur la collection Shopify - conditionnelle selon isShopifyGranted ET non-admin */}
-        {isShopifyGranted && !isAdmin && (
-          <>
-            {isLoadingCollection ? (
-              <div className={styles.loadingContainer}>
-                <LoadingSpinner message="Chargement des informations de la collection..." />
-              </div>
-            ) : collectionId ? (
-              <div className={styles.collectionSection}>
-                <h2 className={styles.sectionTitle}>Collection Shopify associée</h2>
-                
-                <div className={styles.infoBox}>
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLabel}>ID:</span>
-                    <span className={styles.infoValue}>{collectionId}</span>
-                  </div>
-                  
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLabel}>Titre:</span>
-                    <span className={styles.infoValue}>{collectionTitle}</span>
-                  </div>
-                </div>
-                
-                <div className={styles.formGroup}>
-                  <label htmlFor="collectionDescription" className={styles.formLabel}>
-                    Description de la collection
-                  </label>
-                  <textarea
-                    id="collectionDescription"
-                    {...register('collectionDescription')}
-                    className={styles.formTextarea}
-                    rows={5}
-                  />
-                  <p className={styles.infoText}>
-                    Cette description est affichée sur la page de la collection Shopify.<br/>
-                    Vous pouvez utiliser du HTML pour mettre en forme le texte en vous aidant de l'éditeur HTML gratuit <a href="https://onlinehtmleditor.dev/" target="_blank" rel="noopener noreferrer">https://onlinehtmleditor.dev/</a>.
-                  </p>
-                  {hasDescriptionChanged && (
-                    <p className={styles.changeIndicator}>
-                      La description a été modifiée. Enregistrez pour appliquer les changements.
-                    </p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className={styles.noCollectionBox}>
-                Aucune collection Shopify n'est associée à cet utilisateur.
-                Une collection sera créée automatiquement lors de l'enregistrement.
-              </div>
-            )}
-          </>
         )}
 
         <div className={styles.formActions}>
