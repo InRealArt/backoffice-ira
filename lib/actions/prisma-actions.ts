@@ -917,7 +917,6 @@ export async function getItemById(itemId: number) {
         idUser: true,
         realViewCount: true,
         fakeViewCount: true,
-        itemCategoryId: true,
         artistId: true,
         // Nouveaux champs pour les caractéristiques artistiques
         mediumId: true,

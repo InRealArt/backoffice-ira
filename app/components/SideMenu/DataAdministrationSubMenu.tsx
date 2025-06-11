@@ -26,11 +26,6 @@ export default function DataAdministrationSubMenu({ isActive, isOpen, toggleSubm
       {isOpen && !isCollapsed && (
         <ul className="submenu">
           <SideMenuItem 
-            label="Categories Oeuvres" 
-            isSubmenuItem={true}
-            onClick={() => onNavigate('/dataAdministration/itemCategories', 'itemCategories')}
-          />
-          <SideMenuItem 
             label="Artistes" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/dataAdministration/artists', 'artists')}
