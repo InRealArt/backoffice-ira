@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { useRouter } from 'next/navigation'
@@ -9,9 +9,9 @@ import { getAddressById, updateAddress } from '@/lib/actions/address-actions'
 import AddressForm from '../../components/AddressForm'
 
 interface EditAddressPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 interface Address {
@@ -35,6 +35,7 @@ export default function EditAddressPage({ params }: EditAddressPageProps) {
   const [address, setAddress] = useState<Address | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const resolvedParams = use(params)
   
   useEffect(() => {
     if (!user?.email) {
@@ -54,7 +55,7 @@ export default function EditAddressPage({ params }: EditAddressPageProps) {
           return
         }
         
-        const addressId = parseInt(params.id)
+        const addressId = parseInt(resolvedParams.id)
         const addressResult = await getAddressById(addressId)
         
         if (!addressResult.success || !addressResult.data) {
@@ -79,7 +80,7 @@ export default function EditAddressPage({ params }: EditAddressPageProps) {
     }
 
     loadData()
-  }, [user?.email, params.id])
+  }, [user?.email, resolvedParams.id])
 
   const handleSubmit = async (formData: {
     name: string
