@@ -217,6 +217,7 @@ model Address {
   orders              Order[]
   thirdPartyAddresses ThirdPartyAddress[]
   physicalItems       PhysicalItem[]      @relation("PhysicalItemShipping")
+  Country       Country?       @relation(fields: [countryCode], references: [code])
 
   @@map("Address")
   @@schema("public")
@@ -245,11 +246,13 @@ model Artist {
   backgroundImage String?
   slug            String?          @unique
   featuredArtwork String?
+  countryCode     String?
   collections     NftCollection[]
   Profile         Profile[]
   BackofficeUser  BackofficeUser[]
   LandingArtist   LandingArtist[]
   PresaleArtworks PresaleArtwork[]
+  Country         Country?         @relation(fields: [countryCode], references: [code])
   items           Item[]
 
   @@schema("public")
@@ -453,6 +456,8 @@ model Item {
   techniqueId        Int?
   technique          ArtworkTechnique? @relation(fields: [techniqueId], references: [id])
 
+  createdAt          DateTime          @default(now()) @db.Date
+
   // Relations
   nftItem        NftItem?
   physicalItem   PhysicalItem?
@@ -493,9 +498,11 @@ model PhysicalItem {
   height            Decimal?           @db.Decimal(10, 2)
   width             Decimal?           @db.Decimal(10, 2)
   weight            Decimal?           @db.Decimal(10, 2)
-  unitHeight        String?
-  unitWidth         String?
-  unitWeight        String?
+  thickness         Decimal?           @db.Decimal(10, 2)
+  unitHeight        String?            @default("cm")
+  unitWidth         String?            @default("cm")
+  unitWeight        String?            @default("kg")
+  unitThickness     String?            @default("cm")
   creationYear      Int?
   shippingAddressId Int?
   shippingAddress   Address?           @relation("PhysicalItemShipping", fields: [shippingAddressId], references: [id])
@@ -889,5 +896,13 @@ model ArtworkTechnique {
   name  String
   items Item[]
 
+  @@schema("public")
+}
+
+model Country {
+  code      String    @id // Code ISO (ex: FR, US, GB)
+  name      String // Nom du pays (ex: France, United States, United Kingdom)
+  addresses Address[]
+  artists   Artist[]
   @@schema("public")
 }

@@ -8,12 +8,32 @@ import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { getAddressById, updateAddress } from '@/lib/actions/address-actions'
 import AddressForm from '../../components/AddressForm'
 
-export default function EditAddressPage(props) {
-  const { params } = props
+interface EditAddressPageProps {
+  params: {
+    id: string
+  }
+}
+
+interface Address {
+  id: number
+  customerId: string | null
+  firstName: string
+  lastName: string
+  streetAddress: string
+  postalCode: string
+  city: string
+  country: string
+  countryCode: string
+  vatNumber: string | null
+  backofficeUserId: number | null
+  name: string
+}
+
+export default function EditAddressPage({ params }: EditAddressPageProps) {
   const { user } = useDynamicContext()
-  const [isLoading, setIsLoading] = useState(true)
-  const [address, setAddress] = useState(null)
-  const [error, setError] = useState(null)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [address, setAddress] = useState<Address | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   
   useEffect(() => {
@@ -23,10 +43,10 @@ export default function EditAddressPage(props) {
       return
     }
 
-    const loadData = async () => {
+    const loadData = async (): Promise<void> => {
       try {
         const email = user.email
-        const userDBResult = await getBackofficeUserByEmail(email)
+        const userDBResult = await getBackofficeUserByEmail(email as string)
         
         if (!userDBResult) {
           setError('Votre profil utilisateur n\'a pas été trouvé')
@@ -61,7 +81,17 @@ export default function EditAddressPage(props) {
     loadData()
   }, [user?.email, params.id])
 
-  const handleSubmit = async (formData) => {
+  const handleSubmit = async (formData: {
+    name: string
+    firstName: string
+    lastName: string
+    streetAddress: string
+    postalCode: string
+    city: string
+    country: string
+    countryCode: string
+    vatNumber?: string
+  }): Promise<void> => {
     if (!address) {
       setError('Impossible de modifier l\'adresse')
       return
@@ -117,4 +147,4 @@ export default function EditAddressPage(props) {
       </div>
     </div>
   )
-}
+} 

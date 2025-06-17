@@ -14,6 +14,26 @@
   line-height: 1;
 }
 
+/* Styles pour les champs désactivés - spécificité élevée */
+.input-disabled,
+input.input-disabled,
+select.input-disabled {
+  background-color: #f9fafb !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  opacity: 0.8 !important;
+  border-color: #e5e7eb !important;
+}
+
+.input-disabled:focus,
+input.input-disabled:focus,
+select.input-disabled:focus {
+  background-color: #f9fafb !important;
+  color: #9ca3af !important;
+  box-shadow: none !important;
+  border-color: #e5e7eb !important;
+}
+
 /* Animation de surbrillance pour les champs avec erreur */
 @keyframes highlight-pulse {
   0% {

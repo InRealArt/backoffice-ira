@@ -1,9 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Address } from '@prisma/client'
 import { getCountries, Country } from '@/lib/utils'
+import InputField from '@/app/components/Forms/InputField'
+import styles from '@/app/components/Forms/forms.module.css'
+import SimpleAutocomplete, { AddressComponents } from './SimpleAutocomplete'
+import MapWithMarker, { MapLocation } from './MapWithMarker'
+import GoogleMapsLoader from './GoogleMapsLoader'
+import { useGeocoding } from '@/hooks/useGeocoding'
 
 
 interface AddressFormProps {
@@ -27,6 +33,8 @@ export default function AddressForm({ address, defaultFirstName = '', defaultLas
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const countries = getCountries()
+  const { geocodeAddress } = useGeocoding()
+  const [mapLocation, setMapLocation] = useState<MapLocation | undefined>(undefined)
   
   // Trouver le nom du pays à partir du code pays
   const findCountryName = (code: string) => {
@@ -47,6 +55,30 @@ export default function AddressForm({ address, defaultFirstName = '', defaultLas
     countryCode: defaultCountryCode,
     vatNumber: address?.vatNumber || ''
   })
+
+  // Géocoder automatiquement l'adresse en mode édition
+  useEffect(() => {
+    const geocodeExistingAddress = async () => {
+      if (address && address.streetAddress && address.city) {
+        const fullAddress = `${address.streetAddress}, ${address.postalCode} ${address.city}, ${address.country}`
+        
+        try {
+          const geocodeResult = await geocodeAddress(fullAddress)
+          if (geocodeResult) {
+            setMapLocation({
+              lat: geocodeResult.lat,
+              lng: geocodeResult.lng,
+              address: geocodeResult.formattedAddress
+            })
+          }
+        } catch (error) {
+          console.log('Erreur de géocodage de l\'adresse existante:', error)
+        }
+      }
+    }
+
+    geocodeExistingAddress()
+  }, [address, geocodeAddress])
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target as HTMLInputElement
@@ -67,6 +99,43 @@ export default function AddressForm({ address, defaultFirstName = '', defaultLas
       })
     }
   }
+
+  const handlePlaceSelect = async (placeDetails: AddressComponents) => {
+    // Mettre à jour les données du formulaire
+    const updatedFormData = {
+      ...formData,
+      streetAddress: placeDetails.streetAddress,
+      postalCode: placeDetails.postalCode,
+      city: placeDetails.city,
+      country: placeDetails.country,
+      countryCode: placeDetails.countryCode
+    }
+    
+    setFormData(updatedFormData)
+
+    // Géocoder l'adresse pour obtenir les coordonnées et mettre à jour la carte
+    const fullAddress = `${placeDetails.streetAddress}, ${placeDetails.postalCode} ${placeDetails.city}, ${placeDetails.country}`
+    
+    try {
+      const geocodeResult = await geocodeAddress(fullAddress)
+      if (geocodeResult) {
+        setMapLocation({
+          lat: geocodeResult.lat,
+          lng: geocodeResult.lng,
+          address: geocodeResult.formattedAddress
+        })
+      }
+    } catch (error) {
+      console.log('Erreur de géocodage, mais ce n\'est pas grave:', error)
+    }
+  }
+
+  const handleAddressChange = (value: string) => {
+    setFormData({
+      ...formData,
+      streetAddress: value
+    })
+  }
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -85,86 +154,68 @@ export default function AddressForm({ address, defaultFirstName = '', defaultLas
   }
   
   return (
-    <form onSubmit={handleSubmit} className="form-container">
-      <div className="form-group">
-        <label htmlFor="name" className="form-label">Nom pour l'adresse *</label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="Ex: Adresse de facturation, Adresse du bureau, etc."
-          className="form-input"
-          required
-        />
-      </div>
+    <GoogleMapsLoader>
+      <form onSubmit={handleSubmit} className="form-container">
+      <InputField
+        id="name"
+        name="name"
+        label="Nom pour l'adresse"
+        value={formData.name}
+        onChange={handleChange}
+        placeholder="Ex: Adresse de facturation, Adresse du bureau, etc."
+        required
+      />
       
-      <div className="form-group">
-        <label htmlFor="firstName" className="form-label">Prénom *</label>
-        <input
-          type="text"
-          id="firstName"
-          name="firstName"
-          value={formData.firstName}
-          onChange={handleChange}
-          className="form-input"
-          required
-        />
-      </div>
+      <InputField
+        id="firstName"
+        name="firstName"
+        label="Prénom"
+        value={formData.firstName}
+        onChange={handleChange}
+        required
+      />
       
-      <div className="form-group">
-        <label htmlFor="lastName" className="form-label">Nom *</label>
-        <input
-          type="text"
-          id="lastName"
-          name="lastName"
-          value={formData.lastName}
-          onChange={handleChange}
-          className="form-input"
-          required
-        />
-      </div>
+      <InputField
+        id="lastName"
+        name="lastName"
+        label="Nom"
+        value={formData.lastName}
+        onChange={handleChange}
+        required
+      />
       
       <div className="form-group">
         <label htmlFor="streetAddress" className="form-label">Adresse *</label>
-        <input
-          type="text"
-          id="streetAddress"
-          name="streetAddress"
+        <SimpleAutocomplete
           value={formData.streetAddress}
-          onChange={handleChange}
+          onAddressChange={(address) => setFormData({ ...formData, streetAddress: address })}
+          onPlaceSelect={handlePlaceSelect}
+          placeholder="Commencez à taper votre adresse..."
           className="form-input"
           required
         />
       </div>
       
       <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="postalCode" className="form-label">Code postal *</label>
-          <input
-            type="text"
-            id="postalCode"
-            name="postalCode"
-            value={formData.postalCode}
-            onChange={handleChange}
-            className="form-input"
-            required
-          />
-        </div>
+        <InputField
+          id="postalCode"
+          name="postalCode"
+          label="Code postal"
+          value={formData.postalCode}
+          onChange={handleChange}
+          disabled={true}
+          required
+        />
         
-        <div className="form-group">
-          <label htmlFor="city" className="form-label">Ville *</label>
-          <input
-            type="text"
-            id="city"
-            name="city"
-            value={formData.city}
-            onChange={handleChange}
-            className="form-input"
-            required
-          />
-        </div>
+        <InputField
+          id="city"
+          name="city"
+          label="Ville"
+          value={formData.city}
+          onChange={handleChange}
+          disabled={true}
+          required
+        />
       </div>
       
       <div className="form-group">
@@ -174,7 +225,8 @@ export default function AddressForm({ address, defaultFirstName = '', defaultLas
           name="countryCode"
           value={formData.countryCode}
           onChange={handleChange}
-          className="form-select"
+          className={`form-select ${styles['input-disabled']}`}
+          disabled={true}
           required
         >
           {countries.map(country => (
@@ -185,18 +237,13 @@ export default function AddressForm({ address, defaultFirstName = '', defaultLas
         </select>
       </div>
       
-      <div className="form-group">
-        <label htmlFor="vatNumber" className="form-label">Numéro de TVA (pour professionnels)</label>
-        <input
-          type="text"
-          id="vatNumber"
-          name="vatNumber"
-          value={formData.vatNumber}
-          onChange={handleChange}
-          className="form-input"
-        />
-      </div>
-      
+      <InputField
+        id="vatNumber"
+        name="vatNumber"
+        label="Numéro de TVA (pour professionnels)"
+        value={formData.vatNumber}
+        onChange={handleChange}
+      />
       
       <div className="form-actions">
         <button
@@ -216,5 +263,40 @@ export default function AddressForm({ address, defaultFirstName = '', defaultLas
         </button>
       </div>
     </form>
+    
+    <div className="mt-8">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Localisation</h3>
+        {formData.streetAddress && formData.city && !mapLocation && (
+          <button
+            type="button"
+            onClick={async () => {
+              const fullAddress = `${formData.streetAddress}, ${formData.postalCode} ${formData.city}, ${formData.country}`
+              try {
+                const geocodeResult = await geocodeAddress(fullAddress)
+                if (geocodeResult) {
+                  setMapLocation({
+                    lat: geocodeResult.lat,
+                    lng: geocodeResult.lng,
+                    address: geocodeResult.formattedAddress
+                  })
+                }
+              } catch (error) {
+                console.error('Erreur de géocodage:', error)
+              }
+            }}
+            className="btn btn-secondary btn-small"
+          >
+            📍 Localiser sur la carte
+          </button>
+        )}
+      </div>
+      <MapWithMarker
+        location={mapLocation}
+        center={{ lat: 48.8566, lng: 2.3522 }}
+        height="350px"
+      />
+    </div>
+    </GoogleMapsLoader>
   )
 } 

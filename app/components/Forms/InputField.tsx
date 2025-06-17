@@ -126,7 +126,7 @@ export function InputField({
         disabled={disabled}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className={`form-input ${displayError ? styles['input-error'] : ''} ${className}`}
+        className={`form-input ${displayError ? styles['input-error'] : ''} ${disabled ? styles['input-disabled'] : ''} ${className}`}
         {...(register ? register(name) : {})}
       />
       {displayError && (
