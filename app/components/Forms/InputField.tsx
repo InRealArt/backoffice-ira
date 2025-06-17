@@ -113,7 +113,6 @@ export function InputField({
     <div className="form-group" ref={inputRef}>
       <label htmlFor={id} className="form-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
         {label}
-        {required && <span className="text-red-500">*</span>}
       </label>
       <input
         id={id}
