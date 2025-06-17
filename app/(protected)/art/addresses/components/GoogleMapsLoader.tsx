@@ -12,20 +12,69 @@ export default function GoogleMapsLoader({ children, onLoad }: GoogleMapsLoaderP
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
 
+  const checkGoogleMapsReady = () => {
+    // Vérifier que Google Maps et toutes les bibliothèques sont disponibles
+    return (
+      typeof google !== 'undefined' &&
+      google.maps &&
+      google.maps.places &&
+      google.maps.places.Autocomplete &&
+      google.maps.marker &&
+      google.maps.marker.AdvancedMarkerElement
+    )
+  }
+
   const handleLoad = () => {
-    // Vérifier que Google Maps est bien disponible
-    if (typeof google !== 'undefined' && google.maps) {
-      setIsLoaded(true)
-      onLoad?.()
-    } else {
-      setHasError(true)
-    }
+    // Utiliser un petit délai pour s'assurer que toutes les bibliothèques sont initialisées
+    setTimeout(() => {
+      if (checkGoogleMapsReady()) {
+        setIsLoaded(true)
+        onLoad?.()
+      } else {
+        // Réessayer après un court délai
+        const retryCheck = () => {
+          if (checkGoogleMapsReady()) {
+            setIsLoaded(true)
+            onLoad?.()
+          } else {
+            setHasError(true)
+          }
+        }
+        setTimeout(retryCheck, 1000)
+      }
+    }, 100)
   }
 
   const handleError = () => {
     console.error('Erreur lors du chargement de Google Maps')
     setHasError(true)
   }
+
+  // Vérification périodique en cas d'échec de l'événement onLoad
+  useEffect(() => {
+    if (!isLoaded && !hasError) {
+      const checkInterval = setInterval(() => {
+        if (checkGoogleMapsReady()) {
+          setIsLoaded(true)
+          onLoad?.()
+          clearInterval(checkInterval)
+        }
+      }, 1000)
+
+      // Nettoyage après 10 secondes
+      const timeout = setTimeout(() => {
+        clearInterval(checkInterval)
+        if (!isLoaded) {
+          setHasError(true)
+        }
+      }, 10000)
+
+      return () => {
+        clearInterval(checkInterval)
+        clearTimeout(timeout)
+      }
+    }
+  }, [isLoaded, hasError, onLoad])
 
   if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
     return (
