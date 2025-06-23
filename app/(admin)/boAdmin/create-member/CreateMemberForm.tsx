@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { memberSchema, MemberFormData } from './schema'
 import { createMember, checkUserExists, getAllArtists, getArtistById, getAllGalleries } from '@/lib/actions/prisma-actions'
 import { useToast } from '@/app/components/Toast/ToastContext'
-import { createShopifyCollection } from '@/lib/actions/art-actions'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { useRouter } from 'next/navigation'
@@ -120,21 +119,7 @@ export default function CreateMemberForm() {
             setIsSubmitting(false)
             return
           }
-
-          const collectionName = `${artist.name} ${artist.surname}`
-          const collectionResult = await createShopifyCollection(collectionName)
           
-          if (collectionResult.success) {
-            success(`Membre créé et collection "${collectionName}" créée avec succès!`, {
-              duration: 5000,
-              position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
-            })
-          } else {
-            success(`Membre créé avec succès, mais la création de la collection a échoué: ${collectionResult.message}`, {
-              duration: 5000,
-              position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
-            })
-          }
         } else {
           success(result.message, {
             duration: 5000,

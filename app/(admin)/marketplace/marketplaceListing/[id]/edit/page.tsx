@@ -38,7 +38,6 @@ import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { useMarketplaceListing } from '@/app/(admin)/marketplace/hooks/useMarketplaceListing'
 import { NetworkType } from '@prisma/client'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
-import { getShopifyProductById } from '@/lib/actions/art-actions'
 import { getTokenOwner } from '@/lib/blockchain/utils'
 import { marketplaceAbi } from '@/lib/contracts/MarketplaceAbi'
 
@@ -186,21 +185,6 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
         if (isMounted) {
           if (itemResult && itemResult.id) {
             setItem(itemResult)
-            //console.log('Item récupéré:', itemResult)
-            // Récupérer les données du produit Shopify d'abord
-            if (itemResult.id) {
-              try {
-                const productResult = await getShopifyProductById(itemResult.id)
-                if (productResult && productResult.success) {
-                  //console.log('Produit Shopify récupéré:', productResult.product)
-                  setProduct(productResult.product)
-                } else {
-                  console.error('Erreur lors de la récupération du produit Shopify:', productResult || 'Erreur inconnue')
-                }
-              } catch (shopifyError) {
-                console.error('Exception lors de la récupération du produit Shopify:', shopifyError)
-              }
-            }
             
             // Ensuite récupérer la ressource NFT
             try {

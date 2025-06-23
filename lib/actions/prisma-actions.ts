@@ -27,24 +27,12 @@ type CheckUserExistsResult = {
   message: string;
 }
 
-type CheckListingRequestParams = {
-  idProductShopify: string | number | bigint
-  idUser: number
-}
-
-interface UpdateStatusParams {
-  idProductShopify: number
-  idUser: number
-  status: string
-}
-
 interface StatusUpdateResult {
   success: boolean
   message?: string
 }
 
 interface CheckStatusParams {
-  idProductShopify: number
   idUser: number
 }
 
@@ -242,12 +230,12 @@ export async function getBackofficeUsers(): Promise<BackofficeUser[]> {
 
     return users
   } catch (error) {
-    console.error('Erreur lors de la récupération des utilisateurs Shopify:', error)
+    console.error('Erreur lors de la récupération des utilisateurs du back-office:', error)
     return []
   }
 }
 
-type UpdateShopifyUserResult = {
+type UpdateBackofficeUserResult = {
   success: boolean
   message: string
 }
@@ -261,7 +249,7 @@ export async function getBackofficeUserById(id: string) {
 
     return user
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'utilisateur Shopify:', error)
+    console.error('Erreur lors de la récupération de l\'utilisateur du back-office:', error)
     return null
   }
 }
@@ -269,7 +257,7 @@ export async function getBackofficeUserById(id: string) {
 // Ajouter cette fonction pour mettre à jour un utilisateur
 export async function updateBackofficeUser(
   data: any
-): Promise<UpdateShopifyUserResult> {
+): Promise<UpdateBackofficeUserResult> {
   try {
     // Vérifier si l'utilisateur existe
     const existingUser = await prisma.backofficeUser.findUnique({
@@ -630,10 +618,7 @@ export async function updateItemStatus(
 /**
  * Vérifie le statut d'un item en base de données
  */
-export async function checkItemStatus({
-  idProductShopify,
-  idUser
-}: CheckStatusParams): Promise<StatusCheckResult> {
+export async function checkItemStatus({idUser}: CheckStatusParams): Promise<StatusCheckResult> {
   try {
     const item = await prisma.item.findFirst({
       where: {

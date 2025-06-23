@@ -121,7 +121,6 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>ID Shopify</th>
                   <th className="hidden-mobile">Créateur du produit</th>
                   <th>Statut</th>
                   <th className="hidden-mobile">NFT associé</th>
@@ -155,7 +154,6 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                           </span>
                         </div>
                       </td>
-                      <td>{product.id}</td>
                       <td className="hidden-mobile">
                         {product.user ? 
                           `${product.user.firstName || ''} ${product.user.lastName || ''}`.trim() || `ID: ${product.idUser}` : 

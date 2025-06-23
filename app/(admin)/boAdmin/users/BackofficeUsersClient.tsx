@@ -163,7 +163,7 @@ export default function BackofficeUsersClient({ users }: BackofficeUsersClientPr
           loadingRowId={loadingUserId}
           emptyState={
             <EmptyState 
-              message="Aucun utilisateur Shopify trouvé"
+              message="Aucun utilisateur Back-office trouvé"
               action={
                 <ActionButton
                   label="Créer un utilisateur"

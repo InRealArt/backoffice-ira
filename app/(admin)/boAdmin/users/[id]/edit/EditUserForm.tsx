@@ -7,11 +7,6 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { updateBackofficeUser, getAllArtists } from '@/lib/actions/prisma-actions'
-import { 
-  getShopifyCollectionByTitle,
-  updateShopifyCollection,
-  createShopifyCollection
-} from '@/lib/actions/art-actions'
 import { BackofficeUser, Artist } from '@prisma/client'
 import styles from './EditUserForm.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
@@ -136,25 +131,6 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       }
 
       try {
-        const collectionTitle = `${user.firstName} ${user.lastName}`.trim()
-        const result = await getShopifyCollectionByTitle(collectionTitle)
-        
-        if (result.success && result.collection && isMounted) {
-          setCollectionId(result.collection.id)
-          setCollectionTitle(result.collection.title)
-          
-          // Stocker la description dans le state component pour l'affichage
-          const description = result.collection.body_html || ''
-          setCollectionDescription(description)
-          setInitialDescription(description)
-          
-          // Utiliser setValue pour définir la valeur du formulaire
-          setValue('collectionDescription', description)
-          
-          console.log('Collection trouvée:', result.collection)
-        } else if (isMounted) {
-          console.log('Aucune collection trouvée pour:', collectionTitle)
-        }
       } catch (error: any) {
         console.error('Erreur lors de la récupération de la collection:', error)
       } finally {
@@ -203,51 +179,6 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         throw new Error(userResult.message)
       }
 
-      // Si l'utilisateur n'est PAS un administrateur, vérifier/gérer la collection
-      if (!isAdmin) {
-        const collectionTitle = `${data.firstName} ${data.lastName}`.trim()
-        
-        if (!collectionId) {
-          // Aucune collection existante - créer une nouvelle collection
-          console.log(`Création d'une nouvelle collection pour: ${collectionTitle}`)
-          
-          try {
-            const createResult = await createShopifyCollection(collectionTitle)
-            
-            if (!createResult.success) {
-              console.error('Erreur lors de la création de la collection:', createResult.message)
-              error(`L'utilisateur a été mis à jour mais la création de collection a échoué: ${createResult.message}`)
-            } else {
-              console.log('Collection créée avec succès:', createResult.collection)
-              success('Utilisateur mis à jour et nouvelle collection créée')
-            }
-          } catch (createError: any) {
-            console.error('Erreur lors de la création de la collection:', createError)
-            error(`L'utilisateur a été mis à jour mais la création de collection a échoué`)
-          }
-        } else if (hasDescriptionChanged) {
-          // Collection existante avec description modifiée - mettre à jour
-          console.log('Mise à jour de la description de collection:', data.collectionDescription)
-          
-          const updateResult = await updateShopifyCollection(collectionId, {
-            description: data.collectionDescription || ''
-          })
-          
-          if (!updateResult.success) {
-            console.error('Erreur lors de la mise à jour de la collection:', updateResult.message)
-            error('Erreur lors de la mise à jour de la collection')
-          } else {
-            success('Utilisateur et collection mis à jour avec succès')
-          }
-        } else {
-          // Collection existante sans modification - ne rien faire
-          success('Utilisateur mis à jour avec succès')
-        }
-      } else {
-        // Accès Shopify non accordé ou utilisateur admin
-        success('Utilisateur mis à jour avec succès')
-      }
-      
       // Rediriger après 1 seconde
       setTimeout(() => {
         router.push('/boAdmin/users')
@@ -378,16 +309,6 @@ export default function EditUserForm({ user }: EditUserFormProps) {
                 )}
               </>
             )}
-          </div>
-        )}
-
-        {/* Informations administrateur si l'utilisateur est admin */}
-        {isAdmin && (
-          <div className={styles.adminInfoBox}>
-            <p className={styles.adminInfoText}>
-              <strong>Note:</strong> En tant qu'administrateur, cet utilisateur a automatiquement accès à Shopify.
-              Aucune collection personnelle n'est créée pour les administrateurs.
-            </p>
           </div>
         )}
 

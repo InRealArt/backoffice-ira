@@ -88,6 +88,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
         ...data,
         artworkStyle: data.artworkStyle || null,
         backgroundImage: data.backgroundImage || null,
+        countryCode: artist.countryCode, // Préserver le countryCode existant
       }
       
       const result = await updateArtist(artist.id, formattedData)

@@ -12,7 +12,7 @@ export async function POST(request: Request) {
             }, { status: 400 })
         }
 
-        // Vérifier si l'email existe dans la table shopifyUser
+        // Vérifier si l'email existe dans la table backofficeUser
         const user = await prisma.backofficeUser.findUnique({
             where: { email }
         })

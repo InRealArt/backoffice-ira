@@ -55,39 +55,6 @@ export default function AuthObserver() {
   }, [user]);
 
   useEffect(() => {
-    const saveShopifyUserToPrisma = async () => {
-      if (isLoggedIn && user && primaryWallet && isAuthorized) {
-        try {
-          const response = await fetch('/api/auth/saveShopifyUser', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: user.email || null,
-              walletAddress: primaryWallet.address,
-              userMetadata: user.metadata
-            }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Erreur lors de l\'enregistrement de l\'utilisateur:', errorData);
-          } else {
-            // Si l'utilisateur vient de se connecter, rediriger vers le dashboard
-            if (!previousLoginState && isLoggedIn && isAuthorized) {
-              router.push('/dashboard');
-            }
-          }
-        } catch (err) {
-          console.error('Exception lors de l\'enregistrement:', err);
-        }
-      }
-    };
-
-    // if (isAuthorized) {
-    //   saveShopifyUserToPrisma();
-    // }
     
     // Rediriger vers la page d'accueil lorsque l'utilisateur se déconnecte
     if (previousLoginState && !isLoggedIn) {

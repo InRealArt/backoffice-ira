@@ -12,8 +12,6 @@ import { useIsAdmin } from '@/app/hooks/useIsAdmin';
 
 export default function Dashboard() {
   const { user, primaryWallet } = useDynamicContext();
-  const [shopifyGranted, setShopifyGranted] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdminNavigating, setIsAdminNavigating] = useState(false);
   const router = useRouter();
   const [pendingItemsCount, setPendingItemsCount] = useState(0)

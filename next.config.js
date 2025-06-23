@@ -8,10 +8,6 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'cdn.shopify.com',
-      },
-      {
-        protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
       },
       {
@@ -49,7 +45,7 @@ const nextConfig = {
       }
     ],
     // Garder domains pour la compatibilité avec d'anciens composants
-    domains: ['cdn.shopify.com', 'firebasestorage.googleapis.com', 'crypto-economy.com', 'assets.staticimg.com'],
+    domains: ['firebasestorage.googleapis.com', 'crypto-economy.com', 'assets.staticimg.com'],
   },
   // Configuration pour les styles et PostCSS
   sassOptions: {

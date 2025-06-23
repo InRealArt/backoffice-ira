@@ -45,7 +45,7 @@ export function useSideMenuLogic() {
 
   }, [])
 
-  // Fonction pour basculer l'état du sous-menu Shopify
+  // Fonction pour basculer l'état du sous-menu
   const toggleBackofficeAdminSubmenu = useCallback(() => {
     setShowBackofficeAdminSubmenu(prev => {
       const newState = !prev
