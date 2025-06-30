@@ -207,7 +207,7 @@ export function ListElementComponent({ element, onUpdate, onDelete }: ElementPro
           <ul className="space-y-2">
             {listElement.items.map((item, index) => (
               <li key={index} className="flex items-center gap-2">
-                <span className="text-gray-500">•</span>
+                <span className="text-gray-500"></span>
                 <input
                   type="text"
                   value={item}

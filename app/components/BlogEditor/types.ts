@@ -15,6 +15,9 @@ export interface TextSegment {
     isLink: boolean
     linkUrl?: string
     linkText?: string
+    isBold?: boolean
+    isItalic?: boolean
+    isUnderline?: boolean
 }
 
 export interface RichContent {

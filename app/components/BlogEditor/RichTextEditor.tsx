@@ -54,6 +54,26 @@ export default function RichTextEditor({
     }
   }
 
+  // Vérifier si le texte sélectionné a un formatage spécifique
+  const hasFormat = (format: 'bold' | 'italic' | 'underline'): boolean => {
+    if (!selectedText) return false
+    
+    for (const segment of currentRichContent.segments) {
+      const segmentText = segment.isLink ? segment.linkText || segment.text : segment.text
+      if (segmentText === selectedText) {
+        switch (format) {
+          case 'bold':
+            return segment.isBold || false
+          case 'italic':
+            return segment.isItalic || false
+          case 'underline':
+            return segment.isUnderline || false
+        }
+      }
+    }
+    return false
+  }
+
   // Ouvrir le modal de lien
   const openLinkModal = () => {
     handleTextSelection()
@@ -62,6 +82,94 @@ export default function RichTextEditor({
     } else {
       alert('Veuillez sélectionner du texte pour créer un lien')
     }
+  }
+
+  // Appliquer un format (gras, italique, souligné)
+  const applyFormat = (format: 'bold' | 'italic' | 'underline') => {
+    let start = selectionStart
+    let end = selectionEnd
+    // Si le textarea est focus, on lit la sélection courante
+    if (textareaRef.current) {
+      start = textareaRef.current.selectionStart
+      end = textareaRef.current.selectionEnd
+    }
+    const plainText = getPlainText(currentRichContent)
+    const beforeText = plainText.substring(0, start)
+    const selected = plainText.substring(start, end)
+    const afterText = plainText.substring(end)
+    if (!selected) return
+
+    // Vérifier si le texte sélectionné a déjà ce formatage
+    let hasExistingFormat = false
+    let existingSegment: TextSegment | null = null
+    
+    // Chercher si le texte sélectionné correspond exactement à un segment existant
+    for (const segment of currentRichContent.segments) {
+      const segmentText = segment.isLink ? segment.linkText || segment.text : segment.text
+      if (segmentText === selected) {
+        existingSegment = segment
+        switch (format) {
+          case 'bold':
+            hasExistingFormat = segment.isBold || false
+            break
+          case 'italic':
+            hasExistingFormat = segment.isItalic || false
+            break
+          case 'underline':
+            hasExistingFormat = segment.isUnderline || false
+            break
+        }
+        break
+      }
+    }
+
+    const newSegments: TextSegment[] = []
+    
+    if (beforeText) {
+      newSegments.push({
+        id: uuidv4(),
+        text: beforeText,
+        isLink: false
+      })
+    }
+    
+    // Si on a un segment existant, on préserve ses autres formatages
+    if (existingSegment) {
+      newSegments.push({
+        ...existingSegment,
+        id: uuidv4(),
+        text: selected,
+        isLink: existingSegment.isLink,
+        linkUrl: existingSegment.linkUrl,
+        linkText: existingSegment.linkText,
+        isBold: format === 'bold' ? !hasExistingFormat : existingSegment.isBold,
+        isItalic: format === 'italic' ? !hasExistingFormat : existingSegment.isItalic,
+        isUnderline: format === 'underline' ? !hasExistingFormat : existingSegment.isUnderline
+      })
+    } else {
+      // Nouveau segment avec le formatage demandé
+      newSegments.push({
+        id: uuidv4(),
+        text: selected,
+        isLink: false,
+        isBold: format === 'bold',
+        isItalic: format === 'italic',
+        isUnderline: format === 'underline'
+      })
+    }
+    
+    if (afterText) {
+      newSegments.push({
+        id: uuidv4(),
+        text: afterText,
+        isLink: false
+      })
+    }
+    
+    const newRichContent: RichContent = { segments: newSegments }
+    const newPlainText = getPlainText(newRichContent)
+    onChange(newPlainText, newRichContent)
+    setSelectedText('')
   }
 
   // Insérer un lien
@@ -145,6 +253,45 @@ export default function RichTextEditor({
       <div className={styles.toolbar}>
         <button
           type="button"
+          onClick={e => {
+            e.preventDefault()
+            e.stopPropagation()
+            applyFormat('bold')
+          }}
+          className={`${styles.toolbarButton} ${hasFormat('bold') ? styles.active : ''}`}
+          title="Gras"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M6 4h8a4 4 0 0 1 0 8H6zm0 8h9a4 4 0 0 1 0 8H6z"/></svg>
+          Gras
+        </button>
+        <button
+          type="button"
+          onClick={e => {
+            e.preventDefault()
+            e.stopPropagation()
+            applyFormat('italic')
+          }}
+          className={`${styles.toolbarButton} ${hasFormat('italic') ? styles.active : ''}`}
+          title="Italique"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>
+          Italique
+        </button>
+        <button
+          type="button"
+          onClick={e => {
+            e.preventDefault()
+            e.stopPropagation()
+            applyFormat('underline')
+          }}
+          className={`${styles.toolbarButton} ${hasFormat('underline') ? styles.active : ''}`}
+          title="Souligné"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>
+          Souligné
+        </button>
+        <button
+          type="button"
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
@@ -175,6 +322,26 @@ export default function RichTextEditor({
           }}
           rows={rows}
         />
+      </div>
+
+      {/* Aperçu du texte formaté */}
+      <div style={{margin: '1rem 0'}}>
+        {currentRichContent.segments.map(segment => {
+          if (segment.isLink) {
+            return (
+              <a key={segment.id} href={segment.linkUrl} className={styles.linkText} target="_blank" rel="noopener noreferrer">
+                {segment.linkText || segment.text}
+              </a>
+            )
+          }
+          let classNames = ''
+          if (segment.isBold) classNames += styles.boldText + ' '
+          if (segment.isItalic) classNames += styles.italicText + ' '
+          if (segment.isUnderline) classNames += styles.underlineText + ' '
+          return (
+            <span key={segment.id} className={classNames.trim()}>{segment.text}</span>
+          )
+        })}
       </div>
 
       {/* Aperçu des liens */}

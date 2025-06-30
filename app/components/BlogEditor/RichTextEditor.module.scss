@@ -40,6 +40,17 @@
     transform: translateY(1px);
   }
 
+  &.active {
+    background: #3b82f6;
+    border-color: #2563eb;
+    color: white;
+    
+    &:hover {
+      background: #2563eb;
+      border-color: #1d4ed8;
+    }
+  }
+
   svg {
     width: 1rem;
     height: 1rem;
@@ -135,4 +146,16 @@
     border-color: #f87171;
     color: #b91c1c;
   }
+} 
+
+.boldText {
+  font-weight: bold;
+}
+
+.italicText {
+  font-style: italic;
+}
+
+.underlineText {
+  text-decoration: underline;
 } 

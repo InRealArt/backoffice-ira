@@ -40,7 +40,14 @@ export default function RichContentRenderer({
         }
         
         return (
-          <span key={segment.id || index}>
+          <span
+            key={segment.id || index}
+            style={{
+              fontWeight: segment.isBold ? 'bold' : undefined,
+              fontStyle: segment.isItalic ? 'italic' : undefined,
+              textDecoration: segment.isUnderline ? 'underline' : undefined
+            }}
+          >
             {segment.text}
           </span>
         )

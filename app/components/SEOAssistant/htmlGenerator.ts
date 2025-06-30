@@ -1,128 +1,142 @@
 import { BlogContent, BlogSection, ElementType, ImageElement, VideoElement, ListElement, AccordionElement, H2Element, H3Element, ParagraphElement } from '../BlogEditor/types'
 
 export interface FormData {
-    title?: string
-    metaDescription?: string
-    metaKeywords?: string
-    tags?: string[]
-    slug?: string
-    excerpt?: string
-    author?: string
-    authorLink?: string
-    creationDate?: Date
-    mainImageUrl?: string
-    mainImageAlt?: string
-    mainImageCaption?: string
-    content?: string
-    blogContent?: BlogContent
+  title?: string
+  metaDescription?: string
+  metaKeywords?: string
+  tags?: string[]
+  slug?: string
+  excerpt?: string
+  author?: string
+  authorLink?: string
+  creationDate?: Date
+  mainImageUrl?: string
+  mainImageAlt?: string
+  mainImageCaption?: string
+  content?: string
+  blogContent?: BlogContent
 }
 
 export function generateSEOHTML(formData: FormData): string {
-    const {
-        title = '',
-        metaDescription = '',
-        metaKeywords = '',
-        tags = [],
-        slug = '',
-        excerpt = '',
-        author = '',
-        authorLink = '',
-        creationDate = new Date(),
-        mainImageUrl = '',
-        mainImageAlt = '',
-        mainImageCaption = '',
-        blogContent = []
-    } = formData
+  const {
+    title = '',
+    metaDescription = '',
+    metaKeywords = '',
+    tags = [],
+    slug = '',
+    excerpt = '',
+    author = '',
+    authorLink = '',
+    creationDate = new Date(),
+    mainImageUrl = '',
+    mainImageAlt = '',
+    mainImageCaption = '',
+    blogContent = []
+  } = formData
 
-    const keywords = metaKeywords.split(',').map(k => k.trim()).filter(k => k.length > 0)
-    const keywordsString = keywords.join(', ')
+  const keywords = metaKeywords.split(',').map(k => k.trim()).filter(k => k.length > 0)
+  const keywordsString = keywords.join(', ')
 
-    const formatDate = (date: Date) => {
-        return date.toISOString().split('T')[0]
-    }
+  const formatDate = (date: Date) => {
+    return date.toISOString().split('T')[0]
+  }
 
-    const formatDateReadable = (date: Date) => {
-        return date.toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })
-    }
+  const formatDateReadable = (date: Date) => {
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
 
-    const generateBlogContentHTML = (content: BlogContent): string => {
-        return content.map(section => {
-            const sectionHTML = section.elements.map(element => {
-                switch (element.type) {
-                    case ElementType.H2:
-                        const h2Element = element as H2Element
-                        return `        <h2>${h2Element.content || ''}</h2>`
-                    case ElementType.H3:
-                        const h3Element = element as H3Element
-                        return `        <h3>${h3Element.content || ''}</h3>`
-                    case ElementType.PARAGRAPH:
-                        const pElement = element as ParagraphElement
-                        return `        <p>${pElement.content || ''}</p>`
-                    case ElementType.IMAGE:
-                        const imgElement = element as ImageElement
-                        if (imgElement.url) {
-                            return `        <figure>
+  const generateBlogContentHTML = (content: BlogContent): string => {
+    return content.map(section => {
+      const sectionHTML = section.elements.map(element => {
+        switch (element.type) {
+          case ElementType.H2:
+            const h2Element = element as H2Element
+            return `        <h2>${h2Element.content || ''}</h2>`
+          case ElementType.H3:
+            const h3Element = element as H3Element
+            return `        <h3>${h3Element.content || ''}</h3>`
+          case ElementType.PARAGRAPH:
+            const pElement = element as ParagraphElement
+            if (pElement.richContent && pElement.richContent.segments.length > 0) {
+              const formattedContent = pElement.richContent.segments.map(segment => {
+                let text = segment.isLink
+                  ? `<a href="${segment.linkUrl || ''}">${segment.linkText || segment.text}</a>`
+                  : segment.text
+
+                if (segment.isBold) text = `<b>${text}</b>`
+                if (segment.isItalic) text = `<i>${text}</i>`
+                if (segment.isUnderline) text = `<u>${text}</u>`
+
+                return text
+              }).join('')
+              return `        <p>${formattedContent}</p>`
+            }
+            return `        <p>${pElement.content || ''}</p>`
+          case ElementType.IMAGE:
+            const imgElement = element as ImageElement
+            if (imgElement.url) {
+              return `        <figure>
           <img src="${imgElement.url}" alt="${imgElement.alt || ''}" width="600" height="400">
           ${imgElement.caption ? `<figcaption>${imgElement.caption}</figcaption>` : ''}
         </figure>`
-                        }
-                        return ''
-                    case ElementType.VIDEO:
-                        const videoElement = element as VideoElement
-                        if (videoElement.url) {
-                            return `        <div class="video-container">
+            }
+            return ''
+          case ElementType.VIDEO:
+            const videoElement = element as VideoElement
+            if (videoElement.url) {
+              return `        <div class="video-container">
           <iframe src="${videoElement.url}" frameborder="0" allowfullscreen></iframe>
           ${videoElement.caption ? `<p class="video-caption">${videoElement.caption}</p>` : ''}
         </div>`
-                        }
-                        return ''
-                    case ElementType.LIST:
-                        const listElement = element as ListElement
-                        if (listElement.items && listElement.items.length > 0) {
-                            const listItems = listElement.items.map(item => `          <li>${item}</li>`).join('\n')
-                            return `        <ul>
+            }
+            return ''
+          case ElementType.LIST:
+            const listElement = element as ListElement
+            if (listElement.items && listElement.items.length > 0) {
+              const listItems = listElement.items.map(item => `          <li>${item}</li>`).join('\n')
+              return `        <ul>
 ${listItems}
         </ul>`
-                        }
-                        return ''
-                    case ElementType.ACCORDION:
-                        const accordionElement = element as AccordionElement
-                        if (accordionElement.items && accordionElement.items.length > 0) {
-                            const accordionTitle = accordionElement.title ? `        <h2>${accordionElement.title}</h2>` : ''
-                            const accordionItems = accordionElement.items.map(item =>
-                                `          <div class="accordion-item">
+            }
+            return ''
+          case ElementType.ACCORDION:
+            const accordionElement = element as AccordionElement
+            if (accordionElement.items && accordionElement.items.length > 0) {
+              const accordionTitle = accordionElement.title ? `        <h2>${accordionElement.title}</h2>` : ''
+              const accordionItems = accordionElement.items.map(item =>
+                `          <div class="accordion-item">
             <h3 class="accordion-header">${item.title}</h3>
             <div class="accordion-content">
               <p>${item.content}</p>
             </div>
           </div>`
-                            ).join('\n')
+              ).join('\n')
 
-                            return `${accordionTitle}
+              return `${accordionTitle}
         <div class="accordion">
 ${accordionItems}
         </div>`
-                        }
-                        return ''
-                    default:
-                        return ''
-                }
-            }).filter(html => html.length > 0).join('\n')
-
-            if (sectionHTML) {
-                return `      <section>
-${sectionHTML}
-      </section>`
             }
             return ''
-        }).filter(html => html.length > 0).join('\n\n')
-    }
+          default:
+            return ''
+        }
+      }).filter(html => html.length > 0).join('\n')
 
-    return `<!DOCTYPE html>
+      if (sectionHTML) {
+        return `      <section>
+${sectionHTML}
+      </section>`
+      }
+      return ''
+    }).filter(html => html.length > 0).join('\n\n')
+  }
+
+  return `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
