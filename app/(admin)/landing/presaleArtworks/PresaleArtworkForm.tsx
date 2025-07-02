@@ -27,6 +27,8 @@ const presaleArtworkSchema = z.object({
   imageUrl: z.string().min(1, "L'URL de l'image est requise").url("L'URL doit être valide"),
   description: z.string().optional(),
   price: z.string().optional(),
+  width: z.string().optional(),
+  height: z.string().optional(),
   order: z.string().default('')
 })
 
@@ -91,6 +93,8 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
       price: '',
       imageUrl: '',
       description: '',
+      width: '',
+      height: '',
       order: '0'
     }
   })
@@ -123,6 +127,8 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
             setValue('price', presaleArtwork.price?.toString() || '')
             setValue('imageUrl', presaleArtwork.imageUrl)
             setValue('description', presaleArtwork.description || '')
+            setValue('width', presaleArtwork.width?.toString() || '')
+            setValue('height', presaleArtwork.height?.toString() || '')
             setValue('order', presaleArtwork.order?.toString() || '0')
             setImagePreview(presaleArtwork.imageUrl)
             
@@ -189,6 +195,8 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
     
     try {
       const formattedPrice = data.price && data.price.trim() !== '' ? parseFloat(data.price.replace(',', '.')) : null
+      const formattedWidth = data.width && data.width.trim() !== '' ? parseInt(data.width) : null
+      const formattedHeight = data.height && data.height.trim() !== '' ? parseInt(data.height) : null
       const formattedOrder = data.order && data.order.trim() !== '' ? parseInt(data.order) : undefined
       
       if (mode === 'create') {
@@ -198,6 +206,8 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
           price: formattedPrice,
           imageUrl: data.imageUrl,
           description: data.description,
+          width: formattedWidth,
+          height: formattedHeight,
           order: formattedOrder,
           mockupUrls: JSON.stringify(mockupUrls)
         })
@@ -229,6 +239,8 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
           price: formattedPrice,
           imageUrl: data.imageUrl,
           description: data.description,
+          width: formattedWidth,
+          height: formattedHeight,
           order: formattedOrder,
           mockupUrls: JSON.stringify(mockupUrls)
         })
@@ -429,6 +441,47 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
             {errors.price && (
               <p className="form-error">{errors.price.message}</p>
             )}
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Dimensions (cm)</label>
+            <div className="d-flex gap-sm">
+              <div style={{ flex: 1 }}>
+                <label htmlFor="width" className="form-label">Largeur</label>
+                <input
+                  id="width"
+                  type="number"
+                  min="0"
+                  step="1"
+                  {...register('width')}
+                  className={`form-input ${errors.width ? 'input-error' : ''}`}
+                  placeholder="Ex: 50"
+                  disabled={isSubmitting}
+                />
+                {errors.width && (
+                  <p className="form-error">{errors.width.message}</p>
+                )}
+              </div>
+              <div style={{ flex: 1 }}>
+                <label htmlFor="height" className="form-label">Hauteur</label>
+                <input
+                  id="height"
+                  type="number"
+                  min="0"
+                  step="1"
+                  {...register('height')}
+                  className={`form-input ${errors.height ? 'input-error' : ''}`}
+                  placeholder="Ex: 70"
+                  disabled={isSubmitting}
+                />
+                {errors.height && (
+                  <p className="form-error">{errors.height.message}</p>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Dimensions en centimètres (optionnel)
+            </p>
           </div>
 
           <div className="form-group">

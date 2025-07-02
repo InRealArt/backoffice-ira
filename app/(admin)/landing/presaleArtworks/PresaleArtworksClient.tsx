@@ -41,6 +41,8 @@ interface PresaleArtwork {
   name: string
   order: number
   price: number | null
+  width: number | null
+  height: number | null
   artistId: number
   artist: Artist
   imageUrl: string
@@ -153,6 +155,14 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
     setCurrentPage(1) // Réinitialiser à la première page lors du filtrage
   }
   
+  // Fonction pour formater les dimensions
+  const formatDimensions = (width: number | null, height: number | null) => {
+    if (!width && !height) return '-'
+    if (!width) return `- x ${height} cm`
+    if (!height) return `${width} x - cm`
+    return `${width} x ${height} cm`
+  }
+
   // Définition des colonnes pour le DataTable
   const columns: Column<PresaleArtwork>[] = [
     {
@@ -184,6 +194,12 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
       key: 'artist',
       header: 'Artiste',
       render: (artwork) => `${artwork.artist.name} ${artwork.artist.surname}`
+    },
+    {
+      key: 'dimensions',
+      header: 'Dimensions',
+      width: '120px',
+      render: (artwork) => formatDimensions(artwork.width, artwork.height)
     },
     {
       key: 'price',

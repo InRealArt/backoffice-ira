@@ -111,6 +111,8 @@ export async function createPresaleArtwork(data: {
     price: number | undefined | null
     imageUrl: string
     description?: string
+    width?: number | null
+    height?: number | null
     order?: number
     mockupUrls?: string
 }) {
@@ -130,6 +132,8 @@ export async function createPresaleArtwork(data: {
                 price: data.price,
                 imageUrl: data.imageUrl,
                 description: data.description,
+                width: data.width,
+                height: data.height,
                 order: orderToUse,
                 mockupUrls: data.mockupUrls || "[]"
             },
@@ -161,6 +165,8 @@ export async function updatePresaleArtwork(id: number, data: {
     price?: number | null
     imageUrl?: string
     description?: string
+    width?: number | null
+    height?: number | null
     order?: number
     mockupUrls?: string
 }) {

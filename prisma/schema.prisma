@@ -781,6 +781,8 @@ model PresaleArtwork {
   description String?
   order       Int?
   artistId    Int
+  width       Int? //In centimeters
+  height      Int? //In centimeters
   price       Int?
   imageUrl    String  @unique
   mockupUrls  Json    @default("[]")
