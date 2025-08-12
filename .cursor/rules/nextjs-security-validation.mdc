@@ -1,0 +1,676 @@
+# Next.js Security & Validation
+
+## Security Fundamentals
+
+### Input Validation
+
+- **Always validate user inputs** - Never trust client-side data
+- **Use Zod for schema validation** - Provides runtime type safety
+- **Sanitize data before rendering** - Prevent XSS attacks
+- **Implement proper error handling** - Don't expose sensitive information
+
+### Authentication & Authorization
+
+- **Use secure authentication methods** - JWT, OAuth, or session-based
+- **Implement proper role-based access control (RBAC)**
+- **Validate user permissions** - Check access rights before operations
+- **Use secure session management** - Implement proper logout and session expiry
+
+## Data Validation with Zod
+
+### Basic Schema Validation
+
+```tsx
+import { z } from "zod";
+
+// User input validation schema
+const UserInputSchema = z.object({
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  age: z.number().min(18, "Must be at least 18 years old").optional(),
+});
+
+type UserInput = z.infer<typeof UserInputSchema>;
+
+// Validation function
+function validateUserInput(data: unknown): UserInput {
+  try {
+    return UserInputSchema.parse(data);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new Error(
+        `Validation failed: ${error.errors.map((e) => e.message).join(", ")}`
+      );
+    }
+    throw error;
+  }
+}
+```
+
+### API Route Validation
+
+```tsx
+// app/api/users/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+const CreateUserSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+  name: z.string().min(2),
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const validatedData = CreateUserSchema.parse(body);
+
+    // Process validated data
+    const user = await createUser(validatedData);
+
+    return NextResponse.json({ success: true, user }, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Validation failed", details: error.errors },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### Form Validation with React Hook Form
+
+```tsx
+"use client";
+
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const FormSchema = z
+  .object({
+    email: z.string().email("Invalid email"),
+    password: z.string().min(8, "Password too short"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+type FormData = z.infer<typeof FormSchema>;
+
+export default function SecureForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({
+    resolver: zodResolver(FormSchema),
+  });
+
+  const onSubmit = async (data: FormData) => {
+    try {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create user");
+      }
+
+      // Handle success
+    } catch (error) {
+      // Handle error
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div>
+        <input
+          {...register("email")}
+          type="email"
+          placeholder="Email"
+          className="border p-2 rounded"
+        />
+        {errors.email && (
+          <p className="text-red-500 text-sm">{errors.email.message}</p>
+        )}
+      </div>
+
+      <div>
+        <input
+          {...register("password")}
+          type="password"
+          placeholder="Password"
+          className="border p-2 rounded"
+        />
+        {errors.password && (
+          <p className="text-red-500 text-sm">{errors.password.message}</p>
+        )}
+      </div>
+
+      <div>
+        <input
+          {...register("confirmPassword")}
+          type="password"
+          placeholder="Confirm Password"
+          className="border p-2 rounded"
+        />
+        {errors.confirmPassword && (
+          <p className="text-red-500 text-sm">
+            {errors.confirmPassword.message}
+          </p>
+        )}
+      </div>
+
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+      >
+        {isSubmitting ? "Creating..." : "Create User"}
+      </button>
+    </form>
+  );
+}
+```
+
+## Server Actions Security
+
+### Secure Server Actions
+
+```tsx
+// app/actions/user.ts
+"use server";
+
+import { z } from "zod";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+const UpdateUserSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(2).max(100),
+  email: z.string().email(),
+});
+
+export async function updateUser(formData: FormData) {
+  try {
+    // Validate input
+    const data = {
+      id: formData.get("id") as string,
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+    };
+
+    const validatedData = UpdateUserSchema.parse(data);
+
+    // Check user permissions (implement your auth logic)
+    const isAuthorized = await checkUserPermission(validatedData.id);
+    if (!isAuthorized) {
+      throw new Error("Unauthorized");
+    }
+
+    // Update user
+    await updateUserInDatabase(validatedData);
+
+    revalidatePath("/users");
+    redirect("/users");
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new Error(
+        `Validation failed: ${error.errors.map((e) => e.message).join(", ")}`
+      );
+    }
+    throw error;
+  }
+}
+```
+
+## XSS Prevention
+
+### Safe HTML Rendering
+
+```tsx
+// ❌ Bad: Direct HTML injection
+function UnsafeComponent({ content }: { content: string }) {
+  return <div dangerouslySetInnerHTML={{ __html: content }} />;
+}
+
+// ✅ Good: Sanitized HTML
+import DOMPurify from "dompurify";
+
+function SafeComponent({ content }: { content: string }) {
+  const sanitizedContent = DOMPurify.sanitize(content);
+
+  return <div dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+}
+
+// ✅ Better: Text-only rendering
+function TextOnlyComponent({ content }: { content: string }) {
+  return <div>{content}</div>;
+}
+```
+
+### URL Validation
+
+```tsx
+import { z } from "zod";
+
+const URLSchema = z.string().url("Invalid URL format");
+
+function validateURL(url: string): boolean {
+  try {
+    URLSchema.parse(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function SafeLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  if (!validateURL(href)) {
+    return <span className="text-red-500">Invalid URL</span>;
+  }
+
+  return <a href={href}>{children}</a>;
+}
+```
+
+## CSRF Protection
+
+### CSRF Token Implementation
+
+```tsx
+// app/actions/csrf.ts
+"use server";
+
+import { cookies } from "next/headers";
+import { randomBytes } from "crypto";
+
+export async function generateCSRFToken(): Promise<string> {
+  const token = randomBytes(32).toString("hex");
+
+  // Store token in secure, HTTP-only cookie
+  cookies().set("csrf-token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 3600, // 1 hour
+  });
+
+  return token;
+}
+
+export async function validateCSRFToken(token: string): Promise<boolean> {
+  const storedToken = cookies().get("csrf-token")?.value;
+
+  if (!storedToken || storedToken !== token) {
+    return false;
+  }
+
+  // Clear token after use
+  cookies().delete("csrf-token");
+  return true;
+}
+```
+
+### Form with CSRF Protection
+
+```tsx
+"use client";
+
+import { useState, useEffect } from "react";
+
+export default function SecureForm() {
+  const [csrfToken, setCsrfToken] = useState<string>("");
+
+  useEffect(() => {
+    async function getCSRFToken() {
+      const response = await fetch("/api/csrf");
+      const { token } = await response.json();
+      setCsrfToken(token);
+    }
+
+    getCSRFToken();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    formData.append("csrfToken", csrfToken);
+
+    const response = await fetch("/api/submit", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.ok) {
+      // Handle success
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="hidden" name="csrfToken" value={csrfToken} />
+      {/* Form fields */}
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+
+## Environment Variables Security
+
+### Secure Environment Configuration
+
+```tsx
+// lib/env.ts
+import { z } from "zod";
+
+const envSchema = z.object({
+  DATABASE_URL: z.string().url(),
+  JWT_SECRET: z.string().min(32),
+  API_KEY: z.string().min(1),
+  NODE_ENV: z.enum(["development", "production", "test"]),
+});
+
+function validateEnv() {
+  try {
+    return envSchema.parse(process.env);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("❌ Invalid environment variables:");
+      error.errors.forEach((err) => {
+        console.error(`   ${err.path}: ${err.message}`);
+      });
+      process.exit(1);
+    }
+    throw error;
+  }
+}
+
+export const env = validateEnv();
+```
+
+### API Key Validation
+
+```tsx
+// middleware.ts
+import { NextRequest, NextResponse } from "next/server";
+
+export function middleware(request: NextRequest) {
+  // Check API key for protected routes
+  if (request.nextUrl.pathname.startsWith("/api/protected")) {
+    const apiKey = request.headers.get("x-api-key");
+
+    if (apiKey !== process.env.API_KEY) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: "/api/:path*",
+};
+```
+
+## Database Security
+
+### SQL Injection Prevention
+
+```tsx
+// ❌ Bad: String concatenation (vulnerable to SQL injection)
+async function unsafeQuery(userId: string) {
+  const query = `SELECT * FROM users WHERE id = '${userId}'`;
+  // Vulnerable to SQL injection
+}
+
+// ✅ Good: Parameterized queries with Prisma
+import { prisma } from "@/lib/prisma";
+
+async function safeQuery(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      // Don't select sensitive fields like password
+    },
+  });
+
+  return user;
+}
+```
+
+### Input Sanitization
+
+```tsx
+import { z } from "zod";
+
+const SearchSchema = z.object({
+  query: z
+    .string()
+    .min(1, "Search query cannot be empty")
+    .max(100, "Search query too long")
+    .regex(/^[a-zA-Z0-9\s]+$/, "Invalid characters in search query"),
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(20),
+});
+
+export async function searchUsers(searchParams: URLSearchParams) {
+  try {
+    const query = searchParams.get("query") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+
+    const validatedParams = SearchSchema.parse({ query, page, limit });
+
+    // Perform safe search
+    const users = await searchUsersInDatabase(validatedParams);
+
+    return users;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new Error("Invalid search parameters");
+    }
+    throw error;
+  }
+}
+```
+
+## Rate Limiting
+
+### API Rate Limiting
+
+```tsx
+// lib/rate-limit.ts
+import { NextRequest, NextResponse } from "next/server";
+
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+export function rateLimit(
+  request: NextRequest,
+  limit: number = 100,
+  windowMs: number = 15 * 60 * 1000 // 15 minutes
+) {
+  const ip = request.ip || "unknown";
+  const now = Date.now();
+
+  const rateLimitInfo = rateLimitMap.get(ip);
+
+  if (!rateLimitInfo || now > rateLimitInfo.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+    return { success: true };
+  }
+
+  if (rateLimitInfo.count >= limit) {
+    return {
+      success: false,
+      message: "Rate limit exceeded",
+      resetTime: rateLimitInfo.resetTime,
+    };
+  }
+
+  rateLimitInfo.count++;
+  return { success: true };
+}
+
+// Usage in API route
+export async function GET(request: NextRequest) {
+  const rateLimitResult = rateLimit(request, 100, 15 * 60 * 1000);
+
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: rateLimitResult.message },
+      { status: 429 }
+    );
+  }
+
+  // Process request
+  return NextResponse.json({ message: "Success" });
+}
+```
+
+## Content Security Policy
+
+### CSP Implementation
+
+```tsx
+// middleware.ts
+import { NextRequest, NextResponse } from "next/server";
+
+export function middleware(request: NextRequest) {
+  const response = NextResponse.next();
+
+  // Set Content Security Policy headers
+  response.headers.set(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https:",
+      "font-src 'self'",
+      "connect-src 'self'",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; ")
+  );
+
+  // Additional security headers
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()"
+  );
+
+  return response;
+}
+```
+
+## Error Handling Security
+
+### Secure Error Messages
+
+```tsx
+// ❌ Bad: Exposing sensitive information
+try {
+  await connectToDatabase();
+} catch (error) {
+  console.error("Database connection failed:", error);
+  throw new Error(`Database error: ${error.message}`); // Exposes internal details
+}
+
+// ✅ Good: Generic error messages
+try {
+  await connectToDatabase();
+} catch (error) {
+  console.error("Database connection failed:", error);
+  throw new Error("Service temporarily unavailable");
+}
+```
+
+### Error Boundary with Logging
+
+```tsx
+"use client";
+
+import { Component, ErrorInfo, ReactNode } from "react";
+
+interface Props {
+  children: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): State {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log error to monitoring service (don't expose to user)
+    console.error("Error caught by boundary:", error, errorInfo);
+
+    // Send to error tracking service
+    // logErrorToService(error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
+          <p className="mb-4">We're working on fixing the problem</p>
+          <button
+            onClick={() => this.setState({ hasError: false })}
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Try again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+description:
+globs:
+alwaysApply: false
+
+---

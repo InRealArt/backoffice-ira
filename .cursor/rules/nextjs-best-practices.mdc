@@ -1,0 +1,253 @@
+# Next.js Best Practices
+
+## Overview
+
+This rule provides comprehensive guidance for Next.js development following official documentation and best practices. It covers App Router, performance optimization, and modern React patterns.
+
+## Scope
+
+- **Type**: Auto Attached
+- **Pattern**: \*_/_.{ts,tsx,js,jsx}
+- **Description**: Comprehensive Next.js development guidelines and best practices
+
+## Core Principles
+
+### App Router Architecture
+
+- Use the App Router (`/app` directory) for new projects
+- Prefer Server Components over Client Components when possible
+- Implement proper file-based routing conventions
+- Use layout.js for shared UI across routes
+- Implement error boundaries with error.js files
+- Use loading.js for Suspense boundaries
+
+### Server vs Client Components
+
+- **Server Components (default)**: Use for data fetching, database queries, and server-side logic
+- **Client Components**: Only use when you need interactivity, event listeners, or browser APIs
+- Add `'use client'` directive only when necessary
+- Keep client components small and focused
+
+### Data Fetching Patterns
+
+- Use Server Components for data fetching when possible
+- Implement proper caching strategies with `cache()` function
+- Use `revalidatePath()` and `revalidateTag()` for on-demand revalidation
+- Implement proper error handling with try-catch blocks
+- Use `unstable_noStore()` sparingly for dynamic content
+
+### Performance Optimization
+
+- Implement Partial Prerendering (PPR) for dynamic content
+- Use dynamic imports with `React.lazy()` for code splitting
+- Optimize images with Next.js Image component
+- Implement proper font optimization with `next/font`
+- Use Suspense boundaries for loading states
+- Minimize JavaScript bundle size
+
+### File Structure Conventions
+
+```
+app/
+├── layout.js          # Root layout
+├── page.js            # Home page
+├── globals.css        # Global styles
+├── (routes)/          # Route groups
+│   ├── about/
+│   │   └── page.js
+│   └── blog/
+│       ├── [slug]/
+│       │   └── page.js
+│       └── layout.js
+├── api/               # API routes
+│   └── route.js
+└── components/        # Shared components
+    ├── ui/            # UI components
+    └── features/      # Feature-specific components
+```
+
+### Component Best Practices
+
+- Use functional components with proper TypeScript types
+- Implement proper prop validation
+- Use React.memo() for expensive components
+- Implement proper error boundaries
+- Use proper cleanup in useEffect hooks
+- Prefer composition over inheritance
+
+### State Management
+
+- Use React hooks for local state
+- Implement Zustand for global state when needed
+- Use React Context sparingly and only for theme/auth
+- Lift state up when sharing between components
+- Implement proper state persistence strategies
+
+### Styling Guidelines
+
+- Use CSS Modules or Tailwind CSS
+- Implement responsive design with mobile-first approach
+- Use CSS-in-JS solutions sparingly
+- Implement proper CSS organization
+- Use CSS variables for theming
+
+### API Development
+
+- Use App Router API routes (`app/api/route.js`)
+- Implement proper HTTP methods (GET, POST, PUT, DELETE)
+- Use proper status codes and error handling
+- Implement request validation with Zod
+- Use proper authentication and authorization
+
+### Testing Strategy
+
+- Write unit tests for components
+- Implement integration tests for critical flows
+- Use proper testing libraries (Jest, React Testing Library)
+- Test both client and server components
+- Implement proper mocking strategies
+
+### Security Best Practices
+
+- Validate all user inputs
+- Implement proper authentication
+- Use HTTPS in production
+- Sanitize data before rendering
+- Implement proper CORS policies
+- Use environment variables for sensitive data
+
+### Error Handling
+
+- Implement proper error boundaries
+- Use proper error logging
+- Provide user-friendly error messages
+- Handle both client and server errors
+- Implement proper fallback UI
+
+### Accessibility
+
+- Use semantic HTML elements
+- Implement proper ARIA attributes
+- Ensure keyboard navigation
+- Test with screen readers
+- Follow WCAG guidelines
+
+### Internationalization
+
+- Use next-intl or similar libraries
+- Implement proper locale detection
+- Use proper date and number formatting
+- Implement RTL support when needed
+
+### SEO and Metadata
+
+- Use proper meta tags
+- Implement Open Graph images
+- Use proper heading hierarchy
+- Implement structured data
+- Use proper canonical URLs
+
+### Development Workflow
+
+- Use proper Git workflow
+- Implement proper CI/CD
+- Use proper environment variables
+- Implement proper logging
+- Use proper debugging tools
+
+## Code Examples
+
+### Server Component with Data Fetching
+
+```tsx
+// app/blog/[slug]/page.tsx
+import { notFound } from "next/navigation";
+
+async function getPost(slug: string) {
+  const res = await fetch(`https://api.example.com/posts/${slug}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export default async function PostPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const post = await getPost(params.slug);
+
+  if (!post) {
+    notFound();
+  }
+
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <div>{post.content}</div>
+    </article>
+  );
+}
+```
+
+### Client Component with Interactivity
+
+```tsx
+"use client";
+
+import { useState } from "react";
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+
+### Layout with Metadata
+
+```tsx
+// app/layout.tsx
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My App",
+  description: "A Next.js application",
+  openGraph: {
+    title: "My App",
+    description: "A Next.js application",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+## References
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [App Router Guide](https://nextjs.org/docs/app)
+- [Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components)
+- [Data Fetching](https://nextjs.org/docs/app/building-your-application/data-fetching)
+- [Performance](https://nextjs.org/docs/app/building-your-application/optimizing)
+
+---
+
+description: Comprehensive Next.js development guidelines and best practices following official documentation
+globs: ["**/*.{ts,tsx,js,jsx}"]
+alwaysApply: false
+
+---

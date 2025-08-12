@@ -1,0 +1,544 @@
+# Next.js Performance Optimization
+
+## Core Performance Principles
+
+### Server Components Priority
+
+- **Default to Server Components** - They render on the server, reducing client-side JavaScript
+- **Use Client Components sparingly** - Only when interactivity is required
+- **Minimize 'use client' usage** - Each client component increases bundle size
+
+### Bundle Size Optimization
+
+- **Code Splitting** - Use dynamic imports for large components
+- **Tree Shaking** - Import only what you need from libraries
+- **Bundle Analysis** - Use `@next/bundle-analyzer` to identify large dependencies
+
+## Rendering Strategies
+
+### Static Generation (SSG)
+
+```tsx
+// ✅ Good: Static generation for content that doesn't change frequently
+export async function generateStaticParams() {
+  const posts = await getPosts();
+
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
+export default async function Post({ params }: { params: { slug: string } }) {
+  const post = await getPost(params.slug);
+
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <div>{post.content}</div>
+    </article>
+  );
+}
+```
+
+### Incremental Static Regeneration (ISR)
+
+```tsx
+// ✅ Good: ISR for content that changes occasionally
+export async function generateStaticParams() {
+  const posts = await getPosts();
+
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
+export const revalidate = 3600; // Revalidate every hour
+
+export default async function Post({ params }: { params: { slug: string } }) {
+  const post = await getPost(params.slug);
+
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <div>{post.content}</div>
+    </article>
+  );
+}
+```
+
+### Dynamic Rendering
+
+```tsx
+// ✅ Good: Dynamic rendering for real-time content
+export const dynamic = "force-dynamic";
+
+export default async function Dashboard() {
+  const data = await getRealTimeData();
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <RealTimeChart data={data} />
+    </div>
+  );
+}
+```
+
+## Data Fetching Optimization
+
+### Caching Strategies
+
+```tsx
+// ✅ Good: Implement proper caching
+import { cache } from "react";
+
+const getUser = cache(async (id: string) => {
+  const res = await fetch(`https://api.example.com/users/${id}`, {
+    next: {
+      revalidate: 3600, // Cache for 1 hour
+      tags: ["user"], // Tag for selective revalidation
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch user");
+  }
+
+  return res.json();
+});
+
+export default async function UserProfile({ userId }: { userId: string }) {
+  const user = await getUser(userId);
+
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+```
+
+### Parallel Data Fetching
+
+```tsx
+// ✅ Good: Fetch data in parallel
+export default async function Dashboard() {
+  const [users, posts, analytics] = await Promise.all([
+    getUsers(),
+    getPosts(),
+    getAnalytics(),
+  ]);
+
+  return (
+    <div>
+      <UserList users={users} />
+      <PostList posts={posts} />
+      <AnalyticsChart data={analytics} />
+    </div>
+  );
+}
+```
+
+### Sequential Data Fetching
+
+```tsx
+// ✅ Good: Fetch data sequentially when dependencies exist
+export default async function UserPosts({ userId }: { userId: string }) {
+  const user = await getUser(userId);
+  const posts = await getUserPosts(user.id);
+
+  return (
+    <div>
+      <h1>{user.name}'s Posts</h1>
+      <PostList posts={posts} />
+    </div>
+  );
+}
+```
+
+## Component Optimization
+
+### React.memo for Expensive Components
+
+```tsx
+"use client";
+
+import { memo } from "react";
+
+const ExpensiveChart = memo(function ExpensiveChart({ data }: { data: any[] }) {
+  // Expensive chart rendering logic
+  return <div className="chart">{/* Chart implementation */}</div>;
+});
+
+export default ExpensiveChart;
+```
+
+### useMemo for Expensive Calculations
+
+```tsx
+"use client";
+
+import { useMemo } from "react";
+
+function DataProcessor({ data }: { data: any[] }) {
+  const processedData = useMemo(() => {
+    return data
+      .filter((item) => item.active)
+      .map((item) => ({
+        ...item,
+        processed: item.value * 2,
+      }))
+      .sort((a, b) => b.processed - a.processed);
+  }, [data]);
+
+  return (
+    <div>
+      {processedData.map((item) => (
+        <div key={item.id}>
+          {item.name}: {item.processed}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### useCallback for Stable References
+
+```tsx
+"use client";
+
+import { useCallback, useState } from "react";
+
+function ParentComponent() {
+  const [count, setCount] = useState(0);
+
+  const handleIncrement = useCallback(() => {
+    setCount((prev) => prev + 1);
+  }, []);
+
+  const handleReset = useCallback(() => {
+    setCount(0);
+  }, []);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <ChildComponent onIncrement={handleIncrement} onReset={handleReset} />
+    </div>
+  );
+}
+
+const ChildComponent = memo(function ChildComponent({
+  onIncrement,
+  onReset,
+}: {
+  onIncrement: () => void;
+  onReset: () => void;
+}) {
+  return (
+    <div>
+      <button onClick={onIncrement}>Increment</button>
+      <button onClick={onReset}>Reset</button>
+    </div>
+  );
+});
+```
+
+## Image Optimization
+
+### Next.js Image Component Best Practices
+
+```tsx
+import Image from "next/image";
+
+function OptimizedImage({
+  src,
+  alt,
+  width,
+  height,
+}: {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+}) {
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      placeholder="blur"
+      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+      priority={false}
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      className="rounded-lg"
+    />
+  );
+}
+```
+
+### Responsive Images
+
+```tsx
+function ResponsiveImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      className="object-cover"
+      priority={false}
+    />
+  );
+}
+```
+
+## Font Optimization
+
+### Google Fonts with Performance
+
+```tsx
+import { Inter, Roboto_Mono } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "arial"],
+});
+
+const robotoMono = Roboto_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  preload: false, // Only preload primary font
+  variable: "--font-roboto-mono",
+});
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={`${inter.className} ${robotoMono.variable}`}>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+## Code Splitting
+
+### Dynamic Imports
+
+```tsx
+import dynamic from "next/dynamic";
+
+// Lazy load heavy components
+const HeavyChart = dynamic(() => import("./HeavyChart"), {
+  loading: () => <div>Loading chart...</div>,
+  ssr: false, // Disable SSR for client-only components
+});
+
+const AdminPanel = dynamic(() => import("./AdminPanel"), {
+  loading: () => <div>Loading admin panel...</div>,
+  ssr: false,
+});
+
+export default function Dashboard() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <HeavyChart />
+      <AdminPanel />
+    </div>
+  );
+}
+```
+
+### Route-based Code Splitting
+
+```tsx
+// app/dashboard/page.tsx
+import dynamic from "next/dynamic";
+
+const DashboardChart = dynamic(() => import("@/components/DashboardChart"), {
+  loading: () => <div>Loading...</div>,
+});
+
+export default function DashboardPage() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <DashboardChart />
+    </div>
+  );
+}
+```
+
+## Suspense and Loading States
+
+### Suspense Boundaries
+
+```tsx
+import { Suspense } from "react";
+
+function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center p-4">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+    </div>
+  );
+}
+
+export default function UserPage() {
+  return (
+    <div>
+      <h1>User Profile</h1>
+      <Suspense fallback={<LoadingSpinner />}>
+        <UserProfile />
+      </Suspense>
+      <Suspense fallback={<LoadingSpinner />}>
+        <UserPosts />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+### Streaming with Suspense
+
+```tsx
+export default async function StreamingPage() {
+  return (
+    <div>
+      <h1>Streaming Page</h1>
+
+      {/* This will stream in */}
+      <Suspense fallback={<div>Loading user info...</div>}>
+        <UserInfo />
+      </Suspense>
+
+      {/* This will stream in separately */}
+      <Suspense fallback={<div>Loading posts...</div>}>
+        <UserPosts />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+## Bundle Analysis
+
+### Next.js Bundle Analyzer
+
+```bash
+# Install bundle analyzer
+npm install --save-dev @next/bundle-analyzer
+
+# Add to next.config.js
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+
+module.exports = withBundleAnalyzer({
+  // your next config
+})
+
+# Run analysis
+ANALYZE=true npm run build
+```
+
+## Performance Monitoring
+
+### Web Vitals
+
+```tsx
+// app/layout.tsx
+import { reportWebVitals } from "next/web-vitals";
+
+export function reportWebVitals(metric: any) {
+  console.log(metric);
+
+  // Send to analytics service
+  if (metric.label === "web-vital") {
+    // Send to your analytics service
+  }
+}
+```
+
+### Performance Budgets
+
+```json
+// .bundlemon.json
+{
+  "files": [
+    {
+      "path": ".next/static/chunks/*.js",
+      "maxSize": "100 kB"
+    },
+    {
+      "path": ".next/static/chunks/*.css",
+      "maxSize": "50 kB"
+    }
+  ]
+}
+```
+
+## Memory Management
+
+### Cleanup in useEffect
+
+```tsx
+"use client";
+
+import { useEffect, useRef } from "react";
+
+function ComponentWithCleanup() {
+  const intervalRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      // Do something
+    }, 1000);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+
+  return <div>Component with cleanup</div>;
+}
+```
+
+### Event Listener Cleanup
+
+```tsx
+"use client";
+
+import { useEffect } from "react";
+
+function ComponentWithEventListeners() {
+  useEffect(() => {
+    const handleResize = () => {
+      // Handle resize
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  return <div>Component with event listeners</div>;
+}
+```
+
+description:
+globs:
+alwaysApply: false
+
+---
