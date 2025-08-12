@@ -175,6 +175,21 @@ export function generateArticleHtml(postData: SeoPostData): string {
           case ElementType.H3:
             return `      <h3>${element.content || ''}</h3>`
           case ElementType.PARAGRAPH:
+            // Gérer le contenu riche avec liens hypertextes
+            if (element.richContent && element.richContent.segments && element.richContent.segments.length > 0) {
+              const formattedContent = element.richContent.segments.map(segment => {
+                let text = segment.isLink
+                  ? `<a href="${segment.linkUrl || ''}">${segment.linkText || segment.text}</a>`
+                  : segment.text
+
+                if (segment.isBold) text = `<b>${text}</b>`
+                if (segment.isItalic) text = `<i>${text}</i>`
+                if (segment.isUnderline) text = `<u>${text}</u>`
+
+                return text
+              }).join('')
+              return `      <p>${formattedContent}</p>`
+            }
             return `      <p>${element.content || ''}</p>`
           case ElementType.IMAGE:
             if (element.url) {
