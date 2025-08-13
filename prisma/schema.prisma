@@ -254,7 +254,18 @@ model Artist {
   PresaleArtworks PresaleArtwork[]
   Country         Country?         @relation(fields: [countryCode], references: [code])
   items           Item[]
-
+  //Champs pour le descriptif détaillé de l'artiste sur la landing page & marketplace
+  tags String[] @default([])
+  birthYear Int?
+  quoteFromInRealArt String?
+  quoteHeader String?
+  quoteText String?
+  biographyHeader1 String?
+  biographyText1 String?
+  biographyHeader2 String?
+  biographyText2 String?
+  biographyHeader3 String?
+  biographyText3 String?  
   @@schema("public")
 }
 
