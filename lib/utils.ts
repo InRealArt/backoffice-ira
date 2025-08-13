@@ -36,6 +36,8 @@ export function normalizeString(str: string): string {
  */
 export function generateSlug(name: string): string {
     return name
+        .normalize('NFD') // Normalise les caractères Unicode (sépare les accents)
+        .replace(/[\u0300-\u036f]/g, '') // Supprime les diacritiques (accents)
         .toLowerCase()
         .replace(/[^\w\s]/gi, '')
         .replace(/\s+/g, '-')
