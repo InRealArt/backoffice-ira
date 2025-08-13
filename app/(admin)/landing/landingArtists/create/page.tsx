@@ -2,6 +2,7 @@ import { getArtistsNotInLanding } from '@/lib/actions/landing-artist-actions'
 import { unstable_noStore as noStore } from 'next/cache'
 import { getAllCountries } from '@/lib/actions/country-actions'
 import CreateLandingArtistForm from './CreateLandingArtistForm'
+import { getAllArtworkMediums } from '@/lib/actions/artwork-medium-actions'
 
 export const metadata = {
   title: 'Ajouter un artiste | Page d\'accueil',
@@ -13,10 +14,11 @@ export default async function CreateLandingArtistPage() {
   noStore()
   
   // Récupérer tous les artistes qui ne sont pas déjà présents dans la table LandingArtist
-  const [artists, countries] = await Promise.all([
+  const [artists, countries, mediums] = await Promise.all([
     getArtistsNotInLanding(),
-    getAllCountries()
+    getAllCountries(),
+    getAllArtworkMediums()
   ])
 
-  return <CreateLandingArtistForm artists={artists} countries={countries} />
+  return <CreateLandingArtistForm artists={artists} countries={countries} mediums={mediums.map(m => m.name)} />
 } 

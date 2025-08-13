@@ -12,6 +12,7 @@ import TranslationField from '@/app/components/TranslationField'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { generateSlug } from '@/lib/utils'
 import CountrySelect from '@/app/components/Common/CountrySelect'
+import MediumMultiSelect from '@/app/components/Common/MediumMultiSelect'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -58,6 +59,7 @@ const formSchema = z.object({
     biographyText2: z.string().optional(),
     biographyHeader3: z.string().optional(),
     biographyText3: z.string().optional(),
+    mediumTags: z.array(z.string()).default([]),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -75,9 +77,10 @@ interface CountryOption { code: string, name: string }
 interface CreateLandingArtistFormProps {
   artists: Artist[]
   countries: CountryOption[]
+  mediums: string[]
 }
 
-export default function CreateLandingArtistForm({ artists, countries }: CreateLandingArtistFormProps) {
+export default function CreateLandingArtistForm({ artists, countries, mediums }: CreateLandingArtistFormProps) {
   const router = useRouter()
   const { success, error } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -125,6 +128,7 @@ export default function CreateLandingArtistForm({ artists, countries }: CreateLa
   const artistId = watch('artistId')
   const imageUrl = watch('imageUrl')
   const artistsPage = watch('artistsPage')
+  const mediumTags = watch('mediumTags' as any) as string[] | undefined
 
   // Mettre à jour l'artiste sélectionné lorsque l'ID change
   const handleArtistChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -181,6 +185,7 @@ export default function CreateLandingArtistForm({ artists, countries }: CreateLa
         biographyText2: (data.biographyText2 ?? '').trim() === '' ? null : (data.biographyText2 ?? '').trim(),
         biographyHeader3: (data.biographyHeader3 ?? '').trim() === '' ? null : (data.biographyHeader3 ?? '').trim(),
         biographyText3: (data.biographyText3 ?? '').trim() === '' ? null : (data.biographyText3 ?? '').trim(),
+        mediumTags: Array.isArray(data.mediumTags) ? data.mediumTags : [],
       }
       const payload = { ...formattedData, ...artistExtra }
       
@@ -356,6 +361,14 @@ export default function CreateLandingArtistForm({ artists, countries }: CreateLa
                     
                     <div style={{ flex: 1 }}>
                       <div className="form-group">
+                        <label className="form-label">Supports/Mediums</label>
+                        <MediumMultiSelect
+                          options={mediums}
+                          selected={mediumTags || []}
+                          onChange={(values) => setValue('mediumTags' as any, values, { shouldValidate: true })}
+                        />
+                      </div>
+                      <div className="form-group">
                         <div className="d-flex align-items-center gap-md" style={{ marginBottom: '20px' }}>
                           <span className={!artistsPage ? 'text-primary' : 'text-muted'} style={{ fontWeight: !artistsPage ? 'bold' : 'normal' }}>Non affiché</span>
                           <label className="d-flex align-items-center" style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}>
@@ -501,7 +514,7 @@ export default function CreateLandingArtistForm({ artists, countries }: CreateLa
                 </div>
 
                 <div className="form-section mt-lg">
-                  <h2 className="section-title">Quote and Biography</h2>
+                  <h2 className="section-title">Citations et Biographies</h2>
                   <div className="form-group">
                     <label htmlFor="quoteFromInRealArt" className="form-label">Mots d'InRealArt sur l'artiste</label>
                     <input

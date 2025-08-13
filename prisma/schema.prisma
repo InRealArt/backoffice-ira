@@ -255,7 +255,7 @@ model Artist {
   Country         Country?         @relation(fields: [countryCode], references: [code])
   items           Item[]
   //Champs pour le descriptif détaillé de l'artiste sur la landing page & marketplace
-  tags String[] @default([])
+  mediumTags String[] @default([])
   birthYear Int?
   quoteFromInRealArt String?
   quoteHeader String?

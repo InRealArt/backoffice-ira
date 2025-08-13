@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getLandingArtistById } from '@/lib/actions/landing-artist-actions'
 import { getAllCountries } from '@/lib/actions/country-actions'
 import LandingArtistEditForm from './LandingArtistEditForm'
+import { getAllArtworkMediums } from '@/lib/actions/artwork-medium-actions'
 
 export default async function EditLandingArtistPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params
@@ -12,14 +13,15 @@ export default async function EditLandingArtistPage({ params }: { params: Promis
     notFound()
   }
   
-  const [landingArtist, countries] = await Promise.all([
+  const [landingArtist, countries, mediums] = await Promise.all([
     getLandingArtistById(landingArtistId),
-    getAllCountries()
+    getAllCountries(),
+    getAllArtworkMediums()
   ])
   
   if (!landingArtist) {
     notFound()
   }
   
-  return <LandingArtistEditForm landingArtist={landingArtist} countries={countries} />
+  return <LandingArtistEditForm landingArtist={landingArtist} countries={countries} mediums={mediums.map(m => m.name)} />
 } 

@@ -29,6 +29,7 @@ export interface LandingArtistData {
     biographyText2?: string | null
     biographyHeader3?: string | null
     biographyText3?: string | null
+    mediumTags?: string[]
 }
 
 /**
@@ -256,7 +257,8 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
             formData.biographyHeader2 !== undefined ||
             formData.biographyText2 !== undefined ||
             formData.biographyHeader3 !== undefined ||
-            formData.biographyText3 !== undefined
+            formData.biographyText3 !== undefined ||
+            formData.mediumTags !== undefined
         ) {
             try {
                 await prisma.artist.update({
@@ -273,6 +275,7 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
                         ...(formData.biographyText2 !== undefined ? { biographyText2: formData.biographyText2 } : {}),
                         ...(formData.biographyHeader3 !== undefined ? { biographyHeader3: formData.biographyHeader3 } : {}),
                         ...(formData.biographyText3 !== undefined ? { biographyText3: formData.biographyText3 } : {}),
+                        ...(formData.mediumTags !== undefined ? { mediumTags: formData.mediumTags } : {}),
                     }
                 })
             } catch (e) {
@@ -355,7 +358,8 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
             formData.biographyHeader2 !== undefined ||
             formData.biographyText2 !== undefined ||
             formData.biographyHeader3 !== undefined ||
-            formData.biographyText3 !== undefined
+            formData.biographyText3 !== undefined ||
+            formData.mediumTags !== undefined
         ) {
             try {
                 await prisma.artist.update({
@@ -372,6 +376,7 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
                         ...(formData.biographyText2 !== undefined ? { biographyText2: formData.biographyText2 } : {}),
                         ...(formData.biographyHeader3 !== undefined ? { biographyHeader3: formData.biographyHeader3 } : {}),
                         ...(formData.biographyText3 !== undefined ? { biographyText3: formData.biographyText3 } : {}),
+                        ...(formData.mediumTags !== undefined ? { mediumTags: formData.mediumTags } : {}),
                     }
                 })
             } catch (e) {

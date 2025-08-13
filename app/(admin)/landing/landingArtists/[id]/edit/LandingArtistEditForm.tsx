@@ -13,6 +13,7 @@ import TranslationField from '@/app/components/TranslationField'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { generateSlug } from '@/lib/utils'
 import CountrySelect from '@/app/components/Common/CountrySelect'
+import MediumMultiSelect from '@/app/components/Common/MediumMultiSelect'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -49,6 +50,7 @@ const formSchema = z.object({
     { message: 'URL LinkedIn invalide' }
   ).optional().transform(val => val === '' ? null : val),
   slug: z.string().optional(),
+    mediumTags: z.array(z.string()).default([]),
     quoteFromInRealArt: z.string().optional(),
     quoteHeader: z.string().optional(),
     quoteText: z.string().optional(),
@@ -92,6 +94,7 @@ interface LandingArtistWithArtist {
     biographyText2?: string | null
     biographyHeader3?: string | null
     biographyText3?: string | null
+    mediumTags?: string[]
   }
   slug?: string
 }
@@ -101,9 +104,10 @@ interface CountryOption { code: string, name: string }
 interface LandingArtistEditFormProps {
   landingArtist: LandingArtistWithArtist
   countries: CountryOption[]
+  mediums: string[]
 }
 
-export default function LandingArtistEditForm({ landingArtist, countries }: LandingArtistEditFormProps) {
+export default function LandingArtistEditForm({ landingArtist, countries, mediums }: LandingArtistEditFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [artworkImages, setArtworkImages] = useState<{name: string, url: string}[]>(() => {
@@ -170,6 +174,7 @@ export default function LandingArtistEditForm({ landingArtist, countries }: Land
       twitterUrl: landingArtist.twitterUrl || '',
       linkedinUrl: landingArtist.linkedinUrl || '',
       slug: landingArtist.slug || '',
+      mediumTags: landingArtist.artist.mediumTags || [],
       quoteFromInRealArt: landingArtist.artist.quoteFromInRealArt || '',
       quoteHeader: landingArtist.artist.quoteHeader || '',
       quoteText: landingArtist.artist.quoteText || '',
@@ -184,6 +189,7 @@ export default function LandingArtistEditForm({ landingArtist, countries }: Land
 
   const imageUrl = watch('imageUrl')
   const artistsPage = watch('artistsPage')
+  const mediumTags = watch('mediumTags')
   
   useEffect(() => {
     // Générer le slug à partir des informations de l'artiste
@@ -209,6 +215,7 @@ export default function LandingArtistEditForm({ landingArtist, countries }: Land
         instagramUrl: data.instagramUrl || null,
         twitterUrl: data.twitterUrl || null,
         linkedinUrl: data.linkedinUrl || null,
+        mediumTags: Array.isArray(data.mediumTags) ? data.mediumTags : [],
         slug: data.slug || slug,
         quoteFromInRealArt: (data.quoteFromInRealArt ?? '').trim() === '' ? null : (data.quoteFromInRealArt ?? '').trim(),
         quoteHeader: (data.quoteHeader ?? '').trim() === '' ? null : (data.quoteHeader ?? '').trim(),
@@ -376,6 +383,14 @@ export default function LandingArtistEditForm({ landingArtist, countries }: Land
                 
                 <div style={{ flex: 1 }}>
                   <div className="form-group">
+                    <label className="form-label">Supports/Mediums</label>
+                    <MediumMultiSelect
+                      options={mediums}
+                      selected={mediumTags}
+                      onChange={(values) => setValue('mediumTags', values, { shouldValidate: true })}
+                    />
+                  </div>
+                  <div className="form-group">
                     <div className="d-flex align-items-center gap-md" style={{ marginBottom: '20px' }}>
                       <span className={!artistsPage ? 'text-primary' : 'text-muted'} style={{ fontWeight: !artistsPage ? 'bold' : 'normal' }}>Non affiché</span>
                       <label className="d-flex align-items-center" style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}>
@@ -444,7 +459,7 @@ export default function LandingArtistEditForm({ landingArtist, countries }: Land
             </div>
 
             <div className="form-section mt-lg">
-              <h2 className="section-title">Quote and Biography</h2>
+              <h2 className="section-title">Citations et Biographies</h2>
               <div className="form-group">
                 <label htmlFor="quoteFromInRealArt" className="form-label">Mots d'InRealArt sur l'artiste</label>
                 <input
