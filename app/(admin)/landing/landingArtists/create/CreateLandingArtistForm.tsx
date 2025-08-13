@@ -246,19 +246,6 @@ export default function CreateLandingArtistForm({ artists, countries }: CreateLa
             
             {selectedArtist && (
               <>
-                <div className="form-group mt-md">
-                  <label htmlFor="slug" className="form-label">Slug</label>
-                  <input
-                    id="slug"
-                    type="text"
-                    value={slug}
-                    readOnly
-                    className="form-input"
-                    style={{ backgroundColor: '#f9f9f9' }}
-                  />
-                  <p className="form-hint">Généré automatiquement à partir du nom de l'artiste</p>
-                </div>
-
                 <div className="form-section mt-md">
                   <h2 className="section-title">Pays et année de naissance</h2>
                   <div className="d-flex gap-md mt-sm">
@@ -292,8 +279,22 @@ export default function CreateLandingArtistForm({ artists, countries }: CreateLa
                   </div>
                 </div>
                 
-                <div className="d-flex gap-lg mt-lg">
-                  <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
+                <div className="form-section mt-lg">
+                  <h2 className="section-title">Image et description</h2>
+                  <div className="form-group mb-lg">
+                    <label htmlFor="slug" className="form-label">Slug</label>
+                    <input
+                      id="slug"
+                      type="text"
+                      value={slug}
+                      readOnly
+                      className="form-input"
+                      style={{ backgroundColor: '#f9f9f9' }}
+                    />
+                    <p className="form-hint">Généré automatiquement à partir du nom de l'artiste</p>
+                  </div>
+                  <div className="d-flex gap-lg">
+                    <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
                     {imageUrl ? (
                       <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
                         <img
@@ -320,73 +321,74 @@ export default function CreateLandingArtistForm({ artists, countries }: CreateLa
                         <p className="form-error">{errors.imageUrl.message}</p>
                       )}
                     </div>
-                  </div>
-                  
-                  <div style={{ flex: 1 }}>
-                    <div className="form-group">
-                      <div className="d-flex align-items-center gap-md" style={{ marginBottom: '20px' }}>
-                        <span className={!artistsPage ? 'text-primary' : 'text-muted'} style={{ fontWeight: !artistsPage ? 'bold' : 'normal' }}>Non affiché</span>
-                        <label className="d-flex align-items-center" style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}>
-                          <input
-                            type="checkbox"
-                            {...register('artistsPage')}
-                            style={{ opacity: 0, width: 0, height: 0 }}
-                          />
-                          <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: artistsPage ? '#4f46e5' : '#ccc', borderRadius: '34px', transition: '0.4s' }}>
-                            <span style={{ position: 'absolute', content: '""', height: '22px', width: '22px', left: '4px', bottom: '4px', backgroundColor: 'white', borderRadius: '50%', transition: '0.4s', transform: artistsPage ? 'translateX(30px)' : 'translateX(0)' }}></span>
-                          </span>
-                        </label>
-                        <span className={artistsPage ? 'text-primary' : 'text-muted'} style={{ fontWeight: artistsPage ? 'bold' : 'normal' }}>Affiché</span>
-                      </div>
                     </div>
                     
-                    <TranslationField
-                      entityType="LandingArtist"
-                      entityId={null}
-                      field="intro"
-                      label="Introduction"
-                      errorMessage={errors.intro?.message}
-                    >
-                      <textarea
-                        id="intro"
-                        {...register('intro')}
-                        className={`form-textarea ${errors.intro ? 'input-error' : ''}`}
-                        rows={3}
-                        placeholder="Courte introduction de l'artiste qui sera affichée sur la page d'accueil"
-                      />
-                    </TranslationField>
-                    
-                    <TranslationField
-                      entityType="LandingArtist"
-                      entityId={null}
-                      field="description"
-                      label="Description"
-                      errorMessage={errors.description?.message}
-                    >
-                      <textarea
-                        id="description"
-                        {...register('description')}
-                        className={`form-textarea ${errors.description ? 'input-error' : ''}`}
-                        rows={5}
-                        placeholder="Description complète de l'artiste"
-                      />
-                    </TranslationField>
-                    
-                    <TranslationField
-                      entityType="LandingArtist"
-                      entityId={null}
-                      field="artworkStyle"
-                      label="Style artistique"
-                      errorMessage={errors.artworkStyle?.message}
-                    >
-                      <input
-                        id="artworkStyle"
-                        type="text"
-                        {...register('artworkStyle')}
-                        className={`form-input ${errors.artworkStyle ? 'input-error' : ''}`}
-                        placeholder="Style artistique (ex: Peinture contemporaine, Photographie, etc.)"
-                      />
-                    </TranslationField>
+                    <div style={{ flex: 1 }}>
+                      <div className="form-group">
+                        <div className="d-flex align-items-center gap-md" style={{ marginBottom: '20px' }}>
+                          <span className={!artistsPage ? 'text-primary' : 'text-muted'} style={{ fontWeight: !artistsPage ? 'bold' : 'normal' }}>Non affiché</span>
+                          <label className="d-flex align-items-center" style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}>
+                            <input
+                              type="checkbox"
+                              {...register('artistsPage')}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: artistsPage ? '#4f46e5' : '#ccc', borderRadius: '34px', transition: '0.4s' }}>
+                              <span style={{ position: 'absolute', content: '""', height: '22px', width: '22px', left: '4px', bottom: '4px', backgroundColor: 'white', borderRadius: '50%', transition: '0.4s', transform: artistsPage ? 'translateX(30px)' : 'translateX(0)' }}></span>
+                            </span>
+                          </label>
+                          <span className={artistsPage ? 'text-primary' : 'text-muted'} style={{ fontWeight: artistsPage ? 'bold' : 'normal' }}>Affiché</span>
+                        </div>
+                      </div>
+                      
+                      <TranslationField
+                        entityType="LandingArtist"
+                        entityId={null}
+                        field="intro"
+                        label="Introduction"
+                        errorMessage={errors.intro?.message}
+                      >
+                        <textarea
+                          id="intro"
+                          {...register('intro')}
+                          className={`form-textarea ${errors.intro ? 'input-error' : ''}`}
+                          rows={3}
+                          placeholder="Courte introduction de l'artiste qui sera affichée sur la page d'accueil"
+                        />
+                      </TranslationField>
+                      
+                      <TranslationField
+                        entityType="LandingArtist"
+                        entityId={null}
+                        field="description"
+                        label="Description"
+                        errorMessage={errors.description?.message}
+                      >
+                        <textarea
+                          id="description"
+                          {...register('description')}
+                          className={`form-textarea ${errors.description ? 'input-error' : ''}`}
+                          rows={5}
+                          placeholder="Description complète de l'artiste"
+                        />
+                      </TranslationField>
+                      
+                      <TranslationField
+                        entityType="LandingArtist"
+                        entityId={null}
+                        field="artworkStyle"
+                        label="Style artistique"
+                        errorMessage={errors.artworkStyle?.message}
+                      >
+                        <input
+                          id="artworkStyle"
+                          type="text"
+                          {...register('artworkStyle')}
+                          className={`form-input ${errors.artworkStyle ? 'input-error' : ''}`}
+                          placeholder="Style artistique (ex: Peinture contemporaine, Photographie, etc.)"
+                        />
+                      </TranslationField>
+                    </div>
                   </div>
                 </div>
                 
