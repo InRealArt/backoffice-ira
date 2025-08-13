@@ -19,6 +19,16 @@ export interface LandingArtistData {
     twitterUrl?: string | null
     linkedinUrl?: string | null
     slug?: string
+    // Champs Artist complémentaires
+    quoteFromInRealArt?: string | null
+    quoteHeader?: string | null
+    quoteText?: string | null
+    biographyHeader1?: string | null
+    biographyText1?: string | null
+    biographyHeader2?: string | null
+    biographyText2?: string | null
+    biographyHeader3?: string | null
+    biographyText3?: string | null
 }
 
 /**
@@ -235,13 +245,34 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
         }
 
         // Mettre à jour les champs de l'artiste si fournis
-        if (formData.countryCode !== undefined || formData.birthYear !== undefined) {
+        if (
+            formData.countryCode !== undefined ||
+            formData.birthYear !== undefined ||
+            formData.quoteFromInRealArt !== undefined ||
+            formData.quoteHeader !== undefined ||
+            formData.quoteText !== undefined ||
+            formData.biographyHeader1 !== undefined ||
+            formData.biographyText1 !== undefined ||
+            formData.biographyHeader2 !== undefined ||
+            formData.biographyText2 !== undefined ||
+            formData.biographyHeader3 !== undefined ||
+            formData.biographyText3 !== undefined
+        ) {
             try {
                 await prisma.artist.update({
                     where: { id: formData.artistId! },
                     data: {
                         ...(formData.countryCode !== undefined ? { countryCode: formData.countryCode } : {}),
                         ...(formData.birthYear !== undefined ? { birthYear: formData.birthYear } : {}),
+                        ...(formData.quoteFromInRealArt !== undefined ? { quoteFromInRealArt: formData.quoteFromInRealArt } : {}),
+                        ...(formData.quoteHeader !== undefined ? { quoteHeader: formData.quoteHeader } : {}),
+                        ...(formData.quoteText !== undefined ? { quoteText: formData.quoteText } : {}),
+                        ...(formData.biographyHeader1 !== undefined ? { biographyHeader1: formData.biographyHeader1 } : {}),
+                        ...(formData.biographyText1 !== undefined ? { biographyText1: formData.biographyText1 } : {}),
+                        ...(formData.biographyHeader2 !== undefined ? { biographyHeader2: formData.biographyHeader2 } : {}),
+                        ...(formData.biographyText2 !== undefined ? { biographyText2: formData.biographyText2 } : {}),
+                        ...(formData.biographyHeader3 !== undefined ? { biographyHeader3: formData.biographyHeader3 } : {}),
+                        ...(formData.biographyText3 !== undefined ? { biographyText3: formData.biographyText3 } : {}),
                     }
                 })
             } catch (e) {
@@ -313,13 +344,34 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
         }
 
         // Mettre à jour les champs de l'artiste si fournis
-        if (formData.countryCode !== undefined || formData.birthYear !== undefined) {
+        if (
+            formData.countryCode !== undefined ||
+            formData.birthYear !== undefined ||
+            formData.quoteFromInRealArt !== undefined ||
+            formData.quoteHeader !== undefined ||
+            formData.quoteText !== undefined ||
+            formData.biographyHeader1 !== undefined ||
+            formData.biographyText1 !== undefined ||
+            formData.biographyHeader2 !== undefined ||
+            formData.biographyText2 !== undefined ||
+            formData.biographyHeader3 !== undefined ||
+            formData.biographyText3 !== undefined
+        ) {
             try {
                 await prisma.artist.update({
                     where: { id: existingLandingArtist.artistId },
                     data: {
                         ...(formData.countryCode !== undefined ? { countryCode: formData.countryCode } : {}),
                         ...(formData.birthYear !== undefined ? { birthYear: formData.birthYear } : {}),
+                        ...(formData.quoteFromInRealArt !== undefined ? { quoteFromInRealArt: formData.quoteFromInRealArt } : {}),
+                        ...(formData.quoteHeader !== undefined ? { quoteHeader: formData.quoteHeader } : {}),
+                        ...(formData.quoteText !== undefined ? { quoteText: formData.quoteText } : {}),
+                        ...(formData.biographyHeader1 !== undefined ? { biographyHeader1: formData.biographyHeader1 } : {}),
+                        ...(formData.biographyText1 !== undefined ? { biographyText1: formData.biographyText1 } : {}),
+                        ...(formData.biographyHeader2 !== undefined ? { biographyHeader2: formData.biographyHeader2 } : {}),
+                        ...(formData.biographyText2 !== undefined ? { biographyText2: formData.biographyText2 } : {}),
+                        ...(formData.biographyHeader3 !== undefined ? { biographyHeader3: formData.biographyHeader3 } : {}),
+                        ...(formData.biographyText3 !== undefined ? { biographyText3: formData.biographyText3 } : {}),
                     }
                 })
             } catch (e) {

@@ -49,6 +49,15 @@ const formSchema = z.object({
     { message: 'URL LinkedIn invalide' }
   ).optional().transform(val => val === '' ? null : val),
   slug: z.string().optional(),
+    quoteFromInRealArt: z.string().optional(),
+    quoteHeader: z.string().optional(),
+    quoteText: z.string().optional(),
+    biographyHeader1: z.string().optional(),
+    biographyText1: z.string().optional(),
+    biographyHeader2: z.string().optional(),
+    biographyText2: z.string().optional(),
+    biographyHeader3: z.string().optional(),
+    biographyText3: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -101,6 +110,15 @@ export default function CreateLandingArtistForm({ artists, countries }: CreateLa
       twitterUrl: '',
       linkedinUrl: '',
       slug: '',
+      quoteFromInRealArt: '',
+      quoteHeader: '',
+      quoteText: '',
+      biographyHeader1: '',
+      biographyText1: '',
+      biographyHeader2: '',
+      biographyText2: '',
+      biographyHeader3: '',
+      biographyText3: '',
     }
   })
 
@@ -152,9 +170,22 @@ export default function CreateLandingArtistForm({ artists, countries }: CreateLa
         artworkImages: JSON.stringify(artworkImages),
         slug: data.slug
       }
+      // Ajouter les champs Artist si fournis
+      const artistExtra = {
+        quoteFromInRealArt: (data.quoteFromInRealArt ?? '').trim() === '' ? null : (data.quoteFromInRealArt ?? '').trim(),
+        quoteHeader: (data.quoteHeader ?? '').trim() === '' ? null : (data.quoteHeader ?? '').trim(),
+        quoteText: (data.quoteText ?? '').trim() === '' ? null : (data.quoteText ?? '').trim(),
+        biographyHeader1: (data.biographyHeader1 ?? '').trim() === '' ? null : (data.biographyHeader1 ?? '').trim(),
+        biographyText1: (data.biographyText1 ?? '').trim() === '' ? null : (data.biographyText1 ?? '').trim(),
+        biographyHeader2: (data.biographyHeader2 ?? '').trim() === '' ? null : (data.biographyHeader2 ?? '').trim(),
+        biographyText2: (data.biographyText2 ?? '').trim() === '' ? null : (data.biographyText2 ?? '').trim(),
+        biographyHeader3: (data.biographyHeader3 ?? '').trim() === '' ? null : (data.biographyHeader3 ?? '').trim(),
+        biographyText3: (data.biographyText3 ?? '').trim() === '' ? null : (data.biographyText3 ?? '').trim(),
+      }
+      const payload = { ...formattedData, ...artistExtra }
       
       // Appel à la server action pour créer l'artiste
-      const result = await createLandingArtistAction(formattedData)
+      const result = await createLandingArtistAction(payload)
       
       if (result.success) {
         success('Artiste ajouté avec succès')
@@ -469,6 +500,107 @@ export default function CreateLandingArtistForm({ artists, countries }: CreateLa
                   </div>
                 </div>
 
+                <div className="form-section mt-lg">
+                  <h2 className="section-title">Quote and Biography</h2>
+                  <div className="form-group">
+                    <label htmlFor="quoteFromInRealArt" className="form-label">Mots d'InRealArt sur l'artiste</label>
+                    <input
+                      id="quoteFromInRealArt"
+                      type="text"
+                      {...register('quoteFromInRealArt')}
+                      className="form-input"
+                      placeholder="Citation courte affichée sur la page"
+                    />
+                  </div>
+                  <div className="d-flex gap-md mt-md">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="quoteHeader" className="form-label">Entête de citation de l'artiste</label>
+                      <input
+                        id="quoteHeader"
+                        type="text"
+                        {...register('quoteHeader')}
+                        className="form-input"
+                        placeholder="Titre de la citation"
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="quoteText" className="form-label">Texte de citation de l'artiste</label>
+                      <textarea
+                        id="quoteText"
+                        {...register('quoteText')}
+                        className="form-textarea"
+                        rows={3}
+                        placeholder="Texte de la citation"
+                      />
+                    </div>
+                  </div>
+                  <div className="d-flex gap-md mt-md">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="biographyHeader1" className="form-label">Biographie section 1 - Titre</label>
+                      <input
+                        id="biographyHeader1"
+                        type="text"
+                        {...register('biographyHeader1')}
+                        className="form-input"
+                        placeholder="Titre section 1"
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="biographyText1" className="form-label">Biographie section 1 - Texte</label>
+                      <textarea
+                        id="biographyText1"
+                        {...register('biographyText1')}
+                        className="form-textarea"
+                        rows={4}
+                        placeholder="Texte section 1"
+                      />
+                    </div>
+                  </div>
+                  <div className="d-flex gap-md mt-md">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="biographyHeader2" className="form-label">Biographie section 2 - Titre</label>
+                      <input
+                        id="biographyHeader2"
+                        type="text"
+                        {...register('biographyHeader2')}
+                        className="form-input"
+                        placeholder="Titre section 2"
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="biographyText2" className="form-label">Biographie section 2 - Texte</label>
+                      <textarea
+                        id="biographyText2"
+                        {...register('biographyText2')}
+                        className="form-textarea"
+                        rows={4}
+                        placeholder="Texte section 2"
+                      />
+                    </div>
+                  </div>
+                  <div className="d-flex gap-md mt-md">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="biographyHeader3" className="form-label">Biographie section 3 - Titre</label>
+                      <input
+                        id="biographyHeader3"
+                        type="text"
+                        {...register('biographyHeader3')}
+                        className="form-input"
+                        placeholder="Titre section 3"
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="biographyText3" className="form-label">Biographie section 3 - Texte</label>
+                      <textarea
+                        id="biographyText3"
+                        {...register('biographyText3')}
+                        className="form-textarea"
+                        rows={4}
+                        placeholder="Texte section 3"
+                      />
+                    </div>
+                  </div>
+                </div>
                 <div className="form-section mt-lg">
                   <h2 className="section-title">Liens de réseaux sociaux</h2>
                   <p className="section-subtitle">Ajoutez les liens vers les réseaux sociaux et site web de l'artiste</p>
