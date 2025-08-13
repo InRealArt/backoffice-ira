@@ -11,6 +11,7 @@ import { createLandingArtistAction } from '@/lib/actions/landing-artist-actions'
 import TranslationField from '@/app/components/TranslationField'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { generateSlug } from '@/lib/utils'
+import CountrySelect from '@/app/components/Common/CountrySelect'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -20,6 +21,13 @@ const formSchema = z.object({
   artworkStyle: z.string().nullable().optional(),
   artistsPage: z.boolean().default(false),
   imageUrl: z.string().url('URL d\'image invalide'),
+  countryCode: z.string().optional().refine(
+    val => val === undefined || val === '' || /^[A-Za-z]{2}$/.test(val),
+    { message: 'Code pays (ISO 3166-1 alpha-2) invalide' }
+  ),
+  birthYear: z.string().optional()
+    .transform(v => (v || '').trim())
+    .refine(v => v === '' || /^\d{4}$/.test(v), { message: 'Année invalide (YYYY)' }),
   websiteUrl: z.string().refine(
     val => val === '' || /^https?:\/\//.test(val),
     { message: 'URL invalide' }
@@ -53,11 +61,14 @@ interface Artist {
   imageUrl: string
 }
 
+interface CountryOption { code: string, name: string }
+
 interface CreateLandingArtistFormProps {
   artists: Artist[]
+  countries: CountryOption[]
 }
 
-export default function CreateLandingArtistForm({ artists }: CreateLandingArtistFormProps) {
+export default function CreateLandingArtistForm({ artists, countries }: CreateLandingArtistFormProps) {
   const router = useRouter()
   const { success, error } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -82,6 +93,8 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
       artworkStyle: '',
       artistsPage: false,
       imageUrl: '',
+      countryCode: '',
+      birthYear: '',
       websiteUrl: '',
       facebookUrl: '',
       instagramUrl: '',
@@ -129,6 +142,8 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
         artworkStyle: data.artworkStyle || null,
         artistsPage: data.artistsPage,
         imageUrl: data.imageUrl,
+        countryCode: data.countryCode ? data.countryCode.toUpperCase() : undefined,
+        birthYear: data.birthYear && data.birthYear !== '' ? parseInt(data.birthYear, 10) : undefined,
         websiteUrl: data.websiteUrl || null,
         facebookUrl: data.facebookUrl || null, 
         instagramUrl: data.instagramUrl || null,
@@ -242,6 +257,39 @@ export default function CreateLandingArtistForm({ artists }: CreateLandingArtist
                     style={{ backgroundColor: '#f9f9f9' }}
                   />
                   <p className="form-hint">Généré automatiquement à partir du nom de l'artiste</p>
+                </div>
+
+                <div className="form-section mt-md">
+                  <h2 className="section-title">Pays et année de naissance</h2>
+                  <div className="d-flex gap-md mt-sm">
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="countryCode" className="form-label">Code pays (ISO)</label>
+                      <CountrySelect
+                        countries={countries}
+                        value={watch('countryCode') || ''}
+                        onChange={code => setValue('countryCode', code)}
+                        placeholder='FR'
+                      />
+                      {errors.countryCode && (
+                        <p className="form-error">{errors.countryCode.message}</p>
+                      )}
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                      <label htmlFor="birthYear" className="form-label">Année de naissance</label>
+                      <input
+                        id="birthYear"
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={4}
+                        {...register('birthYear')}
+                        className={`form-input ${errors.birthYear ? 'input-error' : ''}`}
+                        placeholder="1980"
+                      />
+                      {errors.birthYear && (
+                        <p className="form-error">{errors.birthYear.message}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="d-flex gap-lg mt-lg">

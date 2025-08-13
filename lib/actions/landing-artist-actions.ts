@@ -11,6 +11,8 @@ export interface LandingArtistData {
     imageUrl: string
     artworkImages?: string
     artistId?: number
+    countryCode?: string
+    birthYear?: number
     websiteUrl?: string | null
     facebookUrl?: string | null
     instagramUrl?: string | null
@@ -232,7 +234,22 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
             }
         }
 
-        // Créer le nouvel artiste
+        // Mettre à jour les champs de l'artiste si fournis
+        if (formData.countryCode !== undefined || formData.birthYear !== undefined) {
+            try {
+                await prisma.artist.update({
+                    where: { id: formData.artistId! },
+                    data: {
+                        ...(formData.countryCode !== undefined ? { countryCode: formData.countryCode } : {}),
+                        ...(formData.birthYear !== undefined ? { birthYear: formData.birthYear } : {}),
+                    }
+                })
+            } catch (e) {
+                console.error('Erreur lors de la mise à jour des infos pays/naissance de l\'artiste:', e)
+            }
+        }
+
+        // Créer le nouvel artiste landing
         const result = await createLandingArtist(formData)
 
         // Revalider les chemins pour mettre à jour les données dans toutes les pages concernées
@@ -293,6 +310,21 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
         // Si le slug n'est pas fourni, conserver celui existant
         if (!formData.slug) {
             formData.slug = existingLandingArtist.slug
+        }
+
+        // Mettre à jour les champs de l'artiste si fournis
+        if (formData.countryCode !== undefined || formData.birthYear !== undefined) {
+            try {
+                await prisma.artist.update({
+                    where: { id: existingLandingArtist.artistId },
+                    data: {
+                        ...(formData.countryCode !== undefined ? { countryCode: formData.countryCode } : {}),
+                        ...(formData.birthYear !== undefined ? { birthYear: formData.birthYear } : {}),
+                    }
+                })
+            } catch (e) {
+                console.error('Erreur lors de la mise à jour des infos pays/naissance de l\'artiste:', e)
+            }
         }
 
         // Mettre à jour l'artiste
