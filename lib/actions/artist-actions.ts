@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { Artist } from '@prisma/client'
+import { Artist, Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getArtistById(id: number): Promise<Artist | null> {
@@ -17,7 +17,7 @@ export async function getArtistById(id: number): Promise<Artist | null> {
 
 export async function updateArtist(
     id: number,
-    data: Omit<Artist, 'id'>
+    data: Prisma.ArtistUpdateInput
 ): Promise<{ success: boolean; message?: string }> {
     try {
         // Mise à jour de l'artiste

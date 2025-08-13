@@ -253,7 +253,7 @@ export default function LandingArtistEditForm({ landingArtist, countries }: Land
           <h1 className="page-title">Modifier l'artiste de la landing page</h1>
         </div>
         <p className="page-subtitle">
-          Modifier les informations de {landingArtist.artist.name} {landingArtist.artist.surname} pour la page d'accueil
+          Modifier les informations de {landingArtist.artist.name} {landingArtist.artist.surname} pour le site corpo et la marketplace
         </p>
       </div>
 
