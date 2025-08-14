@@ -14,6 +14,7 @@ import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { generateSlug } from '@/lib/utils'
 import CountrySelect from '@/app/components/Common/CountrySelect'
 import MediumMultiSelect from '@/app/components/Common/MediumMultiSelect'
+import { ArtistCategory } from '@prisma/client'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -83,6 +84,7 @@ interface LandingArtistWithArtist {
     name: string
     surname: string
     pseudo: string
+    categoryId?: number | null
     countryCode?: string | null
     birthYear?: number | null
     quoteFromInRealArt?: string | null
@@ -105,9 +107,10 @@ interface LandingArtistEditFormProps {
   landingArtist: LandingArtistWithArtist
   countries: CountryOption[]
   mediums: string[]
+  categories: ArtistCategory[]
 }
 
-export default function LandingArtistEditForm({ landingArtist, countries, mediums }: LandingArtistEditFormProps) {
+export default function LandingArtistEditForm({ landingArtist, countries, mediums, categories }: LandingArtistEditFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [artworkImages, setArtworkImages] = useState<{name: string, url: string}[]>(() => {
@@ -190,6 +193,7 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
   const imageUrl = watch('imageUrl')
   const artistsPage = watch('artistsPage')
   const mediumTags = watch('mediumTags')
+  const [categoryId, setCategoryId] = useState<number | ''>(landingArtist.artist.categoryId ?? '')
   
   useEffect(() => {
     // Générer le slug à partir des informations de l'artiste
@@ -235,7 +239,7 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
       }
       
       // Appel à la server action pour mettre à jour l'artiste
-      const result = await updateLandingArtistAction(landingArtist.id, landingArtistDataWithImages)
+      const result = await updateLandingArtistAction(landingArtist.id, { ...landingArtistDataWithImages, categoryId: typeof categoryId === 'number' ? categoryId : undefined })
       
       if (result.success) {
         success('Artiste mis à jour avec succès')
@@ -382,6 +386,20 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
                 </div>
                 
                 <div style={{ flex: 1 }}>
+                  <div className="form-group">
+                    <label htmlFor="categoryId" className="form-label">Catégorie</label>
+                    <select
+                      id="categoryId"
+                      className="form-select"
+                      value={categoryId}
+                      onChange={(e) => setCategoryId(e.target.value ? parseInt(e.target.value) : '')}
+                    >
+                      <option value="">-- Aucune catégorie --</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="form-group">
                     <label className="form-label">Supports/Mediums</label>
                     <MediumMultiSelect

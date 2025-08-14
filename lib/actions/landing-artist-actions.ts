@@ -19,6 +19,7 @@ export interface LandingArtistData {
     twitterUrl?: string | null
     linkedinUrl?: string | null
     slug?: string
+    categoryId?: number
     // Champs Artist complémentaires
     quoteFromInRealArt?: string | null
     quoteHeader?: string | null
@@ -249,6 +250,7 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
         if (
             formData.countryCode !== undefined ||
             formData.birthYear !== undefined ||
+            formData.categoryId !== undefined ||
             formData.quoteFromInRealArt !== undefined ||
             formData.quoteHeader !== undefined ||
             formData.quoteText !== undefined ||
@@ -266,6 +268,7 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
                     data: {
                         ...(formData.countryCode !== undefined ? { countryCode: formData.countryCode } : {}),
                         ...(formData.birthYear !== undefined ? { birthYear: formData.birthYear } : {}),
+                        ...(formData.categoryId !== undefined ? { categoryId: formData.categoryId } : {}),
                         ...(formData.quoteFromInRealArt !== undefined ? { quoteFromInRealArt: formData.quoteFromInRealArt } : {}),
                         ...(formData.quoteHeader !== undefined ? { quoteHeader: formData.quoteHeader } : {}),
                         ...(formData.quoteText !== undefined ? { quoteText: formData.quoteText } : {}),
@@ -350,6 +353,7 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
         if (
             formData.countryCode !== undefined ||
             formData.birthYear !== undefined ||
+            formData.categoryId !== undefined ||
             formData.quoteFromInRealArt !== undefined ||
             formData.quoteHeader !== undefined ||
             formData.quoteText !== undefined ||
@@ -367,6 +371,7 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
                     data: {
                         ...(formData.countryCode !== undefined ? { countryCode: formData.countryCode } : {}),
                         ...(formData.birthYear !== undefined ? { birthYear: formData.birthYear } : {}),
+                        ...(formData.categoryId !== undefined ? { categoryId: formData.categoryId } : {}),
                         ...(formData.quoteFromInRealArt !== undefined ? { quoteFromInRealArt: formData.quoteFromInRealArt } : {}),
                         ...(formData.quoteHeader !== undefined ? { quoteHeader: formData.quoteHeader } : {}),
                         ...(formData.quoteText !== undefined ? { quoteText: formData.quoteText } : {}),

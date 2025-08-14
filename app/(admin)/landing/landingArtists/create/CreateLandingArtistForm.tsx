@@ -13,6 +13,7 @@ import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { generateSlug } from '@/lib/utils'
 import CountrySelect from '@/app/components/Common/CountrySelect'
 import MediumMultiSelect from '@/app/components/Common/MediumMultiSelect'
+import type { ArtistCategory } from '@prisma/client'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -50,6 +51,7 @@ const formSchema = z.object({
     { message: 'URL LinkedIn invalide' }
   ).optional().transform(val => val === '' ? null : val),
   slug: z.string().optional(),
+  categoryId: z.string().optional(),
     quoteFromInRealArt: z.string().optional(),
     quoteHeader: z.string().optional(),
     quoteText: z.string().optional(),
@@ -78,9 +80,10 @@ interface CreateLandingArtistFormProps {
   artists: Artist[]
   countries: CountryOption[]
   mediums: string[]
+  categories: ArtistCategory[]
 }
 
-export default function CreateLandingArtistForm({ artists, countries, mediums }: CreateLandingArtistFormProps) {
+export default function CreateLandingArtistForm({ artists, countries, mediums, categories }: CreateLandingArtistFormProps) {
   const router = useRouter()
   const { success, error } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -113,6 +116,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums }:
       twitterUrl: '',
       linkedinUrl: '',
       slug: '',
+      categoryId: '',
       quoteFromInRealArt: '',
       quoteHeader: '',
       quoteText: '',
@@ -129,6 +133,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums }:
   const imageUrl = watch('imageUrl')
   const artistsPage = watch('artistsPage')
   const mediumTags = watch('mediumTags' as any) as string[] | undefined
+  const categoryId = watch('categoryId')
 
   // Mettre à jour l'artiste sélectionné lorsque l'ID change
   const handleArtistChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -172,7 +177,8 @@ export default function CreateLandingArtistForm({ artists, countries, mediums }:
         twitterUrl: data.twitterUrl || null,
         linkedinUrl: data.linkedinUrl || null,
         artworkImages: JSON.stringify(artworkImages),
-        slug: data.slug
+        slug: data.slug,
+        categoryId: data.categoryId ? parseInt(data.categoryId) : undefined
       }
       // Ajouter les champs Artist si fournis
       const artistExtra = {
@@ -360,6 +366,20 @@ export default function CreateLandingArtistForm({ artists, countries, mediums }:
                     </div>
                     
                     <div style={{ flex: 1 }}>
+                      <div className="form-group">
+                        <label htmlFor="categoryId" className="form-label">Catégorie</label>
+                        <select
+                          id="categoryId"
+                          {...register('categoryId')}
+                          className="form-select"
+                          value={categoryId || ''}
+                        >
+                          <option value="">-- Aucune catégorie --</option>
+                          {categories.map(cat => (
+                            <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
+                          ))}
+                        </select>
+                      </div>
                       <div className="form-group">
                         <label className="form-label">Supports/Mediums</label>
                         <MediumMultiSelect
