@@ -236,6 +236,7 @@ model ThirdPartyAddress {
 model ArtistCategory {
   id          Int      @id @default(autoincrement())
   name        String
+  imageUrl    String? //Image visible for the category card on landing & MP
   description String?
   artistCategories     ArtistCategoryArtist[]
 

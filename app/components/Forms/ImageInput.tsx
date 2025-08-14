@@ -7,12 +7,17 @@ interface ImageInputProps {
   currentImageUrl: string
   onImageUpload: (url: string) => void
   folderPath?: string
+  inputWidthPx?: number
+  thumbnailSizePx?: number
 }
 
-function ImageThumbnail({ url }: { url: string }) {
+function ImageThumbnail({ url, size }: { url: string, size: number }) {
   return (
-    <div className="inline-flex items-center mt-2">
-      <div className="relative w-24 h-24 border rounded-md overflow-hidden">
+    <div className="mt-2">
+      <div
+        className="relative border rounded-md overflow-hidden"
+        style={{ width: `${size}px`, height: `${size}px` }}
+      >
         <Image
           src={url}
           alt="Prévisualisation"
@@ -29,7 +34,9 @@ function ImageThumbnail({ url }: { url: string }) {
 
 export default function ImageInput({
   currentImageUrl,
-  onImageUpload
+  onImageUpload,
+  inputWidthPx,
+  thumbnailSizePx
 }: ImageInputProps) {
   const [imageUrl, setImageUrl] = useState(currentImageUrl || '')
   const [showPreview, setShowPreview] = useState(!!currentImageUrl)
@@ -53,12 +60,13 @@ export default function ImageInput({
         value={imageUrl}
         onChange={handleInputChange}
         placeholder="https://example.com/image.jpg"
-        className="w-full p-2 border rounded-md"
+        className="p-2 border rounded-md"
+        style={{ width: inputWidthPx ? `${inputWidthPx}px` : '100%' }}
       />
       
       {showPreview && imageUrl && (
         <div className="mt-2">
-          <ImageThumbnail url={imageUrl} />
+          <ImageThumbnail url={imageUrl} size={thumbnailSizePx || 96} />
         </div>
       )}
     </div>

@@ -10,10 +10,12 @@ import TranslationField from '@/app/components/TranslationField'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import Image from 'next/image'
 
 // Schéma de validation
 const formSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
+  imageUrl: z.string().url('URL invalide').or(z.literal('')).optional()
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -31,13 +33,18 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    setValue,
+    watch
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: artistCategory?.name || '',
+      imageUrl: artistCategory?.imageUrl || ''
     }
   })
+
+  const watchedImageUrl = watch('imageUrl')
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
@@ -50,6 +57,7 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
         // Mise à jour
         result = await updateArtistCategory(artistCategory.id, {
           name: data.name,
+          imageUrl: data.imageUrl && data.imageUrl.trim() !== '' ? data.imageUrl.trim() : null,
           description: artistCategory?.description ?? null
         })
         categoryId = artistCategory.id
@@ -57,6 +65,7 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
         // Création
         result = await createArtistCategory({
           name: data.name,
+          imageUrl: data.imageUrl && data.imageUrl.trim() !== '' ? data.imageUrl.trim() : null,
           description: null
         })
         categoryId = result.id
@@ -130,6 +139,45 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
                 placeholder="ex: Artistes célèbres, Choix des collectionneurs, Artistes à la une ..."
               />
             </TranslationField>
+          </div>
+        </div>
+
+        <div className="form-card">
+          <div className="card-header">
+            <h2 className="card-title">Image de la catégorie</h2>
+          </div>
+          <div className="card-content">
+            <div className="d-flex gap-lg">
+              <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
+                {watchedImageUrl ? (
+                  <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
+                    <Image
+                      src={watchedImageUrl}
+                      alt="Prévisualisation de la catégorie"
+                      fill
+                      style={{ objectFit: 'cover' }}
+                    />
+                  </div>
+                ) : (
+                  <div style={{ width: '200px', height: '200px', borderRadius: '8px', backgroundColor: '#e0e0e0', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
+                    Aucune image
+                  </div>
+                )}
+                <div className="form-group">
+                  <label htmlFor="imageUrl" className="form-label">URL de l'image</label>
+                  <input
+                    id="imageUrl"
+                    type="text"
+                    {...register('imageUrl')}
+                    className={`form-input ${errors.imageUrl ? 'input-error' : ''}`}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  {errors.imageUrl?.message && (
+                    <p className="form-error">{errors.imageUrl.message}</p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
