@@ -19,7 +19,7 @@ export interface LandingArtistData {
     twitterUrl?: string | null
     linkedinUrl?: string | null
     slug?: string
-    categoryId?: number
+    categoryIds?: number[]
     // Champs Artist complémentaires
     quoteFromInRealArt?: string | null
     quoteHeader?: string | null
@@ -57,10 +57,18 @@ export async function getLandingArtistById(id: number) {
         where: {
             id
         },
-        include: {
-            artist: true
-        }
-    })
+        include: (
+            {
+                artist: {
+                    include: {
+                        artistCategories: {
+                            include: { category: true }
+                        }
+                    }
+                }
+            } as any
+        )
+    }) as any
 }
 
 /**
@@ -250,7 +258,7 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
         if (
             formData.countryCode !== undefined ||
             formData.birthYear !== undefined ||
-            formData.categoryId !== undefined ||
+            formData.categoryIds !== undefined ||
             formData.quoteFromInRealArt !== undefined ||
             formData.quoteHeader !== undefined ||
             formData.quoteText !== undefined ||
@@ -263,12 +271,20 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
             formData.mediumTags !== undefined
         ) {
             try {
+                // Met à jour les infos et, si fourni, remplace les catégories via la table de jointure
+                const categoryOps = (formData.categoryIds !== undefined)
+                    ? {
+                        artistCategories: {
+                            deleteMany: {},
+                            create: formData.categoryIds.map((cid) => ({ categoryId: cid }))
+                        }
+                    }
+                    : {}
                 await prisma.artist.update({
                     where: { id: formData.artistId! },
                     data: {
                         ...(formData.countryCode !== undefined ? { countryCode: formData.countryCode } : {}),
                         ...(formData.birthYear !== undefined ? { birthYear: formData.birthYear } : {}),
-                        ...(formData.categoryId !== undefined ? { categoryId: formData.categoryId } : {}),
                         ...(formData.quoteFromInRealArt !== undefined ? { quoteFromInRealArt: formData.quoteFromInRealArt } : {}),
                         ...(formData.quoteHeader !== undefined ? { quoteHeader: formData.quoteHeader } : {}),
                         ...(formData.quoteText !== undefined ? { quoteText: formData.quoteText } : {}),
@@ -279,6 +295,7 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
                         ...(formData.biographyHeader3 !== undefined ? { biographyHeader3: formData.biographyHeader3 } : {}),
                         ...(formData.biographyText3 !== undefined ? { biographyText3: formData.biographyText3 } : {}),
                         ...(formData.mediumTags !== undefined ? { mediumTags: formData.mediumTags } : {}),
+                        ...categoryOps
                     }
                 })
             } catch (e) {
@@ -353,7 +370,7 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
         if (
             formData.countryCode !== undefined ||
             formData.birthYear !== undefined ||
-            formData.categoryId !== undefined ||
+            formData.categoryIds !== undefined ||
             formData.quoteFromInRealArt !== undefined ||
             formData.quoteHeader !== undefined ||
             formData.quoteText !== undefined ||
@@ -366,12 +383,19 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
             formData.mediumTags !== undefined
         ) {
             try {
+                const categoryOps = (formData.categoryIds !== undefined)
+                    ? {
+                        artistCategories: {
+                            deleteMany: {},
+                            create: formData.categoryIds.map((cid) => ({ categoryId: cid }))
+                        }
+                    }
+                    : {}
                 await prisma.artist.update({
                     where: { id: existingLandingArtist.artistId },
                     data: {
                         ...(formData.countryCode !== undefined ? { countryCode: formData.countryCode } : {}),
                         ...(formData.birthYear !== undefined ? { birthYear: formData.birthYear } : {}),
-                        ...(formData.categoryId !== undefined ? { categoryId: formData.categoryId } : {}),
                         ...(formData.quoteFromInRealArt !== undefined ? { quoteFromInRealArt: formData.quoteFromInRealArt } : {}),
                         ...(formData.quoteHeader !== undefined ? { quoteHeader: formData.quoteHeader } : {}),
                         ...(formData.quoteText !== undefined ? { quoteText: formData.quoteText } : {}),
@@ -382,6 +406,7 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
                         ...(formData.biographyHeader3 !== undefined ? { biographyHeader3: formData.biographyHeader3 } : {}),
                         ...(formData.biographyText3 !== undefined ? { biographyText3: formData.biographyText3 } : {}),
                         ...(formData.mediumTags !== undefined ? { mediumTags: formData.mediumTags } : {}),
+                        ...categoryOps
                     }
                 })
             } catch (e) {

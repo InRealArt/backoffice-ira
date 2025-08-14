@@ -217,7 +217,7 @@ model Address {
   orders              Order[]
   thirdPartyAddresses ThirdPartyAddress[]
   physicalItems       PhysicalItem[]      @relation("PhysicalItemShipping")
-  Country       Country?       @relation(fields: [countryCode], references: [code])
+  Country             Country?            @relation(fields: [countryCode], references: [code])
 
   @@map("Address")
   @@schema("public")
@@ -234,48 +234,61 @@ model ThirdPartyAddress {
 }
 
 model ArtistCategory {
-  id Int @id @default(autoincrement())
-  name String
+  id          Int      @id @default(autoincrement())
+  name        String
   description String?
-  artists Artist[]
+  artistCategories     ArtistCategoryArtist[]
+
   @@schema("public")
 }
 
 model Artist {
-  id              Int              @id @default(autoincrement())
-  name            String
-  surname         String
-  pseudo          String           @unique
-  description     String           @unique
-  artworkStyle    String?
-  publicKey       String           @unique
-  imageUrl        String           @unique
-  isGallery       Boolean          @default(false)
-  backgroundImage String?
-  slug            String?          @unique
-  featuredArtwork String?
-  countryCode     String?
-  collections     NftCollection[]
-  Profile         Profile[]
-  BackofficeUser  BackofficeUser[]
-  LandingArtist   LandingArtist[]
-  PresaleArtworks PresaleArtwork[]
-  Country         Country?         @relation(fields: [countryCode], references: [code])
-  items           Item[]
+  id                 Int              @id @default(autoincrement())
+  name               String
+  surname            String
+  pseudo             String           @unique
+  description        String           @unique
+  artworkStyle       String?
+  publicKey          String           @unique
+  imageUrl           String           @unique
+  isGallery          Boolean          @default(false)
+  backgroundImage    String?
+  slug               String?          @unique
+  featuredArtwork    String?
+  countryCode        String?
+  collections        NftCollection[]
+  Profile            Profile[]
+  BackofficeUser     BackofficeUser[]
+  LandingArtist      LandingArtist[]
+  PresaleArtworks    PresaleArtwork[]
+  Country            Country?         @relation(fields: [countryCode], references: [code])
+  items              Item[]
   //Champs pour le descriptif détaillé de l'artiste sur la landing page & marketplace
-  mediumTags String[] @default([])
-  birthYear Int?
+  mediumTags         String[]         @default([])
+  birthYear          Int?
   quoteFromInRealArt String?
-  quoteHeader String?
-  quoteText String?
-  biographyHeader1 String?
-  biographyText1 String?
-  biographyHeader2 String?
-  biographyText2 String?
-  biographyHeader3 String?
-  biographyText3 String?  
-  categoryId Int?
-  category ArtistCategory? @relation(fields: [categoryId], references: [id])
+  quoteHeader        String?
+  quoteText          String?
+  biographyHeader1   String?
+  biographyText1     String?
+  biographyHeader2   String?
+  biographyText2     String?
+  biographyHeader3   String?
+  biographyText3     String?
+  artistCategories   ArtistCategoryArtist[]
+
+  @@schema("public")
+}
+
+model ArtistCategoryArtist {
+  id         Int             @id @default(autoincrement())
+  artistId   Int
+  categoryId Int
+  artist     Artist          @relation(fields: [artistId], references: [id])
+  category   ArtistCategory  @relation(fields: [categoryId], references: [id])
+
+  @@unique([artistId, categoryId])
+  @@map("ArtistCategoryArtist")
   @@schema("public")
 }
 
@@ -362,20 +375,20 @@ model Transaction {
 }
 
 model BackofficeUser {
-  id               Int                  @id @default(autoincrement())
-  email            String?              @unique
-  walletAddress    String?              @unique
-  linkedWallets    Json                 @default("[]")
-  lastLogin        DateTime             @db.Timestamp(6)
-  userMetadata     Json
-  role             BackofficeUserRoles?
-  firstName        String?
-  lastName         String?
-  createdAt        DateTime             @default(now()) @db.Timestamp(6)
-  artistId         Int?
-  artist           Artist?              @relation(fields: [artistId], references: [id]) // Nouvelle relation
-  items            Item[]
-  addresses        Address[]
+  id            Int                  @id @default(autoincrement())
+  email         String?              @unique
+  walletAddress String?              @unique
+  linkedWallets Json                 @default("[]")
+  lastLogin     DateTime             @db.Timestamp(6)
+  userMetadata  Json
+  role          BackofficeUserRoles?
+  firstName     String?
+  lastName      String?
+  createdAt     DateTime             @default(now()) @db.Timestamp(6)
+  artistId      Int?
+  artist        Artist?              @relation(fields: [artistId], references: [id]) // Nouvelle relation
+  items         Item[]
+  addresses     Address[]
 
   @@index([email])
   @@index([walletAddress])
@@ -477,12 +490,12 @@ model Item {
   techniqueId        Int?
   technique          ArtworkTechnique? @relation(fields: [techniqueId], references: [id])
 
-  createdAt          DateTime          @default(now()) @db.Date
+  createdAt DateTime @default(now()) @db.Date
 
   // Relations
-  nftItem        NftItem?
-  physicalItem   PhysicalItem?
-  
+  nftItem      NftItem?
+  physicalItem PhysicalItem?
+
   @@index([idUser])
   @@index([artistId])
   @@index([mediumId])
@@ -943,5 +956,6 @@ model Country {
   name      String // Nom du pays (ex: France, United States, United Kingdom)
   addresses Address[]
   artists   Artist[]
+
   @@schema("public")
 }

@@ -14,6 +14,7 @@ import { generateSlug } from '@/lib/utils'
 import CountrySelect from '@/app/components/Common/CountrySelect'
 import MediumMultiSelect from '@/app/components/Common/MediumMultiSelect'
 import type { ArtistCategory } from '@prisma/client'
+import CategoryMultiSelect from '@/app/components/Common/CategoryMultiSelect'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -51,7 +52,7 @@ const formSchema = z.object({
     { message: 'URL LinkedIn invalide' }
   ).optional().transform(val => val === '' ? null : val),
   slug: z.string().optional(),
-  categoryId: z.string().optional(),
+  categoryIds: z.array(z.string()).optional(),
     quoteFromInRealArt: z.string().optional(),
     quoteHeader: z.string().optional(),
     quoteText: z.string().optional(),
@@ -116,7 +117,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
       twitterUrl: '',
       linkedinUrl: '',
       slug: '',
-      categoryId: '',
+      categoryIds: [],
       quoteFromInRealArt: '',
       quoteHeader: '',
       quoteText: '',
@@ -133,7 +134,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
   const imageUrl = watch('imageUrl')
   const artistsPage = watch('artistsPage')
   const mediumTags = watch('mediumTags' as any) as string[] | undefined
-  const categoryId = watch('categoryId')
+  const categoryIds = watch('categoryIds') || []
 
   // Mettre à jour l'artiste sélectionné lorsque l'ID change
   const handleArtistChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -178,7 +179,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
         linkedinUrl: data.linkedinUrl || null,
         artworkImages: JSON.stringify(artworkImages),
         slug: data.slug,
-        categoryId: data.categoryId ? parseInt(data.categoryId) : undefined
+        categoryIds: Array.isArray(data.categoryIds) ? data.categoryIds.map(v => parseInt(v)) : undefined
       }
       // Ajouter les champs Artist si fournis
       const artistExtra = {
@@ -366,18 +367,12 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                     
                     <div style={{ flex: 1 }}>
                       <div className="form-group">
-                        <label htmlFor="categoryId" className="form-label">Catégorie</label>
-                        <select
-                          id="categoryId"
-                          {...register('categoryId')}
-                          className="form-select"
-                          value={categoryId || ''}
-                        >
-                          <option value="">-- Aucune catégorie --</option>
-                          {categories.map(cat => (
-                            <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
-                          ))}
-                        </select>
+                        <label className="form-label">Catégories</label>
+                        <CategoryMultiSelect
+                          options={categories.map(c => ({ id: c.id, name: c.name }))}
+                          selected={categoryIds.map(v => parseInt(v))}
+                          onChange={(values) => setValue('categoryIds' as any, values.map(String), { shouldValidate: true })}
+                        />
                       </div>
                       <div className="form-group">
                         <label className="form-label">Supports/Mediums</label>
