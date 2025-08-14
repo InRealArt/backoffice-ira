@@ -322,9 +322,9 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                 </div>
                 
                 <div className="form-section mt-lg">
-                  <h2 className="section-title">Image et description</h2>
+                  <h2 className="section-title">Catégorie, Images & description</h2>
                   <div className="form-group mb-lg">
-                    <label htmlFor="slug" className="form-label">Slug</label>
+                    <label htmlFor="slug" className="form-label">Slug (Généré automatiquement à partir du nom de l'artiste)</label>
                     <input
                       id="slug"
                       type="text"
@@ -333,7 +333,6 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                       className="form-input"
                       style={{ backgroundColor: '#f9f9f9' }}
                     />
-                    <p className="form-hint">Généré automatiquement à partir du nom de l'artiste</p>
                   </div>
                   <div className="d-flex gap-lg">
                     <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
