@@ -233,6 +233,14 @@ model ThirdPartyAddress {
   @@schema("public")
 }
 
+model ArtistCategory {
+  id Int @id @default(autoincrement())
+  name String
+  description String?
+  artists Artist[]
+  @@schema("public")
+}
+
 model Artist {
   id              Int              @id @default(autoincrement())
   name            String
@@ -266,6 +274,8 @@ model Artist {
   biographyText2 String?
   biographyHeader3 String?
   biographyText3 String?  
+  categoryId Int?
+  category ArtistCategory? @relation(fields: [categoryId], references: [id])
   @@schema("public")
 }
 

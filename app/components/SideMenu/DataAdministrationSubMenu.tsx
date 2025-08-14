@@ -30,6 +30,11 @@ export default function DataAdministrationSubMenu({ isActive, isOpen, toggleSubm
             isSubmenuItem={true}
             onClick={() => onNavigate('/dataAdministration/artists', 'artists')}
           />
+          <SideMenuItem 
+            label="Catégories d'artistes" 
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/dataAdministration/artist-categories', 'artist-categories')}
+          />
           <SideMenuItem
             label="Mediums d'œuvres"
             isSubmenuItem={true}
