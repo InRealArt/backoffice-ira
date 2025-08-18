@@ -15,7 +15,12 @@ import Image from 'next/image'
 // Schéma de validation
 const formSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
-  imageUrl: z.string().url('URL invalide').or(z.literal('')).optional()
+  imageUrl: z.string().url('URL invalide').or(z.literal('')).optional(),
+  order: z.preprocess((v) => {
+    if (v === '' || v === null || typeof v === 'undefined') return undefined
+    const n = Number(v)
+    return Number.isNaN(n) ? undefined : n
+  }, z.number().int().optional())
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -40,7 +45,8 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: artistCategory?.name || '',
-      imageUrl: artistCategory?.imageUrl || ''
+      imageUrl: artistCategory?.imageUrl || '',
+      order: typeof artistCategory?.order === 'number' ? artistCategory.order : undefined
     }
   })
 
@@ -58,7 +64,8 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
         result = await updateArtistCategory(artistCategory.id, {
           name: data.name,
           imageUrl: data.imageUrl && data.imageUrl.trim() !== '' ? data.imageUrl.trim() : null,
-          description: artistCategory?.description ?? null
+          description: artistCategory?.description ?? null,
+          order: typeof data.order === 'number' ? data.order : null
         })
         categoryId = artistCategory.id
       } else {
@@ -66,7 +73,8 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
         result = await createArtistCategory({
           name: data.name,
           imageUrl: data.imageUrl && data.imageUrl.trim() !== '' ? data.imageUrl.trim() : null,
-          description: null
+          description: null,
+          order: typeof data.order === 'number' ? data.order : null
         })
         categoryId = result.id
       }
@@ -139,6 +147,22 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
                 placeholder="ex: Artistes célèbres, Choix des collectionneurs, Artistes à la une ..."
               />
             </TranslationField>
+
+            <div className="form-group" style={{ marginTop: '16px' }}>
+              <label htmlFor="order" className="form-label">Ordre d'affichage</label>
+              <input
+                id="order"
+                type="number"
+                step={1}
+                min={0}
+                {...register('order')}
+                className={`form-input ${errors.order ? 'input-error' : ''}`}
+                placeholder="ex: 1, 2, 3 ..."
+              />
+              {errors.order?.message && (
+                <p className="form-error">{errors.order.message as string}</p>
+              )}
+            </div>
           </div>
         </div>
 

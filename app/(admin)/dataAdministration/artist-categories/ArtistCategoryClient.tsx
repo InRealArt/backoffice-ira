@@ -117,6 +117,12 @@ export default function ArtistCategoryClient({ artistCategories }: ArtistCategor
       )
     },
     {
+      key: 'order',
+      header: 'Ordre',
+      width: '80px',
+      sortable: true
+    },
+    {
       key: 'actions',
       header: 'Actions',
       className: 'text-right',

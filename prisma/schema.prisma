@@ -238,6 +238,7 @@ model ArtistCategory {
   name        String
   imageUrl    String? //Image visible for the category card on landing & MP
   description String?
+  order       Int?
   artistCategories     ArtistCategoryArtist[]
 
   @@schema("public")

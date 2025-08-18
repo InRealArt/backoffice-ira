@@ -92,6 +92,13 @@ export async function getSchemaModels() {
                 { name: 'image', type: 'String' }
             ]
         },
+        {
+            name: 'ArtistCategory',
+            fields: [
+                { name: 'name', type: 'String' },
+                { name: 'description', type: 'String' }
+            ]
+        }
     ]
 
     return landingModels

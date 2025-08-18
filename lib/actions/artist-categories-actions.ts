@@ -31,12 +31,22 @@ export async function getAllArtistCategories(): Promise<ArtistCategory[]> {
 
 export async function updateArtistCategory(
     id: number,
-    data: Omit<ArtistCategory, 'id'>
+    data: {
+        name?: string
+        imageUrl?: string | null
+        description?: string | null
+        order?: number | null
+    }
 ): Promise<{ success: boolean; message?: string }> {
     try {
         await prisma.artistCategory.update({
             where: { id },
-            data
+            data: {
+                name: data.name,
+                imageUrl: data.imageUrl,
+                description: data.description,
+                order: data.order
+            }
         })
 
         revalidatePath(`/dataAdministration/artist-categories`)
@@ -62,11 +72,21 @@ export async function updateArtistCategory(
 }
 
 export async function createArtistCategory(
-    data: Omit<ArtistCategory, 'id'>
+    data: {
+        name: string
+        imageUrl?: string | null
+        description?: string | null
+        order?: number | null
+    }
 ): Promise<{ success: boolean; message?: string; id?: number }> {
     try {
         const newArtistCategory = await prisma.artistCategory.create({
-            data
+            data: {
+                name: data.name,
+                imageUrl: data.imageUrl,
+                description: data.description,
+                order: data.order
+            }
         })
 
         revalidatePath(`/dataAdministration/artist-categories`)
