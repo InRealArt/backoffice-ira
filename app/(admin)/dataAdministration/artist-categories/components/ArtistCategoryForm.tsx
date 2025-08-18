@@ -11,6 +11,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
+import { generateSlug } from '@/lib/utils'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -51,6 +52,7 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
   })
 
   const watchedImageUrl = watch('imageUrl')
+  const watchedName = watch('name')
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
@@ -201,6 +203,25 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="form-card">
+          <div className="card-header">
+            <h2 className="card-title">Slug</h2>
+          </div>
+          <div className="card-content">
+            <div className="form-group">
+              <label htmlFor="slug" className="form-label">Slug (lecture seule)</label>
+              <input
+                id="slug"
+                type="text"
+                value={isEditing ? (artistCategory?.slug || generateSlug(watchedName || '')) : generateSlug(watchedName || '')}
+                readOnly
+                className="form-input"
+              />
+              <p className="form-hint">Le slug est généré automatiquement à partir du nom.</p>
             </div>
           </div>
         </div>

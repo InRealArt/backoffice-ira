@@ -1,6 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { generateSlug } from '@/lib/utils'
 import { ArtistCategory } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 
@@ -29,6 +30,32 @@ export async function getAllArtistCategories(): Promise<ArtistCategory[]> {
     }
 }
 
+async function generateUniqueArtistCategorySlug(base: string, excludeId?: number): Promise<string> {
+    let baseSlug = generateSlug(base || '')
+    if (!baseSlug) baseSlug = `artist-category-${Date.now()}`
+
+    const existing = await prisma.artistCategory.findFirst({
+        where: {
+            slug: baseSlug,
+            ...(excludeId ? { id: { not: excludeId } } : {})
+        }
+    })
+    if (!existing) return baseSlug
+
+    let counter = 2
+    while (true) {
+        const candidate = `${baseSlug}-${counter}`
+        const conflict = await prisma.artistCategory.findFirst({
+            where: {
+                slug: candidate,
+                ...(excludeId ? { id: { not: excludeId } } : {})
+            }
+        })
+        if (!conflict) return candidate
+        counter++
+    }
+}
+
 export async function updateArtistCategory(
     id: number,
     data: {
@@ -39,14 +66,20 @@ export async function updateArtistCategory(
     }
 ): Promise<{ success: boolean; message?: string }> {
     try {
+        const updateData: any = {
+            name: data.name,
+            imageUrl: data.imageUrl,
+            description: data.description,
+            order: data.order
+        }
+
+        if (typeof data.name === 'string' && data.name.trim() !== '') {
+            updateData.slug = await generateUniqueArtistCategorySlug(data.name, id)
+        }
+
         await prisma.artistCategory.update({
             where: { id },
-            data: {
-                name: data.name,
-                imageUrl: data.imageUrl,
-                description: data.description,
-                order: data.order
-            }
+            data: updateData
         })
 
         revalidatePath(`/dataAdministration/artist-categories`)
@@ -80,12 +113,14 @@ export async function createArtistCategory(
     }
 ): Promise<{ success: boolean; message?: string; id?: number }> {
     try {
+        const uniqueSlug = await generateUniqueArtistCategorySlug(data.name)
         const newArtistCategory = await prisma.artistCategory.create({
             data: {
                 name: data.name,
                 imageUrl: data.imageUrl,
                 description: data.description,
-                order: data.order
+                order: data.order,
+                slug: uniqueSlug
             }
         })
 
