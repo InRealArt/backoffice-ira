@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation'
 import ArtistCategoryForm from '../../components/ArtistCategoryForm'
 
 export const metadata = {
-  title: 'Modifier un medium d\'œuvre | Data Administration',
-  description: 'Modifier les informations d\'un medium d\'œuvre',
+  title: 'Modifier une catégorie d\'artiste | Data Administration',
+  description: 'Modifier les informations d\'une catégorie d\'artiste',
 }
 
 interface EditArtistCategoryPageProps {

@@ -16,6 +16,7 @@ import { generateSlug } from '@/lib/utils'
 // Schéma de validation
 const formSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
+  description: z.string().optional(),
   imageUrl: z.string().url('URL invalide').or(z.literal('')).optional(),
   order: z.preprocess((v) => {
     if (v === '' || v === null || typeof v === 'undefined') return undefined
@@ -46,6 +47,7 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: artistCategory?.name || '',
+      description: artistCategory?.description || '',
       imageUrl: artistCategory?.imageUrl || '',
       order: typeof artistCategory?.order === 'number' ? artistCategory.order : undefined
     }
@@ -65,8 +67,8 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
         // Mise à jour
         result = await updateArtistCategory(artistCategory.id, {
           name: data.name,
+          description: data.description && data.description.trim() !== '' ? data.description.trim() : null,
           imageUrl: data.imageUrl && data.imageUrl.trim() !== '' ? data.imageUrl.trim() : null,
-          description: artistCategory?.description ?? null,
           order: typeof data.order === 'number' ? data.order : null
         })
         categoryId = artistCategory.id
@@ -74,8 +76,8 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
         // Création
         result = await createArtistCategory({
           name: data.name,
+          description: data.description && data.description.trim() !== '' ? data.description.trim() : null,
           imageUrl: data.imageUrl && data.imageUrl.trim() !== '' ? data.imageUrl.trim() : null,
-          description: null,
           order: typeof data.order === 'number' ? data.order : null
         })
         categoryId = result.id
@@ -87,7 +89,8 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
         // Gestion des traductions pour le nom
         try {
           await handleEntityTranslations('ArtistCategory', categoryId, {
-            name: data.name
+            name: data.name,
+            description: data.description || null
           })
         } catch (translationError) {
           console.error('Erreur lors de la gestion des traductions:', translationError)
@@ -147,6 +150,23 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
                 {...register('name')}
                 className={`form-input ${errors.name ? 'input-error' : ''}`}
                 placeholder="ex: Artistes célèbres, Choix des collectionneurs, Artistes à la une ..."
+              />
+            </TranslationField>
+
+            <TranslationField
+              entityType="ArtistCategory"
+              entityId={artistCategory?.id || null}
+              field="description"
+              label="Description de la catégorie"
+              required={false}
+            >
+              <textarea
+                id="description"
+                {...register('description')}
+                className="form-input"
+                rows={4}
+                placeholder="Décrivez cette catégorie d'artistes..."
+                style={{ resize: 'vertical', minHeight: '100px' }}
               />
             </TranslationField>
 
