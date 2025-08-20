@@ -52,16 +52,16 @@ const formSchema = z.object({
     { message: 'URL LinkedIn invalide' }
   ).optional().transform(val => val === '' ? null : val),
   slug: z.string().optional(),
-    mediumTags: z.array(z.string()).default([]),
-    quoteFromInRealArt: z.string().optional(),
-    quoteHeader: z.string().optional(),
-    quoteText: z.string().optional(),
-    biographyHeader1: z.string().optional(),
-    biographyText1: z.string().optional(),
-    biographyHeader2: z.string().optional(),
-    biographyText2: z.string().optional(),
-    biographyHeader3: z.string().optional(),
-    biographyText3: z.string().optional(),
+  mediumTags: z.array(z.string()).default([]),
+  quoteFromInRealArt: z.string().optional(),
+  quoteHeader: z.string().optional(),
+  quoteText: z.string().optional(),
+  biographyHeader1: z.string().optional(),
+  biographyText1: z.string().optional(),
+  biographyHeader2: z.string().optional(),
+  biographyText2: z.string().optional(),
+  biographyHeader3: z.string().optional(),
+  biographyText3: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -249,7 +249,7 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
       if (result.success) {
         success('Artiste mis à jour avec succès')
         
-        // Gestion des traductions pour intro et description
+        // Gestion des traductions pour intro, description et style artistique
         try {
           await handleEntityTranslations('LandingArtist', landingArtist.id, {
             intro: data.intro || null,
@@ -257,7 +257,25 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
             artworkStyle: data.artworkStyle || null
           })
         } catch (translationError) {
-          console.error('Erreur lors de la gestion des traductions:', translationError)
+          console.error('Erreur lors de la gestion des traductions LandingArtist:', translationError)
+          // On ne bloque pas la mise à jour en cas d'erreur de traduction
+        }
+
+        // Gestion des traductions pour les champs de citations et biographies (LandingArtist)
+        try {
+          await handleEntityTranslations('LandingArtist', landingArtist.id, {
+            quoteFromInRealArt: data.quoteFromInRealArt || null,
+            quoteHeader: data.quoteHeader || null,
+            quoteText: data.quoteText || null,
+            biographyHeader1: data.biographyHeader1 || null,
+            biographyText1: data.biographyText1 || null,
+            biographyHeader2: data.biographyHeader2 || null,
+            biographyText2: data.biographyText2 || null,
+            biographyHeader3: data.biographyHeader3 || null,
+            biographyText3: data.biographyText3 || null
+          })
+        } catch (translationError) {
+          console.error('Erreur lors de la gestion des traductions LandingArtist:', translationError)
           // On ne bloque pas la mise à jour en cas d'erreur de traduction
         }
         
@@ -477,8 +495,12 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
 
             <div className="form-section mt-lg">
               <h2 className="section-title">Citations et Biographies</h2>
-              <div className="form-group">
-                <label htmlFor="quoteFromInRealArt" className="form-label">Mots d'InRealArt sur l'artiste</label>
+              <TranslationField
+                entityType="LandingArtist"
+                entityId={landingArtist.id}
+                field="quoteFromInRealArt"
+                label="Mots d'InRealArt sur l'artiste"
+              >
                 <input
                   id="quoteFromInRealArt"
                   type="text"
@@ -486,93 +508,141 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
                   className="form-input"
                   placeholder="Citation courte affichée sur la page"
                 />
-              </div>
+              </TranslationField>
               <div className="d-flex gap-md mt-md">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="quoteHeader" className="form-label">Entête de citation de l'artiste</label>
-                  <input
-                    id="quoteHeader"
-                    type="text"
-                    {...register('quoteHeader')}
-                    className="form-input"
-                    placeholder="Titre de la citation"
-                  />
+                <div style={{ flex: 1 }}>
+                  <TranslationField
+                    entityType="LandingArtist"
+                    entityId={landingArtist.id}
+                    field="quoteHeader"
+                    label="Entête de citation de l'artiste"
+                  >
+                    <input
+                      id="quoteHeader"
+                      type="text"
+                      {...register('quoteHeader')}
+                      className="form-input"
+                      placeholder="Titre de la citation"
+                    />
+                  </TranslationField>
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="quoteText" className="form-label">Texte de citation de l'artiste</label>
-                  <textarea
-                    id="quoteText"
-                    {...register('quoteText')}
-                    className="form-textarea"
-                    rows={3}
-                    placeholder="Texte de la citation"
-                  />
-                </div>
-              </div>
-              <div className="d-flex gap-md mt-md">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="biographyHeader1" className="form-label">Biographie section 1 - Titre</label>
-                  <input
-                    id="biographyHeader1"
-                    type="text"
-                    {...register('biographyHeader1')}
-                    className="form-input"
-                    placeholder="Titre section 1"
-                  />
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="biographyText1" className="form-label">Biographie section 1 - Texte</label>
-                  <textarea
-                    id="biographyText1"
-                    {...register('biographyText1')}
-                    className="form-textarea"
-                    rows={4}
-                    placeholder="Texte section 1"
-                  />
+                <div style={{ flex: 1 }}>
+                  <TranslationField
+                    entityType="LandingArtist"
+                    entityId={landingArtist.id}
+                    field="quoteText"
+                    label="Texte de citation de l'artiste"
+                  >
+                    <textarea
+                      id="quoteText"
+                      {...register('quoteText')}
+                      className="form-textarea"
+                      rows={3}
+                      placeholder="Texte de la citation"
+                    />
+                  </TranslationField>
                 </div>
               </div>
               <div className="d-flex gap-md mt-md">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="biographyHeader2" className="form-label">Biographie section 2 - Titre</label>
-                  <input
-                    id="biographyHeader2"
-                    type="text"
-                    {...register('biographyHeader2')}
-                    className="form-input"
-                    placeholder="Titre section 2"
-                  />
+                <div style={{ flex: 1 }}>
+                  <TranslationField
+                    entityType="LandingArtist"
+                    entityId={landingArtist.id}
+                    field="biographyHeader1"
+                    label="Biographie section 1 - Titre"
+                  >
+                    <input
+                      id="biographyHeader1"
+                      type="text"
+                      {...register('biographyHeader1')}
+                      className="form-input"
+                      placeholder="Titre section 1"
+                    />
+                  </TranslationField>
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="biographyText2" className="form-label">Biographie section 2 - Texte</label>
-                  <textarea
-                    id="biographyText2"
-                    {...register('biographyText2')}
-                    className="form-textarea"
-                    rows={4}
-                    placeholder="Texte section 2"
-                  />
+                <div style={{ flex: 1 }}>
+                  <TranslationField
+                    entityType="LandingArtist"
+                    entityId={landingArtist.id}
+                    field="biographyText1"
+                    label="Biographie section 1 - Texte"
+                  >
+                    <textarea
+                      id="biographyText1"
+                      {...register('biographyText1')}
+                      className="form-textarea"
+                      rows={4}
+                      placeholder="Texte section 1"
+                    />
+                  </TranslationField>
                 </div>
               </div>
               <div className="d-flex gap-md mt-md">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="biographyHeader3" className="form-label">Biographie section 3 - Titre</label>
-                  <input
-                    id="biographyHeader3"
-                    type="text"
-                    {...register('biographyHeader3')}
-                    className="form-input"
-                    placeholder="Titre section 3"
-                  />
+                <div style={{ flex: 1 }}>
+                  <TranslationField
+                    entityType="LandingArtist"
+                    entityId={landingArtist.id}
+                    field="biographyHeader2"
+                    label="Biographie section 2 - Titre"
+                  >
+                    <input
+                      id="biographyHeader2"
+                      type="text"
+                      {...register('biographyHeader2')}
+                      className="form-input"
+                      placeholder="Titre section 2"
+                    />
+                  </TranslationField>
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="biographyText3" className="form-label">Biographie section 3 - Texte</label>
-                  <textarea
-                    id="biographyText3"
-                    {...register('biographyText3')}
-                    className="form-textarea"
-                    rows={4}
-                    placeholder="Texte section 3"
-                  />
+                <div style={{ flex: 1 }}>
+                  <TranslationField
+                    entityType="LandingArtist"
+                    entityId={landingArtist.id}
+                    field="biographyText2"
+                    label="Biographie section 2 - Texte"
+                  >
+                    <textarea
+                      id="biographyText2"
+                      {...register('biographyText2')}
+                      className="form-textarea"
+                      rows={4}
+                      placeholder="Texte section 2"
+                    />
+                  </TranslationField>
+                </div>
+              </div>
+              <div className="d-flex gap-md mt-md">
+                <div style={{ flex: 1 }}>
+                  <TranslationField
+                    entityType="LandingArtist"
+                    entityId={landingArtist.id}
+                    field="biographyHeader3"
+                    label="Biographie section 3 - Titre"
+                  >
+                    <input
+                      id="biographyHeader3"
+                      type="text"
+                      {...register('biographyHeader3')}
+                      className="form-input"
+                      placeholder="Titre section 3"
+                    />
+                  </TranslationField>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <TranslationField
+                    entityType="LandingArtist"
+                    entityId={landingArtist.id}
+                    field="biographyText3"
+                    label="Biographie section 3 - Texte"
+                  >
+                    <textarea
+                      id="biographyText3"
+                      {...register('biographyText3')}
+                      className="form-textarea"
+                      rows={4}
+                      placeholder="Texte section 3"
+                    />
+                  </TranslationField>
                 </div>
               </div>
             </div>

@@ -63,6 +63,15 @@ export async function getSchemaModels() {
                 { name: 'intro', type: 'String' },
                 { name: 'description', type: 'String' },
                 { name: 'artworkStyle', type: 'String' },
+                { name: 'quoteFromInRealArt', type: 'String' },
+                { name: 'quoteHeader', type: 'String' },
+                { name: 'quoteText', type: 'String' },
+                { name: 'biographyHeader1', type: 'String' },
+                { name: 'biographyText1', type: 'String' },
+                { name: 'biographyHeader2', type: 'String' },
+                { name: 'biographyText2', type: 'String' },
+                { name: 'biographyHeader3', type: 'String' },
+                { name: 'biographyText3', type: 'String' }
             ]
         },
         {
