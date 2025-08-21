@@ -85,11 +85,6 @@ export async function createLandingArtist(data: LandingArtistData) {
                 artistsPage: data.artistsPage,
                 imageUrl: data.imageUrl,
                 artworkImages: data.artworkImages || '[]',
-                websiteUrl: data.websiteUrl,
-                facebookUrl: data.facebookUrl,
-                instagramUrl: data.instagramUrl,
-                twitterUrl: data.twitterUrl,
-                linkedinUrl: data.linkedinUrl,
                 slug: data.slug!,
             },
         })
@@ -131,11 +126,6 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 artistsPage: data.artistsPage,
                 imageUrl: data.imageUrl,
                 artworkImages: data.artworkImages || '[]',
-                websiteUrl: data.websiteUrl,
-                facebookUrl: data.facebookUrl,
-                instagramUrl: data.instagramUrl,
-                twitterUrl: data.twitterUrl,
-                linkedinUrl: data.linkedinUrl,
                 slug: data.slug,
             },
         })
@@ -219,11 +209,6 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
         artistsPage: boolean | null;
         imageUrl: string;
         artworkImages: string;
-        websiteUrl: string | null;
-        facebookUrl: string | null;
-        instagramUrl: string | null;
-        twitterUrl: string | null;
-        linkedinUrl: string | null;
         slug: string;
     };
 }> {
@@ -335,11 +320,6 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
         artistsPage: boolean | null;
         imageUrl: string;
         artworkImages: string;
-        websiteUrl: string | null;
-        facebookUrl: string | null;
-        instagramUrl: string | null;
-        twitterUrl: string | null;
-        linkedinUrl: string | null;
         slug: string;
     };
 }> {

@@ -11,6 +11,9 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { X, Plus } from 'lucide-react'
 import { generateSlug } from '@/lib/utils'
+import styles from './artistEditForm.module.scss'
+import CountrySelect from '@/app/components/Common/CountrySelect'
+import { getCountries } from '@/lib/utils'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -18,13 +21,21 @@ const formSchema = z.object({
   surname: z.string().min(1, 'Le nom est requis'),
   pseudo: z.string().min(1, 'Le pseudo est requis'),
   description: z.string().min(10, 'La description doit contenir au moins 10 caractères'),
-  artworkStyle: z.string().nullable().optional(),
   publicKey: z.string().min(1, 'La clé publique est requise'),
   imageUrl: z.string().url('URL d\'image invalide'),
   isGallery: z.boolean().default(false),
   backgroundImage: z.string().url('URL d\'image d\'arrière-plan invalide').nullable().optional(),
   slug: z.string().min(1, 'Le slug est requis'),
   featuredArtwork: z.string().url('URL d\'image de l\'œuvre vedette invalide'),
+  // Nouveaux champs biographie
+  birthYear: z.number().min(1900, 'L\'année de naissance doit être supérieure à 1900').max(new Date().getFullYear(), 'L\'année de naissance ne peut pas être dans le futur').nullable().optional(),
+  countryCode: z.string().min(2, 'Le code pays doit contenir au moins 2 caractères').max(3, 'Le code pays ne peut pas dépasser 3 caractères').nullable().optional(),
+  // Nouveaux champs réseaux sociaux
+  websiteUrl: z.string().url('URL de site web invalide').nullable().optional().or(z.literal('')),
+  facebookUrl: z.string().url('URL Facebook invalide').nullable().optional().or(z.literal('')),
+  instagramUrl: z.string().url('URL Instagram invalide').nullable().optional().or(z.literal('')),
+  twitterUrl: z.string().url('URL Twitter invalide').nullable().optional().or(z.literal('')),
+  linkedinUrl: z.string().url('URL LinkedIn invalide').nullable().optional().or(z.literal('')),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -53,13 +64,21 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
       surname: artist.surname,
       pseudo: artist.pseudo,
       description: artist.description,
-      artworkStyle: artist.artworkStyle || '',
       publicKey: artist.publicKey,
       imageUrl: artist.imageUrl,
       isGallery: artist.isGallery || false,
       backgroundImage: artist.backgroundImage || null,
       slug: artist.slug || '',
       featuredArtwork: artist.featuredArtwork || '',
+      // Nouveaux champs biographie
+      birthYear: artist.birthYear || null,
+      countryCode: artist.countryCode || null,
+      // Nouveaux champs réseaux sociaux
+      websiteUrl: artist.websiteUrl || '',
+      facebookUrl: artist.facebookUrl || '',
+      instagramUrl: artist.instagramUrl || '',
+      twitterUrl: artist.twitterUrl || '',
+      linkedinUrl: artist.linkedinUrl || '',
     }
   })
 
@@ -68,6 +87,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const watchedName = watch('name')
   const watchedSurname = watch('surname')
   const currentSlug = watch('slug')
+  const countryCode = watch('countryCode')
   
   // Génération automatique du slug
   useEffect(() => {
@@ -82,13 +102,41 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
     
+    // Debug: Vérifier s'il y a des champs non autorisés
+    console.log('🔍 Données du formulaire d\'édition à soumettre:', data)
+    const allowedFields = ['name', 'surname', 'pseudo', 'description', 'publicKey', 'imageUrl', 'isGallery', 'backgroundImage', 'slug', 'featuredArtwork', 'birthYear', 'countryCode', 'websiteUrl', 'facebookUrl', 'instagramUrl', 'twitterUrl', 'linkedinUrl']
+    const extraFields = Object.keys(data).filter(key => !allowedFields.includes(key))
+    if (extraFields.length > 0) {
+      console.warn('⚠️ Champs non autorisés détectés dans l\'édition:', extraFields)
+      console.warn('⚠️ Valeurs des champs non autorisés:', extraFields.reduce((obj, key) => ({ ...obj, [key]: (data as any)[key] }), {}))
+    }
+    
     try {
+      // Filtrer explicitement les champs autorisés pour éviter les champs fantômes
+      const cleanedData = {
+        name: data.name,
+        surname: data.surname,
+        pseudo: data.pseudo,
+        description: data.description,
+        publicKey: data.publicKey,
+        imageUrl: data.imageUrl,
+        isGallery: data.isGallery,
+        backgroundImage: data.backgroundImage,
+        slug: data.slug,
+        featuredArtwork: data.featuredArtwork,
+        birthYear: data.birthYear,
+        // countryCode: data.countryCode, // TODO: Réactiver après npx prisma generate
+        websiteUrl: data.websiteUrl,
+        facebookUrl: data.facebookUrl,
+        instagramUrl: data.instagramUrl,
+        twitterUrl: data.twitterUrl,
+        linkedinUrl: data.linkedinUrl,
+      }
+      
       // Transformer undefined en null pour backgroundImage
       const formattedData = {
-        ...data,
-        artworkStyle: data.artworkStyle || null,
-        backgroundImage: data.backgroundImage || null,
-        countryCode: artist.countryCode, // Préserver le countryCode existant
+        ...cleanedData,
+        backgroundImage: cleanedData.backgroundImage || null,
       }
       
       const result = await updateArtist(artist.id, formattedData)
@@ -117,21 +165,21 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="header-top-section">
-          <h1 className="page-title">Modifier l'artiste</h1>
+    <div className={styles['page-container']}>
+      <div className={styles['page-header']}>
+        <div className={styles['header-top-section']}>
+          <h1 className={styles['page-title']}>Modifier l'artiste</h1>
         </div>
-        <p className="page-subtitle">
+        <p className={styles['page-subtitle']}>
           Modifier les informations de {artist.name} {artist.surname}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="form-container">
-        <div className="form-card">
-          <div className="card-content">
-            <div className="d-flex gap-lg">
-              <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
+      <form onSubmit={handleSubmit(onSubmit)} className={styles['form-container']}>
+        <div className={styles['form-card']}>
+          <div className={styles['card-content']}>
+            <div className={styles['d-flex'] + ' ' + styles['gap-lg']}>
+              <div className={styles['d-flex'] + ' ' + styles['flex-column'] + ' ' + styles['gap-md']} style={{ width: '200px' }}>
                 {imageUrl ? (
                   <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
                     <Image
@@ -146,26 +194,26 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                     {artist.name.charAt(0)}{artist.surname.charAt(0)}
                   </div>
                 )}
-                <div className="form-group">
-                  <label htmlFor="imageUrl" className="form-label">URL de l'image</label>
+                <div className={styles['form-group']}>
+                  <label htmlFor="imageUrl" className={styles['form-label']}>URL de l'image</label>
                   <input
                     id="imageUrl"
                     type="text"
                     {...register('imageUrl')}
-                    className={`form-input ${errors.imageUrl ? 'input-error' : ''}`}
+                    className={`${styles['form-input']} ${errors.imageUrl ? styles['input-error'] : ''}`}
                     placeholder="https://example.com/image.jpg"
                   />
                   {errors.imageUrl && (
-                    <p className="form-error">{errors.imageUrl.message}</p>
+                    <p className={styles['form-error']}>{errors.imageUrl.message}</p>
                   )}
                 </div>
               </div>
               
               <div style={{ flex: 1 }}>
-                <div className="form-group">
-                  <div className="d-flex align-items-center gap-md" style={{ marginBottom: '20px' }}>
-                    <span className={isGallery ? 'text-muted' : 'text-primary'} style={{ fontWeight: isGallery ? 'normal' : 'bold' }}>Artiste</span>
-                    <label className="d-flex align-items-center" style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}>
+                <div className={styles['form-group']}>
+                  <div className={styles['d-flex'] + ' ' + styles['align-items-center'] + ' ' + styles['gap-md']} style={{ marginBottom: '20px' }}>
+                    <span className={isGallery ? styles['text-muted'] : styles['text-primary']} style={{ fontWeight: isGallery ? 'normal' : 'bold' }}>Artiste</span>
+                    <label className={styles['d-flex'] + ' ' + styles['align-items-center']} style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}>
                       <input
                         type="checkbox"
                         {...register('isGallery')}
@@ -175,63 +223,63 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                         <span style={{ position: 'absolute', content: '""', height: '22px', width: '22px', left: '4px', bottom: '4px', backgroundColor: 'white', borderRadius: '50%', transition: '0.4s', transform: isGallery ? 'translateX(30px)' : 'translateX(0)' }}></span>
                       </span>
                     </label>
-                    <span className={isGallery ? 'text-primary' : 'text-muted'} style={{ fontWeight: isGallery ? 'bold' : 'normal' }}>Galerie</span>
+                    <span className={isGallery ? styles['text-primary'] : styles['text-muted']} style={{ fontWeight: isGallery ? 'bold' : 'normal' }}>Galerie</span>
                   </div>
 
                 </div>
                 
-                <div className="d-flex gap-md">
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label htmlFor="name" className="form-label">Prénom</label>
+                <div className={styles['d-flex'] + ' ' + styles['gap-md']}>
+                  <div className={styles['form-group']} style={{ flex: 1 }}>
+                    <label htmlFor="name" className={styles['form-label']}>Prénom</label>
                     <input
                       id="name"
                       type="text"
                       {...register('name')}
-                      className={`form-input ${errors.name ? 'input-error' : ''}`}
+                      className={`${styles['form-input']} ${errors.name ? styles['input-error'] : ''}`}
                     />
                     {errors.name && (
-                      <p className="form-error">{errors.name.message}</p>
+                      <p className={styles['form-error']}>{errors.name.message}</p>
                     )}
                   </div>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label htmlFor="surname" className="form-label">Nom</label>
+                  <div className={styles['form-group']} style={{ flex: 1 }}>
+                    <label htmlFor="surname" className={styles['form-label']}>Nom</label>
                     <input
                       id="surname"
                       type="text"
                       {...register('surname')}
-                      className={`form-input ${errors.surname ? 'input-error' : ''}`}
+                      className={`${styles['form-input']} ${errors.surname ? styles['input-error'] : ''}`}
                     />
                     {errors.surname && (
-                      <p className="form-error">{errors.surname.message}</p>
+                      <p className={styles['form-error']}>{errors.surname.message}</p>
                     )}
                   </div>
                 </div>
                 
-                <div className="form-group">
-                  <label htmlFor="pseudo" className="form-label">Pseudo</label>
+                <div className={styles['form-group']}>
+                  <label htmlFor="pseudo" className={styles['form-label']}>Pseudo</label>
                   <input
                     id="pseudo"
                     type="text"
                     {...register('pseudo')}
-                    className={`form-input ${errors.pseudo ? 'input-error' : ''}`}
+                    className={`${styles['form-input']} ${errors.pseudo ? styles['input-error'] : ''}`}
                   />
                   {errors.pseudo && (
-                    <p className="form-error">{errors.pseudo.message}</p>
+                    <p className={styles['form-error']}>{errors.pseudo.message}</p>
                   )}
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="slug" className="form-label">Slug (généré automatiquement)</label>
+                <div className={styles['form-group']}>
+                  <label htmlFor="slug" className={styles['form-label']}>Slug (généré automatiquement)</label>
                   <input
                     id="slug"
                     type="text"
                     {...register('slug')}
-                    className={`form-input ${errors.slug ? 'input-error' : ''}`}
+                    className={`${styles['form-input']} ${errors.slug ? styles['input-error'] : ''}`}
                     readOnly
                     style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
                   />
                   {errors.slug && (
-                    <p className="form-error">{errors.slug.message}</p>
+                    <p className={styles['form-error']}>{errors.slug.message}</p>
                   )}
                 </div>
               </div>
@@ -239,77 +287,163 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
           </div>
         </div>
         
-        <div className="form-card">
-          <div className="card-content">
-            <div className="form-group">
-              <label htmlFor="description" className="form-label">Description</label>
+        <div className={styles['form-card']}>
+          <div className={styles['card-content']}>
+            <div className={styles['form-group']}>
+              <label htmlFor="description" className={styles['form-label']}>Description</label>
               <textarea
                 id="description"
                 {...register('description')}
-                className={`form-textarea ${errors.description ? 'input-error' : ''}`}
+                className={`${styles['form-textarea']} ${errors.description ? styles['input-error'] : ''}`}
                 rows={5}
               />
               {errors.description && (
-                <p className="form-error">{errors.description.message}</p>
+                <p className={styles['form-error']}>{errors.description.message}</p>
               )}
             </div>
 
-            <div className="form-group">
-              <label htmlFor="artworkStyle" className="form-label">Style d'art</label>
-              <input
-                id="artworkStyle"
-                type="text"
-                {...register('artworkStyle')}
-                className={`form-input ${errors.artworkStyle ? 'input-error' : ''}`}
-              />
-              {errors.artworkStyle && (
-                <p className="form-error">{errors.artworkStyle.message}</p>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="featuredArtwork" className="form-label">Œuvre vedette (URL)</label>
-              <input
-                id="featuredArtwork"
-                type="text"
-                {...register('featuredArtwork')}
-                className={`form-input ${errors.featuredArtwork ? 'input-error' : ''}`}
-                placeholder="https://example.com/featured-artwork.jpg"
-              />
-              {errors.featuredArtwork && (
-                <p className="form-error">{errors.featuredArtwork.message}</p>
-              )}
-              <p className="form-help-text">Cette image sera utilisée comme carte de l'artiste sur la marketplace</p>
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="publicKey" className="form-label">Clé publique</label>
+            <div className={styles['form-group']}>
+              <label htmlFor="publicKey" className={styles['form-label']}>Clé publique</label>
               <input
                 id="publicKey"
                 type="text"
                 {...register('publicKey')}
-                className={`form-input ${errors.publicKey ? 'input-error' : ''}`}
+                className={`${styles['form-input']} ${errors.publicKey ? styles['input-error'] : ''}`}
               />
               {errors.publicKey && (
-                <p className="form-error">{errors.publicKey.message}</p>
+                <p className={styles['form-error']}>{errors.publicKey.message}</p>
               )}
             </div>
             
           </div>
         </div>
+
+        {/* Section Biographie */}
+        <div className={styles['form-card']}>
+          <div className={styles['card-content']}>
+            <h3 className={styles['section-title']}>Biographie</h3>
+            <div className={styles['d-flex'] + ' ' + styles['gap-md']}>
+              <div className={styles['form-group']} style={{ flex: 1 }}>
+                <label htmlFor="birthYear" className={styles['form-label']}>Année de naissance</label>
+                <input
+                  id="birthYear"
+                  type="number"
+                  {...register('birthYear', { valueAsNumber: true })}
+                  className={`${styles['form-input']} ${errors.birthYear ? styles['input-error'] : ''}`}
+                  placeholder="1990"
+                  min="1900"
+                  max={new Date().getFullYear()}
+                />
+                {errors.birthYear && (
+                  <p className={styles['form-error']}>{errors.birthYear.message}</p>
+                )}
+              </div>
+              <div className={styles['form-group']} style={{ flex: 1 }}>
+                <label htmlFor="countryCode" className={styles['form-label']}>Code pays</label>
+                <CountrySelect
+                  countries={getCountries()}
+                  value={countryCode || ''}
+                  onChange={(code) => setValue('countryCode', code)}
+                  placeholder="Sélectionner un pays"
+                />
+                {errors.countryCode && (
+                  <p className={styles['form-error']}>{errors.countryCode.message}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section Réseaux sociaux */}
+        <div className={styles['form-card']}>
+          <div className={styles['card-content']}>
+            <h3 className={styles['section-title']}>Réseaux sociaux</h3>
+            <div className={styles['form-group']}>
+              <label htmlFor="websiteUrl" className={styles['form-label']}>Site web</label>
+              <input
+                id="websiteUrl"
+                type="url"
+                {...register('websiteUrl')}
+                className={`${styles['form-input']} ${errors.websiteUrl ? styles['input-error'] : ''}`}
+                placeholder="https://www.example.com"
+              />
+              {errors.websiteUrl && (
+                <p className={styles['form-error']}>{errors.websiteUrl.message}</p>
+              )}
+            </div>
+            
+            <div className={styles['d-flex'] + ' ' + styles['gap-md']}>
+              <div className={styles['form-group']} style={{ flex: 1 }}>
+                <label htmlFor="facebookUrl" className={styles['form-label']}>Facebook</label>
+                <input
+                  id="facebookUrl"
+                  type="url"
+                  {...register('facebookUrl')}
+                  className={`${styles['form-input']} ${errors.facebookUrl ? styles['input-error'] : ''}`}
+                  placeholder="https://facebook.com/profile"
+                />
+                {errors.facebookUrl && (
+                  <p className={styles['form-error']}>{errors.facebookUrl.message}</p>
+                )}
+              </div>
+              <div className={styles['form-group']} style={{ flex: 1 }}>
+                <label htmlFor="instagramUrl" className={styles['form-label']}>Instagram</label>
+                <input
+                  id="instagramUrl"
+                  type="url"
+                  {...register('instagramUrl')}
+                  className={`${styles['form-input']} ${errors.instagramUrl ? styles['input-error'] : ''}`}
+                  placeholder="https://instagram.com/profile"
+                />
+                {errors.instagramUrl && (
+                  <p className={styles['form-error']}>{errors.instagramUrl.message}</p>
+                )}
+              </div>
+            </div>
+            
+            <div className={styles['d-flex'] + ' ' + styles['gap-md']}>
+              <div className={styles['form-group']} style={{ flex: 1 }}>
+                <label htmlFor="twitterUrl" className={styles['form-label']}>Twitter</label>
+                <input
+                  id="twitterUrl"
+                  type="url"
+                  {...register('twitterUrl')}
+                  className={`${styles['form-input']} ${errors.twitterUrl ? styles['input-error'] : ''}`}
+                  placeholder="https://twitter.com/profile"
+                />
+                {errors.twitterUrl && (
+                  <p className={styles['form-error']}>{errors.twitterUrl.message}</p>
+                )}
+              </div>
+              <div className={styles['form-group']} style={{ flex: 1 }}>
+                <label htmlFor="linkedinUrl" className={styles['form-label']}>LinkedIn</label>
+                <input
+                  id="linkedinUrl"
+                  type="url"
+                  {...register('linkedinUrl')}
+                  className={`${styles['form-input']} ${errors.linkedinUrl ? styles['input-error'] : ''}`}
+                  placeholder="https://linkedin.com/in/profile"
+                />
+                {errors.linkedinUrl && (
+                  <p className={styles['form-error']}>{errors.linkedinUrl.message}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
         
-        <div className="form-actions">
+        <div className={styles['form-actions']}>
           <button 
             type="button" 
             onClick={handleCancel}
-            className="btn btn-secondary btn-medium"
+            className={`${styles.btn} ${styles['btn-secondary']} ${styles['btn-medium']}`}
             disabled={isSubmitting}
           >
             Annuler
           </button>
           <button 
             type="submit" 
-            className="btn btn-primary btn-medium"
+            className={`${styles.btn} ${styles['btn-primary']} ${styles['btn-medium']}`}
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Mise à jour en cours...' : 'Enregistrer les modifications'}

@@ -20,10 +20,32 @@ export async function updateArtist(
     data: Prisma.ArtistUpdateInput
 ): Promise<{ success: boolean; message?: string }> {
     try {
+        // Filtrer les champs autorisés pour éviter les erreurs Prisma
+        // Note: countryCode temporairement retiré car le client Prisma n'est pas synchronisé
+        const allowedData: Prisma.ArtistUpdateInput = {
+            name: data.name,
+            surname: data.surname,
+            pseudo: data.pseudo,
+            description: data.description,
+            publicKey: data.publicKey,
+            imageUrl: data.imageUrl,
+            isGallery: data.isGallery,
+            backgroundImage: data.backgroundImage,
+            slug: data.slug,
+            featuredArtwork: data.featuredArtwork,
+            birthYear: data.birthYear,
+            // countryCode: data.countryCode, // TODO: Réactiver après npx prisma generate
+            websiteUrl: data.websiteUrl,
+            facebookUrl: data.facebookUrl,
+            instagramUrl: data.instagramUrl,
+            twitterUrl: data.twitterUrl,
+            linkedinUrl: data.linkedinUrl,
+        }
+
         // Mise à jour de l'artiste
         await prisma.artist.update({
             where: { id },
-            data
+            data: allowedData
         })
 
         revalidatePath(`/dataAdministration/artists`)
@@ -53,12 +75,20 @@ export interface CreateArtistData {
     surname: string
     pseudo: string
     description: string
-    artworkStyle?: string | null
     artistsPage?: boolean
     publicKey?: string
     imageUrl?: string
     isGallery?: boolean
     backgroundImage?: string | null
+    // Nouveaux champs biographie
+    birthYear?: number | null
+    countryCode?: string | null
+    // Nouveaux champs réseaux sociaux
+    websiteUrl?: string | null
+    facebookUrl?: string | null
+    instagramUrl?: string | null
+    twitterUrl?: string | null
+    linkedinUrl?: string | null
 }
 
 /**
@@ -66,6 +96,7 @@ export interface CreateArtistData {
  */
 export async function createArtist(data: CreateArtistData): Promise<{ success: boolean; message?: string; artist?: Artist }> {
     try {
+        console.log('data', data)
         // Vérifier si le pseudo est déjà utilisé
         const existingArtist = await prisma.artist.findFirst({
             where: {
@@ -88,7 +119,16 @@ export async function createArtist(data: CreateArtistData): Promise<{ success: b
             publicKey: data.publicKey || `default-${Date.now()}`,
             imageUrl: data.imageUrl || '',
             isGallery: data.isGallery || false,
-            backgroundImage: data.backgroundImage || null
+            backgroundImage: data.backgroundImage || null,
+            // Nouveaux champs biographie
+            birthYear: data.birthYear || null,
+            countryCode: data.countryCode || null,
+            // Nouveaux champs réseaux sociaux
+            websiteUrl: data.websiteUrl || null,
+            facebookUrl: data.facebookUrl || null,
+            instagramUrl: data.instagramUrl || null,
+            twitterUrl: data.twitterUrl || null,
+            linkedinUrl: data.linkedinUrl || null
         }
 
         // Créer l'artiste

@@ -22,7 +22,6 @@ type ArtistSelectData = {
   imageUrl: string
   isGallery: boolean
   backgroundImage: string | null
-  artworkStyle: string | null
 }
 
 export default function CreateMemberForm() {

@@ -618,7 +618,7 @@ export async function updateItemStatus(
 /**
  * Vérifie le statut d'un item en base de données
  */
-export async function checkItemStatus({idUser}: CheckStatusParams): Promise<StatusCheckResult> {
+export async function checkItemStatus({ idUser }: CheckStatusParams): Promise<StatusCheckResult> {
   try {
     const item = await prisma.item.findFirst({
       where: {
@@ -1969,7 +1969,6 @@ export async function getAllArtists() {
         imageUrl: true,
         isGallery: true,
         backgroundImage: true,
-        artworkStyle: true,
         BackofficeUser: {
           select: {
             id: true
@@ -1981,10 +1980,9 @@ export async function getAllArtists() {
       }
     })
 
-    // Garantir que artworkStyle est défini, même si null et inclure backofficeUserId
+    // Inclure backofficeUserId
     return artists.map(artist => ({
       ...artist,
-      artworkStyle: artist.artworkStyle || null,
       backofficeUserId: artist.BackofficeUser.length > 0 ? artist.BackofficeUser[0].id : null
     }))
   } catch (error) {
@@ -2008,19 +2006,14 @@ export async function getAllArtistsAndGalleries() {
         publicKey: true,
         imageUrl: true,
         isGallery: true,
-        backgroundImage: true,
-        artworkStyle: true
+        backgroundImage: true
       },
       orderBy: {
         name: 'asc'
       }
     })
 
-    // Garantir que artworkStyle est défini, même si null
-    return artists.map(artist => ({
-      ...artist,
-      artworkStyle: artist.artworkStyle || null
-    }))
+    return artists
   } catch (error) {
     console.error('Erreur lors de la récupération des artistes:', error)
     return []
@@ -2045,19 +2038,14 @@ export async function getAllGalleries() {
         publicKey: true,
         imageUrl: true,
         isGallery: true,
-        backgroundImage: true,
-        artworkStyle: true
+        backgroundImage: true
       },
       orderBy: {
         name: 'asc'
       }
     })
 
-    // Garantir que artworkStyle est défini, même si null
-    return artists.map(artist => ({
-      ...artist,
-      artworkStyle: artist.artworkStyle || null
-    }))
+    return artists
   } catch (error) {
     console.error('Erreur lors de la récupération des artistes:', error)
     return []
@@ -2080,19 +2068,11 @@ export async function getArtistById(id: number) {
         publicKey: true,
         imageUrl: true,
         isGallery: true,
-        backgroundImage: true,
-        artworkStyle: true
+        backgroundImage: true
       }
     })
 
-    if (artist) {
-      return {
-        ...artist,
-        artworkStyle: artist.artworkStyle || null
-      }
-    }
-
-    return null
+    return artist
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'artiste:', error)
     return null

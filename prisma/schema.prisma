@@ -245,20 +245,26 @@ model ArtistCategory {
   @@schema("public")
 }
 
+// Données intrinsèques à l'artiste
 model Artist {
   id                 Int              @id @default(autoincrement())
   name               String
   surname            String
   pseudo             String           @unique
   description        String           @unique
-  artworkStyle       String?
   publicKey          String           @unique
   imageUrl           String           @unique
   isGallery          Boolean          @default(false)
   backgroundImage    String?
   slug               String?          @unique
+  birthYear          Int?
   featuredArtwork    String?
   countryCode        String?
+  websiteUrl         String?
+  facebookUrl        String?
+  instagramUrl       String?
+  twitterUrl         String?
+  linkedinUrl        String?
   collections        NftCollection[]
   Profile            Profile[]
   BackofficeUser     BackofficeUser[]
@@ -266,9 +272,24 @@ model Artist {
   PresaleArtworks    PresaleArtwork[]
   Country            Country?         @relation(fields: [countryCode], references: [code])
   items              Item[]
-  //Champs pour le descriptif détaillé de l'artiste sur la landing page & marketplace
+  
+
+  @@schema("public")
+}
+
+// Modèle LandingArtist : données affichées sur la landing
+model LandingArtist {
+  id            Int      @id @default(autoincrement())
+  slug          String   @unique
+  intro         String?
+  description   String?
+  artworkImages Json     @default("[]")
+  artworkStyle  String?
+  artistsPage   Boolean? @default(false)
+  imageUrl      String   @unique
+  artistId      Int
+  //Champs pour le descriptif détaillé de l'artiste sur la landing
   mediumTags         String[]         @default([])
-  birthYear          Int?
   quoteFromInRealArt String?
   quoteHeader        String?
   quoteText          String?
@@ -279,18 +300,21 @@ model Artist {
   biographyHeader3   String?
   biographyText3     String?
   artistCategories   ArtistCategoryArtist[]
+  artist        Artist   @relation(fields: [artistId], references: [id])
 
-  @@schema("public")
+  @@index([artistId])
+  @@schema("landing")
 }
+
 
 model ArtistCategoryArtist {
   id         Int             @id @default(autoincrement())
-  artistId   Int
+  landingArtistId   Int
   categoryId Int
-  artist     Artist          @relation(fields: [artistId], references: [id])
+  landingArtist     LandingArtist          @relation(fields: [landingArtistId], references: [id])
   category   ArtistCategory  @relation(fields: [categoryId], references: [id])
 
-  @@unique([artistId, categoryId])
+  @@unique([landingArtistId, categoryId])
   @@map("ArtistCategoryArtist")
   @@schema("public")
 }
@@ -712,27 +736,6 @@ model Faq {
   @@schema("landing")
 }
 
-// Modèle LandingArtist
-model LandingArtist {
-  id            Int      @id @default(autoincrement())
-  slug          String   @unique
-  intro         String?
-  description   String?
-  artworkImages Json     @default("[]")
-  artworkStyle  String?
-  artistsPage   Boolean? @default(false)
-  imageUrl      String   @unique
-  websiteUrl    String?
-  facebookUrl   String?
-  instagramUrl  String?
-  twitterUrl    String?
-  linkedinUrl   String?
-  artistId      Int
-  artist        Artist   @relation(fields: [artistId], references: [id])
-
-  @@index([artistId])
-  @@schema("landing")
-}
 
 // Modèle pour l'en-tête de FAQ détaillée
 model DetailedFaqHeader {
