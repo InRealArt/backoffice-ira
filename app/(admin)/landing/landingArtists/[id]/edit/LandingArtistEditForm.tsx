@@ -75,19 +75,7 @@ interface LandingArtistWithArtist {
   artistsPage: boolean | null
   imageUrl: string
   artistId: number
-  websiteUrl: string | null
-  facebookUrl: string | null
-  instagramUrl: string | null
-  twitterUrl: string | null
-  linkedinUrl: string | null
-  artist: {
-    id: number
-    name: string
-    surname: string
-    pseudo: string
-    artistCategories?: { categoryId: number }[]
-    countryCode?: string | null
-    birthYear?: number | null
+  artistCategories?: { categoryId: number }[]
     quoteFromInRealArt?: string | null
     quoteHeader?: string | null
     quoteText?: string | null
@@ -98,6 +86,18 @@ interface LandingArtistWithArtist {
     biographyHeader3?: string | null
     biographyText3?: string | null
     mediumTags?: string[]
+  artist: {
+    id: number
+    name: string
+    surname: string
+    pseudo: string
+    websiteUrl: string | null
+    facebookUrl: string | null
+    instagramUrl: string | null
+    twitterUrl: string | null
+    linkedinUrl: string | null
+    countryCode?: string | null
+    birthYear?: number | null
   }
   slug?: string
 }
@@ -172,22 +172,22 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
       imageUrl: landingArtist.imageUrl,
       countryCode: landingArtist.artist.countryCode || '',
       birthYear: landingArtist.artist.birthYear ? String(landingArtist.artist.birthYear) : '',
-      websiteUrl: landingArtist.websiteUrl || '',
-      facebookUrl: landingArtist.facebookUrl || '',
-      instagramUrl: landingArtist.instagramUrl || '',
-      twitterUrl: landingArtist.twitterUrl || '',
-      linkedinUrl: landingArtist.linkedinUrl || '',
+      websiteUrl: landingArtist.artist.websiteUrl || '',
+      facebookUrl: landingArtist.artist.facebookUrl || '',
+      instagramUrl: landingArtist.artist.instagramUrl || '',
+      twitterUrl: landingArtist.artist.twitterUrl || '',
+      linkedinUrl: landingArtist.artist.linkedinUrl || '',
       slug: landingArtist.slug || '',
-      mediumTags: landingArtist.artist.mediumTags || [],
-      quoteFromInRealArt: landingArtist.artist.quoteFromInRealArt || '',
-      quoteHeader: landingArtist.artist.quoteHeader || '',
-      quoteText: landingArtist.artist.quoteText || '',
-      biographyHeader1: landingArtist.artist.biographyHeader1 || '',
-      biographyText1: landingArtist.artist.biographyText1 || '',
-      biographyHeader2: landingArtist.artist.biographyHeader2 || '',
-      biographyText2: landingArtist.artist.biographyText2 || '',
-      biographyHeader3: landingArtist.artist.biographyHeader3 || '',
-      biographyText3: landingArtist.artist.biographyText3 || '',
+      mediumTags: landingArtist.mediumTags || [],
+      quoteFromInRealArt: landingArtist.quoteFromInRealArt || '',
+      quoteHeader: landingArtist.quoteHeader || '',
+      quoteText: landingArtist.quoteText || '',
+      biographyHeader1: landingArtist.biographyHeader1 || '',
+      biographyText1: landingArtist.biographyText1 || '',
+      biographyHeader2: landingArtist.biographyHeader2 || '',
+      biographyText2: landingArtist.biographyText2 || '',
+      biographyHeader3: landingArtist.biographyHeader3 || '',
+      biographyText3: landingArtist.biographyText3 || '',
     }
   })
 
@@ -195,8 +195,8 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
   const artistsPage = watch('artistsPage')
   const mediumTags = watch('mediumTags')
   const [categoryIds, setCategoryIds] = useState<number[]>(
-    Array.isArray(landingArtist.artist.artistCategories)
-      ? (landingArtist.artist.artistCategories as { categoryId: number }[]).map(c => c.categoryId)
+    Array.isArray(landingArtist.artistCategories)
+      ? (landingArtist.artistCategories as { categoryId: number }[]).map(c => c.categoryId)
       : []
   )
   
@@ -216,14 +216,6 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
         ...data,
         intro: data.intro || null,
         description: data.description || null,
-        artworkStyle: data.artworkStyle || null,
-        countryCode: data.countryCode ? data.countryCode.toUpperCase() : undefined,
-        birthYear: data.birthYear && data.birthYear !== '' ? parseInt(data.birthYear, 10) : undefined,
-        websiteUrl: data.websiteUrl || null,
-        facebookUrl: data.facebookUrl || null,
-        instagramUrl: data.instagramUrl || null,
-        twitterUrl: data.twitterUrl || null,
-        linkedinUrl: data.linkedinUrl || null,
         mediumTags: Array.isArray(data.mediumTags) ? data.mediumTags : [],
         slug: data.slug || slug,
         quoteFromInRealArt: (data.quoteFromInRealArt ?? '').trim() === '' ? null : (data.quoteFromInRealArt ?? '').trim(),
@@ -330,38 +322,7 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
       <form onSubmit={handleSubmit(onSubmit)} className="form-container">
         <div className="form-card">
           <div className="card-content">
-            <div className="form-section mt-md">
-              <h2 className="section-title">Pays et année de naissance</h2>
-              <div className="d-flex gap-md mt-sm">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="countryCode" className="form-label">Code pays (ISO)</label>
-                  <CountrySelect
-                    countries={countries}
-                    value={watch('countryCode') || ''}
-                    onChange={code => setValue('countryCode', code)}
-                    placeholder='FR'
-                  />
-                  {errors.countryCode && (
-                    <p className="form-error">{errors.countryCode.message}</p>
-                  )}
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="birthYear" className="form-label">Année de naissance</label>
-                  <input
-                    id="birthYear"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={4}
-                    {...register('birthYear')}
-                    className={`form-input ${errors.birthYear ? 'input-error' : ''}`}
-                    placeholder="1980"
-                  />
-                  {errors.birthYear && (
-                    <p className="form-error">{errors.birthYear.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
+            
             
             <div className="form-section mt-lg">
               <h2 className="section-title">Catégorie, Images & description</h2>
@@ -725,84 +686,7 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
               </div>
             </div>
 
-            <div className="form-section mt-lg">
-              <h2 className="section-title">Liens de réseaux sociaux</h2>
-              <p className="section-subtitle">Ajoutez les liens vers les réseaux sociaux et site web de l'artiste</p>
-              
-              <div className="form-group mt-md">
-                <label htmlFor="websiteUrl" className="form-label">Site web</label>
-                <input
-                  id="websiteUrl"
-                  type="text"
-                  {...register('websiteUrl')}
-                  className={`form-input ${errors.websiteUrl ? 'input-error' : ''}`}
-                  placeholder="https://site-web-artiste.com"
-                />
-                {errors.websiteUrl && (
-                  <p className="form-error">{errors.websiteUrl.message}</p>
-                )}
-              </div>
-              
-              <div className="d-flex gap-md mt-md">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="facebookUrl" className="form-label">Facebook</label>
-                  <input
-                    id="facebookUrl"
-                    type="text"
-                    {...register('facebookUrl')}
-                    className={`form-input ${errors.facebookUrl ? 'input-error' : ''}`}
-                    placeholder="https://facebook.com/username"
-                  />
-                  {errors.facebookUrl && (
-                    <p className="form-error">{errors.facebookUrl.message}</p>
-                  )}
-                </div>
-                
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="instagramUrl" className="form-label">Instagram</label>
-                  <input
-                    id="instagramUrl"
-                    type="text"
-                    {...register('instagramUrl')}
-                    className={`form-input ${errors.instagramUrl ? 'input-error' : ''}`}
-                    placeholder="https://instagram.com/username"
-                  />
-                  {errors.instagramUrl && (
-                    <p className="form-error">{errors.instagramUrl.message}</p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="d-flex gap-md mt-md">
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="twitterUrl" className="form-label">Twitter</label>
-                  <input
-                    id="twitterUrl"
-                    type="text"
-                    {...register('twitterUrl')}
-                    className={`form-input ${errors.twitterUrl ? 'input-error' : ''}`}
-                    placeholder="https://twitter.com/username"
-                  />
-                  {errors.twitterUrl && (
-                    <p className="form-error">{errors.twitterUrl.message}</p>
-                  )}
-                </div>
-                
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label htmlFor="linkedinUrl" className="form-label">LinkedIn</label>
-                  <input
-                    id="linkedinUrl"
-                    type="text"
-                    {...register('linkedinUrl')}
-                    className={`form-input ${errors.linkedinUrl ? 'input-error' : ''}`}
-                    placeholder="https://linkedin.com/in/username"
-                  />
-                  {errors.linkedinUrl && (
-                    <p className="form-error">{errors.linkedinUrl.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
+            
           </div>
           
           <div className="form-actions">

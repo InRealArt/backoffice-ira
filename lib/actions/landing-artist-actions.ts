@@ -11,13 +11,6 @@ export interface LandingArtistData {
     imageUrl: string
     artworkImages?: string
     artistId?: number
-    countryCode?: string
-    birthYear?: number
-    websiteUrl?: string | null
-    facebookUrl?: string | null
-    instagramUrl?: string | null
-    twitterUrl?: string | null
-    linkedinUrl?: string | null
     slug?: string
     categoryIds?: number[]
     // Champs Artist complémentaires
@@ -57,18 +50,15 @@ export async function getLandingArtistById(id: number) {
         where: {
             id
         },
-        include: (
-            {
-                artist: {
-                    include: {
-                        artistCategories: {
-                            include: { category: true }
-                        }
-                    }
+        include: {
+            artist: true,
+            artistCategories: {
+                include: {
+                    category: true
                 }
-            } as any
-        )
-    }) as any
+            }
+        }
+    })
 }
 
 /**
@@ -86,6 +76,17 @@ export async function createLandingArtist(data: LandingArtistData) {
                 imageUrl: data.imageUrl,
                 artworkImages: data.artworkImages || '[]',
                 slug: data.slug!,
+                // Nouveaux champs du modèle LandingArtist
+                mediumTags: data.mediumTags || [],
+                quoteFromInRealArt: data.quoteFromInRealArt,
+                quoteHeader: data.quoteHeader,
+                quoteText: data.quoteText,
+                biographyHeader1: data.biographyHeader1,
+                biographyText1: data.biographyText1,
+                biographyHeader2: data.biographyHeader2,
+                biographyText2: data.biographyText2,
+                biographyHeader3: data.biographyHeader3,
+                biographyText3: data.biographyText3,
             },
         })
 
@@ -127,6 +128,17 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 imageUrl: data.imageUrl,
                 artworkImages: data.artworkImages || '[]',
                 slug: data.slug,
+                // Nouveaux champs du modèle LandingArtist
+                mediumTags: data.mediumTags,
+                quoteFromInRealArt: data.quoteFromInRealArt,
+                quoteHeader: data.quoteHeader,
+                quoteText: data.quoteText,
+                biographyHeader1: data.biographyHeader1,
+                biographyText1: data.biographyText1,
+                biographyHeader2: data.biographyHeader2,
+                biographyText2: data.biographyText2,
+                biographyHeader3: data.biographyHeader3,
+                biographyText3: data.biographyText3,
             },
         })
 
@@ -195,6 +207,28 @@ export async function checkArtistInLanding(artistId: number) {
 }
 
 /**
+ * Gère les catégories d'artiste pour un LandingArtist
+ */
+async function handleArtistCategories(landingArtistId: number, categoryIds?: number[]) {
+    if (categoryIds !== undefined) {
+        // Supprimer toutes les catégories existantes
+        await prisma.artistCategoryArtist.deleteMany({
+            where: { landingArtistId }
+        })
+
+        // Créer les nouvelles relations de catégories
+        if (categoryIds.length > 0) {
+            await prisma.artistCategoryArtist.createMany({
+                data: categoryIds.map(categoryId => ({
+                    landingArtistId,
+                    categoryId
+                }))
+            })
+        }
+    }
+}
+
+/**
  * Crée un nouvel artiste sur la landing page (Server Action)
  */
 export async function createLandingArtistAction(formData: LandingArtistData): Promise<{
@@ -239,57 +273,13 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
             }
         }
 
-        // Mettre à jour les champs de l'artiste si fournis
-        if (
-            formData.countryCode !== undefined ||
-            formData.birthYear !== undefined ||
-            formData.categoryIds !== undefined ||
-            formData.quoteFromInRealArt !== undefined ||
-            formData.quoteHeader !== undefined ||
-            formData.quoteText !== undefined ||
-            formData.biographyHeader1 !== undefined ||
-            formData.biographyText1 !== undefined ||
-            formData.biographyHeader2 !== undefined ||
-            formData.biographyText2 !== undefined ||
-            formData.biographyHeader3 !== undefined ||
-            formData.biographyText3 !== undefined ||
-            formData.mediumTags !== undefined
-        ) {
-            try {
-                // Met à jour les infos et, si fourni, remplace les catégories via la table de jointure
-                const categoryOps = (formData.categoryIds !== undefined)
-                    ? {
-                        artistCategories: {
-                            deleteMany: {},
-                            create: formData.categoryIds.map((cid) => ({ categoryId: cid }))
-                        }
-                    }
-                    : {}
-                await prisma.artist.update({
-                    where: { id: formData.artistId! },
-                    data: {
-                        ...(formData.countryCode !== undefined ? { countryCode: formData.countryCode } : {}),
-                        ...(formData.birthYear !== undefined ? { birthYear: formData.birthYear } : {}),
-                        ...(formData.quoteFromInRealArt !== undefined ? { quoteFromInRealArt: formData.quoteFromInRealArt } : {}),
-                        ...(formData.quoteHeader !== undefined ? { quoteHeader: formData.quoteHeader } : {}),
-                        ...(formData.quoteText !== undefined ? { quoteText: formData.quoteText } : {}),
-                        ...(formData.biographyHeader1 !== undefined ? { biographyHeader1: formData.biographyHeader1 } : {}),
-                        ...(formData.biographyText1 !== undefined ? { biographyText1: formData.biographyText1 } : {}),
-                        ...(formData.biographyHeader2 !== undefined ? { biographyHeader2: formData.biographyHeader2 } : {}),
-                        ...(formData.biographyText2 !== undefined ? { biographyText2: formData.biographyText2 } : {}),
-                        ...(formData.biographyHeader3 !== undefined ? { biographyHeader3: formData.biographyHeader3 } : {}),
-                        ...(formData.biographyText3 !== undefined ? { biographyText3: formData.biographyText3 } : {}),
-                        ...(formData.mediumTags !== undefined ? { mediumTags: formData.mediumTags } : {}),
-                        ...categoryOps
-                    }
-                })
-            } catch (e) {
-                console.error('Erreur lors de la mise à jour des infos pays/naissance de l\'artiste:', e)
-            }
-        }
-
         // Créer le nouvel artiste landing
         const result = await createLandingArtist(formData)
+
+        if (result.success && result.landingArtist) {
+            // Gérer les catégories après la création
+            await handleArtistCategories(result.landingArtist.id, formData.categoryIds)
+        }
 
         // Revalider les chemins pour mettre à jour les données dans toutes les pages concernées
         revalidatePath('/landing/landingArtists')
@@ -346,56 +336,13 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
             formData.slug = existingLandingArtist.slug
         }
 
-        // Mettre à jour les champs de l'artiste si fournis
-        if (
-            formData.countryCode !== undefined ||
-            formData.birthYear !== undefined ||
-            formData.categoryIds !== undefined ||
-            formData.quoteFromInRealArt !== undefined ||
-            formData.quoteHeader !== undefined ||
-            formData.quoteText !== undefined ||
-            formData.biographyHeader1 !== undefined ||
-            formData.biographyText1 !== undefined ||
-            formData.biographyHeader2 !== undefined ||
-            formData.biographyText2 !== undefined ||
-            formData.biographyHeader3 !== undefined ||
-            formData.biographyText3 !== undefined ||
-            formData.mediumTags !== undefined
-        ) {
-            try {
-                const categoryOps = (formData.categoryIds !== undefined)
-                    ? {
-                        artistCategories: {
-                            deleteMany: {},
-                            create: formData.categoryIds.map((cid) => ({ categoryId: cid }))
-                        }
-                    }
-                    : {}
-                await prisma.artist.update({
-                    where: { id: existingLandingArtist.artistId },
-                    data: {
-                        ...(formData.countryCode !== undefined ? { countryCode: formData.countryCode } : {}),
-                        ...(formData.birthYear !== undefined ? { birthYear: formData.birthYear } : {}),
-                        ...(formData.quoteFromInRealArt !== undefined ? { quoteFromInRealArt: formData.quoteFromInRealArt } : {}),
-                        ...(formData.quoteHeader !== undefined ? { quoteHeader: formData.quoteHeader } : {}),
-                        ...(formData.quoteText !== undefined ? { quoteText: formData.quoteText } : {}),
-                        ...(formData.biographyHeader1 !== undefined ? { biographyHeader1: formData.biographyHeader1 } : {}),
-                        ...(formData.biographyText1 !== undefined ? { biographyText1: formData.biographyText1 } : {}),
-                        ...(formData.biographyHeader2 !== undefined ? { biographyHeader2: formData.biographyHeader2 } : {}),
-                        ...(formData.biographyText2 !== undefined ? { biographyText2: formData.biographyText2 } : {}),
-                        ...(formData.biographyHeader3 !== undefined ? { biographyHeader3: formData.biographyHeader3 } : {}),
-                        ...(formData.biographyText3 !== undefined ? { biographyText3: formData.biographyText3 } : {}),
-                        ...(formData.mediumTags !== undefined ? { mediumTags: formData.mediumTags } : {}),
-                        ...categoryOps
-                    }
-                })
-            } catch (e) {
-                console.error('Erreur lors de la mise à jour des infos pays/naissance de l\'artiste:', e)
-            }
-        }
-
-        // Mettre à jour l'artiste
+        // Mettre à jour l'artiste landing
         const result = await updateLandingArtist(id, formData)
+
+        if (result.success && result.landingArtist) {
+            // Gérer les catégories après la mise à jour
+            await handleArtistCategories(result.landingArtist.id, formData.categoryIds)
+        }
 
         // Revalider le chemin pour mettre à jour les données
         revalidatePath('/landing/landingArtists')
