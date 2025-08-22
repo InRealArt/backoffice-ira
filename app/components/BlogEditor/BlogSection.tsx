@@ -217,6 +217,25 @@ export default function BlogSection({
           
           <button
             type="button"
+            onClick={() => handleAddElement(ElementType.ORDERED_LIST)}
+            className={`${styles.elementButton} ${styles.orderedList}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+              <line x1="10" y1="6" x2="21" y2="6" />
+              <line x1="10" y1="12" x2="21" y2="12" />
+              <line x1="10" y1="18" x2="21" y2="18" />
+              <path d="M4 6h1v4" />
+              <path d="M4 10h2" />
+              <path d="M6 4v6" />
+              <path d="M4 18h1v4" />
+              <path d="M4 22h2" />
+              <path d="M6 18v6" />
+            </svg>
+            Liste numérotée
+          </button>
+          
+          <button
+            type="button"
             onClick={() => handleAddElement(ElementType.ACCORDION)}
             className={`${styles.elementButton} ${styles.accordion}`}
           >
@@ -275,6 +294,12 @@ function createNewElement(type: ElementType): ContentElement {
         caption: ''
       }
     case ElementType.LIST:
+      return {
+        id,
+        type,
+        items: []
+      }
+    case ElementType.ORDERED_LIST:
       return {
         id,
         type,

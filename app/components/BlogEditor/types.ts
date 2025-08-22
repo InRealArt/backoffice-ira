@@ -5,6 +5,7 @@ export enum ElementType {
     IMAGE = 'image',
     VIDEO = 'video',
     LIST = 'list',
+    ORDERED_LIST = 'ordered_list',
     ACCORDION = 'accordion'
 }
 
@@ -71,6 +72,11 @@ export interface ListElement extends BaseElement {
     items: string[]
 }
 
+export interface OrderedListElement extends BaseElement {
+    type: ElementType.ORDERED_LIST
+    items: string[]
+}
+
 export interface AccordionItemData {
     id: string
     title: string
@@ -83,7 +89,7 @@ export interface AccordionElement extends BaseElement {
     items: AccordionItemData[]
 }
 
-export type ContentElement = H2Element | H3Element | ParagraphElement | ImageElement | VideoElement | ListElement | AccordionElement
+export type ContentElement = H2Element | H3Element | ParagraphElement | ImageElement | VideoElement | ListElement | OrderedListElement | AccordionElement
 
 export interface BlogSection {
     id: string

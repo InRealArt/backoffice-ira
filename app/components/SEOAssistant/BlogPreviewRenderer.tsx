@@ -105,13 +105,26 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
             case ElementType.LIST:
               if (element.items && element.items.length > 0) {
                 return (
-                  <ul key={element.id || elementIndex} className={styles.previewList}>
+                  <ul key={element.id || elementIndex} className={styles.previewList} data-list-type="unordered">
                     {element.items.map((item, itemIndex) => (
                       <li key={itemIndex} className={styles.previewListItem}>
                         {item}
                       </li>
                     ))}
                   </ul>
+                )
+              }
+              return null
+            case ElementType.ORDERED_LIST:
+              if (element.items && element.items.length > 0) {
+                return (
+                  <ol key={element.id || elementIndex} className={styles.previewList} data-list-type="ordered">
+                    {element.items.map((item, itemIndex) => (
+                      <li key={itemIndex} className={styles.previewListItem}>
+                        {item}
+                      </li>
+                    ))}
+                  </ol>
                 )
               }
               return null

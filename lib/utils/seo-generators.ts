@@ -218,6 +218,14 @@ ${listItems}
       </ul>`
             }
             return ''
+          case ElementType.ORDERED_LIST:
+            if (element.items && element.items.length > 0) {
+              const listItems = element.items.map(item => `        <li>${item}</li>`).join('\n')
+              return `      <ol>
+${listItems}
+      </ol>`
+            }
+            return ''
           case ElementType.ACCORDION:
             if (element.items && element.items.length > 0) {
               const accordionTitle = element.title ? `      <h2>${element.title}</h2>` : ''

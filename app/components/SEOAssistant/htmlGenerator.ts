@@ -1,4 +1,4 @@
-import { BlogContent, BlogSection, ElementType, ImageElement, VideoElement, ListElement, AccordionElement, H2Element, H3Element, ParagraphElement } from '../BlogEditor/types'
+import { BlogContent, BlogSection, ElementType, ImageElement, VideoElement, ListElement, OrderedListElement, AccordionElement, H2Element, H3Element, ParagraphElement } from '../BlogEditor/types'
 
 export interface FormData {
   title?: string
@@ -101,6 +101,15 @@ export function generateSEOHTML(formData: FormData): string {
               return `        <ul>
 ${listItems}
         </ul>`
+            }
+            return ''
+          case ElementType.ORDERED_LIST:
+            const orderedListElement = element as OrderedListElement
+            if (orderedListElement.items && orderedListElement.items.length > 0) {
+              const listItems = orderedListElement.items.map(item => `          <li>${item}</li>`).join('\n')
+              return `        <ol>
+${listItems}
+        </ol>`
             }
             return ''
           case ElementType.ACCORDION:

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ElementType, ContentElement, H2Element, H3Element, ParagraphElement, ImageElement, VideoElement, ListElement, AccordionElement, AccordionItemData, RichContent } from './types'
+import { ElementType, ContentElement, H2Element, H3Element, ParagraphElement, ImageElement, VideoElement, ListElement, OrderedListElement, AccordionElement, AccordionItemData, RichContent } from './types'
 import { v4 as uuidv4 } from 'uuid'
 import RichTextEditor from './RichTextEditor'
 import styles from './BlogSection.module.scss'
@@ -207,7 +207,7 @@ export function ListElementComponent({ element, onUpdate, onDelete }: ElementPro
           <ul className="space-y-2">
             {listElement.items.map((item, index) => (
               <li key={index} className="flex items-center gap-2">
-                <span className="text-gray-500"></span>
+                <span className="text-gray-500">•</span>
                 <input
                   type="text"
                   value={item}
@@ -256,6 +256,102 @@ export function ListElementComponent({ element, onUpdate, onDelete }: ElementPro
         className="text-red-500 mt-4"
       >
         Supprimer la liste
+      </button>
+    </div>
+  )
+}
+
+export function OrderedListElementComponent({ element, onUpdate, onDelete }: ElementProps) {
+  const orderedListElement = element as OrderedListElement
+  const [newItem, setNewItem] = useState('')
+
+  const addItem = () => {
+    if (newItem.trim()) {
+      onUpdate({
+        ...orderedListElement,
+        items: [...orderedListElement.items, newItem.trim()]
+      })
+      setNewItem('')
+    }
+  }
+
+  const removeItem = (index: number) => {
+    const newItems = [...orderedListElement.items]
+    newItems.splice(index, 1)
+    onUpdate({
+      ...orderedListElement,
+      items: newItems
+    })
+  }
+
+  const updateItem = (index: number, value: string) => {
+    const newItems = [...orderedListElement.items]
+    newItems[index] = value
+    onUpdate({
+      ...orderedListElement,
+      items: newItems
+    })
+  }
+
+  return (
+    <div className={styles.elementItem}>
+      <div className="mb-4">
+        <h4 className="mb-2 font-medium">Éléments de la liste numérotée</h4>
+        {orderedListElement.items.length === 0 ? (
+          <p className="text-gray-500 italic">Aucun élément dans la liste</p>
+        ) : (
+          <ol className="space-y-2">
+            {orderedListElement.items.map((item, index) => (
+              <li key={index} className="flex items-center gap-2">
+                <span className="text-gray-500 font-medium min-w-[20px]">{index + 1}.</span>
+                <input
+                  type="text"
+                  value={item}
+                  onChange={(e) => updateItem(index, e.target.value)}
+                  className="form-input flex-grow"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeItem(index)}
+                  className="text-red-500"
+                >
+                  Supprimer
+                </button>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+      
+      <div className="flex gap-2 mb-2">
+        <input
+          type="text"
+          value={newItem}
+          onChange={(e) => setNewItem(e.target.value)}
+          placeholder="Nouvel élément"
+          className="form-input flex-grow"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              addItem()
+            }
+          }}
+        />
+        <button
+          type="button"
+          onClick={addItem}
+          className="btn btn-secondary btn-small"
+        >
+          Ajouter
+        </button>
+      </div>
+      
+      <button 
+        type="button" 
+        onClick={onDelete}
+        className="text-red-500 mt-4"
+      >
+        Supprimer la liste numérotée
       </button>
     </div>
   )
@@ -417,6 +513,8 @@ export function ContentElementComponent({ element, onUpdate, onDelete }: Element
       return <VideoElementComponent element={element} onUpdate={onUpdate} onDelete={onDelete} />
     case ElementType.LIST:
       return <ListElementComponent element={element} onUpdate={onUpdate} onDelete={onDelete} />
+    case ElementType.ORDERED_LIST:
+      return <OrderedListElementComponent element={element} onUpdate={onUpdate} onDelete={onDelete} />
     case ElementType.ACCORDION:
       return <AccordionElementComponent element={element} onUpdate={onUpdate} onDelete={onDelete} />
     default:
