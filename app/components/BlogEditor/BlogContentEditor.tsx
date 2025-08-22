@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { v4 as uuidv4 } from 'uuid'
-import { BlogContent, BlogSection as BlogSectionType } from './types'
+import { useEffect } from 'react'
+import { BlogContent } from './types'
 import BlogSection from './BlogSection'
+import { useSectionOrdering } from './hooks/useSectionOrdering'
 import styles from './BlogSection.module.scss'
 
 interface BlogContentEditorProps {
@@ -12,54 +12,21 @@ interface BlogContentEditorProps {
 }
 
 export default function BlogContentEditor({ initialContent = [], onChange }: BlogContentEditorProps) {
-  const [sections, setSections] = useState<BlogSectionType[]>(initialContent)
-  
+  const {
+    sections,
+    addSection,
+    updateSection,
+    deleteSection,
+    moveSection,
+    canMoveUp,
+    canMoveDown
+  } = useSectionOrdering(initialContent)
+
   // Mise à jour du contenu parent lorsque les sections changent
   useEffect(() => {
     onChange(sections)
   }, [sections, onChange])
-  
-  const addSection = () => {
-    const newSection: BlogSectionType = {
-      id: uuidv4(),
-      title: `Section ${sections.length + 1}`,
-      elements: []
-    }
-    
-    setSections([...sections, newSection])
-  }
-  
-  const updateSection = (index: number, updated: BlogSectionType) => {
-    const newSections = [...sections]
-    newSections[index] = updated
-    setSections(newSections)
-  }
-  
-  const deleteSection = (index: number) => {
-    const newSections = [...sections]
-    newSections.splice(index, 1)
-    setSections(newSections)
-  }
-  
-  const moveSection = (index: number, direction: 'up' | 'down') => {
-    if (
-      (direction === 'up' && index === 0) || 
-      (direction === 'down' && index === sections.length - 1)
-    ) {
-      return
-    }
-    
-    const newSections = [...sections]
-    const targetIndex = direction === 'up' ? index - 1 : index + 1
-    
-    // Échanger les sections
-    const temp = newSections[index]
-    newSections[index] = newSections[targetIndex]
-    newSections[targetIndex] = temp
-    
-    setSections(newSections)
-  }
-  
+
   return (
     <div className="space-y-4">
       <div className="mb-4">
@@ -82,10 +49,13 @@ export default function BlogContentEditor({ initialContent = [], onChange }: Blo
               <BlogSection
                 key={section.id}
                 section={section}
+                index={index}
                 onUpdate={(updated) => updateSection(index, updated)}
                 onDelete={() => deleteSection(index)}
                 onMoveUp={() => moveSection(index, 'up')}
                 onMoveDown={() => moveSection(index, 'down')}
+                canMoveUp={canMoveUp(index)}
+                canMoveDown={canMoveDown(index)}
               />
             ))}
           </div>
