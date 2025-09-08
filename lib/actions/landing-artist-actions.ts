@@ -9,20 +9,21 @@ export interface LandingArtistData {
     artworkStyle?: string | null
     artistsPage?: boolean | null
     imageUrl: string
+    secondaryImageUrl?: string | null
     artworkImages?: string
     artistId?: number
     slug?: string
     categoryIds?: number[]
     // Champs Artist complémentaires
     quoteFromInRealArt?: string | null
-    quoteHeader?: string | null
-    quoteText?: string | null
     biographyHeader1?: string | null
     biographyText1?: string | null
     biographyHeader2?: string | null
     biographyText2?: string | null
     biographyHeader3?: string | null
     biographyText3?: string | null
+    biographyHeader4?: string | null
+    biographyText4?: string | null
     mediumTags?: string[]
 }
 
@@ -74,19 +75,20 @@ export async function createLandingArtist(data: LandingArtistData) {
                 artworkStyle: data.artworkStyle,
                 artistsPage: data.artistsPage,
                 imageUrl: data.imageUrl,
+                secondaryImageUrl: data.secondaryImageUrl,
                 artworkImages: data.artworkImages || '[]',
                 slug: data.slug!,
                 // Nouveaux champs du modèle LandingArtist
                 mediumTags: data.mediumTags || [],
                 quoteFromInRealArt: data.quoteFromInRealArt,
-                quoteHeader: data.quoteHeader,
-                quoteText: data.quoteText,
                 biographyHeader1: data.biographyHeader1,
                 biographyText1: data.biographyText1,
                 biographyHeader2: data.biographyHeader2,
                 biographyText2: data.biographyText2,
                 biographyHeader3: data.biographyHeader3,
                 biographyText3: data.biographyText3,
+                biographyHeader4: data.biographyHeader4,
+                biographyText4: data.biographyText4,
             },
         })
 
@@ -126,19 +128,20 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 artworkStyle: data.artworkStyle,
                 artistsPage: data.artistsPage,
                 imageUrl: data.imageUrl,
+                secondaryImageUrl: data.secondaryImageUrl,
                 artworkImages: data.artworkImages || '[]',
                 slug: data.slug,
                 // Nouveaux champs du modèle LandingArtist
                 mediumTags: data.mediumTags,
                 quoteFromInRealArt: data.quoteFromInRealArt,
-                quoteHeader: data.quoteHeader,
-                quoteText: data.quoteText,
                 biographyHeader1: data.biographyHeader1,
                 biographyText1: data.biographyText1,
                 biographyHeader2: data.biographyHeader2,
                 biographyText2: data.biographyText2,
                 biographyHeader3: data.biographyHeader3,
                 biographyText3: data.biographyText3,
+                biographyHeader4: data.biographyHeader4,
+                biographyText4: data.biographyText4,
             },
         })
 

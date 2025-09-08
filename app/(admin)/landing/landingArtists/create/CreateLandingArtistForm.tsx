@@ -24,6 +24,10 @@ const formSchema = z.object({
   artworkStyle: z.string().nullable().optional(),
   artistsPage: z.boolean().default(false),
   imageUrl: z.string().url('URL d\'image invalide'),
+  secondaryImageUrl: z.string().refine(
+    val => val === '' || /^https?:\/\//.test(val),
+    { message: 'URL d\'image secondaire invalide' }
+  ).optional().transform(val => val === '' ? null : val),
   countryCode: z.string().optional().refine(
     val => val === undefined || val === '' || /^[A-Za-z]{2}$/.test(val),
     { message: 'Code pays (ISO 3166-1 alpha-2) invalide' }
@@ -54,14 +58,14 @@ const formSchema = z.object({
   slug: z.string().optional(),
   categoryIds: z.array(z.string()).optional(),
     quoteFromInRealArt: z.string().optional(),
-    quoteHeader: z.string().optional(),
-    quoteText: z.string().optional(),
     biographyHeader1: z.string().optional(),
     biographyText1: z.string().optional(),
     biographyHeader2: z.string().optional(),
     biographyText2: z.string().optional(),
     biographyHeader3: z.string().optional(),
     biographyText3: z.string().optional(),
+    biographyHeader4: z.string().optional(),
+    biographyText4: z.string().optional(),
     mediumTags: z.array(z.string()).default([]),
 })
 
@@ -109,6 +113,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
       artworkStyle: '',
       artistsPage: false,
       imageUrl: '',
+      secondaryImageUrl: '',
       countryCode: '',
       birthYear: '',
       websiteUrl: '',
@@ -119,19 +124,20 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
       slug: '',
       categoryIds: [],
       quoteFromInRealArt: '',
-      quoteHeader: '',
-      quoteText: '',
       biographyHeader1: '',
       biographyText1: '',
       biographyHeader2: '',
       biographyText2: '',
       biographyHeader3: '',
       biographyText3: '',
+      biographyHeader4: '',
+      biographyText4: '',
     }
   })
 
   const artistId = watch('artistId')
   const imageUrl = watch('imageUrl')
+  const secondaryImageUrl = watch('secondaryImageUrl')
   const artistsPage = watch('artistsPage')
   const mediumTags = watch('mediumTags' as any) as string[] | undefined
   const categoryIds = watch('categoryIds') || []
@@ -170,6 +176,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
         artworkStyle: data.artworkStyle || null,
         artistsPage: data.artistsPage,
         imageUrl: data.imageUrl,
+        secondaryImageUrl: data.secondaryImageUrl || null,
         countryCode: data.countryCode ? data.countryCode.toUpperCase() : undefined,
         birthYear: data.birthYear && data.birthYear !== '' ? parseInt(data.birthYear, 10) : undefined,
         websiteUrl: data.websiteUrl || null,
@@ -184,14 +191,14 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
       // Ajouter les champs Artist si fournis
       const artistExtra = {
         quoteFromInRealArt: (data.quoteFromInRealArt ?? '').trim() === '' ? null : (data.quoteFromInRealArt ?? '').trim(),
-        quoteHeader: (data.quoteHeader ?? '').trim() === '' ? null : (data.quoteHeader ?? '').trim(),
-        quoteText: (data.quoteText ?? '').trim() === '' ? null : (data.quoteText ?? '').trim(),
         biographyHeader1: (data.biographyHeader1 ?? '').trim() === '' ? null : (data.biographyHeader1 ?? '').trim(),
         biographyText1: (data.biographyText1 ?? '').trim() === '' ? null : (data.biographyText1 ?? '').trim(),
         biographyHeader2: (data.biographyHeader2 ?? '').trim() === '' ? null : (data.biographyHeader2 ?? '').trim(),
         biographyText2: (data.biographyText2 ?? '').trim() === '' ? null : (data.biographyText2 ?? '').trim(),
         biographyHeader3: (data.biographyHeader3 ?? '').trim() === '' ? null : (data.biographyHeader3 ?? '').trim(),
         biographyText3: (data.biographyText3 ?? '').trim() === '' ? null : (data.biographyText3 ?? '').trim(),
+        biographyHeader4: (data.biographyHeader4 ?? '').trim() === '' ? null : (data.biographyHeader4 ?? '').trim(),
+        biographyText4: (data.biographyText4 ?? '').trim() === '' ? null : (data.biographyText4 ?? '').trim(),
         mediumTags: Array.isArray(data.mediumTags) ? data.mediumTags : [],
       }
       const payload = { ...formattedData, ...artistExtra }
@@ -221,14 +228,14 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
           if (result.landingArtist?.id) {
             await handleEntityTranslations('LandingArtist', result.landingArtist.id, {
               quoteFromInRealArt: data.quoteFromInRealArt || null,
-              quoteHeader: data.quoteHeader || null,
-              quoteText: data.quoteText || null,
               biographyHeader1: data.biographyHeader1 || null,
               biographyText1: data.biographyText1 || null,
               biographyHeader2: data.biographyHeader2 || null,
               biographyText2: data.biographyText2 || null,
               biographyHeader3: data.biographyHeader3 || null,
-              biographyText3: data.biographyText3 || null
+              biographyText3: data.biographyText3 || null,
+              biographyHeader4: data.biographyHeader4 || null,
+              biographyText4: data.biographyText4 || null
             })
           }
         } catch (translationError) {
@@ -357,32 +364,65 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                   </div>
                   <div className="d-flex gap-lg">
                     <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
-                    {imageUrl ? (
-                      <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
-                        <img
-                          src={imageUrl}
-                          alt={selectedArtist ? `${selectedArtist.name} ${selectedArtist.surname}` : 'Artiste'}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
+                      <div>
+                        <label className="form-label" style={{ marginBottom: '8px' }}>Image principale</label>
+                        {imageUrl ? (
+                          <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
+                            <img
+                              src={imageUrl}
+                              alt={selectedArtist ? `${selectedArtist.name} ${selectedArtist.surname}` : 'Artiste'}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          </div>
+                        ) : (
+                          <div style={{ width: '200px', height: '200px', borderRadius: '8px', backgroundColor: '#e0e0e0', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '1.5rem' }}>
+                            {selectedArtist ? selectedArtist.name.charAt(0) + selectedArtist.surname.charAt(0) : '??'}
+                          </div>
+                        )}
+                        <div className="form-group" style={{ marginTop: '8px' }}>
+                          <label htmlFor="imageUrl" className="form-label">URL de l'image</label>
+                          <input
+                            id="imageUrl"
+                            type="text"
+                            {...register('imageUrl')}
+                            className={`form-input ${errors.imageUrl ? 'input-error' : ''}`}
+                            placeholder="https://example.com/image.jpg"
+                          />
+                          {errors.imageUrl && (
+                            <p className="form-error">{errors.imageUrl.message}</p>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <div style={{ width: '200px', height: '200px', borderRadius: '8px', backgroundColor: '#e0e0e0', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '1.5rem' }}>
-                        {selectedArtist.name.charAt(0)}{selectedArtist.surname.charAt(0)}
+                      
+                      <div>
+                        <label className="form-label" style={{ marginBottom: '8px' }}>Image secondaire</label>
+                        {secondaryImageUrl ? (
+                          <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
+                            <img
+                              src={secondaryImageUrl}
+                              alt={selectedArtist ? `${selectedArtist.name} ${selectedArtist.surname} - Image secondaire` : 'Artiste - Image secondaire'}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          </div>
+                        ) : (
+                          <div style={{ width: '200px', height: '200px', borderRadius: '8px', backgroundColor: '#f5f5f5', color: '#999', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '500', fontSize: '0.9rem', border: '2px dashed #ddd' }}>
+                            Aucune image secondaire
+                          </div>
+                        )}
+                        <div className="form-group" style={{ marginTop: '8px' }}>
+                          <label htmlFor="secondaryImageUrl" className="form-label">URL de l'image secondaire (optionnel)</label>
+                          <input
+                            id="secondaryImageUrl"
+                            type="text"
+                            {...register('secondaryImageUrl')}
+                            className={`form-input ${errors.secondaryImageUrl ? 'input-error' : ''}`}
+                            placeholder="https://example.com/secondary-image.jpg"
+                          />
+                          {errors.secondaryImageUrl && (
+                            <p className="form-error">{errors.secondaryImageUrl.message}</p>
+                          )}
+                        </div>
                       </div>
-                    )}
-                    <div className="form-group">
-                      <label htmlFor="imageUrl" className="form-label">URL de l'image</label>
-                      <input
-                        id="imageUrl"
-                        type="text"
-                        {...register('imageUrl')}
-                        className={`form-input ${errors.imageUrl ? 'input-error' : ''}`}
-                        placeholder="https://example.com/image.jpg"
-                      />
-                      {errors.imageUrl && (
-                        <p className="form-error">{errors.imageUrl.message}</p>
-                      )}
-                    </div>
                     </div>
                     
                     <div style={{ flex: 1 }}>
@@ -568,40 +608,6 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                       <TranslationField
                         entityType="LandingArtist"
                         entityId={null}
-                        field="quoteHeader"
-                        label="Entête de citation de l'artiste"
-                      >
-                        <input
-                          id="quoteHeader"
-                          type="text"
-                          {...register('quoteHeader')}
-                          className="form-input"
-                          placeholder="Titre de la citation"
-                        />
-                      </TranslationField>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <TranslationField
-                        entityType="LandingArtist"
-                        entityId={null}
-                        field="quoteText"
-                        label="Texte de citation de l'artiste"
-                      >
-                        <textarea
-                          id="quoteText"
-                          {...register('quoteText')}
-                          className="form-textarea"
-                          rows={3}
-                          placeholder="Texte de la citation"
-                        />
-                      </TranslationField>
-                    </div>
-                  </div>
-                  <div className="d-flex gap-md mt-md">
-                    <div style={{ flex: 1 }}>
-                      <TranslationField
-                        entityType="LandingArtist"
-                        entityId={null}
                         field="biographyHeader1"
                         label="Biographie section 1 - Titre"
                       >
@@ -695,6 +701,40 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                           className="form-textarea"
                           rows={4}
                           placeholder="Texte section 3"
+                        />
+                      </TranslationField>
+                    </div>
+                  </div>
+                  <div className="d-flex gap-md mt-md">
+                    <div style={{ flex: 1 }}>
+                      <TranslationField
+                        entityType="LandingArtist"
+                        entityId={null}
+                        field="biographyHeader4"
+                        label="Biographie section 4 - Titre"
+                      >
+                        <input
+                          id="biographyHeader4"
+                          type="text"
+                          {...register('biographyHeader4')}
+                          className="form-input"
+                          placeholder="Titre section 4"
+                        />
+                      </TranslationField>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <TranslationField
+                        entityType="LandingArtist"
+                        entityId={null}
+                        field="biographyText4"
+                        label="Biographie section 4 - Texte"
+                      >
+                        <textarea
+                          id="biographyText4"
+                          {...register('biographyText4')}
+                          className="form-textarea"
+                          rows={4}
+                          placeholder="Texte section 4"
                         />
                       </TranslationField>
                     </div>
