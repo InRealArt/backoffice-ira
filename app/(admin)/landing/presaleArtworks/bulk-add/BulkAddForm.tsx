@@ -157,8 +157,8 @@ export default function BulkAddForm({ artists }: BulkAddFormProps) {
       if (result.success) {
         // Gérer les traductions pour chaque œuvre créée
         try {
-          for (let i = 0; i < result.artworks.length; i++) {
-            const createdArtwork = result.artworks[i]
+          for (let i = 0; i < result.artworks!.length; i++) {
+            const createdArtwork = result.artworks![i]
             const originalData = artworksData[i]
             
             await handleEntityTranslations('PresaleArtwork', createdArtwork.id, {
@@ -171,7 +171,7 @@ export default function BulkAddForm({ artists }: BulkAddFormProps) {
           // On ne bloque pas la création en cas d'erreur de traduction
         }
 
-        success(`${result.count} œuvre${result.count > 1 ? 's' : ''} créée${result.count > 1 ? 's' : ''} avec succès`)
+        success(`${result.count!} œuvre${result.count! > 1 ? 's' : ''} créée${result.count! > 1 ? 's' : ''} avec succès`)
         router.push('/landing/presaleArtworks')
       } else {
         error(result.message || 'Erreur lors de la création des œuvres')
