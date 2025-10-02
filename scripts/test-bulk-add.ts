@@ -36,7 +36,7 @@ async function testBulkAdd() {
         console.log('📝 Création des œuvres en masse...')
         const result = await createBulkPresaleArtworks(testData)
 
-        if (result.success) {
+        if (result.success && result.artworks) {
             console.log('✅ Œuvres créées avec succès:', result.count)
 
             // Tester les traductions pour chaque œuvre créée
