@@ -387,6 +387,11 @@
     pointer-events: none;
   }
 
+  .error-row {
+    background-color: rgba(239, 68, 68, 0.05);
+    border-left: 3px solid #ef4444;
+  }
+
   .actions-cell {
     text-align: center;
     white-space: nowrap;

@@ -106,6 +106,11 @@ export default function PresaleArtworksClient({
     router.push(`/landing/presaleArtworks/create`)
   }
 
+  const handleBulkAdd = () => {
+    // Navigation vers la page d'ajout en masse
+    router.push(`/landing/presaleArtworks/bulk-add`)
+  }
+
   const handleDelete = async (artworkId: number) => {
     try {
       const result = await deletePresaleArtwork(artworkId)
@@ -240,11 +245,19 @@ export default function PresaleArtworksClient({
         title="Œuvres en prévente"
         subtitle="Gérez les œuvres disponibles en prévente"
         actions={
-          <ActionButton 
-            label="Ajouter une œuvre"
-            onClick={handleAddNewArtwork}
-            size="small"
-          />
+          <div className="d-flex gap-sm">
+            <ActionButton 
+              label="Ajouter en masse"
+              onClick={handleBulkAdd}
+              size="small"
+              variant="secondary"
+            />
+            <ActionButton 
+              label="Ajouter une œuvre"
+              onClick={handleAddNewArtwork}
+              size="small"
+            />
+          </div>
         }
       />
       

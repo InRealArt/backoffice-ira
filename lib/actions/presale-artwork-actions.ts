@@ -275,4 +275,69 @@ export async function deletePresaleArtwork(id: number) {
             message: (error as Error).message
         }
     }
+}
+
+/**
+ * Crée plusieurs œuvres en prévente en une seule fois
+ */
+export async function createBulkPresaleArtworks(data: {
+    artistId: number
+    artworks: Array<{
+        name: string
+        description?: string
+        price?: number | null
+        imageUrl: string
+        width?: number | null
+        height?: number | null
+    }>
+}) {
+    try {
+        // Récupérer l'ordre maximum actuel
+        const maxOrder = await getMaxPresaleArtworkOrder()
+
+        // Créer les œuvres en lot
+        const createdArtworks = await prisma.$transaction(async (tx) => {
+            const artworks = []
+
+            for (let i = 0; i < data.artworks.length; i++) {
+                const artworkData = data.artworks[i]
+                const order = maxOrder + 1 + i
+
+                const artwork = await tx.presaleArtwork.create({
+                    data: {
+                        name: artworkData.name,
+                        artistId: data.artistId,
+                        price: artworkData.price,
+                        imageUrl: artworkData.imageUrl,
+                        description: artworkData.description,
+                        width: artworkData.width,
+                        height: artworkData.height,
+                        order: order,
+                        mockupUrls: "[]"
+                    },
+                    include: {
+                        artist: true
+                    }
+                })
+
+                artworks.push(artwork)
+            }
+
+            return artworks
+        })
+
+        revalidatePath('/landing/presaleArtworks')
+
+        return {
+            success: true,
+            artworks: createdArtworks,
+            count: createdArtworks.length
+        }
+    } catch (error) {
+        console.error('Erreur lors de la création en masse des œuvres en prévente:', error)
+        return {
+            success: false,
+            message: (error as Error).message
+        }
+    }
 } 
