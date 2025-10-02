@@ -239,8 +239,8 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
             // On ne bloque pas la création en cas d'erreur de traduction
           }
           
-          // Retourner à la liste après création/mise à jour
-          router.push('/landing/presaleArtworks')
+          // Retourner à la page précédente (avec filtres préservés)
+          router.back()
         } else {
           error(result.message || 'Erreur lors de la création de l\'œuvre en prévente')
         }
@@ -271,8 +271,8 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
             // On ne bloque pas la mise à jour en cas d'erreur de traduction
           }
           
-          // Retourner à la liste après création/mise à jour
-          router.push('/landing/presaleArtworks')
+          // Retourner à la page précédente (avec filtres préservés)
+          router.back()
         } else {
           error(result.message || 'Erreur lors de la mise à jour de l\'œuvre en prévente')
         }
