@@ -3,11 +3,27 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Artist } from '@prisma/client'
+
+// Type pour les artistes du filtre (retourné par getAllArtists)
+type FilterArtist = {
+  id: number
+  name: string
+  surname: string
+  pseudo: string
+  description: string
+  publicKey: string
+  imageUrl: string
+  isGallery: boolean
+  backgroundImage: string | null
+  backofficeUserId: number | null
+}
 import Image from 'next/image'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { useToast } from '@/app/components/Toast/ToastContext' 
 import { deletePresaleArtwork } from '@/lib/actions/presale-artwork-actions'
 import { Filters, FilterItem } from '@/app/components/Common'
+import { useQueryStates } from 'nuqs'
+import { presaleArtworksSearchParams } from './searchParams'
 import {
   PageContainer,
   PageHeader,
@@ -50,18 +66,32 @@ interface PresaleArtwork {
 
 interface PresaleArtworksClientProps {
   presaleArtworks: PresaleArtwork[]
+  totalItems: number
+  currentPage: number
+  itemsPerPage: number
+  selectedArtistId: number | null
+  sortColumn: string
+  sortDirection: 'asc' | 'desc'
+  allArtists: FilterArtist[]
 }
 
-export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtworksClientProps) {
+export default function PresaleArtworksClient({ 
+  presaleArtworks, 
+  totalItems, 
+  currentPage: initialCurrentPage, 
+  itemsPerPage: initialItemsPerPage, 
+  selectedArtistId: initialSelectedArtistId, 
+  sortColumn: initialSortColumn, 
+  sortDirection: initialSortDirection,
+  allArtists
+}: PresaleArtworksClientProps) {
   const router = useRouter()
   const [loadingArtworkId, setLoadingArtworkId] = useState<number | null>(null)
-  const [selectedArtistId, setSelectedArtistId] = useState<number | null>(null)
-  const [sortColumn, setSortColumn] = useState<string>('order')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   
-  // États pour la pagination
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(25)
+  // Utiliser Nuqs pour gérer les paramètres de recherche
+  const [searchParams, setSearchParams] = useQueryStates(presaleArtworksSearchParams, {
+    shallow: false // Permettre la mise à jour côté serveur
+  })
   
   const { success, error } = useToast()
 
@@ -96,63 +126,43 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(price)
   }
   
-  // Obtenir la liste unique des artistes à partir des œuvres
-  const artists = Array.from(
-    new Map(
-      presaleArtworks.map(artwork => [
-        artwork.artistId,
-        artwork.artist
-      ])
-    ).values()
-  )
+  // Utiliser la liste complète des artistes passée en props
+  const artists = allArtists
   
   // Fonction pour gérer le tri
   const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+    if (searchParams.sortColumn === column) {
+      setSearchParams({
+        sortDirection: searchParams.sortDirection === 'asc' ? 'desc' : 'asc',
+        page: 1 // Réinitialiser à la première page lors du tri
+      })
     } else {
-      setSortColumn(column)
-      setSortDirection('asc')
+      setSearchParams({
+        sortColumn: column,
+        sortDirection: 'asc',
+        page: 1 // Réinitialiser à la première page lors du tri
+      })
     }
-    // Réinitialiser à la première page lors du tri
-    setCurrentPage(1)
   }
-  
-  // Filtrer les œuvres en fonction de l'artiste sélectionné
-  const filteredArtworks = selectedArtistId
-    ? presaleArtworks.filter(artwork => artwork.artistId === selectedArtistId)
-    : presaleArtworks
-  
-  // Trier les œuvres selon le champ sélectionné
-  const sortedArtworks = [...filteredArtworks].sort((a, b) => {
-    const valueA = (a as any)[sortColumn] ?? 0
-    const valueB = (b as any)[sortColumn] ?? 0
-    
-    if (sortDirection === 'asc') {
-      return typeof valueA === 'string' 
-        ? valueA.localeCompare(valueB) 
-        : valueA - valueB
-    } else {
-      return typeof valueA === 'string' 
-        ? valueB.localeCompare(valueA) 
-        : valueB - valueA
-    }
-  })
 
   // Gestion des changements de pagination
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    setSearchParams({ page })
   }
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
-    setItemsPerPage(newItemsPerPage)
-    setCurrentPage(1) // Réinitialiser à la première page
+    setSearchParams({ 
+      itemsPerPage: newItemsPerPage,
+      page: 1 // Réinitialiser à la première page
+    })
   }
 
   // Gestion du changement de filtre artiste
   const handleArtistFilterChange = (value: string) => {
-    setSelectedArtistId(value ? parseInt(value) : null)
-    setCurrentPage(1) // Réinitialiser à la première page lors du filtrage
+    setSearchParams({
+      artistId: value ? parseInt(value) : null,
+      page: 1 // Réinitialiser à la première page lors du filtrage
+    })
   }
   
   // Fonction pour formater les dimensions
@@ -240,7 +250,7 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
         <FilterItem
           id="artistFilter"
           label="Filtrer par artiste:"
-          value={selectedArtistId ? selectedArtistId.toString() : ''}
+          value={searchParams.artistId ? searchParams.artistId.toString() : ''}
           onChange={handleArtistFilterChange}
           options={[
             { value: '', label: 'Tous les artistes' },
@@ -254,20 +264,20 @@ export default function PresaleArtworksClient({ presaleArtworks }: PresaleArtwor
       
       <PageContent>
         <DataTable
-          data={sortedArtworks}
+          data={presaleArtworks}
           columns={columns}
           keyExtractor={(artwork) => artwork.id}
           onRowClick={handleArtworkClick}
           isLoading={false}
           loadingRowId={loadingArtworkId}
-          sortColumn={sortColumn}
-          sortDirection={sortDirection}
+          sortColumn={searchParams.sortColumn}
+          sortDirection={searchParams.sortDirection}
           onSort={handleSort}
           pagination={{
             enabled: true,
-            currentPage,
-            itemsPerPage,
-            totalItems: sortedArtworks.length,
+            currentPage: searchParams.page,
+            itemsPerPage: searchParams.itemsPerPage,
+            totalItems: totalItems,
             onPageChange: handlePageChange,
             onItemsPerPageChange: handleItemsPerPageChange,
             showItemsPerPage: true,
