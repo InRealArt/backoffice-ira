@@ -37,7 +37,10 @@ export default async function EditPresaleArtworkPage({ params }: EditPresaleArtw
       </div>
       
       <div className="page-content">
-        <PresaleArtworkForm mode="edit" presaleArtworkId={presaleArtworkId} />
+        <PresaleArtworkForm 
+          mode="edit" 
+          presaleArtworkId={presaleArtworkId}
+        />
       </div>
     </div>
   )

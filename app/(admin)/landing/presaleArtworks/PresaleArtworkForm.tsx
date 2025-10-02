@@ -79,6 +79,17 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
   const [orderValue, setOrderValue] = useState<string>('0')
   const [isCheckingOrder, setIsCheckingOrder] = useState<boolean>(false)
   const { success, error } = useToast()
+  
+  // Fonction pour gérer l'annulation
+  const handleCancel = () => {
+    // Utiliser l'historique du navigateur pour un retour naturel
+    if (window.history.length > 1) {
+      router.back()
+    } else {
+      router.push('/landing/presaleArtworks')
+    }
+  }
+  
   const {
     register,
     handleSubmit,
@@ -228,6 +239,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
             // On ne bloque pas la création en cas d'erreur de traduction
           }
           
+          // Retourner à la liste après création/mise à jour
           router.push('/landing/presaleArtworks')
         } else {
           error(result.message || 'Erreur lors de la création de l\'œuvre en prévente')
@@ -259,6 +271,7 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
             // On ne bloque pas la mise à jour en cas d'erreur de traduction
           }
           
+          // Retourner à la liste après création/mise à jour
           router.push('/landing/presaleArtworks')
         } else {
           error(result.message || 'Erreur lors de la mise à jour de l\'œuvre en prévente')
@@ -270,10 +283,6 @@ export default function PresaleArtworkForm({ mode, presaleArtworkId }: PresaleAr
     } finally {
       setIsSubmitting(false)
     }
-  }
-  
-  const handleCancel = () => {
-    router.push('/landing/presaleArtworks')
   }
   
   const handleAddMockup = () => {

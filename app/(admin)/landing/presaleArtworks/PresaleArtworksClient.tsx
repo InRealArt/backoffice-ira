@@ -97,10 +97,12 @@ export default function PresaleArtworksClient({
 
   const handleArtworkClick = (artwork: PresaleArtwork) => {
     setLoadingArtworkId(artwork.id)
+    // Navigation simple vers l'édition - l'historique du navigateur gère le retour
     router.push(`/landing/presaleArtworks/${artwork.id}/edit`)
   }
 
   const handleAddNewArtwork = () => {
+    // Navigation simple vers la création - l'historique du navigateur gère le retour
     router.push(`/landing/presaleArtworks/create`)
   }
 
