@@ -18,6 +18,7 @@ export function useSideMenuLogic() {
   const [showMarketplaceSubmenu, setShowMarketplaceSubmenu] = useState(false)
   const [showDataAdministrationSubmenu, setShowDataAdministrationSubmenu] = useState(false)
   const [showLandingSubmenu, setShowLandingSubmenu] = useState(false)
+  const [showToolsSubmenu, setShowToolsSubmenu] = useState(false)
 
   // État pour le menu plié/déplié
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false)
@@ -42,7 +43,7 @@ export function useSideMenuLogic() {
     if (menuToKeepOpen !== 'marketplace') setShowMarketplaceSubmenu(false)
     if (menuToKeepOpen !== 'dataAdministration') setShowDataAdministrationSubmenu(false)
     if (menuToKeepOpen !== 'landing') setShowLandingSubmenu(false)
-
+    if (menuToKeepOpen !== 'tools') setShowToolsSubmenu(false)
   }, [])
 
   // Fonction pour basculer l'état du sous-menu
@@ -86,6 +87,15 @@ export function useSideMenuLogic() {
     setShowLandingSubmenu(prev => {
       const newState = !prev
       if (newState) closeAllSubmenusExcept('landing')
+      return newState
+    })
+  }, [closeAllSubmenusExcept])
+
+  // Fonction pour basculer l'état du sous-menu Tools
+  const toggleToolsSubmenu = useCallback(() => {
+    setShowToolsSubmenu(prev => {
+      const newState = !prev
+      if (newState) closeAllSubmenusExcept('tools')
       return newState
     })
   }, [closeAllSubmenusExcept])
@@ -143,6 +153,9 @@ export function useSideMenuLogic() {
       } else if (pathname.includes('/landing')) {
         setActiveItem('adminLanding')
         setShowLandingSubmenu(true)
+      } else if (pathname.includes('/tools')) {
+        setActiveItem('adminTools')
+        setShowToolsSubmenu(true)
       }
     }
   }, [pathname])
@@ -252,6 +265,7 @@ export function useSideMenuLogic() {
     showMarketplaceSubmenu,
     showDataAdministrationSubmenu,
     showLandingSubmenu,
+    showToolsSubmenu,
 
     isMenuCollapsed,
     handleNavigation,
@@ -260,6 +274,7 @@ export function useSideMenuLogic() {
     toggleMarketplaceSubmenu,
     toggleDataAdministrationSubmenu,
     toggleLandingSubmenu,
+    toggleToolsSubmenu,
 
     toggleMenuCollapse
   }

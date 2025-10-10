@@ -485,3 +485,41 @@ body.dark .pagination-btn-next:hover:not(:disabled) {
   flex-direction: column;
   gap: 0;
 }
+
+/* Variables CSS pour le convertisseur WebP */
+:root,
+.light-theme,
+body.light {
+  --text-primary: #1a1a1a;
+  --text-secondary: #666;
+  --background-primary: #ffffff;
+  --background-secondary: #f8f9fa;
+  --background-hover: #f0f0f0;
+  --background-active: #e8f4fd;
+  --border-color: #e0e0e0;
+  --primary-color: #007bff;
+  --primary-color-dark: #0056b3;
+  --error-color: #dc3545;
+  --error-color-dark: #c82333;
+  --error-background: #f8d7da;
+  --success-color: #28a745;
+  --success-color-dark: #218838;
+}
+
+.dark-theme,
+body.dark {
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --background-primary: #1a1a1a;
+  --background-secondary: #2d2d2d;
+  --background-hover: #3a3a3a;
+  --background-active: #1e3a5f;
+  --border-color: #404040;
+  --primary-color: #4dabf7;
+  --primary-color-dark: #339af0;
+  --error-color: #ff6b6b;
+  --error-color-dark: #ff5252;
+  --error-background: #2d1b1b;
+  --success-color: #51cf66;
+  --success-color-dark: #40c057;
+}

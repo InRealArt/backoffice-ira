@@ -60,6 +60,7 @@ const protectedRoutes: Record<string, AccessLevel> = {
     "/presale-artworks": "admin",
     "/presale-artworks/[id]/edit": "admin",
     "/presale-artworks/new": "admin",
+    "/tools/webp-converter": "admin",
     // Routes artiste
     "/art/createArtwork": "artist",
     "/art/collection": "artist",

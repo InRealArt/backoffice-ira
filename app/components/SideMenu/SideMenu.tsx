@@ -8,6 +8,7 @@ import { useSideMenuLogic } from './useSideMenuLogic'
 import MarketplaceSubMenu from './MarketplaceSubMenu'
 import DataAdministrationSubMenu from './DataAdministrationSubMenu'
 import LandingSubMenu from './LandingSubMenu'
+import ToolsSubMenu from './ToolsSubMenu'
 
 // Composant de fallback pour le chargement
 function SideMenuSkeleton({ isMenuCollapsed }: { isMenuCollapsed: boolean }) {
@@ -51,7 +52,9 @@ export default function SideMenu() {
     showDataAdministrationSubmenu,
     toggleDataAdministrationSubmenu,
     showLandingSubmenu,
-    toggleLandingSubmenu
+    toggleLandingSubmenu,
+    showToolsSubmenu,
+    toggleToolsSubmenu
   } = useSideMenuLogic()
   
   if (!isLoggedIn) {
@@ -148,6 +151,14 @@ export default function SideMenu() {
               isActive={activeItem === 'adminMarketplace'}
               isOpen={showMarketplaceSubmenu}
               toggleSubmenu={toggleMarketplaceSubmenu}
+              onNavigate={handleNavigation}
+              isCollapsed={isMenuCollapsed}
+            />
+            <MenuSeparator isCollapsed={isMenuCollapsed} />
+            <ToolsSubMenu
+              isActive={activeItem === 'adminTools'}
+              isOpen={showToolsSubmenu}
+              toggleSubmenu={toggleToolsSubmenu}
               onNavigate={handleNavigation}
               isCollapsed={isMenuCollapsed}
             />
