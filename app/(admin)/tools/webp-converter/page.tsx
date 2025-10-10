@@ -139,7 +139,7 @@ export default function WebPConverterPage() {
     <div className={styles['webp-converter-page']}>
       <div className={styles['page-header']}>
         <h1>Convertisseur WebP</h1>
-        <p>Convertissez vos images au format WebP sans perte de qualité (maximum 5 images)</p>
+        <p>Convertissez vos images au format WebP sans perte de qualité (maximum 5 images, 10MB par image)</p>
       </div>
 
       <div className={styles['converter-container']}>
@@ -160,7 +160,7 @@ export default function WebPConverterPage() {
                   : 'Cliquez pour sélectionner vos images'
                 }
               </p>
-              <p className={styles['file-types']}>Formats supportés: JPEG, PNG, GIF, BMP, TIFF</p>
+              <p className={styles['file-types']}>Formats supportés: JPEG, PNG, GIF, BMP, TIFF (max 10MB par image)</p>
             </div>
           </div>
         </div>

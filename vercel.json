@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "app/api/tools/webp-converter/route.ts": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  }
+}
