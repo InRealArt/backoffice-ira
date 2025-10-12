@@ -83,6 +83,11 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/seo-posts', 'seo-posts')}
           />
+          <SideMenuItem
+            label="Paramétrage Sticky Footer"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/sticky-footer', 'sticky-footer')}
+          />
         </ul>
       )}
 
@@ -142,6 +147,11 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             label="Catégories d'articles"
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/blog-categories', 'blog-categories')}
+          />
+          <SideMenuItem
+            label="Paramétrage Sticky Footer"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/sticky-footer', 'sticky-footer')}
           />
         </ul>
       )}

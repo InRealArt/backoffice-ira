@@ -925,14 +925,16 @@ model SeoPostTag {
 }
 
 model StickyFooter {
-  id       Int       @id @default(autoincrement())
-  active   Boolean   @default(false)
-  endValidityDate DateTime? @db.Date
-  title    String?
-  text     String?
-  textButton String?
-  buttonUrl String?
-  
+  id                    Int       @id @default(autoincrement())
+  activeOnAllPages      Boolean   @default(false)
+  activeOnSpecificPages Boolean   @default(false)
+  specificPages         String[]
+  endValidityDate       DateTime? @db.Date
+  title                 String?
+  text                  String?
+  textButton            String?
+  buttonUrl             String?
+
   @@schema("landingUi")
 }
 
