@@ -7,6 +7,8 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { updateStickyFooter } from '@/lib/actions/sticky-footer-actions'
 import InputField from '@/app/components/Forms/InputField'
 import TextareaField from '@/app/components/Forms/TextareaField'
+import TranslationField from '@/app/components/TranslationField'
+import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -150,6 +152,26 @@ export default function StickyFooterEditForm({ stickyFooter }: StickyFooterEditF
       const result = await updateStickyFooter(stickyFooter.id, apiData)
       
       if (result.success) {
+        // Gérer les traductions pour les champs traduisibles
+        const fieldsToTranslate: { [key: string]: string } = {}
+        
+        if (data.title?.trim()) {
+          fieldsToTranslate.title = data.title.trim()
+        }
+        
+        if (data.text?.trim()) {
+          fieldsToTranslate.text = data.text.trim()
+        }
+        
+        if (data.textButton?.trim()) {
+          fieldsToTranslate.textButton = data.textButton.trim()
+        }
+        
+        // Traiter les traductions si des champs sont présents
+        if (Object.keys(fieldsToTranslate).length > 0) {
+          await handleEntityTranslations('StickyFooter', stickyFooter.id, fieldsToTranslate)
+        }
+        
         success('Sticky footer mis à jour avec succès')
         setTimeout(() => {
           router.push('/landing/sticky-footer')
@@ -243,33 +265,56 @@ export default function StickyFooterEditForm({ stickyFooter }: StickyFooterEditF
           <div className="form-section">
             <h3>Contenu</h3>
             
-            <InputField
-              id="title"
+            <TranslationField
+              entityType="StickyFooter"
+              entityId={stickyFooter.id}
+              field="title"
               label="Titre"
-              name="title"
-              register={register}
-              error={errors.title?.message}
               required={watchedValues.activeOnAllPages || watchedValues.activeOnSpecificPages}
-            />
+              errorMessage={errors.title?.message}
+            >
+              <input
+                id="title"
+                type="text"
+                {...register('title')}
+                className={`form-input ${errors.title ? 'input-error' : ''}`}
+                placeholder="Titre du sticky footer"
+              />
+            </TranslationField>
             
-            <TextareaField
-              id="text"
+            <TranslationField
+              entityType="StickyFooter"
+              entityId={stickyFooter.id}
+              field="text"
               label="Texte"
-              name="text"
-              register={register}
-              error={errors.text?.message}
               required={watchedValues.activeOnAllPages || watchedValues.activeOnSpecificPages}
-              rows={4}
-            />
+              errorMessage={errors.text?.message}
+            >
+              <textarea
+                id="text"
+                {...register('text')}
+                className={`form-input ${errors.text ? 'input-error' : ''}`}
+                rows={4}
+                placeholder="Texte du sticky footer"
+              />
+            </TranslationField>
             
-            <InputField
-              id="textButton"
+            <TranslationField
+              entityType="StickyFooter"
+              entityId={stickyFooter.id}
+              field="textButton"
               label="Texte du bouton"
-              name="textButton"
-              register={register}
-              error={errors.textButton?.message}
               required={watchedValues.activeOnAllPages || watchedValues.activeOnSpecificPages}
-            />
+              errorMessage={errors.textButton?.message}
+            >
+              <input
+                id="textButton"
+                type="text"
+                {...register('textButton')}
+                className={`form-input ${errors.textButton ? 'input-error' : ''}`}
+                placeholder="Texte du bouton"
+              />
+            </TranslationField>
             
             <InputField
               id="buttonUrl"

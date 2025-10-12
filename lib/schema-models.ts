@@ -108,6 +108,14 @@ export async function getSchemaModels() {
                 { name: 'name', type: 'String' },
                 { name: 'description', type: 'String' }
             ]
+        },
+        {
+            name: 'StickyFooter',
+            fields: [
+                { name: 'title', type: 'String' },
+                { name: 'text', type: 'String' },
+                { name: 'textButton', type: 'String' }
+            ]
         }
     ]
 
