@@ -7,7 +7,7 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["auth", "public", "landing", "marketplace", "blockchain"]
+  schemas   = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi"]
 }
 
 // Imported from Marketplace
@@ -922,6 +922,18 @@ model SeoPostTag {
 
   @@id([postId, tagId])
   @@schema("landing")
+}
+
+model StickyFooter {
+  id       Int       @id @default(autoincrement())
+  active   Boolean   @default(false)
+  endValidityDate DateTime? @db.Date
+  title    String?
+  text     String?
+  textButton String?
+  buttonUrl String?
+  
+  @@schema("landingUi")
 }
 
 enum PostStatus {
