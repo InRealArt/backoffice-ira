@@ -66,6 +66,10 @@ const formSchema = z.object({
   biographyText3: z.string().optional(),
   biographyHeader4: z.string().optional(),
   biographyText4: z.string().optional(),
+  imageArtistStudio: z.string().refine(
+    val => val === '' || /^https?:\/\//.test(val),
+    { message: 'URL d\'image d\'atelier invalide' }
+  ).optional().transform(val => val === '' ? null : val),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -91,6 +95,7 @@ interface LandingArtistWithArtist {
     biographyHeader4?: string | null
     biographyText4?: string | null
     mediumTags?: string[]
+    imageArtistStudio?: string | null
   artist: {
     id: number
     name: string
@@ -194,6 +199,7 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
       biographyText3: landingArtist.biographyText3 || '',
       biographyHeader4: landingArtist.biographyHeader4 || '',
       biographyText4: landingArtist.biographyText4 || '',
+      imageArtistStudio: landingArtist.imageArtistStudio || '',
     }
   })
 
@@ -234,6 +240,7 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
         biographyText3: (data.biographyText3 ?? '').trim() === '' ? null : (data.biographyText3 ?? '').trim(),
         biographyHeader4: (data.biographyHeader4 ?? '').trim() === '' ? null : (data.biographyHeader4 ?? '').trim(),
         biographyText4: (data.biographyText4 ?? '').trim() === '' ? null : (data.biographyText4 ?? '').trim(),
+        imageArtistStudio: (data.imageArtistStudio ?? '').trim() === '' ? null : (data.imageArtistStudio ?? '').trim(),
       }
       
       // Préparer les données d'artworkImages pour le format attendu par l'API
@@ -511,6 +518,21 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
                   placeholder="Citation courte affichée sur la page"
                 />
               </TranslationField>
+              
+              <div className="form-group mt-md">
+                <label htmlFor="imageArtistStudio" className="form-label">Image d'atelier de l'artiste</label>
+                <input
+                  id="imageArtistStudio"
+                  type="text"
+                  {...register('imageArtistStudio')}
+                  className={`form-input ${errors.imageArtistStudio ? 'input-error' : ''}`}
+                  placeholder="https://firebase-storage.googleapis.com/..."
+                />
+                {errors.imageArtistStudio && (
+                  <p className="form-error">{errors.imageArtistStudio.message}</p>
+                )}
+                <p className="form-help">URL Firebase de l'image de l'atelier de l'artiste (optionnel)</p>
+              </div>
               <div className="d-flex gap-md mt-md">
                 <div style={{ flex: 1 }}>
                   <TranslationField

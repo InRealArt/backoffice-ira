@@ -25,6 +25,7 @@ export interface LandingArtistData {
     biographyHeader4?: string | null
     biographyText4?: string | null
     mediumTags?: string[]
+    imageArtistStudio?: string | null
 }
 
 /**
@@ -89,6 +90,7 @@ export async function createLandingArtist(data: LandingArtistData) {
                 biographyText3: data.biographyText3,
                 biographyHeader4: data.biographyHeader4,
                 biographyText4: data.biographyText4,
+                imageArtistStudio: data.imageArtistStudio,
             },
         })
 
@@ -142,6 +144,7 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 biographyText3: data.biographyText3,
                 biographyHeader4: data.biographyHeader4,
                 biographyText4: data.biographyText4,
+                imageArtistStudio: data.imageArtistStudio,
             },
         })
 

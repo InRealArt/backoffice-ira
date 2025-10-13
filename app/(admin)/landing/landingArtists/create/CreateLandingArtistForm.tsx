@@ -67,6 +67,10 @@ const formSchema = z.object({
     biographyHeader4: z.string().optional(),
     biographyText4: z.string().optional(),
     mediumTags: z.array(z.string()).default([]),
+    imageArtistStudio: z.string().refine(
+      val => val === '' || /^https?:\/\//.test(val),
+      { message: 'URL d\'image d\'atelier invalide' }
+    ).optional().transform(val => val === '' ? null : val),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -200,6 +204,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
         biographyHeader4: (data.biographyHeader4 ?? '').trim() === '' ? null : (data.biographyHeader4 ?? '').trim(),
         biographyText4: (data.biographyText4 ?? '').trim() === '' ? null : (data.biographyText4 ?? '').trim(),
         mediumTags: Array.isArray(data.mediumTags) ? data.mediumTags : [],
+        imageArtistStudio: (data.imageArtistStudio ?? '').trim() === '' ? null : (data.imageArtistStudio ?? '').trim(),
       }
       const payload = { ...formattedData, ...artistExtra }
       
@@ -603,6 +608,21 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                       placeholder="Citation courte affichée sur la page"
                     />
                   </TranslationField>
+                  
+                  <div className="form-group mt-md">
+                    <label htmlFor="imageArtistStudio" className="form-label">Image d'atelier de l'artiste</label>
+                    <input
+                      id="imageArtistStudio"
+                      type="text"
+                      {...register('imageArtistStudio')}
+                      className={`form-input ${errors.imageArtistStudio ? 'input-error' : ''}`}
+                      placeholder="https://firebase-storage.googleapis.com/..."
+                    />
+                    {errors.imageArtistStudio && (
+                      <p className="form-error">{errors.imageArtistStudio.message}</p>
+                    )}
+                    <p className="form-help">URL Firebase de l'image de l'atelier de l'artiste (optionnel)</p>
+                  </div>
                   <div className="d-flex gap-md mt-md">
                     <div style={{ flex: 1 }}>
                       <TranslationField
