@@ -57,11 +57,13 @@ export function useStickyFooters({ initialStickyFooters }: UseStickyFootersProps
                 )
                 success('Sticky footer supprimé avec succès')
 
-                // Rediriger vers la liste des sticky footers
+                // Forcer le rafraîchissement immédiat
+                router.refresh()
+
+                // Rediriger vers la liste des sticky footers après un court délai
                 setTimeout(() => {
                     router.push('/landing/sticky-footer')
-                    router.refresh()
-                }, 1000)
+                }, 500)
                 return true
             } else {
                 error(result.message || 'Une erreur est survenue lors de la suppression')
@@ -79,9 +81,23 @@ export function useStickyFooters({ initialStickyFooters }: UseStickyFootersProps
         }
     }, [stickyFooters, router])
 
-    const refreshStickyFooters = useCallback(() => {
-        router.refresh()
+    const refreshStickyFooters = useCallback(async () => {
+        try {
+            // Forcer le rafraîchissement côté serveur
+            router.refresh()
+        } catch (error) {
+            console.error('Erreur lors du rafraîchissement:', error)
+        }
     }, [router])
+
+    const forceRefreshStickyFooters = useCallback(async () => {
+        try {
+            // Recharger la page complètement pour s'assurer de la synchronisation parfaite
+            window.location.reload()
+        } catch (error) {
+            console.error('Erreur lors du rechargement forcé:', error)
+        }
+    }, [])
 
     return {
         stickyFooters,
@@ -91,6 +107,7 @@ export function useStickyFooters({ initialStickyFooters }: UseStickyFootersProps
         navigateToCreate,
         deleteStickyFooter: deleteStickyFooterAction,
         refreshStickyFooters,
+        forceRefreshStickyFooters,
         isLoading: loadingStickyFooterId !== null || deletingStickyFooterId !== null
     }
 }

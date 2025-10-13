@@ -1,6 +1,9 @@
 import { getAllStickyFooters } from '@/lib/actions/sticky-footer-actions'
 import StickyFooterClient from './StickyFooterClient'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata = {
   title: 'Paramétrage Sticky Footer | Administration',
   description: 'Gérez les paramètres du sticky footer',

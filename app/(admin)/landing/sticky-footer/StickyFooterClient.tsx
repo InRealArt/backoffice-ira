@@ -37,6 +37,8 @@ export default function StickyFooterClient({ stickyFooters: initialStickyFooters
     navigateToEdit,
     navigateToCreate,
     deleteStickyFooter,
+    refreshStickyFooters,
+    forceRefreshStickyFooters,
     isLoading
   } = useStickyFooters({ initialStickyFooters })
 
@@ -63,6 +65,19 @@ export default function StickyFooterClient({ stickyFooters: initialStickyFooters
 
   // Définition des colonnes pour le DataTable
   const columns: Column<StickyFooterProps>[] = [
+    {
+      key: 'id',
+      header: 'ID',
+      width: '80px',
+      render: (stickyFooter) => (
+        <div className="d-flex align-items-center gap-sm">
+          {loadingStickyFooterId === stickyFooter.id && <LoadingSpinner size="small" message="" inline />}
+          <span className={loadingStickyFooterId === stickyFooter.id ? 'text-muted' : ''}>
+            {stickyFooter.id}
+          </span>
+        </div>
+      )
+    },
     {
       key: 'title',
       header: 'Titre',
@@ -115,11 +130,27 @@ export default function StickyFooterClient({ stickyFooters: initialStickyFooters
         title="Paramétrage Sticky Footer"
         subtitle="Gérez les paramètres du sticky footer"
         actions={
-          <ActionButton 
-            label="Ajouter un sticky footer"
-            onClick={navigateToCreate}
-            size="small"
-          />
+          <div className="d-flex gap-sm">
+            <ActionButton 
+              label="Actualiser"
+              onClick={refreshStickyFooters}
+              size="small"
+              variant="secondary"
+              disabled={isLoading}
+            />
+            <ActionButton 
+              label="Synchroniser"
+              onClick={forceRefreshStickyFooters}
+              size="small"
+              variant="secondary"
+              disabled={isLoading}
+            />
+            <ActionButton 
+              label="Ajouter un sticky footer"
+              onClick={navigateToCreate}
+              size="small"
+            />
+          </div>
         }
       />
       
