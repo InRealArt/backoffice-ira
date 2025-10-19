@@ -44,11 +44,11 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
     <>
       <AuthObserver />
       <Navbar />
-      <div className="page-layout">
+      <div className="flex min-h-[calc(100vh-90px)] mt-0 bg-background-main transition-colors duration-300">
         <Suspense fallback={<SideMenuFallback />}>
           <SideMenu />
         </Suspense>
-        <div className="content-container">
+        <div className="flex-1 p-xxl ml-[250px] transition-all duration-300 w-full overflow-x-hidden bg-background-main md:ml-0 md:p-xl xs:p-lg">
           {children}
         </div>
       </div>

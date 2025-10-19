@@ -1,7 +1,6 @@
 import { FormFields } from '../types'
 import InfoTooltip from '../InfoTooltip'
 import FormSection from '../FormSection'
-import styles from '../../ArtworkForm.module.scss'
 
 function MainInfoSection({ 
   register, 
@@ -17,10 +16,10 @@ function MainInfoSection({
 }) {
   return (
     <FormSection title="Caractéristiques principales">
-      <div className={styles.formGrid}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
         {/* Name */}
-        <div className={styles.formGroup}>
-          <label htmlFor="name" className={styles.formLabel} data-required={true}>
+        <div className="mb-6">
+          <label htmlFor="name" className="flex items-center gap-1" data-required={true}>
             Nom
           </label>
           <input
@@ -30,16 +29,16 @@ function MainInfoSection({
               required: true,
               onChange: onNameChange // Appeler le gestionnaire de changement de name
             })}
-            className={`${styles.formInput} ${errors.name ? styles.formInputError : ''}`}
+            className={`form-input ${errors.name ? 'input-error' : ''}`}
             placeholder="Entrez le nom de l'œuvre"
             defaultValue={title}
           />
-          {errors.name && <p className={styles.formError}>Le nom est requis</p>}
+          {errors.name && <p className="form-error">Le nom est requis</p>}
         </div>
         
         {/* Slug généré automatiquement */}
-        <div className={styles.formGroup}>
-          <label htmlFor="slug" className={styles.formLabel}>
+        <div className="mb-6">
+          <label htmlFor="slug" className="flex items-center gap-1">
             Slug
             <InfoTooltip
               title="Slug"
@@ -51,22 +50,21 @@ function MainInfoSection({
             type="text"
             value={slug}
             readOnly
-            className={`${styles.formInput} ${styles.formInputDisabled}`}
-            style={{ backgroundColor: '#f0f0f0', color: '#666', cursor: 'not-allowed' }}
+            className="form-input bg-gray-100 text-gray-600 cursor-not-allowed"
           />
-          <p className={styles.formHelp}>Ce champ est généré automatiquement à partir du nom</p>
+          <p className="form-help">Ce champ est généré automatiquement à partir du nom</p>
         </div>
       </div>
 
       {/* Description */}
-      <div className={styles.formGroup}>
-        <label htmlFor="description" className={styles.formLabel}>
+      <div className="mb-6">
+        <label htmlFor="description" className="flex items-center gap-1">
           Description
         </label>
         <textarea
           id="description"
           {...register('description')}
-          className={`${styles.formTextarea} ${errors.description ? styles.formInputError : ''}`}
+          className={`form-textarea ${errors.description ? 'input-error' : ''}`}
           rows={4}
           placeholder="Décrivez l'œuvre..."
         />

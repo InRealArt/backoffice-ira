@@ -1,28 +1,23 @@
 'use client'
 
 import { useThemeStore } from '@/app/hooks/useThemeStore'
-import styles from './ThemeToggle.module.scss'
 import { useEffect, useState } from 'react'
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useThemeStore()
   const [mounted, setMounted] = useState(false)
   
-  // S'assurer que le composant est monté pour éviter les problèmes d'hydratation
   useEffect(() => {
     setMounted(true)
   }, [])
   
   const handleToggle = () => {
-    console.log('Thème actuel avant le clic:', theme)
     toggleTheme()
-    console.log('Thème basculé vers:', theme === 'light' ? 'dark' : 'light')
   }
   
-  // Éviter le rendu pendant le montage pour éviter les problèmes d'hydratation
   if (!mounted) {
     return (
-      <button className={styles.themeToggle}>
+      <button className="flex items-center justify-center w-10 h-10 rounded-full bg-transparent border border-border text-text-primary transition-colors" aria-label="Chargement...">
         <span className="sr-only">Chargement...</span>
       </button>
     )
@@ -31,19 +26,17 @@ export function ThemeToggle() {
   return (
     <button 
       onClick={handleToggle}
-      className={styles.themeToggle}
+      className="flex items-center justify-center w-10 h-10 rounded-full bg-transparent border border-border text-text-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 hover:bg-background-hover"
       aria-label={theme === 'light' ? 'Activer le mode sombre' : 'Activer le mode clair'} 
       title={theme === 'light' ? 'Activer le mode sombre' : 'Activer le mode clair'}
-      data-theme={theme} // Attribut de donnée pour aider au débogage
+      data-theme={theme}
     >
       {theme === 'light' ? (
-        // Icône lune (mode sombre)
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 hover:rotate-12">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
       ) : (
-        // Icône soleil (mode clair)
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 hover:rotate-12">
           <circle cx="12" cy="12" r="5"></circle>
           <line x1="12" y1="1" x2="12" y2="3"></line>
           <line x1="12" y1="21" x2="12" y2="23"></line>

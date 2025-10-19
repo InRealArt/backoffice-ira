@@ -16,9 +16,9 @@ export function PageHeader({
   className = '' 
 }: PageHeaderProps) {
   return (
-    <div className={`page-header ${className}`}>
-      <div className="header-top-section">
-        <h1 className="page-title">{title}</h1>
+    <div className={`mb-xxl ${className}`}>
+      <div className="flex justify-between items-center mb-sm flex-col sm:flex-row sm:items-center gap-md sm:gap-0">
+        <h1 className="text-xl font-semibold mb-sm text-text-primary">{title}</h1>
         {actions && (
           <div className="header-actions">
             {actions}
@@ -26,7 +26,7 @@ export function PageHeader({
         )}
       </div>
       {subtitle && (
-        <p className="page-subtitle">
+        <p className="text-text-secondary text-sm">
           {subtitle}
         </p>
       )}

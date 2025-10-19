@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { getTranslation } from '@/lib/actions/translation-actions'
-import styles from './TranslationIcon.module.scss'
 
 interface TranslationIconProps {
   entityType: string
@@ -28,7 +27,6 @@ export default function TranslationIcon({
       try {
         setIsLoading(true)
         const result = await getTranslation(entityType, entityId, field, languageCode)
-        
         if (result.success && result.translation) {
           setTranslationId(result.translation.id)
         } else {
@@ -50,10 +48,15 @@ export default function TranslationIcon({
     }
   }, [entityType, entityId, field, languageCode])
 
+  const baseIconClasses = 'inline-flex items-center justify-center ml-2 p-1 rounded text-[9px] font-semibold uppercase transition-colors duration-200'
+
   if (isLoading) {
     return (
-      <span className={`${styles.translationIcon} ${styles.translationIconLoading} ${className}`} title="Chargement...">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <span className={[
+        'inline-flex items-center justify-center ml-2 p-1 rounded bg-black/5 text-black/50 animate-pulse cursor-default',
+        className,
+      ].filter(Boolean).join(' ')} title="Chargement...">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M5 12h14"></path>
           <path d="M12 5v14"></path>
         </svg>
@@ -61,36 +64,42 @@ export default function TranslationIcon({
     )
   }
 
-  // Si on a trouvé une traduction, on affiche un lien pour l'éditer
   if (translationId) {
     return (
       <Link
         href={`/landing/translations/${translationId}/edit`}
-        className={`${styles.translationIcon} ${className}`}
+        className={[
+          baseIconClasses,
+          'bg-black/5 text-black/70 hover:bg-black/10 hover:text-black/80',
+          className,
+        ].filter(Boolean).join(' ')}
         title={`Modifier la traduction ${languageCode.toUpperCase()} pour ce champ`}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m5 8 6 6 6-6"></path>
           <path d="M4 14h2v6h12v-6h2"></path>
           <path d="M15 14v-5"></path>
         </svg>
-        <span className={styles.translationLangCode}>{languageCode.toUpperCase()}</span>
+        <span className="ml-[0.15rem]">{languageCode.toUpperCase()}</span>
       </Link>
     )
   }
 
-  // Si pas de traduction existante, on affiche un lien pour en créer une nouvelle
   return (
     <Link
       href={`/landing/translations/new?entityType=${entityType}&entityId=${entityId}&field=${field}&languageCode=${languageCode}`}
-      className={`${styles.translationIcon} ${styles.translationIconNew} ${className}`}
+      className={[
+        baseIconClasses,
+        'text-blue-600 bg-blue-600/10 hover:bg-blue-600/20 hover:text-blue-800',
+        className,
+      ].filter(Boolean).join(' ')}
       title={`Créer une traduction ${languageCode.toUpperCase()} pour ce champ`}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 5v14"></path>
         <path d="M5 12h14"></path>
       </svg>
-      <span className={styles.translationLangCode}>{languageCode.toUpperCase()}</span>
+      <span className="ml-[0.15rem]">{languageCode.toUpperCase()}</span>
     </Link>
   )
 } 

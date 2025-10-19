@@ -20,9 +20,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return isAdmin ? (
     <>
       <Navbar />
-      <div className="page-layout">
+      <div className="flex min-h-[calc(100vh-90px)] mt-0 bg-background-main transition-colors duration-300">
         <SideMenu />
-        <div className="content-container">
+        <div className="flex-1 p-xxl ml-[250px] transition-all duration-300 w-full overflow-x-hidden bg-background-main md:ml-0 md:p-xl xs:p-lg">
           {children}
         </div>
       </div>
@@ -30,8 +30,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ) : (
     <>
       <Navbar />
-      <div className="page-layout">
-        <div className="content-container">
+      <div className="flex min-h-[calc(100vh-90px)] mt-0 bg-background-main transition-colors duration-300">
+        <div className="flex-1 p-xxl transition-all duration-300 w-full overflow-x-hidden bg-background-main md:p-xl xs:p-lg">
           <p>Vous n'êtes pas autorisé à accéder à cette page ou vous n'êtes pas connecté.</p>
           <p>Veuillez vous connecter pour voir cette page.</p>
         </div>

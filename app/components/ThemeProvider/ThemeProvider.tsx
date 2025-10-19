@@ -10,14 +10,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Logique de base pour les classes
     const root = document.documentElement
-    root.classList.remove('light-theme', 'dark-theme')
+    root.classList.remove('light-theme', 'dark-theme', 'dark', 'light')
     document.body.classList.remove('light', 'dark')
     
     if (theme === 'dark') {
-      root.classList.add('dark-theme')
+      root.classList.add('dark-theme', 'dark') // 'dark' for Tailwind
       document.body.classList.add('dark')
     } else {
-      root.classList.add('light-theme')
+      root.classList.add('light-theme', 'light')
       document.body.classList.add('light')
     }
     

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import styles from './Tabs.module.scss'
 
 export interface TabItem {
   id: string
@@ -20,12 +19,15 @@ export default function Tabs({ tabs, defaultTabId }: TabsProps) {
   const activeTab = tabs.find(tab => tab.id === activeTabId)
   
   return (
-    <div className={styles.tabsContainer}>
-      <div className={styles.tabHeaders}>
+    <div className="w-full mb-4">
+      <div className="flex border-b border-border mb-4">
         {tabs.map(tab => (
           <div
             key={tab.id}
-            className={`${styles.tabHeader} ${activeTabId === tab.id ? styles.active : ''}`}
+            className={[
+              'px-4 py-3 text-sm font-medium cursor-pointer border-b-2 transition-colors',
+              activeTabId === tab.id ? 'text-primary border-primary' : 'border-transparent hover:text-primary',
+            ].join(' ')}
             onClick={() => setActiveTabId(tab.id)}
           >
             {tab.label}
@@ -33,7 +35,7 @@ export default function Tabs({ tabs, defaultTabId }: TabsProps) {
         ))}
       </div>
       
-      <div className={styles.tabContent}>
+      <div className="py-2">
         {activeTab?.content}
       </div>
     </div>

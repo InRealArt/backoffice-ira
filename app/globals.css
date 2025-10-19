@@ -1,3 +1,9 @@
+/* Tailwind CSS v3 directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables for theming */
 :root,
 .light-theme,
 body.light {
@@ -9,16 +15,23 @@ body.light {
   /* Couleurs en mode clair */
   --color-primary: #4f46e5;
   --color-primary-dark: #4338ca;
-  --color-primary-light: #eef2ff;
+  --color-primary-light: #444e6e;
+  --color-error: #dc2626;
+  --color-error-dark: #b91c1c;
+  --color-error-light: #f87171;
   --color-text-primary: #333;
   --color-text-secondary: #666;
+  --color-text-tertiary: #888;
+  --color-text-light: #9ca3af;
   --color-text-muted: #a0aec0;
   --color-background-main: #f9f9f9;
   --color-background-white: #ffffff;
   --color-background-light: #f5f5f5;
   --color-background-hover: #f7f9fc;
+  --color-background-disabled: #f0f0f0;
   --color-border: #eee;
   --color-border-input: #e2e8f0;
+  --color-border-light: #f0f0f0;
 }
 
 .dark-theme,
@@ -32,15 +45,22 @@ body.dark {
   --color-primary: #6366f1;
   --color-primary-dark: #4f46e5;
   --color-primary-light: #312e81;
+  --color-error: #ef4444;
+  --color-error-dark: #dc2626;
+  --color-error-light: #f87171;
   --color-text-primary: #ffffff; /* Plus blanc pour le texte principal */
   --color-text-secondary: #f3f4f6; /* Plus blanc pour le texte secondaire */
+  --color-text-tertiary: #e5e7eb;
+  --color-text-light: #d1d5db;
   --color-text-muted: #d1d5db; /* Plus blanc pour le texte muté */
   --color-background-main: #111827;
   --color-background-white: #1f2937;
   --color-background-light: #374151;
   --color-background-hover: #2d3748;
+  --color-background-disabled: #374151;
   --color-border: #4a5568;
   --color-border-input: #4b5563;
+  --color-border-light: #4a5568;
 }
 
 html,
@@ -76,66 +96,10 @@ a {
   text-decoration: none;
 }
 
-/* Classes génériques pour les layouts de page */
-.page-layout,
-.dashboard-page,
-.pageLayout,
-[class*="pageLayout"],
-[class*="page-layout"] {
-  display: flex;
-  min-height: calc(100vh - var(--navbar-height));
-  margin-top: 0;
-  background-color: var(--color-background-main);
-  transition: background-color 0.3s ease;
-}
-
-/* Styles de page spécifiques au mode sombre */
-body.dark .page-layout,
-body.dark .dashboard-page,
-body.dark .pageLayout,
-body.dark [class*="pageLayout"],
-body.dark [class*="page-layout"],
-.dark-theme .page-layout,
-.dark-theme .dashboard-page,
-.dark-theme .pageLayout,
-.dark-theme [class*="pageLayout"],
-.dark-theme [class*="page-layout"] {
-  background-color: var(--color-background-main);
-}
-
-/* Classes génériques pour les conteneurs de contenu */
-.content-container,
-.contentContainer,
-[class*="contentContainer"],
-[class*="content-container"] {
-  flex: 1;
-  padding: 24px;
-  margin-left: var(--sidemenu-width);
-  transition: all 0.3s ease;
-  width: 100%;
-  overflow-x: hidden;
-  background-color: var(--color-background-main);
-}
-
-/* Ajustements responsifs génériques */
-@media (max-width: 768px) {
-  .content-container,
-  .contentContainer,
-  [class*="contentContainer"],
-  [class*="content-container"] {
-    margin-left: 0;
-    padding: 20px;
-  }
-}
-
-@media (max-width: 480px) {
-  .content-container,
-  .contentContainer,
-  [class*="contentContainer"],
-  [class*="content-container"] {
-    padding: 16px;
-  }
-}
+/* =========================================
+   LAYOUT CLASSES MIGRATED TO @layer components
+   See bottom of file for Tailwind-based definitions
+   ========================================= */
 
 /* Style pour les lignes en succès (NFT listé et smart contract actif) */
 .success-row {
@@ -522,4 +486,386 @@ body.dark {
   --error-background: #2d1b1b;
   --success-color: #51cf66;
   --success-color-dark: #40c057;
+}
+
+/* ========================================
+   MIGRATED SCSS CLASSES TO TAILWIND
+   ======================================== */
+
+@layer components {
+  /* Page Container - Main wrapper for page content */
+  .page-container {
+    @apply w-full p-xl bg-background-main rounded-lg shadow-md;
+  }
+
+  /* Page Header - Header section with title and actions */
+  .page-header {
+    @apply mb-xxl;
+  }
+
+  .page-header .header-top-section {
+    @apply flex justify-between items-center mb-sm flex-col sm:flex-row gap-md sm:gap-0;
+  }
+
+  .page-header .page-title {
+    @apply text-xl font-semibold mb-sm text-text-primary;
+  }
+
+  .page-header .page-subtitle {
+    @apply text-text-secondary text-sm;
+  }
+
+  /* Page Content - Content area with white background */
+  .page-content {
+    @apply bg-background-white rounded-md overflow-hidden;
+  }
+
+  /* Legacy support - keeping for backward compatibility */
+  .page-layout {
+    @apply flex min-h-[calc(100vh-90px)] mt-0 bg-background-main transition-colors duration-300;
+  }
+
+  .content-container {
+    @apply flex-1 p-lg ml-[250px] transition-all duration-300 w-full overflow-x-hidden bg-background-main md:ml-0 md:p-xl lg:p-xxl;
+  }
+
+  /* ========================================
+     FORM COMPONENTS
+     ======================================== */
+
+  /* Form Container */
+  .form-container {
+    @apply max-w-3xl mx-auto;
+  }
+
+  /* Form Card */
+  .form-card {
+    @apply bg-background-white rounded-md shadow-sm overflow-hidden mb-xl;
+  }
+
+  .card-header {
+    @apply px-xl py-lg border-b border-border bg-background-light;
+  }
+
+  .card-title {
+    @apply text-lg font-semibold text-text-primary m-0;
+  }
+
+  .card-content {
+    @apply p-xl;
+  }
+
+  /* Form Groups & Labels */
+  .form-group {
+    @apply mb-lg;
+  }
+
+  .form-label {
+    @apply block mb-xs font-medium text-text-primary;
+  }
+
+  .form-label.checkbox-label {
+    @apply flex items-center gap-sm m-0;
+  }
+
+  /* Form Inputs */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    @apply w-full px-md py-md text-sm border border-border-input rounded-sm bg-background-white text-text-primary transition-all duration-200;
+  }
+
+  .form-input:focus,
+  .form-select:focus,
+  .form-textarea:focus {
+    @apply outline-none border-primary ring-1 ring-primary ring-opacity-20;
+  }
+
+  .form-input.input-error,
+  .form-select.input-error,
+  .form-textarea.input-error {
+    @apply border-error;
+  }
+
+  .form-input.input-error:focus,
+  .form-select.input-error:focus,
+  .form-textarea.input-error:focus {
+    @apply ring-1 ring-error ring-opacity-20;
+  }
+
+  /* Form Select with dropdown icon */
+  .form-select {
+    @apply appearance-none pr-9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+  }
+
+  /* Form Textarea */
+  .form-textarea {
+    @apply min-h-[100px] resize-y;
+  }
+
+  /* Form Checkbox */
+  .form-checkbox {
+    @apply w-[18px] h-[18px] m-0 cursor-pointer;
+  }
+
+  /* Form Error Message */
+  .form-error {
+    @apply text-error text-xs mt-xs;
+  }
+
+  /* Form Readonly Field */
+  .form-readonly {
+    @apply px-md py-md bg-background-light border border-border rounded-sm text-text-secondary min-h-[40px] flex items-center;
+  }
+
+  /* Form Helper Text */
+  .form-helper-text,
+  .form-help {
+    @apply text-text-secondary text-xs mt-xs leading-tight;
+  }
+
+  /* Form Actions */
+  .form-actions {
+    @apply flex justify-end gap-md mt-lg;
+  }
+
+  /* Edit Form Container */
+  .edit-form-container {
+    @apply bg-background-white rounded-lg shadow-lg p-3xl max-w-3xl mx-auto;
+  }
+
+  .edit-form {
+    @apply grid gap-xxl md:grid-cols-2;
+  }
+
+  .edit-form .full-width {
+    @apply md:col-span-2;
+  }
+
+  /* Editable Label */
+  .editable-label {
+    @apply text-primary text-xs font-normal ml-sm;
+  }
+
+  .label-with-action {
+    @apply flex justify-between items-center w-full;
+  }
+
+  /* Sync Button */
+  .sync-button {
+    @apply flex items-center gap-sm px-md py-xs text-xs text-primary bg-primary-light border border-primary border-opacity-20 rounded-sm transition-colors duration-200 cursor-pointer;
+  }
+
+  .sync-button:hover:not(:disabled) {
+    @apply bg-primary bg-opacity-10;
+  }
+
+  .sync-button:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .sync-icon {
+    @apply w-4 h-4;
+  }
+
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ========================================
+     BUTTON COMPONENTS
+     ======================================== */
+
+  /* Base Button */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded border-none cursor-pointer transition-all duration-200;
+  }
+
+  .btn:disabled {
+    @apply opacity-70 cursor-not-allowed;
+  }
+
+  /* Button Variants */
+  .btn-primary {
+    @apply bg-[#4779fe] text-white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    @apply bg-[#3a67e0];
+  }
+
+  .btn-secondary {
+    @apply bg-gray-100 text-gray-700;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    @apply bg-gray-200;
+  }
+
+  .btn-danger {
+    @apply bg-red-500 text-white;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    @apply bg-red-600;
+  }
+
+  .btn-success {
+    @apply bg-green-500 text-white;
+  }
+
+  .btn-success:hover:not(:disabled) {
+    @apply bg-green-600;
+  }
+
+  /* Button Sizes */
+  .btn-small {
+    @apply px-3 py-2 text-sm;
+  }
+
+  .btn-medium {
+    @apply px-5 py-2.5 text-base;
+  }
+
+  .btn-large {
+    @apply px-6 py-3 text-lg;
+  }
+
+  /* Button Layout */
+  .btn-full-width {
+    @apply w-full;
+  }
+
+  /* Button Loading State */
+  .btn-loading-container {
+    @apply flex items-center gap-2;
+  }
+
+  .btn-loading-text {
+    @apply inline-block;
+  }
+
+  /* Button Icon */
+  .btn-icon {
+    @apply inline-flex items-center;
+  }
+
+  /* Loading Spinner Inline */
+  .loading-spinner-inline {
+    @apply inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin;
+  }
+
+  /* ========================================
+     TABLE COMPONENTS
+     ======================================== */
+
+  /* Table Container */
+  .table-container {
+    @apply w-full overflow-x-auto;
+  }
+
+  /* Data Table */
+  .data-table {
+    @apply w-full border-collapse;
+  }
+
+  .data-table th,
+  .data-table td {
+    @apply px-lg py-md text-left border-b border-border;
+  }
+
+  .data-table th {
+    @apply font-semibold text-text-secondary bg-background-light;
+  }
+
+  /* Table Row States */
+  .data-table .clickable-row {
+    @apply cursor-pointer transition-colors duration-200;
+  }
+
+  .data-table .clickable-row:hover {
+    @apply bg-background-hover;
+  }
+
+  .data-table .loading-row {
+    @apply opacity-70 bg-background-disabled;
+  }
+
+  .data-table .disabled-row {
+    @apply opacity-50 pointer-events-none;
+  }
+
+  .data-table .error-row {
+    @apply bg-red-50 border-l-4 border-l-red-500;
+  }
+
+  .data-table .actions-cell {
+    @apply text-center whitespace-nowrap;
+  }
+
+  /* Empty State */
+  .empty-state {
+    @apply p-4xl text-center text-text-tertiary;
+  }
+
+  /* Responsive Helpers */
+  .hidden-mobile {
+    @apply md:hidden;
+  }
+
+  /* ========================================
+     BADGE COMPONENTS
+     ======================================== */
+
+  /* Status Badge */
+  .status-badge {
+    @apply inline-block px-2 py-1 rounded text-xs font-medium capitalize;
+  }
+
+  .status-badge.badge-small {
+    @apply w-fit min-w-0 px-1.5 py-0.5 text-[0.7rem];
+  }
+
+  /* Badge Variants */
+  .status-badge.status-default {
+    @apply bg-gray-200 text-gray-600;
+  }
+
+  .status-badge.status-success {
+    @apply bg-green-500 text-white;
+  }
+
+  .status-badge.status-warning {
+    @apply bg-orange-500 text-white;
+  }
+
+  .status-badge.status-error {
+    @apply bg-red-500 text-white;
+  }
+
+  .status-badge.status-info {
+    @apply bg-blue-500 text-white;
+  }
+
+  .status-badge.status-primary {
+    @apply bg-indigo-500 text-white;
+  }
+
+  /* Info Badge */
+  .info-badge {
+    @apply inline-block px-sm py-xs rounded-sm text-xs font-medium bg-primary-light text-primary;
+  }
 }

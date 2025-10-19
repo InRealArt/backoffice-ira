@@ -1,50 +1,14 @@
 @use './variables.scss' as *;
 
-// Styles de conteneur principal pour les pages
-.page-container {
-  width: 100%;
-  padding: $spacing-xl;
-  background-color: $color-background-main;
-  border-radius: $border-radius-lg;
-  box-shadow: $shadow-md;
-}
-
-// Styles pour les en-têtes de page
-.page-header {
-  margin-bottom: $spacing-xxl;
-
-  .header-top-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-sm;
-
-    @media (max-width: $breakpoint-sm) {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: $spacing-md;
-    }
-  }
-
-  .page-title {
-    font-size: $font-size-xl;
-    font-weight: $font-weight-semibold;
-    margin-bottom: $spacing-sm;
-    color: $color-text-primary;
-  }
-
-  .page-subtitle {
-    color: $color-text-secondary;
-    font-size: $font-size-sm;
-  }
-}
-
-// Styles pour le contenu des pages
-.page-content {
-  background-color: $color-background-white;
-  border-radius: $border-radius-md;
-  overflow: hidden;
-}
+// ===================================
+// MIGRATED TO TAILWIND (globals.css)
+// ===================================
+// - page-container -> @layer components in globals.css
+// - page-header -> @layer components in globals.css  
+// - page-content -> @layer components in globals.css
+// - page-layout -> Removed, using Tailwind in layouts
+// - content-container -> Removed, using Tailwind in layouts
+// ===================================
 
 // Sections de filtres 
 .filter-section {
@@ -142,419 +106,50 @@
   }
 }
 
-// Styles de formulaire
-.form-container {
-  max-width: 800px;
-  margin: 0 auto;
-}
+// ===================================
+// MIGRATED TO TAILWIND (globals.css)
+// ===================================
+// Form components migrated (~200 lines):
+// - form-container, form-card, card-header, card-title, card-content
+// - form-group, form-label, form-input, form-select, form-textarea
+// - form-checkbox, form-error, form-readonly
+// - form-helper-text, form-help, form-actions
+// - edit-form-container, edit-form, editable-label
+// - label-with-action, sync-button, sync-icon, spinning
+// See: app/globals.css @layer components
+// ===================================
 
-.form-card {
-  background-color: $color-background-white;
-  border-radius: $border-radius-md;
-  box-shadow: $shadow-sm;
-  overflow: hidden;
-  margin-bottom: $spacing-xl;
-}
+// ===================================
+// MIGRATED TO TAILWIND (globals.css)
+// ===================================
+// Table components migrated (~65 lines):
+// - table-container, data-table (th, td)
+// - clickable-row, loading-row, disabled-row, error-row
+// - actions-cell, empty-state, hidden-mobile
+// See: app/globals.css @layer components
+// ===================================
 
-.card-header {
-  padding: $spacing-lg $spacing-xl;
-  border-bottom: 1px solid $color-border;
-  background-color: $color-background-light;
-}
+// ===================================
+// MIGRATED TO TAILWIND (globals.css)
+// ===================================
+// Badge components migrated (~55 lines):
+// - status-badge (base, badge-small)
+// - status-default, status-success, status-warning
+// - status-error, status-info, status-primary
+// - info-badge
+// See: app/globals.css @layer components
+// ===================================
 
-.card-title {
-  font-size: $font-size-lg;
-  font-weight: $font-weight-semibold;
-  color: $color-text-primary;
-  margin: 0;
-}
-
-.card-content {
-  padding: $spacing-xl;
-}
-
-.form-group {
-  margin-bottom: $spacing-lg;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: $spacing-xs;
-  font-weight: $font-weight-medium;
-  color: $color-text-primary;
-
-  &.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    margin: 0;
-  }
-}
-
-.form-input,
-.form-select,
-.form-textarea {
-  width: 100%;
-  padding: $spacing-md;
-  font-size: $font-size-sm;
-  border: 1px solid $color-border-input;
-  border-radius: $border-radius-sm;
-  background-color: $color-background-white;
-  color: $color-text-primary;
-  transition: $transition-default;
-
-  &:focus {
-    outline: none;
-    border-color: $color-primary;
-    box-shadow: 0 0 0 1px rgba($color-primary, 0.2);
-  }
-
-  &.input-error {
-    border-color: $color-error;
-
-    &:focus {
-      box-shadow: 0 0 0 1px rgba($color-error, 0.2);
-    }
-  }
-}
-
-.form-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
-  padding-right: 36px;
-}
-
-.form-textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-.form-checkbox {
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  cursor: pointer;
-}
-
-.form-error {
-  color: $color-error;
-  font-size: $font-size-xs;
-  margin-top: $spacing-xs;
-}
-
-.form-readonly {
-  padding: $spacing-md;
-  background-color: $color-background-light;
-  border: 1px solid $color-border;
-  border-radius: $border-radius-sm;
-  color: $color-text-secondary;
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-}
-
-.form-helper-text {
-  color: $color-text-secondary;
-  font-size: $font-size-xs;
-  margin-top: $spacing-xs;
-}
-
-.form-help {
-  color: $color-text-secondary;
-  font-size: $font-size-xs;
-  margin-top: $spacing-xs;
-  line-height: 1.3;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: $spacing-md;
-  margin-top: $spacing-lg;
-}
-
-// Formulaires d'édition (inspiré du style standardisé de EditCollectionForm)
-.edit-form-container {
-  background-color: $color-background-white;
-  border-radius: $border-radius-lg;
-  box-shadow: $shadow-lg;
-  padding: $spacing-3xl;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.edit-form {
-  display: grid;
-  gap: $spacing-xxl;
-  
-  @media (min-width: $breakpoint-md) {
-    grid-template-columns: repeat(2, 1fr);
-    
-    .full-width {
-      grid-column: 1 / -1;
-    }
-  }
-}
-
-.editable-label {
-  color: $color-primary;
-  font-size: $font-size-xs;
-  font-weight: normal;
-  margin-left: $spacing-sm;
-}
-
-.label-with-action {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.sync-button {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  padding: $spacing-xs $spacing-md;
-  font-size: $font-size-xs;
-  color: $color-primary;
-  background-color: $color-primary-light;
-  border: 1px solid rgba($color-primary, 0.2);
-  border-radius: $border-radius-sm;
-  transition: $transition-default;
-  cursor: pointer;
-  
-  &:hover:not(:disabled) {
-    background-color: rgba($color-primary, 0.1);
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-.sync-icon {
-  width: $font-size-md;
-  height: $font-size-md;
-}
-
-.spinning {
-  animation: spin 1s linear infinite;
-}
-
-// Styles de tableau
-.table-container {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-
-  th,
-  td {
-    padding: $spacing-md $spacing-lg;
-    text-align: left;
-    border-bottom: 1px solid $color-border;
-  }
-
-  th {
-    font-weight: $font-weight-semibold;
-    color: $color-text-secondary;
-    background-color: $color-background-light;
-  }
-
-  .clickable-row {
-    cursor: pointer;
-    transition: background-color 0.2s;
-
-    &:hover {
-      background-color: $color-background-hover;
-    }
-  }
-
-  .loading-row {
-    opacity: 0.7;
-    background-color: $color-background-disabled;
-  }
-
-  .disabled-row {
-    opacity: 0.5;
-    pointer-events: none;
-  }
-
-  .error-row {
-    background-color: rgba(239, 68, 68, 0.05);
-    border-left: 3px solid #ef4444;
-  }
-
-  .actions-cell {
-    text-align: center;
-    white-space: nowrap;
-  }
-}
-
-// État vide
-.empty-state {
-  padding: $spacing-4xl;
-  text-align: center;
-  color: $color-text-tertiary;
-}
-
-// Responsive helpers
-.hidden-mobile {
-  @media (max-width: $breakpoint-md) {
-    display: none;
-  }
-}
-
-// Badges
-.status-badge {
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border-radius: 3px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  text-transform: capitalize;
-  
-  &.badge-small {
-    display: inline-block;
-    width: fit-content;
-    min-width: auto;
-    padding: 0.15rem 0.35rem;
-    font-size: 0.7rem;
-  }
-  
-  &.status-default {
-    background-color: #e5e7eb;
-    color: #4b5563;
-  }
-  
-  &.status-success {
-    background-color: #10b981;
-    color: white;
-  }
-  
-  &.status-warning {
-    background-color: #f97316;
-    color: white;
-  }
-  
-  &.status-error {
-    background-color: #f44336;
-    color: white;
-  }
-  
-  &.status-info {
-    background-color: #3b82f6;
-    color: white;
-  }
-  
-  &.status-primary {
-    background-color: #6366f1;
-    color: white;
-  }
-}
-
-.info-badge {
-  display: inline-block;
-  padding: $spacing-xs $spacing-sm;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-xs;
-  font-weight: $font-weight-medium;
-  background-color: $color-primary-light;
-  color: $color-primary;
-}
-
-// Styles pour les boutons
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-  
-  // Variants
-  &.btn-primary {
-    background-color: #4779fe;
-    color: white;
-    
-    &:hover:not(:disabled) {
-      background-color: #3a67e0;
-    }
-  }
-  
-  &.btn-secondary {
-    background-color: #f3f4f6;
-    color: #374151;
-    
-    &:hover:not(:disabled) {
-      background-color: #e5e7eb;
-    }
-  }
-  
-  &.btn-danger {
-    background-color: #ef4444;
-    color: white;
-    
-    &:hover:not(:disabled) {
-      background-color: #dc2626;
-    }
-  }
-  
-  &.btn-success {
-    background-color: #10b981;
-    color: white;
-    
-    &:hover:not(:disabled) {
-      background-color: #059669;
-    }
-  }
-  
-  // Tailles
-  &.btn-small {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
-  }
-  
-  &.btn-medium {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.95rem;
-  }
-  
-  &.btn-large {
-    padding: 0.8rem 1.6rem;
-    font-size: 1.05rem;
-  }
-  
-  &.btn-full-width {
-    width: 100%;
-  }
-  
-  // État de chargement
-  .btn-loading-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  
-  .btn-loading-text {
-    opacity: 0.9;
-  }
-}
+// ===================================
+// MIGRATED TO TAILWIND (globals.css)
+// ===================================
+// Button components migrated:
+// - btn (base), btn-primary, btn-secondary, btn-danger, btn-success
+// - btn-small, btn-medium, btn-large, btn-full-width
+// - btn-loading-container, btn-loading-text, btn-icon
+// - loading-spinner-inline
+// See: app/globals.css @layer components
+// ===================================
 
 // Loader
 .spinner-container {

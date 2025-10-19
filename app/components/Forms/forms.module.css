@@ -1,40 +1,21 @@
-/* Styles pour les labels et l'astérisque des champs obligatoires */
-.form-label {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
+/* ================================================
+   MIGRATED TO TAILWIND (globals.css @layer components)
+   ================================================ */
 
-.label-text {
-  display: inline-block;
-}
-
-.required-mark {
-  display: inline-block;
-  line-height: 1;
-}
-
-/* Styles pour les champs désactivés - spécificité élevée */
+/* Disabled Input States */
 .input-disabled,
 input.input-disabled,
 select.input-disabled {
-  background-color: #f9fafb !important;
-  color: #9ca3af !important;
-  cursor: not-allowed !important;
-  opacity: 0.8 !important;
-  border-color: #e5e7eb !important;
+  @apply bg-gray-50 text-gray-400 cursor-not-allowed opacity-80 border-gray-200 #{!important};
 }
 
 .input-disabled:focus,
 input.input-disabled:focus,
 select.input-disabled:focus {
-  background-color: #f9fafb !important;
-  color: #9ca3af !important;
-  box-shadow: none !important;
-  border-color: #e5e7eb !important;
+  @apply bg-gray-50 text-gray-400 shadow-none border-gray-200 #{!important};
 }
 
-/* Animation de surbrillance pour les champs avec erreur */
+/* Error Highlight Animation */
 @keyframes highlight-pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4);
@@ -51,8 +32,7 @@ select.input-disabled:focus {
   animation: highlight-pulse 1.5s ease-out;
 }
 
-/* Assurez-vous que les éléments avec une erreur ont une transition douce */
+/* Input Error State */
 .input-error {
-  border-color: #f43f5e !important;
-  transition: border-color 0.3s ease;
+  @apply border-error transition-colors duration-300 #{!important};
 } 

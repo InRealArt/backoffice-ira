@@ -280,18 +280,18 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
   }
   
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-      <div className={styles.formHeader}>
-        <h1 className={styles.formTitle}>
+    <form onSubmit={handleSubmit(onSubmit)} className="bg-background-white rounded-lg shadow-md p-8 max-w-[1000px] mx-auto">
+      <div className="mb-8 text-center">
+        <h1 className="text-[1.8rem] text-gray-900 mb-2">
           {isEditMode ? 'Modifier l\'œuvre' : 'Créer une nouvelle œuvre'}
         </h1>
-        <p className={styles.formSubtitle}>
+        <p className="text-gray-500 text-base">
           {isEditMode 
             ? 'Modifiez les informations de votre œuvre d\'art' 
             : 'Remplissez le formulaire pour ajouter une nouvelle œuvre d\'art'}
         </p>
         {isFormReadOnly && (
-          <div className={styles.readOnlyWarning}>
+          <div className="block mt-2 p-2 bg-red-100 text-red-700 rounded text-sm font-semibold">
             Au moins un élément est listé, vous ne pouvez pas modifier l'œuvre.
           </div>
         )}
@@ -464,9 +464,9 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
       
       {/* Prévisualisation du certificat d'œuvre physique */}
       {hasPhysicalOnly && (previewPhysicalCertificate || initialData?.physicalCertificateUrl) && (
-        <div className={styles.certificatePreviewContainer}>
+        <div className="mt-4 bg-black/5 p-4 rounded-lg">
           <h4>Certificat d'œuvre physique</h4>
-          <div className={styles.pdfPreview}>
+          <div className="flex flex-col items-center">
             {previewPhysicalCertificate ? (
               <PdfPreview 
                 url={previewPhysicalCertificate}
@@ -477,7 +477,7 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
                 href={initialData.physicalCertificateUrl} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className={styles.viewPdfLink}
+                className="mt-2 text-primary underline hover:text-primary-dark"
               >
                 Voir le certificat d'œuvre physique existant
               </a>
@@ -488,9 +488,9 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
 
       {/* Prévisualisation du certificat NFT */}
       {hasNftOnly && (previewNftCertificate || initialData?.nftCertificateUrl) && (
-        <div className={styles.certificatePreviewContainer}>
+        <div className="mt-4 bg-black/5 p-4 rounded-lg">
           <h4>Certificat NFT</h4>
-          <div className={styles.pdfPreview}>
+          <div className="flex flex-col items-center">
             {previewNftCertificate ? (
               <PdfPreview 
                 url={previewNftCertificate}
@@ -501,7 +501,7 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
                 href={initialData.nftCertificateUrl} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className={styles.viewPdfLink}
+                className="mt-2 text-primary underline hover:text-primary-dark"
               >
                 Voir le certificat NFT existant
               </a>
@@ -511,10 +511,10 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
       )}
       
       {/* Actions du formulaire */}
-      <div className={styles.formActions}>
+      <div className="flex justify-end gap-4 mt-8 pt-6 border-t-2 border-border">
         <button
           type="button"
-          className={styles.cancelButton}
+          className="px-6 py-3 text-base font-semibold rounded bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200 disabled:opacity-70 disabled:cursor-not-allowed"
           onClick={() => router.back()}
         >
           Annuler
@@ -522,7 +522,7 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
         <button
           type="submit"
           disabled={isSubmitting || isFormReadOnly}
-          className={styles.submitButton}
+          className="px-6 py-3 text-base font-semibold rounded bg-[#4a6cf7] text-white hover:bg-[#3a57e8] disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Traitement en cours...' : isEditMode ? 'Mettre à jour' : 'Créer l\'œuvre'}
         </button>

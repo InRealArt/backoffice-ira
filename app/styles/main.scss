@@ -34,55 +34,13 @@ a {
   text-decoration: none;
 }
 
-// Définition de base des layouts
-.page-layout {
-  display: flex;
-  min-height: calc(100vh - $navbar-height);
-  margin-top: 0;
-  background-color: $color-background-main !important;
-}
-
-// Surcharge explicite pour le mode sombre
-body.dark .page-layout,
-html.dark-theme .page-layout {
-  background-color: $color-background-main !important;
-}
-
-.content-container {
-  flex: 1;
-  padding: $spacing-xxl;
-  margin-left: $sidemenu-width;
-  transition: $transition-default;
-  width: calc(100% - $sidemenu-width);
-  overflow-x: hidden;
-  background-color: $color-background-main;
-  
-  // Adapter la marge et la largeur quand le menu est plié
-  .side-menu-collapsed ~ & {
-    margin-left: 60px;
-    width: calc(100% - 60px);
-  }
-}
-
-// Surcharge explicite pour le mode sombre
-body.dark .content-container,
-html.dark-theme .content-container {
-  background-color: $color-background-main;
-}
-
-@media (max-width: $breakpoint-md) {
-  .content-container {
-    margin-left: 0;
-    padding: $spacing-xl;
-    width: 100%;
-  }
-}
-
-@media (max-width: $breakpoint-xs) {
-  .content-container {
-    padding: $spacing-lg;
-  }
-}
+// ===================================
+// MIGRATED TO TAILWIND (globals.css)
+// ===================================
+// - page-layout -> @layer components in globals.css
+// - content-container -> @layer components in globals.css
+// These classes now use Tailwind and are available globally
+// ===================================
 
 // Règles générales pour améliorer l'interface en mode sombre
 .dark-theme,
