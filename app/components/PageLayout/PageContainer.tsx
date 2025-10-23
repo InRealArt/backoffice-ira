@@ -9,7 +9,7 @@ interface PageContainerProps {
 
 export function PageContainer({ children, className = '' }: PageContainerProps) {
   return (
-    <div className={`w-full p-xl bg-background-main rounded-lg shadow-md ${className}`}>
+    <div className={`w-full p-xl bg-background-main rounded-lg shadow-md mx-4 ${className}`}>
       {children}
     </div>
   )

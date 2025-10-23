@@ -7,11 +7,13 @@ import Navbar from '@/app/components/Navbar/Navbar'
 import SideMenu from '@/app/components/SideMenu/SideMenu'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { useIsAdmin } from '../hooks/useIsAdmin'
+import { useSideMenuLogic } from '../components/SideMenu/useSideMenuLogic'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) { 
   const { primaryWallet } = useDynamicContext()
   const router = useRouter()
   const { isAdmin, isLoading } = useIsAdmin()
+  const { isMenuCollapsed } = useSideMenuLogic()
   
   if (isLoading || isAdmin === null) {
     return <LoadingSpinner message="Vérification des droits administrateur..." />
@@ -22,7 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <Navbar />
       <div className="flex min-h-[calc(100vh-90px)] mt-0 bg-background-main transition-colors duration-300">
         <SideMenu />
-        <div className="flex-1 p-xxl ml-[250px] transition-all duration-300 w-full overflow-x-hidden bg-background-main md:ml-0 md:p-xl xs:p-lg">
+        <div className={`flex-1 p-xxl transition-all duration-300 w-full overflow-x-hidden bg-background-main md:ml-0 md:p-xl xs:p-lg ${isMenuCollapsed ? 'ml-16' : 'ml-[250px]'}`}>
           {children}
         </div>
       </div>
