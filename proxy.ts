@@ -5,7 +5,7 @@ import { getRequiredAccessLevel } from './app/config/protectedRoutes'
 // Pages publiques qui ne nécessitent pas d'authentification
 const publicPaths = ['/', '/api/auth/callback', '/login']
 
-export async function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname
 
     // Ne pas appliquer la protection aux chemins publics ou aux routes d'API
@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
-    // Nous ne pouvons pas vérifier l'email dans le middleware car 
+    // Nous ne pouvons pas vérifier l'email dans le proxy car 
     // nous n'avons pas accès aux informations de l'utilisateur
     // La vérification d'autorisation sera gérée par le composant AuthObserver
     // et la page elle-même
@@ -43,7 +43,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
 }
 
-// Configurer les chemins sur lesquels le middleware s'applique
+// Configurer les chemins sur lesquels le proxy s'applique
 export const config = {
     matcher: [
         '/dashboard/:path*',
@@ -52,4 +52,4 @@ export const config = {
         '/profile/:path*',
         '/notifications/:path*',
     ],
-} 
+}
