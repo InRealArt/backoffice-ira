@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   // Désactiver les Cache Components pour la compatibilité avec les configurations de route existantes
   // cacheComponents: true,
 
+  // Output standalone pour Vercel
+  output: 'standalone',
+
   // Configurer les fichiers externes pour Prisma (nouvelle syntaxe Next.js 16)
   serverExternalPackages: ['@prisma/client', '@prisma/engines'],
 

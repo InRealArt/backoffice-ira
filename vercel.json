@@ -1,10 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "app/api/tools/webp-converter/route.ts": {
-      "maxDuration": 30,
-      "memory": 1024
-    }
-  },
+  "buildCommand": "npx prisma generate && npm run build && bash scripts/copy-prisma-engines.sh",
   "installCommand": "npm install --legacy-peer-deps"
 }
