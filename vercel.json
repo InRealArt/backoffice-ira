@@ -6,5 +6,5 @@
       "memory": 1024
     }
   },
-  "buildCommand": "bash scripts/vercel-build.sh"
+  "buildCommand": "npx prisma generate && npm run build"
 }

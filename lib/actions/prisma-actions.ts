@@ -670,11 +670,14 @@ export async function saveAuthCertificate(itemId: number, fileData: Uint8Array) 
       return null
     }
 
+    // Convertir Uint8Array en Buffer pour la compatibilité Prisma
+    const fileBuffer = Buffer.from(fileData)
+
     // Maintenant créer le certificat avec la référence correcte au nftItemId
     const certificate = await prisma.authCertificate.create({
       data: {
         nftItemId: nftItem.id,
-        file: fileData
+        file: fileBuffer
       }
     })
 
@@ -700,11 +703,14 @@ export async function savePhysicalCertificate(itemId: number, fileData: Uint8Arr
       return null
     }
 
+    // Convertir Uint8Array en Buffer pour la compatibilité Prisma
+    const fileBuffer = Buffer.from(fileData)
+
     // Maintenant créer le certificat avec la référence correcte au physicalItemId
     const certificate = await prisma.authCertificate.create({
       data: {
         physicalItemId: physicalItem.id,
-        file: fileData
+        file: fileBuffer
       }
     })
 
@@ -730,11 +736,14 @@ export async function saveNftCertificate(itemId: number, fileData: Uint8Array) {
       return null
     }
 
+    // Convertir Uint8Array en Buffer pour la compatibilité Prisma
+    const fileBuffer = Buffer.from(fileData)
+
     // Maintenant créer le certificat avec la référence correcte au nftItemId
     const certificate = await prisma.authCertificate.create({
       data: {
         nftItemId: nftItem.id,
-        file: fileData
+        file: fileBuffer
       }
     })
 
