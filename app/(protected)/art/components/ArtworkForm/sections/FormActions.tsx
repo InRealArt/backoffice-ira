@@ -1,5 +1,4 @@
 import { useRouter } from 'next/navigation'
-import styles from '../../ArtworkForm.module.scss'
 
 interface FormActionsProps {
   isSubmitting: boolean
@@ -10,10 +9,10 @@ function FormActions({ isSubmitting, isEditMode }: FormActionsProps) {
   const router = useRouter()
   
   return (
-    <div className={styles.formActions}>
+    <div className="flex justify-end gap-4 mt-8 pt-6 border-t-2 border-gray-200 dark:border-gray-700">
       <button 
         type="button" 
-        className={styles.cancelButton}
+        className="px-6 py-3 text-base font-semibold rounded bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200 disabled:opacity-70 disabled:cursor-not-allowed"
         onClick={() => router.push('/art/collection')}
         disabled={isSubmitting}
       >
@@ -21,7 +20,7 @@ function FormActions({ isSubmitting, isEditMode }: FormActionsProps) {
       </button>
       <button 
         type="submit" 
-        className={styles.submitButton}
+        className="px-6 py-3 text-base font-semibold rounded bg-[#4a6cf7] text-white hover:bg-[#3a57e8] disabled:opacity-70 disabled:cursor-not-allowed"
         disabled={isSubmitting}
       >
         {isSubmitting 
