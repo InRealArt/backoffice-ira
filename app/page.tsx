@@ -10,6 +10,7 @@ import AuthObserver from './components/Auth/AuthObserver';
 import UnauthorizedMessage from './components/Auth/UnauthorizedMessage';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
 import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core';
+import { checkAuthorizedUser } from '@/lib/actions/auth-actions';
 
 const checkIsDarkSchemePreferred = () => {
   if (typeof window !== 'undefined') {
@@ -38,18 +39,9 @@ export default function Main() {
       if (isLoggedIn && user?.email) {
         setIsLoading(true);
         try {
-          const response = await fetch('/api/auth/checkAuthorizedUser', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: user.email
-            }),
-          });
-
-          const data = await response.json();
-          setIsAuthorized(data.authorized);
+          // Utilisation de la Server Action au lieu de l'API Route
+          const result = await checkAuthorizedUser(user.email);
+          setIsAuthorized(result.authorized);
         } catch (error) {
           console.error('Erreur lors de la vérification de l\'autorisation:', error);
           setIsAuthorized(false);

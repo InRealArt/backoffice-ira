@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useToast } from '@/app/components/Toast/ToastContext';
 import UnauthorizedMessage from './UnauthorizedMessage';
 import WalletEventListener from './WalletEventListener';
+import { checkAuthorizedUser } from '@/lib/actions/auth-actions';
 
 export default function AuthObserver() {
   const isLoggedIn = useIsLoggedIn();
@@ -22,20 +23,11 @@ export default function AuthObserver() {
       if (isLoggedIn && user?.email && !isCheckingAuth) {
         setIsCheckingAuth(true);
         try {
-          const response = await fetch('/api/auth/checkAuthorizedUser', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: user.email
-            }),
-          });
-
-          const data = await response.json();
-          setIsAuthorized(data.authorized);
+          // Utilisation de la Server Action au lieu de l'API Route
+          const result = await checkAuthorizedUser(user.email);
+          setIsAuthorized(result.authorized);
           
-          if (!data.authorized && pathname !== '/') {
+          if (!result.authorized && pathname !== '/') {
             // Rediriger vers la page d'accueil si l'utilisateur n'est pas autorisé
             router.push('/');
             errorToast('Vous n\'êtes pas autorisé à accéder à cette application');

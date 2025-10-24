@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { checkAuthorizedUser, checkIsAdmin } from '@/lib/actions/auth-actions'
 
 export function useSideMenuLogic() {
   // Récupérer le pathway pour déterminer l'élément actif
@@ -180,42 +181,16 @@ export function useSideMenuLogic() {
         setIsLoggedIn(true);
 
         try {
-          // Vérifier le rôle de l'utilisateur via l'API
-          const response = await fetch('/api/auth/checkAuthorizedUser', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: user.email
-            }),
-          });
+          // Vérifier le rôle de l'utilisateur via Server Action
+          const result = await checkAuthorizedUser(user.email);
 
-          if (response.ok) {
-            const data = await response.json();
-
-            // Vérifier si l'utilisateur a un rôle administrateur
-            // Appel direct à l'API pour vérifier le rôle admin
-            const adminCheckResponse = await fetch('/api/auth/checkAdminRole', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                email: user.email,
-                walletAddress: dynamicContext.primaryWallet?.address || null
-              }),
-            });
-
-            if (adminCheckResponse.ok) {
-              const adminData = await adminCheckResponse.json();
-              setIsAdmin(adminData.isAdmin);
-            } else {
-              setIsAdmin(false);
-            }
+          if (result.authorized) {
+            // Vérifier si l'utilisateur a un rôle administrateur via Server Action
+            const isAdmin = await checkIsAdmin(user.email);
+            setIsAdmin(isAdmin);
 
             // Tous les utilisateurs autorisés peuvent accéder à leur collection
-            setCanAccessCollection(data.authorized);
+            setCanAccessCollection(result.authorized);
           } else {
             setIsAdmin(false);
             setCanAccessCollection(false);
