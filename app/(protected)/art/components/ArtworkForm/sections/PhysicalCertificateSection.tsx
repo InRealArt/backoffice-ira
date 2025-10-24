@@ -2,7 +2,6 @@
 
 import { PhysicalCertificateSectionProps } from '../types'
 import FormSection from '../FormSection'
-import styles from '../../ArtworkForm.module.scss'
 
 function PhysicalCertificateSection({
   register,
@@ -21,12 +20,12 @@ function PhysicalCertificateSection({
   return (
     <FormSection title="Certificat Œuvre Physique">
       {/* Certificat d'œuvre physique */}
-      <div className={styles.formGroup}>
-        <label htmlFor="physicalCertificate" className={styles.formLabel} data-required={!hasExistingCertificate}>
+      <div className="mb-6">
+        <label htmlFor="physicalCertificate" className="flex items-center gap-1" data-required={!hasExistingCertificate}>
           Certificat d'œuvre physique (PDF) {hasExistingCertificate ? '(optionnel - remplacer le fichier existant)' : '(obligatoire)'}
         </label>
         {hasExistingCertificate && (
-          <p className={styles.formHelp}>
+          <p className="form-help">
             Un certificat existe déjà. Vous pouvez le remplacer en sélectionnant un nouveau fichier.
           </p>
         )}
@@ -42,13 +41,13 @@ function PhysicalCertificateSection({
           }}
           ref={fileInputRef}
           disabled={isFormReadOnly}
-          className={`${styles.formFileInput} ${errors.physicalCertificate ? styles.formInputError : ''}`}
+          className={`form-input ${errors.physicalCertificate ? 'input-error' : ''}`}
         />
         {errors.physicalCertificate && (
-          <p className={styles.formError}>{errors.physicalCertificate?.message ? String(errors.physicalCertificate.message) : 'Le certificat est requis'}</p>
+          <p className="form-error">{errors.physicalCertificate?.message ? String(errors.physicalCertificate.message) : 'Le certificat est requis'}</p>
         )}
         {!isFormReadOnly && (
-          <p className={styles.formHelp}>
+          <p className="form-help">
             Ce certificat sera associé à l'œuvre physique. Format PDF uniquement.
           </p>
         )}

@@ -2,7 +2,6 @@
 
 import { MediaFilesSectionProps } from '../types'
 import FormSection from '../FormSection'
-import styles from '../../ArtworkForm.module.scss'
 
 function MediaFilesSection({
   register,
@@ -21,12 +20,12 @@ function MediaFilesSection({
   return (
     <FormSection title="Fichiers Media">
       {/* Image Principale */}
-      <div className={styles.formGroup}>
-        <label htmlFor="images" className={styles.formLabel} data-required={!isEditMode || !initialImageUrl}>
+      <div className="mb-6">
+        <label htmlFor="images" className="flex items-center gap-1" data-required={!isEditMode || !initialImageUrl}>
           Image Principale {isEditMode && initialImageUrl ? '(optionnelle)' : ''}
         </label>
         {isEditMode && initialImageUrl && (
-          <p className={styles.formHelp}>
+          <p className="form-help">
             Une image existe déjà. Vous pouvez la remplacer en sélectionnant un nouveau fichier.
           </p>
         )}
@@ -43,19 +42,19 @@ function MediaFilesSection({
           }}
           ref={fileInputRef}
           disabled={isFormReadOnly}
-          className={`${styles.formFileInput} ${errors.images && (!isEditMode || !initialImageUrl) ? styles.formInputError : ''}`}
+          className={`form-input ${errors.images && (!isEditMode || !initialImageUrl) ? 'input-error' : ''}`}
         />
         {errors.images && (!isEditMode || !initialImageUrl) && (
-          <p className={styles.formError}>{errors.images?.message ? String(errors.images.message) : 'L\'image principale est requise'}</p>
+          <p className="form-error">{errors.images?.message ? String(errors.images.message) : 'L\'image principale est requise'}</p>
         )}
       </div>
       
       {/* Images secondaires */}
-      <div className={styles.formGroup}>
-        <label htmlFor="secondaryImages" className={styles.formLabel}>
+      <div className="mb-6">
+        <label htmlFor="secondaryImages" className="flex items-center gap-1">
           Images secondaires
         </label>
-        <p className={styles.formHelp}>
+        <p className="form-help">
           Vous pouvez ajouter une ou plusieurs images secondaires qui seront affichées après l'image principale.
         </p>
         <input
@@ -66,7 +65,7 @@ function MediaFilesSection({
           onChange={handleSecondaryImagesChange}
           ref={secondaryImagesInputRef}
           disabled={isFormReadOnly}
-          className={styles.formFileInput}
+          className="form-input"
         />
       </div>
     </FormSection>

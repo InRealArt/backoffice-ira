@@ -2,7 +2,6 @@
 
 import { NftCertificateSectionProps } from '../types'
 import FormSection from '../FormSection'
-import styles from '../../ArtworkForm.module.scss'
 
 function NftCertificateSection({
   register,
@@ -21,12 +20,12 @@ function NftCertificateSection({
   return (
     <FormSection title="Certificat NFT">
       {/* Certificat NFT */}
-      <div className={styles.formGroup}>
-        <label htmlFor="nftCertificate" className={styles.formLabel} data-required={!hasExistingCertificate}>
+      <div className="mb-6">
+        <label htmlFor="nftCertificate" className="flex items-center gap-1" data-required={!hasExistingCertificate}>
           Certificat NFT (PDF) {hasExistingCertificate ? '(optionnel - remplacer le fichier existant)' : '(obligatoire)'}
         </label>
         {hasExistingCertificate && (
-          <p className={styles.formHelp}>
+          <p className="form-help">
             Un certificat existe déjà. Vous pouvez le remplacer en sélectionnant un nouveau fichier.
           </p>
         )}
@@ -42,13 +41,13 @@ function NftCertificateSection({
           }}
           ref={fileInputRef}
           disabled={isFormReadOnly}
-          className={`${styles.formFileInput} ${errors.nftCertificate ? styles.formInputError : ''}`}
+          className={`form-input ${errors.nftCertificate ? 'input-error' : ''}`}
         />
         {errors.nftCertificate && (
-          <p className={styles.formError}>{errors.nftCertificate?.message ? String(errors.nftCertificate.message) : 'Le certificat est requis'}</p>
+          <p className="form-error">{errors.nftCertificate?.message ? String(errors.nftCertificate.message) : 'Le certificat est requis'}</p>
         )}
         {!isFormReadOnly && (
-          <p className={styles.formHelp}>
+          <p className="form-help">
             Ce certificat sera associé au NFT. Format PDF uniquement.
           </p>
         )}

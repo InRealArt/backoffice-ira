@@ -1,6 +1,5 @@
 import { FormFields } from '../types'
 import FormSection from '../FormSection'
-import styles from '../../ArtworkForm.module.scss'
 import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from '@prisma/client'
 
 interface ArtworkCharacteristicsSectionProps extends FormFields {
@@ -23,10 +22,10 @@ function ArtworkCharacteristicsSection({
 }: ArtworkCharacteristicsSectionProps) {
   return (
     <FormSection title="Caractéristiques artistiques">
-      <div className={styles.formGrid}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
         {/* Support/Medium */}
-        <div className={styles.formGroup}>
-          <label htmlFor="mediumId" className={styles.formLabel} data-required={true}>
+        <div className="mb-6">
+          <label htmlFor="mediumId" className="flex items-center gap-1" data-required={true}>
             Support/Medium
           </label>
           <select
@@ -34,7 +33,7 @@ function ArtworkCharacteristicsSection({
             {...register("mediumId", {
               required: "Le support/medium est requis"
             })}
-            className={`${styles.formSelect} ${errors.mediumId ? styles.formInputError : ''}`}
+            className={`form-select ${errors.mediumId ? 'input-error' : ''}`}
             disabled={isFormReadOnly}
           >
             <option value="">Sélectionnez un support</option>
@@ -44,12 +43,12 @@ function ArtworkCharacteristicsSection({
               </option>
             ))}
           </select>
-          {errors.mediumId && <p className={styles.formError}>{String(errors.mediumId?.message)}</p>}
+          {errors.mediumId && <p className="form-error">{String(errors.mediumId?.message)}</p>}
         </div>
 
         {/* Style */}
-        <div className={styles.formGroup}>
-          <label htmlFor="styleId" className={styles.formLabel} data-required={true}>
+        <div className="mb-6">
+          <label htmlFor="styleId" className="flex items-center gap-1" data-required={true}>
             Style
           </label>
           <select
@@ -57,7 +56,7 @@ function ArtworkCharacteristicsSection({
             {...register("styleId", {
               required: "Le style est requis"
             })}
-            className={`${styles.formSelect} ${errors.styleId ? styles.formInputError : ''}`}
+            className={`form-select ${errors.styleId ? 'input-error' : ''}`}
             disabled={isFormReadOnly}
           >
             <option value="">Sélectionnez un style</option>
@@ -67,14 +66,14 @@ function ArtworkCharacteristicsSection({
               </option>
             ))}
           </select>
-          {errors.styleId && <p className={styles.formError}>{String(errors.styleId?.message)}</p>}
+          {errors.styleId && <p className="form-error">{String(errors.styleId?.message)}</p>}
         </div>
       </div>
 
-      <div className={styles.formGrid}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
         {/* Technique */}
-        <div className={styles.formGroup}>
-          <label htmlFor="techniqueId" className={styles.formLabel} data-required={true}>
+        <div className="mb-6">
+          <label htmlFor="techniqueId" className="flex items-center gap-1" data-required={true}>
             Technique
           </label>
           <select
@@ -82,7 +81,7 @@ function ArtworkCharacteristicsSection({
             {...register("techniqueId", {
               required: "La technique est requise"
             })}
-            className={`${styles.formSelect} ${errors.techniqueId ? styles.formInputError : ''}`}
+            className={`form-select ${errors.techniqueId ? 'input-error' : ''}`}
             disabled={isFormReadOnly}
           >
             <option value="">Sélectionnez une technique</option>
@@ -92,7 +91,7 @@ function ArtworkCharacteristicsSection({
               </option>
             ))}
           </select>
-          {errors.techniqueId && <p className={styles.formError}>{String(errors.techniqueId?.message)}</p>}
+          {errors.techniqueId && <p className="form-error">{String(errors.techniqueId?.message)}</p>}
         </div>
       </div>
     </FormSection>

@@ -5,7 +5,7 @@ import { useArtworkForm } from './useArtworkForm'
 import { ArtworkFormProps } from './types'
 import ImagePreview from './ImagePreview'
 import PdfPreview from './PdfPreview'
-import styles from '../ArtworkForm.module.scss'
+// styles replaced by Tailwind utilities
 import { normalizeString } from '@/lib/utils'
 import {
   MainInfoSection,
