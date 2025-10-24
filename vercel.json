@@ -6,6 +6,5 @@
       "memory": 1024
     }
   },
-  "buildCommand": "npx prisma generate && npm run build",
   "installCommand": "npm install --legacy-peer-deps"
 }

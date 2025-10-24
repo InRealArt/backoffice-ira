@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   // Désactiver les Cache Components pour la compatibilité avec les configurations de route existantes
   // cacheComponents: true,
 
+  // Configuration pour le déploiement Vercel avec Prisma
+  output: 'standalone',
+
+  // Configurer les fichiers externes pour Prisma (nouvelle syntaxe Next.js 16)
+  serverExternalPackages: ['@prisma/client', '@prisma/engines'],
+
   // Configuration expérimentale pour le cache du système de fichiers Turbopack
   experimental: {
     turbopackFileSystemCacheForDev: true,
