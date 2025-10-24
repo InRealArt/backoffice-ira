@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx prisma generate && npm run build && bash scripts/copy-prisma-engines.sh",
+  "buildCommand": "npx prisma generate && npm run build",
   "installCommand": "npm install --legacy-peer-deps"
 }

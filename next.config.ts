@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
   // Configurer les fichiers externes pour Prisma (nouvelle syntaxe Next.js 16)
   serverExternalPackages: ['@prisma/client', '@prisma/engines'],
 
+  // SOLUTION FINALE : Inclure les moteurs Prisma dans le file tracing
+  outputFileTracingIncludes: {
+    '/*': ['node_modules/.prisma/client/**/*', 'node_modules/@prisma/client/**/*'],
+  },
+
   // Configuration expérimentale pour le cache du système de fichiers Turbopack
   experimental: {
     turbopackFileSystemCacheForDev: true,
