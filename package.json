@@ -15,7 +15,8 @@
     "test-translation": "tsx scripts/test-google-translation.ts",
     "test-html-translation": "tsx scripts/test-html-translation.ts",
     "test-complete-translation": "tsx scripts/test-complete-translation.ts",
-    "test-standalone-translation": "tsx scripts/test-complete-translation-standalone.ts"
+    "test-standalone-translation": "tsx scripts/test-complete-translation-standalone.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@dynamic-labs/ethereum": "^4.7.2",

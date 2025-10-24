@@ -1,6 +1,7 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["multiSchema"]
+  engineType      = "binary"
 }
 
 datasource db {
@@ -299,7 +300,7 @@ model LandingArtist {
   biographyText3     String?
   biographyHeader4   String?
   biographyText4     String?
-  imageArtistStudio  String? 
+  imageArtistStudio  String?
   artistCategories   ArtistCategoryArtist[]
   artist             Artist                 @relation(fields: [artistId], references: [id])
 
