@@ -60,9 +60,14 @@ Un script bash qui génère automatiquement le client Prisma après l'installati
   "scripts": {
     "postinstall": "bash scripts/postinstall.sh",
     "build": "npx prisma generate && next build"
+  },
+  "devDependencies": {
+    "@prisma/nextjs-monorepo-workaround-plugin": "^5.0.0"
   }
 }
 ```
+
+**Important :** Le plugin `@prisma/nextjs-monorepo-workaround-plugin` est essentiel pour que Vercel copie correctement les moteurs Prisma dans le déploiement.
 
 ## Déploiement
 

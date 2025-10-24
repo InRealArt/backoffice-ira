@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin'
 
 const nextConfig: NextConfig = {
   // Désactiver les Cache Components pour la compatibilité avec les configurations de route existantes
@@ -71,6 +72,20 @@ const nextConfig: NextConfig = {
   // Configuration Turbopack pour remplacer webpack
   turbopack: {
     // Configuration vide pour éviter les conflits avec webpack
+  },
+
+  // Configuration webpack pour copier les moteurs Prisma
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.plugins = [...config.plugins, new PrismaPlugin()]
+
+      // Forcer l'inclusion des moteurs Prisma dans le bundle
+      config.externals = config.externals || []
+      config.externals.push({
+        '.prisma/client/index-browser': '@prisma/client/index-browser',
+      })
+    }
+    return config
   },
 };
 
