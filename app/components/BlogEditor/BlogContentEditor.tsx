@@ -4,7 +4,6 @@ import { useEffect } from 'react'
 import { BlogContent } from './types'
 import BlogSection from './BlogSection'
 import { useSectionOrdering } from './hooks/useSectionOrdering'
-import styles from './BlogSection.module.scss'
 
 interface BlogContentEditorProps {
   initialContent?: BlogContent
@@ -49,7 +48,6 @@ export default function BlogContentEditor({ initialContent = [], onChange }: Blo
               <BlogSection
                 key={section.id}
                 section={section}
-                index={index}
                 onUpdate={(updated) => updateSection(index, updated)}
                 onDelete={() => deleteSection(index)}
                 onMoveUp={() => moveSection(index, 'up')}
@@ -65,9 +63,9 @@ export default function BlogContentEditor({ initialContent = [], onChange }: Blo
           <button
             type="button"
             onClick={addSection}
-            className={styles.addSectionButton}
+            className="flex items-center justify-center gap-2 w-full p-4 bg-purple-50 border border-dashed border-gray-300 rounded-lg text-purple-700 font-medium cursor-pointer transition-colors hover:bg-purple-100"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="16" />
               <line x1="8" y1="12" x2="16" y2="12" />

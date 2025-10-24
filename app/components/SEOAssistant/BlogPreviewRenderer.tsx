@@ -3,7 +3,6 @@
 import { BlogContent, ElementType } from '../BlogEditor/types'
 import { FormData } from './htmlGenerator'
 import RichContentRenderer from '../BlogEditor/RichContentRenderer'
-import styles from '../SeoGuide/SeoGuideModal.module.scss'
 import { calculateReadingTimeFromBlogContent } from '@/lib/utils/reading-time-calculator'
 
 interface BlogPreviewRendererProps {
@@ -34,24 +33,24 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
 
   const renderBlogContent = (content: BlogContent) => {
     return content.map((section, sectionIndex) => (
-      <div key={section.id || sectionIndex} className={styles.previewSection}>
+      <div key={section.id || sectionIndex} className="mb-8">
         {section.elements.map((element, elementIndex) => {
           switch (element.type) {
             case ElementType.H2:
               return (
-                <h2 key={element.id || elementIndex} className={styles.previewH2}>
+                <h2 key={element.id || elementIndex} className="text-2xl font-bold text-gray-900 mb-4 mt-8 first:mt-0">
                   {element.content || 'Titre H2'}
                 </h2>
               )
             case ElementType.H3:
               return (
-                <h3 key={element.id || elementIndex} className={styles.previewH3}>
+                <h3 key={element.id || elementIndex} className="text-xl font-semibold text-gray-800 mb-3 mt-6">
                   {element.content || 'Titre H3'}
                 </h3>
               )
             case ElementType.PARAGRAPH:
               return (
-                <p key={element.id || elementIndex} className={styles.previewParagraph}>
+                <p key={element.id || elementIndex} className="text-gray-700 leading-relaxed mb-4">
                   <RichContentRenderer 
                     content={element.content || 'Contenu du paragraphe...'}
                     richContent={element.richContent}
@@ -65,13 +64,13 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
                     <img 
                       src={element.url} 
                       alt={element.alt || 'Image'} 
-                      className={styles.previewImage}
+                      className="w-full h-auto rounded-lg shadow-md mb-2"
                       onError={(e) => {
                         e.currentTarget.src = "";
                       }}
                     />
                     {element.caption && (
-                      <p className={styles.previewFigCaption}>{element.caption}</p>
+                      <p className="text-sm text-gray-600 italic text-center">{element.caption}</p>
                     )}
                   </div>
                 )
@@ -80,7 +79,7 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
             case ElementType.VIDEO:
               if (element.url) {
                 return (
-                  <div key={element.id || elementIndex} className={styles.previewSection}>
+                  <div key={element.id || elementIndex} className="mb-8">
                     <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
                       <iframe 
                         src={element.url}
@@ -96,7 +95,7 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
                       />
                     </div>
                     {element.caption && (
-                      <p className={styles.previewFigCaption}>{element.caption}</p>
+                      <p className="text-sm text-gray-600 italic text-center">{element.caption}</p>
                     )}
                   </div>
                 )
@@ -105,9 +104,9 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
             case ElementType.LIST:
               if (element.items && element.items.length > 0) {
                 return (
-                  <ul key={element.id || elementIndex} className={styles.previewList} data-list-type="unordered">
+                  <ul key={element.id || elementIndex} className="list-disc list-inside space-y-2 mb-4" data-list-type="unordered">
                     {element.items.map((item, itemIndex) => (
-                      <li key={itemIndex} className={styles.previewListItem}>
+                      <li key={itemIndex} className="text-gray-700">
                         {item}
                       </li>
                     ))}
@@ -118,9 +117,9 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
             case ElementType.ORDERED_LIST:
               if (element.items && element.items.length > 0) {
                 return (
-                  <ol key={element.id || elementIndex} className={styles.previewList} data-list-type="ordered">
+                  <ol key={element.id || elementIndex} className="list-decimal list-inside space-y-2 mb-4" data-list-type="ordered">
                     {element.items.map((item, itemIndex) => (
-                      <li key={itemIndex} className={styles.previewListItem}>
+                      <li key={itemIndex} className="text-gray-700">
                         {item}
                       </li>
                     ))}
@@ -131,18 +130,18 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
             case ElementType.ACCORDION:
               if (element.items && element.items.length > 0) {
                 return (
-                  <div key={element.id || elementIndex} className={styles.previewSection}>
+                  <div key={element.id || elementIndex} className="mb-8">
                     {element.title && (
-                      <h3 className={styles.previewH3}>{element.title}</h3>
+                      <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">{element.title}</h3>
                     )}
                     {element.items.map((item, itemIndex) => (
-                      <div key={item.id || `accordion-item-${elementIndex}-${itemIndex}`} className={styles.previewAccordion}>
-                        <div className={styles.previewAccordionHeader}>
-                          {item.title || 'Titre non défini'}
-                          <span>▼</span>
+                      <div key={item.id || `accordion-item-${elementIndex}-${itemIndex}`} className="border border-gray-200 rounded-lg mb-2">
+                        <div className="flex justify-between items-center p-4 bg-gray-50 cursor-pointer">
+                          <span className="font-medium text-gray-800">{item.title || 'Titre non défini'}</span>
+                          <span className="text-gray-500">▼</span>
                         </div>
-                        <div className={styles.previewAccordionContent}>
-                          <p>{item.content || 'Contenu non défini'}</p>
+                        <div className="p-4 bg-white">
+                          <p className="text-gray-700">{item.content || 'Contenu non défini'}</p>
                         </div>
                       </div>
                     ))}
@@ -150,17 +149,17 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
                 )
               } else {
                 return (
-                  <div key={element.id || elementIndex} className={styles.previewSection}>
+                  <div key={element.id || elementIndex} className="mb-8">
                     {element.title && (
-                      <h3 className={styles.previewH3}>{element.title}</h3>
+                      <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">{element.title}</h3>
                     )}
-                    <div className={styles.previewAccordion}>
-                      <div className={styles.previewAccordionHeader}>
-                        Accordion vide
-                        <span>▼</span>
+                    <div className="border border-gray-200 rounded-lg mb-2">
+                      <div className="flex justify-between items-center p-4 bg-gray-50 cursor-pointer">
+                        <span className="font-medium text-gray-800">Accordion vide</span>
+                        <span className="text-gray-500">▼</span>
                       </div>
-                      <div className={styles.previewAccordionContent}>
-                        <p style={{ fontStyle: 'italic', color: '#9ca3af' }}>Aucun élément ajouté à cet accordion</p>
+                      <div className="p-4 bg-white">
+                        <p className="italic text-gray-400">Aucun élément ajouté à cet accordion</p>
                       </div>
                     </div>
                   </div>
@@ -175,41 +174,41 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
   }
 
   return (
-    <div className={styles.previewContainer}>
-      <h1 className={styles.previewTitle}>{title}</h1>
+    <div className="max-w-4xl mx-auto p-6 bg-white">
+      <h1 className="text-4xl font-bold text-gray-900 mb-6">{title}</h1>
       
-      <div className={styles.previewMeta}>
-        <div className={styles.previewAuthor}>
-          <span>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 pb-4 border-b border-gray-200">
+        <div className="mb-2 sm:mb-0">
+          <span className="text-gray-600">
             Par {authorLink ? (
-              <a href={authorLink} target="_blank" rel="noopener noreferrer">{author}</a>
+              <a href={authorLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{author}</a>
             ) : (
               author
             )} • {formatDateReadable(creationDate)}
           </span>
         </div>
-        <span>Temps de lecture: {calculateReadingTimeFromBlogContent(JSON.stringify(blogContent))} min</span>
+        <span className="text-sm text-gray-500">Temps de lecture: {calculateReadingTimeFromBlogContent(JSON.stringify(blogContent))} min</span>
       </div>
       
-      <div className={styles.previewContent}>
+      <div className="prose prose-lg max-w-none">
         {mainImageUrl && (
           <>
             <img 
               src={mainImageUrl}
               alt={mainImageAlt || 'Image principale'} 
-              className={styles.previewImage}
+              className="w-full h-auto rounded-lg shadow-lg mb-4"
               onError={(e) => {
                 e.currentTarget.src = "";
               }}
             />
             {mainImageCaption && (
-              <p className={styles.previewFigCaption}>{mainImageCaption}</p>
+              <p className="text-sm text-gray-600 italic text-center mb-6">{mainImageCaption}</p>
             )}
           </>
         )}
         
         {excerpt && (
-          <p className={styles.previewParagraph} style={{ fontStyle: 'italic', marginBottom: '2rem' }}>
+          <p className="text-gray-700 leading-relaxed mb-8 italic text-lg">
             {excerpt}
           </p>
         )}
@@ -217,37 +216,15 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
         {renderBlogContent(blogContent)}
         
         {tags && tags.length > 0 && (
-          <div style={{ 
-            marginTop: '2rem', 
-            paddingTop: '1.5rem', 
-            borderTop: '1px solid #e5e7eb' 
-          }}>
-            <h3 style={{ 
-              margin: '0 0 1rem 0', 
-              fontSize: '1.125rem', 
-              fontWeight: '600', 
-              color: '#374151' 
-            }}>
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
               Tags
             </h3>
-            <div style={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: '0.5rem' 
-            }}>
+            <div className="flex flex-wrap gap-2">
               {tags.map((tag, index) => (
                 <span
                   key={index}
-                  style={{
-                    display: 'inline-block',
-                    padding: '0.25rem 0.75rem',
-                    backgroundColor: '#f3f4f6',
-                    color: '#374151',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    borderRadius: '9999px',
-                    border: '1px solid #d1d5db'
-                  }}
+                  className="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full border border-gray-300"
                 >
                   {tag}
                 </span>
@@ -257,8 +234,8 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
         )}
         
         {blogContent.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#6b7280', padding: '2rem' }}>
-            <p>Aucun contenu n'a encore été ajouté à l'article.</p>
+          <div className="text-center text-gray-500 py-8">
+            <p>Aucun contenu n&apos;a encore été ajouté à l&apos;article.</p>
             <p>Commencez par remplir les champs du formulaire pour voir la prévisualisation.</p>
           </div>
         )}

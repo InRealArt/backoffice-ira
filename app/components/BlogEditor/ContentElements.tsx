@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { ElementType, ContentElement, H2Element, H3Element, ParagraphElement, ImageElement, VideoElement, ListElement, OrderedListElement, AccordionElement, AccordionItemData, RichContent } from './types'
 import { v4 as uuidv4 } from 'uuid'
 import RichTextEditor from './RichTextEditor'
-import styles from './BlogSection.module.scss'
 
 interface ElementProps {
   element: ContentElement
@@ -16,7 +15,7 @@ export function H2ElementComponent({ element, onUpdate, onDelete }: ElementProps
   const h2Element = element as H2Element
   
   return (
-    <div className={styles.elementItem}>
+    <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <input
         type="text"
         value={h2Element.content}
@@ -39,7 +38,7 @@ export function H3ElementComponent({ element, onUpdate, onDelete }: ElementProps
   const h3Element = element as H3Element
   
   return (
-    <div className={styles.elementItem}>
+    <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <input
         type="text"
         value={h3Element.content}
@@ -70,7 +69,7 @@ export function ParagraphElementComponent({ element, onUpdate, onDelete }: Eleme
   }
   
   return (
-    <div className={styles.elementItem}>
+    <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <RichTextEditor
         content={paragraphElement.content}
         richContent={paragraphElement.richContent}
@@ -93,7 +92,7 @@ export function ImageElementComponent({ element, onUpdate, onDelete }: ElementPr
   const imageElement = element as ImageElement
   
   return (
-    <div className={styles.elementItem}>
+    <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <input
         type="text"
         value={imageElement.url}
@@ -139,7 +138,7 @@ export function VideoElementComponent({ element, onUpdate, onDelete }: ElementPr
   const videoElement = element as VideoElement
   
   return (
-    <div className={styles.elementItem}>
+    <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <input
         type="text"
         value={videoElement.url}
@@ -198,7 +197,7 @@ export function ListElementComponent({ element, onUpdate, onDelete }: ElementPro
   }
 
   return (
-    <div className={styles.elementItem}>
+    <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <div className="mb-4">
         <h4 className="mb-2 font-medium">Éléments de la liste</h4>
         {listElement.items.length === 0 ? (
@@ -294,7 +293,7 @@ export function OrderedListElementComponent({ element, onUpdate, onDelete }: Ele
   }
 
   return (
-    <div className={styles.elementItem}>
+    <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <div className="mb-4">
         <h4 className="mb-2 font-medium">Éléments de la liste numérotée</h4>
         {orderedListElement.items.length === 0 ? (
@@ -404,7 +403,7 @@ export function AccordionElementComponent({ element, onUpdate, onDelete }: Eleme
   }
 
   return (
-    <div className={styles.elementItem}>
+    <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <div className="mb-4">
         <h4 className="text-lg font-medium mb-2">Accordéon / FAQ</h4>
         <input

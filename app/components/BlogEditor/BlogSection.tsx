@@ -5,11 +5,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { BlogSection as BlogSectionType, ContentElement, ElementType } from './types'
 import { ContentElementComponent } from './ContentElements'
 import SectionControlButtons from './components/SectionControlButtons'
-import styles from './BlogSection.module.scss'
 
 interface BlogSectionProps {
   section: BlogSectionType
-  index: number
   onUpdate: (updated: BlogSectionType) => void
   onDelete: () => void
   onMoveUp: () => void
@@ -20,7 +18,6 @@ interface BlogSectionProps {
 
 export default function BlogSection({ 
   section, 
-  index,
   onUpdate, 
   onDelete, 
   onMoveUp, 
@@ -68,8 +65,8 @@ export default function BlogSection({
   }
 
   return (
-    <div className={styles.sectionContainer}>
-      <div className={styles.sectionHeader}>
+    <div className="border border-gray-200 rounded-lg mb-4 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 bg-purple-50 border-b border-gray-200">
         {isEditing ? (
           <div className="flex items-center gap-2 w-full">
             <input
@@ -94,7 +91,7 @@ export default function BlogSection({
             </button>
           </div>
         ) : (
-          <h3 onClick={() => setIsEditing(true)}>{section.title}</h3>
+          <h3 onClick={() => setIsEditing(true)} className="text-base font-medium m-0 cursor-pointer">{section.title}</h3>
         )}
         
         <SectionControlButtons
@@ -106,9 +103,9 @@ export default function BlogSection({
         />
       </div>
       
-      <div className={styles.sectionContent}>
+      <div className="p-4 bg-white">
         {section.elements.length === 0 ? (
-          <div className={styles.emptySection}>
+          <div className="flex flex-col items-center justify-center py-12 px-4 bg-gray-50 rounded text-center text-gray-500">
             <p>Aucun élément dans cette section.</p>
             <p>Utilisez les boutons ci-dessous pour ajouter du contenu.</p>
           </div>
@@ -123,11 +120,11 @@ export default function BlogSection({
           ))
         )}
         
-        <div className={styles.elementButtons}>
+        <div className="flex flex-wrap gap-2 mt-4">
           <button
             type="button"
             onClick={() => handleAddElement(ElementType.H2)}
-            className={`${styles.elementButton} ${styles.h2}`}
+            className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-full text-sm text-red-700 cursor-pointer transition-colors hover:bg-red-100 hover:border-red-300"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <path d="M4 12h8" />
@@ -141,7 +138,7 @@ export default function BlogSection({
           <button
             type="button"
             onClick={() => handleAddElement(ElementType.H3)}
-            className={`${styles.elementButton} ${styles.h3}`}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-50 border border-orange-200 rounded-full text-sm text-orange-700 cursor-pointer transition-colors hover:bg-orange-100 hover:border-orange-300"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <path d="M4 12h8" />
@@ -155,7 +152,7 @@ export default function BlogSection({
           <button
             type="button"
             onClick={() => handleAddElement(ElementType.PARAGRAPH)}
-            className={`${styles.elementButton} ${styles.paragraph}`}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm text-gray-600 cursor-pointer transition-colors hover:bg-gray-100 hover:border-gray-300"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <path d="M8 6h13" />
@@ -171,7 +168,7 @@ export default function BlogSection({
           <button
             type="button"
             onClick={() => handleAddElement(ElementType.IMAGE)}
-            className={`${styles.elementButton} ${styles.image}`}
+            className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-full text-sm text-green-700 cursor-pointer transition-colors hover:bg-green-100 hover:border-green-300"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -184,7 +181,7 @@ export default function BlogSection({
           <button
             type="button"
             onClick={() => handleAddElement(ElementType.VIDEO)}
-            className={`${styles.elementButton} ${styles.video}`}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-full text-sm text-blue-700 cursor-pointer transition-colors hover:bg-blue-100 hover:border-blue-300"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
@@ -196,7 +193,7 @@ export default function BlogSection({
           <button
             type="button"
             onClick={() => handleAddElement(ElementType.LIST)}
-            className={`${styles.elementButton} ${styles.list}`}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-50 border border-purple-200 rounded-full text-sm text-purple-700 cursor-pointer transition-colors hover:bg-purple-100 hover:border-purple-300"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <line x1="8" y1="6" x2="21" y2="6" />
@@ -212,7 +209,7 @@ export default function BlogSection({
           <button
             type="button"
             onClick={() => handleAddElement(ElementType.ORDERED_LIST)}
-            className={`${styles.elementButton} ${styles.orderedList}`}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-50 border border-orange-200 rounded-full text-sm text-orange-700 cursor-pointer transition-colors hover:bg-orange-100 hover:border-orange-300"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <line x1="10" y1="6" x2="21" y2="6" />
@@ -231,7 +228,7 @@ export default function BlogSection({
           <button
             type="button"
             onClick={() => handleAddElement(ElementType.ACCORDION)}
-            className={`${styles.elementButton} ${styles.accordion}`}
+            className="flex items-center gap-2 px-4 py-2 bg-sky-50 border border-sky-200 rounded-full text-sm text-sky-700 cursor-pointer transition-colors hover:bg-sky-100 hover:border-sky-300"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
               <rect x="2" y="4" width="20" height="5" rx="2" />

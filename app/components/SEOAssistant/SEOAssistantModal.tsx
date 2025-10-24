@@ -5,7 +5,6 @@ import Tabs, { TabItem } from '../Tabs/Tabs'
 import BlogPreviewRenderer from './BlogPreviewRenderer'
 import SEOScoreAnalyzer from './SEOScoreAnalyzer'
 import { generateSEOHTML, FormData } from './htmlGenerator'
-import styles from '../SeoGuide/SeoGuideModal.module.scss'
 
 interface SEOAssistantModalProps {
   isOpen: boolean
@@ -28,7 +27,7 @@ export default function SEOAssistantModal({ isOpen, onClose, formData }: SEOAssi
       id: 'html-structure',
       label: 'HTML Structure',
       content: (
-        <pre className={styles.codeBlock}>{generatedHTML}</pre>
+        <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm font-mono">{generatedHTML}</pre>
       )
     },
     {
@@ -42,7 +41,7 @@ export default function SEOAssistantModal({ isOpen, onClose, formData }: SEOAssi
   
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="SEO Assistant - Prévisualisation de l'article">
-      <p className={styles.modalDescription}>
+      <p className="text-gray-600 mb-4">
         Prévisualisation en temps réel de votre article basée sur les données du formulaire.
       </p>
       <Tabs tabs={tabs} defaultTabId="preview" />
