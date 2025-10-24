@@ -4,7 +4,6 @@ import { useState, useRef, useCallback } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { RichContent, TextSegment } from './types'
 import LinkModal from './LinkModal'
-import styles from './RichTextEditor.module.scss'
 
 interface RichTextEditorProps {
   content: string
@@ -249,8 +248,8 @@ export default function RichTextEditor({
   }
 
   return (
-    <div className={styles.richTextEditor}>
-      <div className={styles.toolbar}>
+    <div className="border border-gray-300 rounded-lg overflow-hidden bg-white w-full">
+      <div className="flex items-center gap-2 p-2 bg-gray-50 border-b border-gray-300">
         <button
           type="button"
           onClick={e => {
@@ -258,7 +257,7 @@ export default function RichTextEditor({
             e.stopPropagation()
             applyFormat('bold')
           }}
-          className={`${styles.toolbarButton} ${hasFormat('bold') ? styles.active : ''}`}
+          className={`flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-gray-700 text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-gray-100 hover:border-gray-400 hover:text-gray-900 active:bg-gray-200 active:transform active:translate-y-px ${hasFormat('bold') ? 'bg-blue-500 border-blue-600 text-white hover:bg-blue-600 hover:border-blue-700' : ''}`}
           title="Gras"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M6 4h8a4 4 0 0 1 0 8H6zm0 8h9a4 4 0 0 1 0 8H6z"/></svg>
@@ -271,7 +270,7 @@ export default function RichTextEditor({
             e.stopPropagation()
             applyFormat('italic')
           }}
-          className={`${styles.toolbarButton} ${hasFormat('italic') ? styles.active : ''}`}
+          className={`flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-gray-700 text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-gray-100 hover:border-gray-400 hover:text-gray-900 active:bg-gray-200 active:transform active:translate-y-px ${hasFormat('italic') ? 'bg-blue-500 border-blue-600 text-white hover:bg-blue-600 hover:border-blue-700' : ''}`}
           title="Italique"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>
@@ -284,7 +283,7 @@ export default function RichTextEditor({
             e.stopPropagation()
             applyFormat('underline')
           }}
-          className={`${styles.toolbarButton} ${hasFormat('underline') ? styles.active : ''}`}
+          className={`flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-gray-700 text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-gray-100 hover:border-gray-400 hover:text-gray-900 active:bg-gray-200 active:transform active:translate-y-px ${hasFormat('underline') ? 'bg-blue-500 border-blue-600 text-white hover:bg-blue-600 hover:border-blue-700' : ''}`}
           title="Souligné"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/></svg>
@@ -297,7 +296,7 @@ export default function RichTextEditor({
             e.stopPropagation()
             openLinkModal()
           }}
-          className={styles.toolbarButton}
+          className="flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-300 rounded-md text-gray-700 text-sm font-medium cursor-pointer transition-all duration-200 hover:bg-gray-100 hover:border-gray-400 hover:text-gray-900 active:bg-gray-200 active:transform active:translate-y-px"
           title="Insérer un lien"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -308,7 +307,7 @@ export default function RichTextEditor({
         </button>
       </div>
 
-      <div className={styles.textareaContainer}>
+      <div className="w-full relative">
         <textarea
           ref={textareaRef}
           value={getPlainText(currentRichContent)}
@@ -316,7 +315,7 @@ export default function RichTextEditor({
           onMouseUp={handleTextSelection}
           onKeyUp={handleTextSelection}
           placeholder={placeholder}
-          className={styles.textarea}
+          className="w-full p-3 border-0 resize-none outline-none font-inherit text-sm leading-relaxed bg-transparent box-border"
           style={{
             minHeight: `${rows * 1.5}rem`
           }}
@@ -329,15 +328,15 @@ export default function RichTextEditor({
         {currentRichContent.segments.map(segment => {
           if (segment.isLink) {
             return (
-              <a key={segment.id} href={segment.linkUrl} className={styles.linkText} target="_blank" rel="noopener noreferrer">
+              <a key={segment.id} href={segment.linkUrl} className="text-blue-600 underline hover:text-blue-800" target="_blank" rel="noopener noreferrer">
                 {segment.linkText || segment.text}
               </a>
             )
           }
           let classNames = ''
-          if (segment.isBold) classNames += styles.boldText + ' '
-          if (segment.isItalic) classNames += styles.italicText + ' '
-          if (segment.isUnderline) classNames += styles.underlineText + ' '
+          if (segment.isBold) classNames += 'font-bold '
+          if (segment.isItalic) classNames += 'italic '
+          if (segment.isUnderline) classNames += 'underline '
           return (
             <span key={segment.id} className={classNames.trim()}>{segment.text}</span>
           )
@@ -346,16 +345,16 @@ export default function RichTextEditor({
 
       {/* Aperçu des liens */}
       {currentRichContent.segments.some(s => s.isLink) && (
-        <div className={styles.linksPreview}>
-          <h5 className={styles.linksTitle}>Liens dans ce paragraphe :</h5>
-          <div className={styles.linksList}>
+        <div className="p-3 bg-gray-50 border-t border-gray-300">
+          <h5 className="text-sm font-semibold text-gray-700 m-0 mb-2">Liens dans ce paragraphe :</h5>
+          <div className="flex flex-col gap-2">
             {currentRichContent.segments
               .filter(segment => segment.isLink)
               .map(segment => (
-                <div key={segment.id} className={styles.linkItem}>
-                  <div className={styles.linkInfo}>
-                    <span className={styles.linkText}>{segment.linkText}</span>
-                    <span className={styles.linkUrl}>{segment.linkUrl}</span>
+                <div key={segment.id} className="flex items-center justify-between p-2 bg-white border border-gray-300 rounded-md text-sm">
+                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                    <span className="font-medium text-gray-900 break-words">{segment.linkText}</span>
+                    <span className="text-gray-500 text-xs break-all">{segment.linkUrl}</span>
                   </div>
                   <button
                     type="button"
@@ -364,7 +363,7 @@ export default function RichTextEditor({
                       e.stopPropagation()
                       removeLink(segment.id)
                     }}
-                    className={styles.removeLinkButton}
+                    className="flex items-center justify-center w-6 h-6 bg-red-100 border border-red-200 rounded text-red-600 text-base font-bold cursor-pointer transition-all duration-200 hover:bg-red-200 hover:border-red-300 hover:text-red-700 ml-2"
                     title="Supprimer le lien"
                   >
                     ×
