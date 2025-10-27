@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import DynamicMethods from "@/app/components/Methods";
 import styles from './homepage.module.scss';
 import Navbar from './components/Navbar/Navbar';
-import SideMenu from './components/SideMenu/SideMenu';
 import AuthObserver from './components/Auth/AuthObserver';
 import UnauthorizedMessage from './components/Auth/UnauthorizedMessage';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
@@ -78,7 +77,6 @@ export default function Main() {
     <div className={`${styles.container} ${isDarkMode ? styles.dark : ''}`}>
       <AuthObserver />
       <Navbar />
-      <SideMenu />
       <div className={styles.header}>
         {/*
         <img className={styles.logo} src={isDarkMode ? "/logo-light.png" : "/logo-dark.png"} alt="dynamic" />
