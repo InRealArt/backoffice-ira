@@ -41,6 +41,13 @@ module.exports = {
           // Classes pour les états
           /^is-/,
           /^has-/,
+          // Classes DaisyUI à préserver
+          /^alert-/, /^badge-/, /^btn-/, /^card-/, /^drawer-/, /^dropdown-/, /^menu-/,
+          /^tab-/, /^tooltip-/, /^loading-/, /^input-/, /^select-/, /^textarea-/,
+          /^checkbox-/, /^radio-/, /^toggle-/, /^range-/, /^progress-/, /^radial-progress-/,
+          /^stat-/, /^join-/, /^hero-/, /^divider-/, /^mask-/, /^swap-/, /^indicator-/,
+          /^countdown-/, /^carousel-/, /^rating-/, /^stack-/, /^steps-/, /^link-/,
+          /^label-/, /^artboard-/, /^mockup-/, /^collapse-/, /^chat-/,
         ],
         // Éviter la purge en développement
         rejected: process.env.NODE_ENV === 'development',

@@ -67,7 +67,15 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [require('daisyui')],
+  daisyui: {
+    themes: ['light', 'dark'],
+    darkTheme: 'dark',
+    base: false, // Ne pas modifier les styles de base pour préserver les polices
+    styled: true,
+    utils: true,
+    logs: false, // Désactiver les logs en production
+  },
 };
 
 export default config;
