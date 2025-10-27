@@ -1,6 +1,5 @@
 'use client'
 
-import { DynamicWidget } from '@dynamic-labs/sdk-react-core'
 import Image from 'next/image'
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle'
 
@@ -29,21 +28,6 @@ export default function Navbar() {
       <div className="flex-none">
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <div className="dropdown dropdown-end">
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle hover:bg-gray-100 dark:hover:bg-gray-800">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-700 dark:text-gray-300">
-                <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <div tabIndex={0} className="dropdown-content z-[1] menu p-4 shadow-xl bg-white dark:bg-gray-800 rounded-box w-80 mt-3 border border-gray-200 dark:border-gray-600">
-              <div className="flex flex-col gap-2">
-                <span className="font-medium text-gray-700 dark:text-gray-300 mb-2">Connexion</span>
-                <div className="dynamic-widget-container">
-                  <DynamicWidget variant="modal" />
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

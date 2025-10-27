@@ -90,9 +90,16 @@ export default function Main() {
       </div>
       <div className={styles.modal}>
         <h1 className={styles.welcomeTitle}>Welcome to InRealArt backoffice</h1>
-        <p className={styles.loginNote}>
-          Vous pouvez vous connecter via le menu en haut à droite <span className={styles.loginArrow}>↗</span>
-        </p>
+        {!isLoggedIn && (
+          <div className="flex flex-col items-center gap-4">
+            <p className={styles.loginNote}>
+              Connectez-vous pour accéder au backoffice
+            </p>
+            <div className="dynamic-widget-container">
+              <DynamicWidget variant="modal" />
+            </div>
+          </div>
+        )}
       </div>
     </div> 
   );
