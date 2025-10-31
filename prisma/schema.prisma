@@ -278,8 +278,9 @@ model Artist {
   Country            Country?             @relation(fields: [countryCode], references: [code])
   items              Item[]
   BackofficeAuthUser BackofficeAuthUser[]
-
+  WhiteListedUsers WhiteListedUser[]
   @@schema("public")
+  
 }
 
 // Modèle LandingArtist : données affichées sur la landing
@@ -984,6 +985,18 @@ model Country {
 
   @@schema("public")
 }
+
+model WhiteListedUser {
+  id    Int    @id @default(autoincrement())
+  email String @unique
+  role          BackofficeUserRoles?
+  artistId      Int?
+  artist        Artist?                 @relation(fields: [artistId], references: [id])
+
+  @@index([artistId])
+  @@schema("backoffice")
+}
+
 
 /// =============================
 /// Better Auth (schéma backoffice)

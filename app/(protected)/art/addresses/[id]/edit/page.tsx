@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { getAddressById, updateAddress } from '@/lib/actions/address-actions'
 import AddressForm from '../../components/AddressForm'
+import type { Address } from '@prisma/client'
 
 interface EditAddressPageProps {
   params: Promise<{
@@ -14,20 +15,6 @@ interface EditAddressPageProps {
   }>
 }
 
-interface Address {
-  id: number
-  customerId: string | null
-  firstName: string
-  lastName: string
-  streetAddress: string
-  postalCode: string
-  city: string
-  country: string
-  countryCode: string
-  vatNumber: string | null
-  backofficeUserId: number | null
-  name: string
-}
 
 export default function EditAddressPage({ params }: EditAddressPageProps) {
   const { user } = useDynamicContext()
