@@ -215,6 +215,10 @@ model Address {
   backofficeUser   BackofficeUser? @relation(fields: [backofficeUserId], references: [id], onDelete: Cascade)
   backofficeUserId Int?
 
+  // Relations BackofficeAuthUser (adresse d'un utilisateur auth backoffice)
+  backofficeAuthUser   BackofficeAuthUser? @relation(fields: [backofficeAuthUserId], references: [id], onDelete: Cascade)
+  backofficeAuthUserId String?
+
   orders              Order[]
   thirdPartyAddresses ThirdPartyAddress[]
   physicalItems       PhysicalItem[]      @relation("PhysicalItemShipping")
@@ -248,31 +252,32 @@ model ArtistCategory {
 
 // Données intrinsèques à l'artiste
 model Artist {
-  id              Int              @id @default(autoincrement())
-  name            String
-  surname         String
-  pseudo          String           @unique
-  description     String           @unique
-  publicKey       String           @unique
-  imageUrl        String           @unique
-  isGallery       Boolean          @default(false)
-  backgroundImage String?
-  slug            String?          @unique
-  birthYear       Int?
-  featuredArtwork String?
-  countryCode     String?
-  websiteUrl      String?
-  facebookUrl     String?
-  instagramUrl    String?
-  twitterUrl      String?
-  linkedinUrl     String?
-  collections     NftCollection[]
-  Profile         Profile[]
-  BackofficeUser  BackofficeUser[]
-  LandingArtist   LandingArtist[]
-  PresaleArtworks PresaleArtwork[]
-  Country         Country?         @relation(fields: [countryCode], references: [code])
-  items           Item[]
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  surname            String
+  pseudo             String               @unique
+  description        String               @unique
+  publicKey          String               @unique
+  imageUrl           String               @unique
+  isGallery          Boolean              @default(false)
+  backgroundImage    String?
+  slug               String?              @unique
+  birthYear          Int?
+  featuredArtwork    String?
+  countryCode        String?
+  websiteUrl         String?
+  facebookUrl        String?
+  instagramUrl       String?
+  twitterUrl         String?
+  linkedinUrl        String?
+  collections        NftCollection[]
+  Profile            Profile[]
+  BackofficeUser     BackofficeUser[]
+  LandingArtist      LandingArtist[]
+  PresaleArtworks    PresaleArtwork[]
+  Country            Country?             @relation(fields: [countryCode], references: [code])
+  items              Item[]
+  BackofficeAuthUser BackofficeAuthUser[]
 
   @@schema("public")
 }
@@ -429,7 +434,7 @@ enum BackofficeUserRoles {
   artist
   galleryManager
 
-  @@schema("public")
+  @@schema("backoffice")
 }
 
 enum ResourceTypes {
@@ -992,10 +997,15 @@ model BackofficeAuthUser {
   image         String?
   createdAt     DateTime                @default(now())
   updatedAt     DateTime                @updatedAt
+  role          BackofficeUserRoles?
+  artistId      Int?
+  artist        Artist?                 @relation(fields: [artistId], references: [id])
+  addresses     Address[]
   // relations
   sessions      BackofficeAuthSession[]
   accounts      BackofficeAuthAccount[]
 
+  @@index([artistId])
   @@map("user")
   @@schema("backoffice")
 }
