@@ -8,7 +8,7 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi"]
+  schemas   = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "backoffice"]
 }
 
 // Imported from Marketplace
@@ -978,4 +978,71 @@ model Country {
   artists   Artist[]
 
   @@schema("public")
+}
+
+/// =============================
+/// Better Auth (schéma backoffice)
+/// =============================
+
+model BackofficeAuthUser {
+  id            String                  @id
+  name          String?
+  email         String                  @unique
+  emailVerified Boolean                 @default(false)
+  image         String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  // relations
+  sessions      BackofficeAuthSession[]
+  accounts      BackofficeAuthAccount[]
+
+  @@map("user")
+  @@schema("backoffice")
+}
+
+model BackofficeAuthSession {
+  id        String             @id
+  expiresAt DateTime
+  token     String             @unique
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      BackofficeAuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+  @@schema("backoffice")
+}
+
+model BackofficeAuthAccount {
+  id                    String             @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  BackofficeAuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@map("account")
+  @@schema("backoffice")
+}
+
+model BackofficeAuthVerification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+  @@schema("backoffice")
 }

@@ -16,6 +16,8 @@
     "test-html-translation": "tsx scripts/test-html-translation.ts",
     "test-complete-translation": "tsx scripts/test-complete-translation.ts",
     "test-standalone-translation": "tsx scripts/test-complete-translation-standalone.ts",
+    "test-better-auth-signup": "USE_DIRECT_PRISMA=1 tsx scripts/test-better-auth-signup.ts",
+    "check-backoffice-auth-schema": "USE_DIRECT_PRISMA=1 tsx scripts/check-backoffice-auth-schema.ts",
     "postinstall": "bash scripts/postinstall.sh"
   },
   "dependencies": {
