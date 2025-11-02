@@ -3,7 +3,7 @@
 import { memberSchema } from "@/app/(admin)/boAdmin/create-member/schema";
 import { MemberFormData } from "@/app/(admin)/boAdmin/create-member/schema";
 import { prisma } from "@/lib/prisma"
-import { BackofficeUser, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType, PhysicalItemStatus, NftItemStatus } from "@prisma/client"
+import { BackofficeUser, WhiteListedUser, Artist, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType, PhysicalItemStatus, NftItemStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache";
 import { PrismaClient } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -18,8 +18,6 @@ type CreateMemberResult = {
 
 type CheckUserExistsParams = {
   email: string;
-  firstName: string;
-  lastName: string;
 }
 
 type CheckUserExistsResult = {
@@ -102,8 +100,8 @@ export async function createMember(data: MemberFormData): Promise<CreateMemberRe
     // Valider les données avec Zod
     const validatedData = memberSchema.parse(data)
 
-    // Vérifier si l'email existe déjà
-    const existingUser = await prisma.backofficeUser.findUnique({
+    // Vérifier si l'email existe déjà dans WhiteListedUser
+    const existingUser = await prisma.whiteListedUser.findUnique({
       where: { email: validatedData.email }
     })
 
@@ -136,16 +134,11 @@ export async function createMember(data: MemberFormData): Promise<CreateMemberRe
       }
     }
 
-    // Créer l'utilisateur dans la base de données
-    await prisma.backofficeUser.create({
+    // Créer l'utilisateur dans la table WhiteListedUser
+    await prisma.whiteListedUser.create({
       data: {
         email: validatedData.email,
-        firstName: validatedData.firstName,
-        lastName: validatedData.lastName,
         role: validatedData.role,
-        walletAddress: '', // Valeur par défaut pour le champ obligatoire
-        lastLogin: new Date(), // Date actuelle par défaut
-        userMetadata: {},
         artistId: validatedData.role === 'artist' ? validatedData.artistId : null
       }
     })
@@ -179,37 +172,22 @@ export async function checkUserExists(
   params: CheckUserExistsParams
 ): Promise<CheckUserExistsResult> {
   try {
-    // Vérifier si l'email existe déjà
-    const existingUserByEmail = await prisma.backofficeUser.findUnique({
-      where: { email: params.email }
+    // Vérifier si l'email existe déjà dans WhiteListedUser
+    const existingUser = await prisma.whiteListedUser.findUnique({
+      where: { email: params.email.toLowerCase() }
     })
 
-    if (existingUserByEmail) {
+    if (existingUser) {
       return {
         unique: false,
         message: 'Un utilisateur avec cet email existe déjà'
       }
     }
 
-    // Vérifier si la combinaison prénom+nom existe déjà
-    const existingUserByName = await prisma.backofficeUser.findFirst({
-      where: {
-        firstName: params.firstName,
-        lastName: params.lastName
-      }
-    })
-
-    if (existingUserByName) {
-      return {
-        unique: false,
-        message: `Un utilisateur avec le nom "${params.firstName} ${params.lastName}" existe déjà`
-      }
-    }
-
-    // Si aucun utilisateur existant n'est trouvé, la combinaison est unique
+    // Si aucun utilisateur existant n'est trouvé, l'email est unique
     return {
       unique: true,
-      message: 'La combinaison est unique'
+      message: 'L\'email est unique'
     }
   } catch (error) {
     console.error('Erreur lors de la vérification de l\'unicité:', error)
@@ -220,19 +198,27 @@ export async function checkUserExists(
   }
 }
 
-export async function getBackofficeUsers(): Promise<BackofficeUser[]> {
+export async function getWhiteListedUsers(): Promise<(WhiteListedUser & { artist: Artist | null })[]> {
   try {
-    const users = await prisma.backofficeUser.findMany({
+    const users = await prisma.whiteListedUser.findMany({
+      include: {
+        artist: true
+      },
       orderBy: {
-        createdAt: 'desc'
+        id: 'desc'
       }
     })
 
     return users
   } catch (error) {
-    console.error('Erreur lors de la récupération des utilisateurs du back-office:', error)
+    console.error('Erreur lors de la récupération des utilisateurs whitelistés:', error)
     return []
   }
+}
+
+// Fonction de compatibilité - utilise WhiteListedUser maintenant
+export async function getBackofficeUsers(): Promise<any[]> {
+  return getWhiteListedUsers()
 }
 
 type UpdateBackofficeUserResult = {
@@ -240,27 +226,33 @@ type UpdateBackofficeUserResult = {
   message: string
 }
 
-// Ajouter cette fonction pour récupérer un utilisateur par son ID
-export async function getBackofficeUserById(id: string) {
+// Récupérer un utilisateur whitelisté par son ID
+export async function getWhiteListedUserById(id: string) {
   try {
-    const user = await prisma.backofficeUser.findUnique({
-      where: { id: parseInt(id) }
+    const user = await prisma.whiteListedUser.findUnique({
+      where: { id: parseInt(id) },
+      include: { artist: true }
     })
 
     return user
   } catch (error) {
-    console.error('Erreur lors de la récupération de l\'utilisateur du back-office:', error)
+    console.error('Erreur lors de la récupération de l\'utilisateur whitelisté:', error)
     return null
   }
 }
 
-// Ajouter cette fonction pour mettre à jour un utilisateur
-export async function updateBackofficeUser(
+// Fonction de compatibilité
+export async function getBackofficeUserById(id: string) {
+  return getWhiteListedUserById(id)
+}
+
+// Mettre à jour un utilisateur whitelisté
+export async function updateWhiteListedUser(
   data: any
 ): Promise<UpdateBackofficeUserResult> {
   try {
     // Vérifier si l'utilisateur existe
-    const existingUser = await prisma.backofficeUser.findUnique({
+    const existingUser = await prisma.whiteListedUser.findUnique({
       where: { id: parseInt(data.id) }
     })
 
@@ -273,7 +265,7 @@ export async function updateBackofficeUser(
 
     // Vérifier si l'email existe déjà pour un autre utilisateur
     if (data.email !== existingUser.email) {
-      const emailExists = await prisma.backofficeUser.findFirst({
+      const emailExists = await prisma.whiteListedUser.findFirst({
         where: {
           email: data.email,
           id: { not: parseInt(data.id) }
@@ -298,16 +290,13 @@ export async function updateBackofficeUser(
 
     // Si le rôle n'est pas "artist", s'assurer que artistId est null
     const artistId = data.role === 'artist' ? data.artistId : null
-    console.log('artistId === ', artistId);
-    // Mettre à jour l'utilisateur
-    await prisma.backofficeUser.update({
+
+    // Mettre à jour l'utilisateur dans WhiteListedUser
+    await prisma.whiteListedUser.update({
       where: { id: parseInt(data.id) },
       data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
         email: data.email,
         role: data.role || null,
-        walletAddress: data.walletAddress || '',
         artistId: artistId
       }
     })
@@ -335,6 +324,13 @@ export async function updateBackofficeUser(
       message: 'Une erreur inconnue est survenue'
     }
   }
+}
+
+// Fonction de compatibilité
+export async function updateBackofficeUser(
+  data: any
+): Promise<UpdateBackofficeUserResult> {
+  return updateWhiteListedUser(data)
 }
 
 // Ajouter cette fonction pour récupérer un utilisateur par son email

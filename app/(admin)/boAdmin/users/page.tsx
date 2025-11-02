@@ -1,4 +1,4 @@
-import { getBackofficeUsers } from '@/lib/actions/prisma-actions'
+import { getWhiteListedUsers } from '@/lib/actions/prisma-actions'
 import BackofficeUsersClient from './BackofficeUsersClient'
 
 // Désactive le cache pour cette route afin de toujours avoir les données à jour
@@ -7,7 +7,7 @@ export const revalidate = 0
 
 export default async function BackofficeUsersPage() {
   
-  const users = await getBackofficeUsers()
+  const users = await getWhiteListedUsers()
 
   return <BackofficeUsersClient users={users} />
 } 

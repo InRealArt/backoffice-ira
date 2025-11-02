@@ -23,7 +23,12 @@ export const auth = betterAuth({
         }
     },
     session: {
-        modelName: 'BackofficeAuthSession'
+        modelName: 'BackofficeAuthSession',
+        // Activer le cookie cache pour réduire les appels DB
+        cookieCache: {
+            enabled: true,
+            maxAge: 5 * 60 // 5 minutes
+        }
     },
     account: {
         modelName: 'BackofficeAuthAccount'

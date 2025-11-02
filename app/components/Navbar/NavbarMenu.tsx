@@ -1,7 +1,7 @@
 'use client'
 
 import { useSideMenuLogic } from '../SideMenu/useSideMenuLogic'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { authClient } from '@/lib/auth-client'
 
 export default function NavbarMenu() {
   const {
@@ -13,7 +13,9 @@ export default function NavbarMenu() {
     handleNavigation
   } = useSideMenuLogic()
 
-  const { user, handleLogOut } = useDynamicContext()
+  const handleSignOut = async () => {
+    await authClient.signOut()
+  }
 
   if (!isLoggedIn || isLoading) {
     return null

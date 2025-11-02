@@ -7,18 +7,15 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { updateBackofficeUser, getAllArtists } from '@/lib/actions/prisma-actions'
-import { BackofficeUser, Artist } from '@prisma/client'
+import { WhiteListedUser, Artist } from '@prisma/client'
 import styles from './EditUserForm.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 
 // Schéma de validation
 const formSchema = z.object({
   id: z.string(),
-  firstName: z.string().min(1, 'Le prénom est requis'),
-  lastName: z.string().min(1, 'Le nom est requis'),
   email: z.string().email('Format d\'email invalide'),
   role: z.string().nullable().optional(),
-  collectionDescription: z.string().optional(),
   artistId: z.number().nullable().optional()
 }).refine((data) => {
   // Si le rôle est 'artist', artistId est requis
@@ -34,7 +31,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 interface EditUserFormProps {
-  user: BackofficeUser
+  user: WhiteListedUser
 }
 
 // Type spécifique pour les artistes retournés par getAllArtists
@@ -53,12 +50,6 @@ type ArtistSelectData = {
 export default function EditUserForm({ user }: EditUserFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [collectionId, setCollectionId] = useState<string | null>(null)
-  const [collectionTitle, setCollectionTitle] = useState<string | null>(null)
-  const [collectionDescription, setCollectionDescription] = useState<string | null>(null)
-  const [initialDescription, setInitialDescription] = useState<string | null>(null)
-  const [isLoadingCollection, setIsLoadingCollection] = useState(true)
-  const [hasDescriptionChanged, setHasDescriptionChanged] = useState(false)
   const [artists, setArtists] = useState<ArtistSelectData[]>([])
   const [isLoadingArtists, setIsLoadingArtists] = useState(true)
   const { success, error } = useToast()
@@ -75,16 +66,12 @@ export default function EditUserForm({ user }: EditUserFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: user.id.toString(),
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
       email: user.email || '',
       role: user.role || null,
-      collectionDescription: '',
       artistId: user.artistId || null
     }
   })
 
-  const currentDescription = watch('collectionDescription')
   const selectedRole = watch('role')
 
   // Réinitialiser artistId quand le rôle change
@@ -111,41 +98,6 @@ export default function EditUserForm({ user }: EditUserFormProps) {
     fetchArtists()
   }, [])
 
-  // Observer les changements dans la description et comparer avec la valeur initiale
-  useEffect(() => {
-    if (initialDescription !== null && currentDescription !== undefined) {
-      setHasDescriptionChanged(currentDescription !== initialDescription)
-    }
-  }, [currentDescription, initialDescription])
-
-  // Récupérer les informations de la collection basée sur le nom de l'utilisateur
-  useEffect(() => {
-    let isMounted = true
-    setIsLoadingCollection(true)
-    
-    const fetchCollectionInfo = async () => {
-      if (!user.firstName || !user.lastName) {
-        setIsLoadingCollection(false)
-        return
-      }
-
-      try {
-      } catch (error: any) {
-        console.error('Erreur lors de la récupération de la collection:', error)
-      } finally {
-        if (isMounted) {
-          setIsLoadingCollection(false)
-        }
-      }
-    }
-
-    fetchCollectionInfo()
-    
-    // Nettoyage pour éviter des mises à jour sur un composant démonté
-    return () => {
-      isMounted = false
-    }
-  }, [user.firstName, user.lastName, setValue])
 
   // Fonction de soumission du formulaire
   const onSubmit = async (data: FormValues) => {
@@ -161,11 +113,8 @@ export default function EditUserForm({ user }: EditUserFormProps) {
       // S'assurer que tous les champs requis sont présents
       const payload = {
         id: data.id,
-        firstName: data.firstName || '',
-        lastName: data.lastName || '',
         email: data.email || '',
         role: data.role || null,
-        walletAddress: user.walletAddress || '',
         artistId: data.artistId || null
       }
 
@@ -202,47 +151,8 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         <div className={styles.formHeader}>
           <h1 className={styles.formTitle}>Modifier l'utilisateur</h1>
           <p className={styles.formSubtitle}>
-            Modifier les informations de {user.firstName} {user.lastName}
+            Modifier les informations de {user.email}
           </p>
-        </div>
-
-        {/* Champ caché pour stocker la description initiale */}
-        <input 
-          type="hidden"
-          id="initialDescription"
-          value={initialDescription || ''}
-        />
-
-        <div className={styles.formGrid}>
-          <div className={styles.formGroup}>
-            <label htmlFor="firstName" className={styles.formLabel}>
-              Prénom
-            </label>
-            <input
-              id="firstName"
-              type="text"
-              {...register('firstName')}
-              className={`${styles.formInput} ${errors.firstName ? styles.formInputError : ''}`}
-            />
-            {errors.firstName && (
-              <p className={styles.formError}>{errors.firstName.message}</p>
-            )}
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="lastName" className={styles.formLabel}>
-              Nom
-            </label>
-            <input
-              id="lastName"
-              type="text"
-              {...register('lastName')}
-              className={`${styles.formInput} ${errors.lastName ? styles.formInputError : ''}`}
-            />
-            {errors.lastName && (
-              <p className={styles.formError}>{errors.lastName.message}</p>
-            )}
-          </div>
         </div>
 
         <div className={styles.formGroup}>

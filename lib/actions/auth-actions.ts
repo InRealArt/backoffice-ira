@@ -21,9 +21,9 @@ export async function checkAuthorizedUser(email: string): Promise<CheckAuthorize
             }
         }
 
-        // Vérifier si l'email existe dans la table backofficeUser
-        const user = await prisma.backofficeUser.findUnique({
-            where: { email }
+        // Vérifier si l'email existe dans la table BackofficeAuthUser (Better Auth)
+        const user = await prisma.backofficeAuthUser.findUnique({
+            where: { email: email.toLowerCase() }
         })
 
         return {
@@ -48,8 +48,8 @@ export async function checkIsAdmin(email: string): Promise<boolean> {
     try {
         if (!email) return false
 
-        const user = await prisma.backofficeUser.findUnique({
-            where: { email },
+        const user = await prisma.backofficeAuthUser.findUnique({
+            where: { email: email.toLowerCase() },
             select: { role: true }
         })
 
@@ -57,6 +57,27 @@ export async function checkIsAdmin(email: string): Promise<boolean> {
     } catch (error) {
         console.error('Erreur lors de la vérification admin:', error)
         return false
+    }
+}
+
+/**
+ * Récupère le rôle d'un utilisateur depuis la table BackofficeAuthUser
+ * @param email - Email de l'utilisateur
+ * @returns Le rôle de l'utilisateur ou null
+ */
+export async function getUserRole(email: string): Promise<string | null> {
+    try {
+        if (!email) return null
+
+        const user = await prisma.backofficeAuthUser.findUnique({
+            where: { email: email.toLowerCase() },
+            select: { role: true }
+        })
+
+        return user?.role || null
+    } catch (error) {
+        console.error('Erreur lors de la récupération du rôle:', error)
+        return null
     }
 }
 

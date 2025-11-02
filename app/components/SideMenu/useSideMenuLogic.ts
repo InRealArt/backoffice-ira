@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { authClient } from '@/lib/auth-client'
 import { checkAuthorizedUser, checkIsAdmin } from '@/lib/actions/auth-actions'
 
 export function useSideMenuLogic() {
@@ -10,8 +10,9 @@ export function useSideMenuLogic() {
   const pathname = usePathname()
   const router = useRouter()
 
-  // Utiliser le contexte Dynamic pour l'authentification
-  const dynamicContext = useDynamicContext()
+  // Utiliser Better Auth pour l'authentification
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
+  const user = session?.user
 
   // État des sous-menus
   const [showBackofficeAdminSubmenu, setShowBackofficeAdminSubmenu] = useState(false)
@@ -173,22 +174,29 @@ export function useSideMenuLogic() {
 
   // Vérification de l'authentification et des rôles utilisateur
   useEffect(() => {
+    let isMounted = true
+
     const checkUserRole = async () => {
       setIsLoading(true)
-      const { user } = dynamicContext;
 
-      if (user?.email) {
+      const userEmail = user?.email
+
+      if (userEmail && !isSessionPending) {
         setIsLoggedIn(true);
 
         try {
           // Vérifier le rôle de l'utilisateur via Server Action
-          const result = await checkAuthorizedUser(user.email);
+          const result = await checkAuthorizedUser(userEmail);
+
+          if (!isMounted) return
 
           if (result.authorized) {
             // Vérifier si l'utilisateur a un rôle administrateur via Server Action
-            const isAdmin = await checkIsAdmin(user.email);
-            setIsAdmin(isAdmin);
+            const isAdminResult = await checkIsAdmin(userEmail);
 
+            if (!isMounted) return
+
+            setIsAdmin(isAdminResult);
             // Tous les utilisateurs autorisés peuvent accéder à leur collection
             setCanAccessCollection(result.authorized);
           } else {
@@ -196,21 +204,28 @@ export function useSideMenuLogic() {
             setCanAccessCollection(false);
           }
         } catch (error) {
+          if (!isMounted) return
           console.error('Erreur lors de la vérification du rôle:', error);
           setIsAdmin(false);
           setCanAccessCollection(false);
         }
-      } else {
+      } else if (!isSessionPending) {
         setIsLoggedIn(false);
         setIsAdmin(false);
         setCanAccessCollection(false);
       }
 
-      setIsLoading(false)
+      if (isMounted) {
+        setIsLoading(false)
+      }
     };
 
     checkUserRole();
-  }, [dynamicContext.user, dynamicContext.primaryWallet]);
+
+    return () => {
+      isMounted = false
+    }
+  }, [user?.email, isSessionPending]); // Utiliser user?.email au lieu de user pour stabiliser
 
   // Effet pour fermer les sous-menus sur clic en dehors
   useEffect(() => {

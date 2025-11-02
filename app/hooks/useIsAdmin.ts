@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core'
-import { checkIsAdmin } from '@/lib/actions/prisma-actions'
+import { authClient } from '@/lib/auth-client'
+import { checkIsAdmin } from '@/lib/actions/auth-actions'
 
 interface UseIsAdminResult {
     isAdmin: boolean
@@ -18,14 +18,17 @@ export function useIsAdmin(): UseIsAdminResult {
     const [isAdmin, setIsAdmin] = useState<boolean>(false)
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
-    const isLoggedIn = useIsLoggedIn()
-    const { user, primaryWallet } = useDynamicContext()
+    const { data: session, isPending } = authClient.useSession()
+    const user = session?.user
+    const isLoggedIn = !!session
 
     useEffect(() => {
+        let isMounted = true
+
         // Réinitialiser les états lorsque l'utilisateur n'est pas connecté
-        if (!isLoggedIn || !user) {
+        if (!isLoggedIn || !user || isPending) {
             setIsAdmin(false)
-            setIsLoading(false)
+            setIsLoading(isPending)
             setError(null)
             return
         }
@@ -34,29 +37,33 @@ export function useIsAdmin(): UseIsAdminResult {
             setIsLoading(true)
             setError(null)
 
+            const userEmail = user.email
+
             try {
-                // Appel du Server Action au lieu de faire un fetch
-                const result = await checkIsAdmin(
-                    user?.email || null,
-                    primaryWallet?.address || null
-                )
+                // Appel du Server Action pour vérifier le rôle admin
+                const result = await checkIsAdmin(userEmail || '')
 
-                if (result.error) {
-                    throw new Error(result.error)
-                }
+                if (!isMounted) return
 
-                setIsAdmin(result.isAdmin)
+                setIsAdmin(result)
             } catch (err) {
+                if (!isMounted) return
                 console.error('Erreur dans useIsAdmin:', err)
                 setError((err as Error).message)
                 setIsAdmin(false)
             } finally {
-                setIsLoading(false)
+                if (isMounted) {
+                    setIsLoading(false)
+                }
             }
         }
 
         verifyAdminRole()
-    }, [isLoggedIn, user, primaryWallet])
+
+        return () => {
+            isMounted = false
+        }
+    }, [isLoggedIn, user?.email, isPending]) // Utiliser user?.email au lieu de user pour stabiliser
 
     return { isAdmin, isLoading, error }
 } 

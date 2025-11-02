@@ -1,15 +1,14 @@
 'use client';
 
-import { DynamicWidget } from '@dynamic-labs/sdk-react-core';
 import { useState, useEffect } from 'react';
-import DynamicMethods from "@/app/components/Methods";
 import styles from './homepage.module.scss';
 import Navbar from './components/Navbar/Navbar';
 import AuthObserver from './components/Auth/AuthObserver';
 import UnauthorizedMessage from './components/Auth/UnauthorizedMessage';
 import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner';
-import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core';
+import { authClient } from '@/lib/auth-client';
 import { checkAuthorizedUser } from '@/lib/actions/auth-actions';
+import { useRouter } from 'next/navigation';
 
 const checkIsDarkSchemePreferred = () => {
   if (typeof window !== 'undefined') {
@@ -20,10 +19,14 @@ const checkIsDarkSchemePreferred = () => {
 
 export default function Main() {
   const [isDarkMode, setIsDarkMode] = useState(checkIsDarkSchemePreferred);
-  const isLoggedIn = useIsLoggedIn();
-  const { user } = useDynamicContext();
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
+  const userEmail = user?.email;
+  const isLoggedIn = !!session;
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -34,28 +37,53 @@ export default function Main() {
   }, []);
 
   useEffect(() => {
+    let isMounted = true
+
     const checkAuthorization = async () => {
-      if (isLoggedIn && user?.email) {
+      // Réinitialiser la redirection si l'état change
+      if (!isLoggedIn && !isPending) {
+        if (isMounted) {
+          setIsAuthorized(null);
+          setHasRedirected(false);
+        }
+        return;
+      }
+
+      if (isLoggedIn && userEmail && !isPending && !hasRedirected) {
         setIsLoading(true);
         try {
           // Utilisation de la Server Action au lieu de l'API Route
-          const result = await checkAuthorizedUser(user.email);
+          const result = await checkAuthorizedUser(userEmail);
+          
+          if (!isMounted) return
+          
           setIsAuthorized(result.authorized);
+          
+          // Rediriger immédiatement si autorisé (évite un useEffect séparé)
+          if (result.authorized && !hasRedirected) {
+            setHasRedirected(true);
+            router.push('/dashboard');
+          }
         } catch (error) {
+          if (!isMounted) return
           console.error('Erreur lors de la vérification de l\'autorisation:', error);
           setIsAuthorized(false);
         } finally {
-          setIsLoading(false);
+          if (isMounted) {
+            setIsLoading(false);
+          }
         }
-      } else {
-        setIsAuthorized(null);
       }
     };
 
     checkAuthorization();
-  }, [isLoggedIn, user]);
 
-  if (isLoading) {
+    return () => {
+      isMounted = false
+    }
+  }, [isLoggedIn, userEmail, isPending, hasRedirected, router]);
+
+  if (isPending || isLoading) {
     return (
       <>
         <Navbar />
@@ -93,8 +121,19 @@ export default function Main() {
             <p className={styles.loginNote}>
               Connectez-vous pour accéder au backoffice
             </p>
-            <div className="dynamic-widget-container">
-              <DynamicWidget variant="modal" />
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => router.push('/sign-in')}
+                className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                Se connecter
+              </button>
+              <button
+                onClick={() => router.push('/sign-up')}
+                className="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors"
+              >
+                S'inscrire
+              </button>
             </div>
           </div>
         )}

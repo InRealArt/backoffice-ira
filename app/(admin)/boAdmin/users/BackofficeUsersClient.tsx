@@ -2,21 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { BackofficeUser } from '@prisma/client'
+import { WhiteListedUser, Artist } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import {
   PageContainer,
   PageHeader,
   PageContent,
-  DataTable,
   EmptyState,
-  ActionButton,
-  Badge,
-  Column
+  ActionButton
 } from '../../../components/PageLayout/index'
 
+// Type étendu pour inclure la relation artist
+type WhiteListedUserWithArtist = WhiteListedUser & {
+  artist: Artist | null
+}
+
 interface BackofficeUsersClientProps {
-  users: BackofficeUser[]
+  users: WhiteListedUserWithArtist[]
 }
 
 export default function BackofficeUsersClient({ users }: BackofficeUsersClientProps) {
@@ -48,7 +50,7 @@ export default function BackofficeUsersClient({ users }: BackofficeUsersClientPr
     }
   }, [])
   
-  const handleUserClick = (user: BackofficeUser) => {
+  const handleUserClick = (user: WhiteListedUserWithArtist) => {
     setLoadingUserId(user.id.toString())
     router.push(`/boAdmin/users/${user.id}/edit`)
   }
@@ -70,62 +72,49 @@ export default function BackofficeUsersClient({ users }: BackofficeUsersClientPr
     }, 100)
   }
   
-  // Fonction pour déterminer la variante du badge selon le rôle
-  const getRoleBadgeVariant = (role: string | null): { variant: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info', text: string } => {
-    if (!role) return { variant: 'secondary', text: 'Utilisateur' }
+  // Fonction pour déterminer la classe du badge DaisyUI selon le rôle
+  const getRoleBadgeClass = (role: string | null): string => {
+    const baseClasses = 'badge rounded-lg px-3 py-1.5 font-medium text-white border-none'
+    
+    if (!role) return `${baseClasses} bg-gray-500`
     
     const roleLC = role.toLowerCase()
     
-    if (roleLC === 'admin' || roleLC === 'administrateur') {
-      return { variant: 'danger', text: 'Admin' }
-    } else if (roleLC === 'artist' || roleLC === 'artiste') {
-      return { variant: 'success', text: 'Artiste' }
-    } else if (roleLC === 'gallerymanager') {
-      return { variant: 'info', text: 'Resp. galerie' }
-    } else {
-      return { variant: 'secondary', text: 'Utilisateur' }
+    switch (roleLC) {
+      case 'admin':
+      case 'administrateur':
+        return `${baseClasses} bg-green-500 hover:bg-green-600`
+      case 'artist':
+      case 'artiste':
+        return `${baseClasses} bg-blue-500 hover:bg-blue-600`
+      case 'gallerymanager':
+      case 'gallery manager':
+        return `${baseClasses} bg-blue-500 hover:bg-blue-600`
+      default:
+        return `${baseClasses} bg-gray-500`
     }
   }
 
-  // Définition des colonnes pour le DataTable
-  const columns: Column<BackofficeUser>[] = [
-    {
-      key: 'name',
-      header: 'Nom',
-      render: (user) => (
-        <div className="d-flex align-items-center gap-sm">
-          {loadingUserId === user.id.toString() && <LoadingSpinner size="small" message="" inline />}
-          <span className={loadingUserId === user.id.toString() ? 'text-muted' : ''}>
-            {user.firstName} {user.lastName}
-          </span>
-        </div>
-      )
-    },
-    {
-      key: 'email',
-      header: 'Email'
-    },
-    {
-      key: 'role',
-      header: 'Rôle',
-      width: '140px',
-      render: (user) => {
-        const { variant, text } = getRoleBadgeVariant(user.role)
-        return <Badge variant={variant} text={text} />
-      }
-    },
-    {
-      key: 'walletAddress',
-      header: 'Wallet Address',
-      className: 'hidden-mobile'
-    },
-    {
-      key: 'createdAt',
-      header: 'Date de création',
-      className: 'hidden-mobile',
-      render: (user) => formatDate(user.createdAt)
+  // Fonction pour obtenir le texte affiché selon le rôle
+  const getRoleText = (role: string | null): string => {
+    if (!role) return 'Utilisateur'
+    
+    const roleLC = role.toLowerCase()
+    
+    switch (roleLC) {
+      case 'admin':
+      case 'administrateur':
+        return 'Admin'
+      case 'artist':
+      case 'artiste':
+        return 'Artiste'
+      case 'gallerymanager':
+      case 'gallery manager':
+        return 'Resp. galerie'
+      default:
+        return 'Utilisateur'
     }
-  ]
+  }
   
   return (
     <PageContainer>
@@ -154,35 +143,65 @@ export default function BackofficeUsersClient({ users }: BackofficeUsersClientPr
       />
       
       <PageContent>
-        <DataTable
-          data={users}
-          columns={columns}
-          keyExtractor={(user) => user.id}
-          onRowClick={handleUserClick}
-          isLoading={false}
-          loadingRowId={loadingUserId}
-          emptyState={
-            <EmptyState 
-              message="Aucun utilisateur Back-office trouvé"
-              action={
-                <ActionButton
-                  label="Créer un utilisateur"
-                  onClick={handleCreateUser}
-                  variant="primary"
-                />
-              }
-            />
-          }
-        />
+        {users.length === 0 ? (
+          <EmptyState 
+            message="Aucun utilisateur Back-office trouvé"
+            action={
+              <ActionButton
+                label="Créer un utilisateur"
+                onClick={handleCreateUser}
+                variant="primary"
+              />
+            }
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th className="hidden md:table-cell">ID</th>
+                  <th>Email</th>
+                  <th>Rôle</th>
+                  <th>Artiste</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr 
+                    key={user.id}
+                    onClick={() => handleUserClick(user)}
+                    className="cursor-pointer hover:bg-base-200"
+                  >
+                    <td className="hidden md:table-cell">{user.id}</td>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        {loadingUserId === user.id.toString() && (
+                          <LoadingSpinner size="small" message="" inline />
+                        )}
+                        <span className={loadingUserId === user.id.toString() ? 'opacity-50' : ''}>
+                          {user.email}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={getRoleBadgeClass(user.role)}>
+                        {getRoleText(user.role)}
+                      </span>
+                    </td>
+                    <td>
+                      {user.artist ? (
+                        <span className="text-sm">{user.artist.name} {user.artist.surname}</span>
+                      ) : (
+                        <span className="text-base-content/50 text-sm">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </PageContent>
     </PageContainer>
   )
 }
-
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-} 

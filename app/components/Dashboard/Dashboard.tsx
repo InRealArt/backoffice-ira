@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core';
+import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
@@ -11,7 +11,10 @@ import { getPendingItemsCount, getUserMintedItemsCount, getUserListedItemsCount,
 import { useIsAdmin } from '@/app/hooks/useIsAdmin';
 
 export default function Dashboard() {
-  const { user, primaryWallet } = useDynamicContext();
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+  // Note: primaryWallet sera géré plus tard dans une migration séparée des wallets
+  const primaryWallet = null as { address?: string } | null;
   const [isAdminNavigating, setIsAdminNavigating] = useState(false);
   const router = useRouter();
   const [pendingItemsCount, setPendingItemsCount] = useState(0)
@@ -48,10 +51,16 @@ export default function Dashboard() {
   }, [isAdmin])
 
   useEffect(() => {
+    let isMounted = true
+
     const fetchUserItemsStats = async () => {
-      if (!isAdmin && user?.email) {
+      const userEmail = user?.email
+      
+      if (!isAdmin && userEmail) {
         try {
-          const backofficeUser = await getBackofficeUserByEmail(user.email);
+          const backofficeUser = await getBackofficeUserByEmail(userEmail);
+          
+          if (!isMounted) return
           
           if (!backofficeUser) {
             console.error('Utilisateur Backoffice non trouvé pour cet email');
@@ -63,32 +72,46 @@ export default function Dashboard() {
           // Récupérer l'artiste associé via l'artistId
           if (backofficeUser.artistId) {
             const artist = await getArtistById(backofficeUser.artistId);
+            if (!isMounted) return
+            
             if (artist) {
               setAssociatedArtist(artist);
             }
           }
+          
+          if (!isMounted) return
+          
           setIsLoadingArtist(false);
           
           const mintedResult = await getUserMintedItemsCount(backofficeUser.id);
           const listedResult = await getUserListedItemsCount(backofficeUser.id);
           
+          if (!isMounted) return
+          
           setMintedItemsCount(mintedResult.count);
           setListedItemsCount(listedResult.count);
         } catch (error) {
+          if (!isMounted) return
           console.error('Erreur lors de la récupération des statistiques d\'items:', error)
         } finally {
-          setIsLoadingUserCounts(false)
-          setIsLoadingArtist(false)
+          if (isMounted) {
+            setIsLoadingUserCounts(false)
+            setIsLoadingArtist(false)
+          }
         }
       }
     }
 
     fetchUserItemsStats()
-  }, [isAdmin, user])
+
+    return () => {
+      isMounted = false
+    }
+  }, [isAdmin, user?.email]) // Utiliser user?.email au lieu de user pour stabiliser
 
   const handleAdminShowUsers = () => {
     setIsAdminNavigating(true);
-    router.push('/admin/boAdmin/users');
+    router.push('/boAdmin/users');
   };
 
   if (isLoading) return <LoadingSpinner fullPage message="Chargement du tableau de bord..." />;
@@ -100,7 +123,6 @@ export default function Dashboard() {
       <div className="dashboard-content">
         <DashboardCard title="Informations utilisateur">
           <p><strong>Email:</strong> {user?.email || 'Non défini'}</p>
-          <p><strong>Adresse wallet:</strong> <span className="dashboard-small-text">{truncateAddress(primaryWallet?.address)}</span></p>
           {!isAdmin && (
             <>
               {isLoadingArtist ? (
@@ -140,20 +162,7 @@ export default function Dashboard() {
               </Button>
             </DashboardCard>
 
-            <DashboardCard title="Items en attente">
-              {isLoadingCount ? (
-                <p>Chargement du nombre d'items...</p>
-              ) : (
-                <>
-                  <p>Nombre d'items en attente de validation : <strong>{pendingItemsCount}</strong></p>
-                  <Button 
-                    onClick={() => router.push('/marketplace/nftsToMint')}
-                  >
-                    Voir les items en attente
-                  </Button>
-                </>
-              )}
-            </DashboardCard>
+            
           </>
         ) : (
           <>

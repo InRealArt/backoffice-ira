@@ -1,39 +1,28 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useIsLoggedIn, useDynamicContext } from '@dynamic-labs/sdk-react-core'
-import Cookies from 'js-cookie'
+import { authClient } from '@/lib/auth-client'
 
+/**
+ * AuthStateManager - Composant pour gérer l'état d'authentification
+ * Note: Better-Auth gère automatiquement les cookies de session,
+ * ce composant est conservé pour compatibilité mais peut être supprimé progressivement
+ */
 export default function AuthStateManager() {
-  const isLoggedIn = useIsLoggedIn()
-  const { primaryWallet, user } = useDynamicContext()
+  const { data: session } = authClient.useSession()
+  const isLoggedIn = !!session
 
   useEffect(() => {
-    // Quand l'utilisateur se connecte
-    if (isLoggedIn && primaryWallet) {
-      // Stocker un cookie d'authentification
-      Cookies.set('dynamic_auth_token', 'authenticated', {
-        expires: 1, // Expire après 1 jour
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-      })
-      
-      // Stocker l'adresse du portefeuille dans le stockage local
-      localStorage.setItem('walletAddress', primaryWallet.address)
-      localStorage.setItem('userIsLoggedIn', 'true')
+    // Better-Auth gère automatiquement les cookies de session
+    // On peut utiliser ce hook pour d'autres effets si nécessaire
+    if (isLoggedIn && session?.user) {
+      // Logique optionnelle pour stocker des données locales si nécessaire
+      // Exemple: localStorage.setItem('userId', session.user.id)
+    } else if (!isLoggedIn) {
+      // Nettoyer les données locales si nécessaire
+      // Exemple: localStorage.removeItem('userId')
     }
-    
-    // Quand l'utilisateur se déconnecte
-    if (isLoggedIn === false) {
-      // Supprimer le cookie d'authentification
-      Cookies.remove('dynamic_auth_token', { path: '/' })
-      
-      // Supprimer les données du stockage local
-      localStorage.removeItem('walletAddress')
-      localStorage.removeItem('userIsLoggedIn')
-    }
-  }, [isLoggedIn, primaryWallet, user])
+  }, [isLoggedIn, session])
 
   return null
 } 

@@ -42,8 +42,6 @@ export default function CreateMemberForm() {
   } = useForm<MemberFormData>({
     resolver: zodResolver(memberSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
       email: '',
       role: 'artist',
       artistId: null
@@ -92,11 +90,9 @@ export default function CreateMemberForm() {
     setUniqueError(null)
     
     try {
-      // Vérifier d'abord l'unicité du trio email+nom+prénom
+      // Vérifier d'abord l'unicité de l'email
       const uniqueCheck = await checkUserExists({
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName
+        email: data.email
       })
       
       if (!uniqueCheck.unique) {
@@ -160,42 +156,6 @@ export default function CreateMemberForm() {
                 <p>{uniqueError}</p>
               </div>
             )}
-            
-            <div className="d-grid grid-md-2 gap-md">
-              {/* Prénom */}
-              <div className="form-group">
-                <label htmlFor="firstName" className="form-label">
-                  Prénom
-                </label>
-                <input
-                  id="firstName"
-                  type="text"
-                  {...register('firstName')}
-                  className={`form-input ${errors.firstName || uniqueError ? 'input-error' : ''}`}
-                  placeholder="John"
-                />
-                {errors.firstName && (
-                  <p className="form-error text-danger">{errors.firstName.message}</p>
-                )}
-              </div>
-              
-              {/* Nom */}
-              <div className="form-group">
-                <label htmlFor="lastName" className="form-label">
-                  Nom
-                </label>
-                <input
-                  id="lastName"
-                  type="text"
-                  {...register('lastName')}
-                  className={`form-input ${errors.lastName || uniqueError ? 'input-error' : ''}`}
-                  placeholder="Doe"
-                />
-                {errors.lastName && (
-                  <p className="form-error text-danger">{errors.lastName.message}</p>
-                )}
-              </div>
-            </div>
             
             {/* Email */}
             <div className="form-group">
