@@ -65,7 +65,7 @@ export default function NavbarMenu() {
               <li><a onClick={() => handleNavigation('/landing/detailedGlossary', 'detailedGlossary')}>Glossaire détaillé</a></li>
               <li><a onClick={() => handleNavigation('/landing/landingArtists', 'landingArtists')}>Page artistes</a></li>
               <li><a onClick={() => handleNavigation('/landing/presaleArtworks', 'presaleArtworks')}>Œuvres en prévente</a></li>
-              <li><a onClick={() => handleNavigation('/landing/blog', 'blog')}>Articles de blog</a></li>
+              <li><a onClick={() => handleNavigation('/landing/seo-posts', 'seoPosts')}>Articles de blog</a></li>
             </ul>
           </li>
           <li className="divider my-1"></li>
