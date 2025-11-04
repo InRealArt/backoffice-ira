@@ -34,7 +34,7 @@ export default function NavbarMenu() {
           <li className="divider my-1"></li>
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">🖼️ MA COLLECTION</a>
-            <ul className="p-2 bg-base-50 rounded-lg mt-1">
+            <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li><a onClick={() => handleNavigation('/art/collection', 'collection')}>Collection</a></li>
               <li><a onClick={() => handleNavigation('/art/addresses', 'addresses')}>📍 Adresses</a></li>
               <li><a onClick={() => handleNavigation('/art/createArtwork', 'createArtwork')}>➕ Créer une œuvre</a></li>
@@ -55,7 +55,7 @@ export default function NavbarMenu() {
           <li className="divider my-1"></li>
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">🏠 LANDING PAGES</a>
-            <ul className="p-2 bg-base-50 rounded-lg mt-1">
+            <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li><a onClick={() => handleNavigation('/landing/languages', 'languages')}>Languages</a></li>
               <li><a onClick={() => handleNavigation('/landing/translations', 'translations')}>Translations</a></li>
               <li><a onClick={() => handleNavigation('/landing/team', 'team')}>Team</a></li>
@@ -71,7 +71,7 @@ export default function NavbarMenu() {
           <li className="divider my-1"></li>
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">📊 DATA ADMINISTRATION</a>
-            <ul className="p-2 bg-base-50 rounded-lg mt-1">
+            <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li><a onClick={() => handleNavigation('/dataAdministration/artists', 'artists')}>Artistes</a></li>
               <li><a onClick={() => handleNavigation('/dataAdministration/artist-categories', 'artist-categories')}>Catégories d'artistes</a></li>
               <li><a onClick={() => handleNavigation('/dataAdministration/artwork-mediums', 'artwork-mediums')}>Mediums d'œuvres</a></li>
@@ -82,7 +82,7 @@ export default function NavbarMenu() {
           <li className="divider my-1"></li>
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">👥 BACKOFFICE ADMIN</a>
-            <ul className="p-2 bg-base-50 rounded-lg mt-1">
+            <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li><a onClick={() => handleNavigation('/boAdmin/users', 'boUsers')}>Gestion des Membres</a></li>
               <li><a onClick={() => handleNavigation('/boAdmin/create-member', 'createMember')}>Créer un Membre</a></li>
             </ul>
@@ -90,7 +90,7 @@ export default function NavbarMenu() {
           <li className="divider my-1"></li>
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">⛓️ BLOCKCHAIN</a>
-            <ul className="p-2 bg-base-50 rounded-lg mt-1">
+            <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li><a onClick={() => handleNavigation('/blockchain/smartContracts', 'smartContracts')}>Smart Contracts</a></li>
               <li><a onClick={() => handleNavigation('/blockchain/collections', 'collections')}>Collections</a></li>
               <li><a onClick={() => handleNavigation('/blockchain/royaltyBeneficiaries', 'royaltyBeneficiaries')}>Royalties</a></li>
@@ -99,7 +99,7 @@ export default function NavbarMenu() {
           <li className="divider my-1"></li>
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">🛒 MARKETPLACE</a>
-            <ul className="p-2 bg-base-50 rounded-lg mt-1">
+            <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li><a onClick={() => handleNavigation('/admin-art/createArtwork', 'adminCreateArtwork')}>➕ Créer une œuvre</a></li>
               <li><a onClick={() => handleNavigation('/admin-art/collection', 'adminArtCollection')}>🎨 Collection d'œuvres</a></li>
               <li><a onClick={() => handleNavigation('/marketplace/nftsToMint', 'nftsToMint')}>NFTs à minter</a></li>
@@ -112,7 +112,7 @@ export default function NavbarMenu() {
           <li className="divider my-1"></li>
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">🔧 TOOLS</a>
-            <ul className="p-2 bg-base-50 rounded-lg mt-1">
+            <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li><a onClick={() => handleNavigation('/tools/webp-converter', 'toolsWebpConverter')}>🖼️ Convertisseur WebP</a></li>
             </ul>
           </li>
@@ -131,7 +131,7 @@ export default function NavbarMenu() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
           </svg>
         </div>
-        <ul tabIndex={0} className="menu menu-sm dropdown-content bg-base-100/95 backdrop-blur-md rounded-box z-[1] mt-3 w-52 p-2 shadow-2xl border-2 border-base-300" style={{backgroundColor: 'rgb(255 255 255 / 0.98)', backdropFilter: 'blur(12px) saturate(180%)', WebkitBackdropFilter: 'blur(12px) saturate(180%)'}}>
+        <ul tabIndex={0} className="menu menu-sm dropdown-content bg-background-white dark:bg-background-white backdrop-blur-md rounded-box z-[1] mt-3 w-52 p-2 shadow-2xl border-2 border-border dark:border-border">
           {renderMobileMenuItems()}
         </ul>
       </div>
@@ -152,7 +152,7 @@ export default function NavbarMenu() {
             <li>
               <details>
                 <summary>🖼️ Ma Collection</summary>
-                <ul className="bg-base-100/95 backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-base-300" style={{backgroundColor: 'rgb(255 255 255 / 0.98)', backdropFilter: 'blur(12px) saturate(180%)', WebkitBackdropFilter: 'blur(12px) saturate(180%)'}}>
+                <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                   <li>
                     <a onClick={() => handleNavigation('/art/collection', 'collection')}>
                       Collection
@@ -188,7 +188,7 @@ export default function NavbarMenu() {
             <li>
               <details>
                 <summary>🏠 Landing</summary>
-                <ul className="bg-base-100/95 backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-base-300 w-60 max-h-80 overflow-y-auto" style={{backgroundColor: 'rgb(255 255 255 / 0.98)', backdropFilter: 'blur(12px) saturate(180%)', WebkitBackdropFilter: 'blur(12px) saturate(180%)'}}>
+                <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60 max-h-80 overflow-y-auto">
                   <li><a onClick={() => handleNavigation('/landing/languages', 'languages')}>Languages</a></li>
                   <li><a onClick={() => handleNavigation('/landing/translations', 'translations')}>Translations</a></li>
                   <li><a onClick={() => handleNavigation('/landing/team', 'team')}>Team</a></li>
@@ -205,7 +205,7 @@ export default function NavbarMenu() {
             <li>
               <details>
                 <summary>📊 Data</summary>
-                <ul className="bg-base-100/95 backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-base-300 w-60" style={{backgroundColor: 'rgb(255 255 255 / 0.98)', backdropFilter: 'blur(12px) saturate(180%)', WebkitBackdropFilter: 'blur(12px) saturate(180%)'}}>
+                <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60">
                   <li><a onClick={() => handleNavigation('/dataAdministration/artists', 'artists')}>Artistes</a></li>
                   <li><a onClick={() => handleNavigation('/dataAdministration/artist-categories', 'artist-categories')}>Catégories d'artistes</a></li>
                   <li><a onClick={() => handleNavigation('/dataAdministration/artwork-mediums', 'artwork-mediums')}>Mediums d'œuvres</a></li>
@@ -217,7 +217,7 @@ export default function NavbarMenu() {
             <li>
               <details>
                 <summary>👥 Admin</summary>
-                <ul className="bg-base-100/95 backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-base-300" style={{backgroundColor: 'rgb(255 255 255 / 0.98)', backdropFilter: 'blur(12px) saturate(180%)', WebkitBackdropFilter: 'blur(12px) saturate(180%)'}}>
+                <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                   <li><a onClick={() => handleNavigation('/boAdmin/users', 'boUsers')}>Gestion des Membres</a></li>
                   <li><a onClick={() => handleNavigation('/boAdmin/create-member', 'createMember')}>Créer un Membre</a></li>
                 </ul>
@@ -226,7 +226,7 @@ export default function NavbarMenu() {
             <li>
               <details>
                 <summary>⛓️ Blockchain</summary>
-                <ul className="bg-base-100/95 backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-base-300" style={{backgroundColor: 'rgb(255 255 255 / 0.98)', backdropFilter: 'blur(12px) saturate(180%)', WebkitBackdropFilter: 'blur(12px) saturate(180%)'}}>
+                <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                   <li><a onClick={() => handleNavigation('/blockchain/smartContracts', 'smartContracts')}>Smart Contracts</a></li>
                   <li><a onClick={() => handleNavigation('/blockchain/collections', 'collections')}>Collections</a></li>
                   <li><a onClick={() => handleNavigation('/blockchain/royaltyBeneficiaries', 'royaltyBeneficiaries')}>Royalties</a></li>
@@ -236,7 +236,7 @@ export default function NavbarMenu() {
             <li>
               <details>
                 <summary>🛒 Marketplace</summary>
-                <ul className="bg-base-100/95 backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-base-300 w-60" style={{backgroundColor: 'rgb(255 255 255 / 0.98)', backdropFilter: 'blur(12px) saturate(180%)', WebkitBackdropFilter: 'blur(12px) saturate(180%)'}}>
+                <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60">
                   <li><a onClick={() => handleNavigation('/admin-art/createArtwork', 'adminCreateArtwork')}>➕ Créer une œuvre</a></li>
                   <li><a onClick={() => handleNavigation('/admin-art/collection', 'adminArtCollection')}>🎨 Collection d'œuvres</a></li>
                   <li><a onClick={() => handleNavigation('/marketplace/nftsToMint', 'nftsToMint')}>NFTs à minter</a></li>
@@ -250,7 +250,7 @@ export default function NavbarMenu() {
             <li>
               <details>
                 <summary>🔧 Tools</summary>
-                <ul className="bg-base-100/95 backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-base-300" style={{backgroundColor: 'rgb(255 255 255 / 0.98)', backdropFilter: 'blur(12px) saturate(180%)', WebkitBackdropFilter: 'blur(12px) saturate(180%)'}}>
+                <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                   <li><a onClick={() => handleNavigation('/tools/webp-converter', 'toolsWebpConverter')}>🖼️ Convertisseur WebP</a></li>
                 </ul>
               </details>

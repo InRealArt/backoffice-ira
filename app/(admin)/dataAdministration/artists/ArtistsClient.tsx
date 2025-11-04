@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Artist } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import {
   PageContainer,
   PageHeader,
@@ -77,17 +76,6 @@ export default function ArtistsClient({ artists }: ArtistsClientProps) {
         <Badge 
           variant={artist.isGallery ? 'info' : 'success'}
           text={artist.isGallery ? 'Galerie' : 'Artiste'}
-        />
-      )
-    },
-    {
-      key: 'publicKey',
-      header: 'Clé publique',
-      className: 'hidden-mobile',
-      render: (artist) => (
-        <BlockchainAddress 
-          address={artist.publicKey} 
-          network="sepolia"
         />
       )
     }

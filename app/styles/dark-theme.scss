@@ -31,6 +31,40 @@ html.dark-theme {
     color: #ffffff !important;
   }
   
+  // Exception pour les badges - conserver les couleurs de texte originales
+  // Badges avec texte vert (success)
+  span.inline-flex[class*="text-green-800"] {
+    color: #166534 !important; // green-800
+  }
+  
+  // Badges avec texte bleu (info)
+  span.inline-flex[class*="text-blue-800"] {
+    color: #1e40af !important; // blue-800
+  }
+  
+  // Badges avec texte amber (warning)
+  span.inline-flex[class*="text-amber-800"] {
+    color: #92400e !important; // amber-800
+  }
+  
+  // Badges avec texte rouge (danger)
+  span.inline-flex[class*="text-red-800"] {
+    color: #991b1b !important; // red-800
+  }
+  
+  // Badges avec texte indigo (primary)
+  span.inline-flex[class*="text-indigo-800"] {
+    color: #3730a3 !important; // indigo-800
+  }
+  
+  // Badges avec texte gris (secondary)
+  span.inline-flex[class*="text-gray-800"] {
+    color: #1f2937 !important; // gray-800
+  }
+  
+  // Les StatusBadge gardent le texte blanc (déjà défini dans globals.css)
+  // Pas besoin d'exception ici car ils utilisent text-white en light mode
+  
   // Classes secondaires
   .text-secondary,
   [class*="text-secondary"],

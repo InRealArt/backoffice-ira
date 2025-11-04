@@ -17,6 +17,14 @@ const config: Config = {
           dark: "var(--color-primary-dark)",
           light: "var(--color-primary-light)",
         },
+        purple: {
+          DEFAULT: "var(--color-purple)",
+        },
+        secondary: {
+          DEFAULT: "#6b7280",
+          dark: "#4b5563",
+          light: "#9ca3af",
+        },
         error: {
           DEFAULT: "var(--color-error)",
           dark: "var(--color-error-dark)",
@@ -64,6 +72,34 @@ const config: Config = {
         base: ["16px", { lineHeight: "1.5" }],
         lg: ["18px", { lineHeight: "1.5" }],
         xl: ["24px", { lineHeight: "1.3" }],
+      },
+      keyframes: {
+        titleLanding: {
+          "0%": {
+            transform: "scale(0.5) translateY(-20px)",
+            opacity: "0",
+            letterSpacing: "0.5em",
+            textShadow: "0 0 0 rgba(0,0,0,0)",
+          },
+          "40%": {
+            opacity: "1",
+          },
+          "70%": {
+            transform: "scale(1.05) translateY(0)",
+            letterSpacing: "normal",
+            textShadow: "0 10px 20px rgba(0,0,0,0.15)",
+          },
+          "85%": {
+            transform: "scale(0.95)",
+          },
+          "100%": {
+            transform: "scale(1)",
+            textShadow: "0 5px 10px rgba(0,0,0,0.1)",
+          },
+        },
+      },
+      animation: {
+        titleLanding: "titleLanding 1.8s ease-out forwards",
       },
     },
   },

@@ -16,6 +16,7 @@ body.light {
   --color-primary: #4f46e5;
   --color-primary-dark: #4338ca;
   --color-primary-light: #444e6e;
+  --color-purple: #6052ff;
   --color-error: #dc2626;
   --color-error-dark: #b91c1c;
   --color-error-light: #f87171;
@@ -45,6 +46,7 @@ body.dark {
   --color-primary: #6366f1;
   --color-primary-dark: #4f46e5;
   --color-primary-light: #312e81;
+  --color-purple: #6052ff;
   --color-error: #ef4444;
   --color-error-dark: #dc2626;
   --color-error-light: #f87171;
@@ -72,7 +74,7 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-bricolage-grotesque), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding-top: var(--navbar-height); /* Espace pour la navbar */
@@ -555,6 +557,11 @@ body.dark {
     @apply p-xl;
   }
 
+  /* Section Title */
+  .section-title {
+    @apply text-xl font-semibold mb-lg pb-md border-b-2 border-border text-text-primary;
+  }
+
   /* Form Groups & Labels */
   .form-group {
     @apply mb-lg;
@@ -700,11 +707,11 @@ body.dark {
 
   /* Button Variants */
   .btn-primary {
-    @apply bg-[#4779fe] text-white;
+    @apply bg-purple text-white border border-white;
   }
 
   .btn-primary:hover:not(:disabled) {
-    @apply bg-[#3a67e0];
+    background-color: rgba(96, 82, 255, 0.9);
   }
 
   .btn-secondary {
@@ -841,27 +848,27 @@ body.dark {
 
   /* Badge Variants */
   .status-badge.status-default {
-    @apply bg-gray-200 text-gray-600;
+    @apply bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-600;
   }
 
   .status-badge.status-success {
-    @apply bg-green-500 text-white;
+    @apply bg-green-500 dark:bg-green-900/30 text-white dark:text-white;
   }
 
   .status-badge.status-warning {
-    @apply bg-orange-500 text-white;
+    @apply bg-orange-500 dark:bg-orange-900/30 text-white dark:text-white;
   }
 
   .status-badge.status-error {
-    @apply bg-red-500 text-white;
+    @apply bg-red-500 dark:bg-red-900/30 text-white dark:text-white;
   }
 
   .status-badge.status-info {
-    @apply bg-blue-500 text-white;
+    @apply bg-blue-500 dark:bg-blue-900/30 text-white dark:text-white;
   }
 
   .status-badge.status-primary {
-    @apply bg-indigo-500 text-white;
+    @apply bg-indigo-500 dark:bg-indigo-900/30 text-white dark:text-white;
   }
 
   /* Info Badge */

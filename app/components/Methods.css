@@ -24,8 +24,9 @@
   }
   
   .btn-primary {
-    background-color: #4779fe;
+    background-color: #6052ff;
     color: white;
+    border: 1px solid white;
   }
   
   .results-container {

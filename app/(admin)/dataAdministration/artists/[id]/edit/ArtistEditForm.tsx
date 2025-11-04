@@ -11,7 +11,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { X, Plus } from 'lucide-react'
 import { generateSlug } from '@/lib/utils'
-import styles from './artistEditForm.module.scss'
 import CountrySelect from '@/app/components/Common/CountrySelect'
 import { getCountries } from '@/lib/utils'
 
@@ -165,21 +164,21 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   }
 
   return (
-    <div className={styles['page-container']}>
-      <div className={styles['page-header']}>
-        <div className={styles['header-top-section']}>
-          <h1 className={styles['page-title']}>Modifier l'artiste</h1>
+    <div className="max-w-6xl mx-auto p-xxl">
+      <div className="page-header">
+        <div className="header-top-section">
+          <h1 className="page-title">Modifier l'artiste</h1>
         </div>
-        <p className={styles['page-subtitle']}>
+        <p className="page-subtitle">
           Modifier les informations de {artist.name} {artist.surname}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className={styles['form-container']}>
-        <div className={styles['form-card']}>
-          <div className={styles['card-content']}>
-            <div className={styles['d-flex'] + ' ' + styles['gap-lg']}>
-              <div className={styles['d-flex'] + ' ' + styles['flex-column'] + ' ' + styles['gap-md']} style={{ width: '200px' }}>
+      <form onSubmit={handleSubmit(onSubmit)} className="form-container">
+        <div className="form-card">
+          <div className="card-content">
+            <div className="flex gap-xxl">
+              <div className="flex flex-col gap-md" style={{ width: '200px' }}>
                 {imageUrl ? (
                   <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
                     <Image
@@ -194,26 +193,26 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                     {artist.name.charAt(0)}{artist.surname.charAt(0)}
                   </div>
                 )}
-                <div className={styles['form-group']}>
-                  <label htmlFor="imageUrl" className={styles['form-label']}>URL de l'image</label>
+                <div className="form-group">
+                  <label htmlFor="imageUrl" className="form-label">URL de l'image</label>
                   <input
                     id="imageUrl"
                     type="text"
                     {...register('imageUrl')}
-                    className={`${styles['form-input']} ${errors.imageUrl ? styles['input-error'] : ''}`}
+                    className={`form-input ${errors.imageUrl ? 'input-error' : ''}`}
                     placeholder="https://example.com/image.jpg"
                   />
                   {errors.imageUrl && (
-                    <p className={styles['form-error']}>{errors.imageUrl.message}</p>
+                    <p className="form-error">{errors.imageUrl.message}</p>
                   )}
                 </div>
               </div>
               
-              <div style={{ flex: 1 }}>
-                <div className={styles['form-group']}>
-                  <div className={styles['d-flex'] + ' ' + styles['align-items-center'] + ' ' + styles['gap-md']} style={{ marginBottom: '20px' }}>
-                    <span className={isGallery ? styles['text-muted'] : styles['text-primary']} style={{ fontWeight: isGallery ? 'normal' : 'bold' }}>Artiste</span>
-                    <label className={styles['d-flex'] + ' ' + styles['align-items-center']} style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}>
+              <div className="flex-1">
+                <div className="form-group">
+                  <div className="flex items-center gap-md mb-5">
+                    <span className={isGallery ? 'text-text-secondary' : 'text-primary font-bold'}>Artiste</span>
+                    <label className="relative w-[60px] h-[30px]">
                       <input
                         type="checkbox"
                         {...register('isGallery')}
@@ -223,63 +222,62 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                         <span style={{ position: 'absolute', content: '""', height: '22px', width: '22px', left: '4px', bottom: '4px', backgroundColor: 'white', borderRadius: '50%', transition: '0.4s', transform: isGallery ? 'translateX(30px)' : 'translateX(0)' }}></span>
                       </span>
                     </label>
-                    <span className={isGallery ? styles['text-primary'] : styles['text-muted']} style={{ fontWeight: isGallery ? 'bold' : 'normal' }}>Galerie</span>
+                    <span className={isGallery ? 'text-primary font-bold' : 'text-text-secondary'}>Galerie</span>
                   </div>
 
                 </div>
                 
-                <div className={styles['d-flex'] + ' ' + styles['gap-md']}>
-                  <div className={styles['form-group']} style={{ flex: 1 }}>
-                    <label htmlFor="name" className={styles['form-label']}>Prénom</label>
+                <div className="flex gap-md">
+                  <div className="form-group flex-1">
+                    <label htmlFor="name" className="form-label">Prénom</label>
                     <input
                       id="name"
                       type="text"
                       {...register('name')}
-                      className={`${styles['form-input']} ${errors.name ? styles['input-error'] : ''}`}
+                      className={`form-input ${errors.name ? 'input-error' : ''}`}
                     />
                     {errors.name && (
-                      <p className={styles['form-error']}>{errors.name.message}</p>
+                      <p className="form-error">{errors.name.message}</p>
                     )}
                   </div>
-                  <div className={styles['form-group']} style={{ flex: 1 }}>
-                    <label htmlFor="surname" className={styles['form-label']}>Nom</label>
+                  <div className="form-group flex-1">
+                    <label htmlFor="surname" className="form-label">Nom</label>
                     <input
                       id="surname"
                       type="text"
                       {...register('surname')}
-                      className={`${styles['form-input']} ${errors.surname ? styles['input-error'] : ''}`}
+                      className={`form-input ${errors.surname ? 'input-error' : ''}`}
                     />
                     {errors.surname && (
-                      <p className={styles['form-error']}>{errors.surname.message}</p>
+                      <p className="form-error">{errors.surname.message}</p>
                     )}
                   </div>
                 </div>
                 
-                <div className={styles['form-group']}>
-                  <label htmlFor="pseudo" className={styles['form-label']}>Pseudo</label>
+                <div className="form-group">
+                  <label htmlFor="pseudo" className="form-label">Pseudo</label>
                   <input
                     id="pseudo"
                     type="text"
                     {...register('pseudo')}
-                    className={`${styles['form-input']} ${errors.pseudo ? styles['input-error'] : ''}`}
+                    className={`form-input ${errors.pseudo ? 'input-error' : ''}`}
                   />
                   {errors.pseudo && (
-                    <p className={styles['form-error']}>{errors.pseudo.message}</p>
+                    <p className="form-error">{errors.pseudo.message}</p>
                   )}
                 </div>
 
-                <div className={styles['form-group']}>
-                  <label htmlFor="slug" className={styles['form-label']}>Slug (généré automatiquement)</label>
+                <div className="form-group">
+                  <label htmlFor="slug" className="form-label">Slug (généré automatiquement)</label>
                   <input
                     id="slug"
                     type="text"
                     {...register('slug')}
-                    className={`${styles['form-input']} ${errors.slug ? styles['input-error'] : ''}`}
+                    className={`form-input form-readonly ${errors.slug ? 'input-error' : ''}`}
                     readOnly
-                    style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
                   />
                   {errors.slug && (
-                    <p className={styles['form-error']}>{errors.slug.message}</p>
+                    <p className="form-error">{errors.slug.message}</p>
                   )}
                 </div>
               </div>
@@ -287,31 +285,31 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
           </div>
         </div>
         
-        <div className={styles['form-card']}>
-          <div className={styles['card-content']}>
-            <div className={styles['form-group']}>
-              <label htmlFor="description" className={styles['form-label']}>Description</label>
+        <div className="form-card">
+          <div className="card-content">
+            <div className="form-group">
+              <label htmlFor="description" className="form-label">Description</label>
               <textarea
                 id="description"
                 {...register('description')}
-                className={`${styles['form-textarea']} ${errors.description ? styles['input-error'] : ''}`}
+                className={`form-textarea ${errors.description ? 'input-error' : ''}`}
                 rows={5}
               />
               {errors.description && (
-                <p className={styles['form-error']}>{errors.description.message}</p>
+                <p className="form-error">{errors.description.message}</p>
               )}
             </div>
 
-            <div className={styles['form-group']}>
-              <label htmlFor="publicKey" className={styles['form-label']}>Clé publique</label>
+            <div className="form-group">
+              <label htmlFor="publicKey" className="form-label">Clé publique</label>
               <input
                 id="publicKey"
                 type="text"
                 {...register('publicKey')}
-                className={`${styles['form-input']} ${errors.publicKey ? styles['input-error'] : ''}`}
+                className={`form-input ${errors.publicKey ? 'input-error' : ''}`}
               />
               {errors.publicKey && (
-                <p className={styles['form-error']}>{errors.publicKey.message}</p>
+                <p className="form-error">{errors.publicKey.message}</p>
               )}
             </div>
             
@@ -319,27 +317,27 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
         </div>
 
         {/* Section Biographie */}
-        <div className={styles['form-card']}>
-          <div className={styles['card-content']}>
-            <h3 className={styles['section-title']}>Biographie</h3>
-            <div className={styles['d-flex'] + ' ' + styles['gap-md']}>
-              <div className={styles['form-group']} style={{ flex: 1 }}>
-                <label htmlFor="birthYear" className={styles['form-label']}>Année de naissance</label>
+        <div className="form-card">
+          <div className="card-content">
+            <h3 className="section-title">Biographie</h3>
+            <div className="flex gap-md">
+              <div className="form-group flex-1">
+                <label htmlFor="birthYear" className="form-label">Année de naissance</label>
                 <input
                   id="birthYear"
                   type="number"
                   {...register('birthYear', { valueAsNumber: true })}
-                  className={`${styles['form-input']} ${errors.birthYear ? styles['input-error'] : ''}`}
+                  className={`form-input ${errors.birthYear ? 'input-error' : ''}`}
                   placeholder="1990"
                   min="1900"
                   max={new Date().getFullYear()}
                 />
                 {errors.birthYear && (
-                  <p className={styles['form-error']}>{errors.birthYear.message}</p>
+                  <p className="form-error">{errors.birthYear.message}</p>
                 )}
               </div>
-              <div className={styles['form-group']} style={{ flex: 1 }}>
-                <label htmlFor="countryCode" className={styles['form-label']}>Code pays</label>
+              <div className="form-group flex-1">
+                <label htmlFor="countryCode" className="form-label">Code pays</label>
                 <CountrySelect
                   countries={getCountries()}
                   value={countryCode || ''}
@@ -347,7 +345,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                   placeholder="Sélectionner un pays"
                 />
                 {errors.countryCode && (
-                  <p className={styles['form-error']}>{errors.countryCode.message}</p>
+                  <p className="form-error">{errors.countryCode.message}</p>
                 )}
               </div>
             </div>
@@ -355,95 +353,95 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
         </div>
 
         {/* Section Réseaux sociaux */}
-        <div className={styles['form-card']}>
-          <div className={styles['card-content']}>
-            <h3 className={styles['section-title']}>Réseaux sociaux</h3>
-            <div className={styles['form-group']}>
-              <label htmlFor="websiteUrl" className={styles['form-label']}>Site web</label>
+        <div className="form-card">
+          <div className="card-content">
+            <h3 className="section-title">Réseaux sociaux</h3>
+            <div className="form-group">
+              <label htmlFor="websiteUrl" className="form-label">Site web</label>
               <input
                 id="websiteUrl"
                 type="url"
                 {...register('websiteUrl')}
-                className={`${styles['form-input']} ${errors.websiteUrl ? styles['input-error'] : ''}`}
+                className={`form-input ${errors.websiteUrl ? 'input-error' : ''}`}
                 placeholder="https://www.example.com"
               />
               {errors.websiteUrl && (
-                <p className={styles['form-error']}>{errors.websiteUrl.message}</p>
+                <p className="form-error">{errors.websiteUrl.message}</p>
               )}
             </div>
             
-            <div className={styles['d-flex'] + ' ' + styles['gap-md']}>
-              <div className={styles['form-group']} style={{ flex: 1 }}>
-                <label htmlFor="facebookUrl" className={styles['form-label']}>Facebook</label>
+            <div className="flex gap-md">
+              <div className="form-group flex-1">
+                <label htmlFor="facebookUrl" className="form-label">Facebook</label>
                 <input
                   id="facebookUrl"
                   type="url"
                   {...register('facebookUrl')}
-                  className={`${styles['form-input']} ${errors.facebookUrl ? styles['input-error'] : ''}`}
+                  className={`form-input ${errors.facebookUrl ? 'input-error' : ''}`}
                   placeholder="https://facebook.com/profile"
                 />
                 {errors.facebookUrl && (
-                  <p className={styles['form-error']}>{errors.facebookUrl.message}</p>
+                  <p className="form-error">{errors.facebookUrl.message}</p>
                 )}
               </div>
-              <div className={styles['form-group']} style={{ flex: 1 }}>
-                <label htmlFor="instagramUrl" className={styles['form-label']}>Instagram</label>
+              <div className="form-group flex-1">
+                <label htmlFor="instagramUrl" className="form-label">Instagram</label>
                 <input
                   id="instagramUrl"
                   type="url"
                   {...register('instagramUrl')}
-                  className={`${styles['form-input']} ${errors.instagramUrl ? styles['input-error'] : ''}`}
+                  className={`form-input ${errors.instagramUrl ? 'input-error' : ''}`}
                   placeholder="https://instagram.com/profile"
                 />
                 {errors.instagramUrl && (
-                  <p className={styles['form-error']}>{errors.instagramUrl.message}</p>
+                  <p className="form-error">{errors.instagramUrl.message}</p>
                 )}
               </div>
             </div>
             
-            <div className={styles['d-flex'] + ' ' + styles['gap-md']}>
-              <div className={styles['form-group']} style={{ flex: 1 }}>
-                <label htmlFor="twitterUrl" className={styles['form-label']}>Twitter</label>
+            <div className="flex gap-md">
+              <div className="form-group flex-1">
+                <label htmlFor="twitterUrl" className="form-label">Twitter</label>
                 <input
                   id="twitterUrl"
                   type="url"
                   {...register('twitterUrl')}
-                  className={`${styles['form-input']} ${errors.twitterUrl ? styles['input-error'] : ''}`}
+                  className={`form-input ${errors.twitterUrl ? 'input-error' : ''}`}
                   placeholder="https://twitter.com/profile"
                 />
                 {errors.twitterUrl && (
-                  <p className={styles['form-error']}>{errors.twitterUrl.message}</p>
+                  <p className="form-error">{errors.twitterUrl.message}</p>
                 )}
               </div>
-              <div className={styles['form-group']} style={{ flex: 1 }}>
-                <label htmlFor="linkedinUrl" className={styles['form-label']}>LinkedIn</label>
+              <div className="form-group flex-1">
+                <label htmlFor="linkedinUrl" className="form-label">LinkedIn</label>
                 <input
                   id="linkedinUrl"
                   type="url"
                   {...register('linkedinUrl')}
-                  className={`${styles['form-input']} ${errors.linkedinUrl ? styles['input-error'] : ''}`}
+                  className={`form-input ${errors.linkedinUrl ? 'input-error' : ''}`}
                   placeholder="https://linkedin.com/in/profile"
                 />
                 {errors.linkedinUrl && (
-                  <p className={styles['form-error']}>{errors.linkedinUrl.message}</p>
+                  <p className="form-error">{errors.linkedinUrl.message}</p>
                 )}
               </div>
             </div>
           </div>
         </div>
         
-        <div className={styles['form-actions']}>
+        <div className="form-actions">
           <button 
             type="button" 
             onClick={handleCancel}
-            className={`${styles.btn} ${styles['btn-secondary']} ${styles['btn-medium']}`}
+            className="btn btn-secondary btn-medium"
             disabled={isSubmitting}
           >
             Annuler
           </button>
           <button 
             type="submit" 
-            className={`${styles.btn} ${styles['btn-primary']} ${styles['btn-medium']}`}
+            className="btn btn-primary btn-medium"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Mise à jour en cours...' : 'Enregistrer les modifications'}
