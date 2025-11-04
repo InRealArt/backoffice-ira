@@ -65,15 +65,18 @@ body.dark {
   --color-border-light: #4a5568;
 }
 
-html,
-body {
+html {
   max-width: 100vw;
   overflow-x: hidden;
+  background: var(--color-background-main);
+  min-height: 100vh;
 }
 
 body {
+  max-width: 100vw;
+  overflow-x: hidden;
   color: var(--foreground);
-  background: var(--background);
+  background: var(--color-background-main);
   font-family: var(--font-bricolage-grotesque), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -84,7 +87,12 @@ body {
 
 body.dark {
   color: var(--foreground);
-  background: var(--background);
+  background: var(--color-background-main);
+}
+
+html.dark-theme,
+html.dark {
+  background: var(--color-background-main);
 }
 
 *, 
@@ -497,7 +505,7 @@ body.dark {
 @layer components {
   /* Page Container - Main wrapper for page content */
   .page-container {
-    @apply w-full p-xl bg-background-main rounded-lg shadow-md;
+    @apply w-full p-xl bg-background-main rounded-lg shadow-md min-h-[calc(100vh-180px)];
   }
 
   /* Page Header - Header section with title and actions */
@@ -562,6 +570,11 @@ body.dark {
     @apply text-xl font-semibold mb-lg pb-md border-b-2 border-border text-text-primary;
   }
 
+  /* Form Title */
+  .form-title {
+    @apply text-lg font-semibold text-text-primary mb-md;
+  }
+
   /* Form Groups & Labels */
   .form-group {
     @apply mb-lg;
@@ -591,13 +604,13 @@ body.dark {
   .form-input.input-error,
   .form-select.input-error,
   .form-textarea.input-error {
-    @apply border-error;
+    @apply border-error dark:border-red-600;
   }
 
   .form-input.input-error:focus,
   .form-select.input-error:focus,
   .form-textarea.input-error:focus {
-    @apply ring-1 ring-error ring-opacity-20;
+    @apply ring-1 ring-error ring-opacity-20 dark:ring-red-600 dark:ring-opacity-30;
   }
 
   /* Form Select with dropdown icon */
@@ -621,12 +634,18 @@ body.dark {
 
   /* Form Error Message */
   .form-error {
-    @apply text-error text-xs mt-xs;
+    @apply text-error dark:text-red-400 text-xs mt-xs;
   }
 
   /* Form Readonly Field */
   .form-readonly {
-    @apply px-md py-md bg-background-light border border-border rounded-sm text-text-secondary min-h-[40px] flex items-center;
+    @apply bg-background-light dark:bg-background-light border border-border dark:border-border text-text-primary dark:text-text-primary cursor-not-allowed;
+  }
+  
+  /* Apply to input elements */
+  input.form-readonly,
+  textarea.form-readonly {
+    @apply px-md py-md min-h-[40px];
   }
 
   /* Form Helper Text */
@@ -715,11 +734,11 @@ body.dark {
   }
 
   .btn-secondary {
-    @apply bg-gray-100 text-gray-700;
+    @apply bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600;
   }
 
   .btn-secondary:hover:not(:disabled) {
-    @apply bg-gray-200;
+    @apply bg-gray-200 dark:bg-gray-600;
   }
 
   .btn-danger {
@@ -791,11 +810,11 @@ body.dark {
 
   .data-table th,
   .data-table td {
-    @apply px-lg py-md text-left border-b border-border;
+    @apply px-lg py-md text-left border-b border-border dark:border-border;
   }
 
   .data-table th {
-    @apply font-semibold text-text-secondary bg-background-light;
+    @apply font-semibold text-text-secondary bg-background-light dark:bg-background-light dark:text-text-primary;
   }
 
   /* Table Row States */
@@ -816,7 +835,7 @@ body.dark {
   }
 
   .data-table .error-row {
-    @apply bg-red-50 border-l-4 border-l-red-500;
+    @apply bg-red-50 dark:bg-red-900/20 border-l-4 border-l-red-500 dark:border-l-red-600;
   }
 
   .data-table .actions-cell {

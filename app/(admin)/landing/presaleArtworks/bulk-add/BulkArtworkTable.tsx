@@ -26,7 +26,7 @@ function ImageThumbnail({ url }: { url: string }) {
           }}
         />
       </div>
-      <span className="text-xs text-green-600">✓</span>
+      <span className="text-xs text-green-600 dark:text-green-400">✓</span>
     </div>
   )
 }
@@ -119,15 +119,15 @@ export default function BulkArtworkTable({
         <div className="form-group">
           <h3 className="form-title">Saisie des données des œuvres</h3>
           <div className="d-flex justify-content-between align-items-center mb-3">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-text-secondary">
               {artworksData.length} œuvre{artworksData.length > 1 ? 's' : ''} • 
               {getTotalErrors() === 0 ? (
-                <span className="text-green-600 ml-1">
+                <span className="text-green-600 dark:text-green-400 ml-1">
                   <CheckCircle size={16} className="inline mr-1" />
                   Toutes les données sont valides
                 </span>
               ) : (
-                <span className="text-red-600 ml-1">
+                <span className="text-red-600 dark:text-red-400 ml-1">
                   <AlertCircle size={16} className="inline mr-1" />
                   {getTotalErrors()} erreur{getTotalErrors() > 1 ? 's' : ''} à corriger
                 </span>
@@ -140,12 +140,12 @@ export default function BulkArtworkTable({
           <table className="data-table">
             <thead>
               <tr>
-                <th style={{ width: '50px' }}>#</th>
+                <th className="w-[50px]">#</th>
                 <th>Nom de l'œuvre *</th>
                 <th>Description</th>
-                <th style={{ width: '100px' }}>Hauteur (cm)</th>
-                <th style={{ width: '100px' }}>Largeur (cm)</th>
-                <th style={{ width: '100px' }}>Prix (€)</th>
+                <th className="w-[100px]">Hauteur (cm)</th>
+                <th className="w-[100px]">Largeur (cm)</th>
+                <th className="w-[100px]">Prix (€)</th>
                 <th>URL de l'image *</th>
               </tr>
             </thead>
@@ -156,7 +156,7 @@ export default function BulkArtworkTable({
                 
                 return (
                   <tr key={index} className={status === 'error' ? 'error-row' : ''}>
-                    <td style={{ textAlign: 'center', fontWeight: 'bold' }}>
+                    <td className="text-center font-bold">
                       {index + 1}
                     </td>
                     
@@ -220,7 +220,7 @@ export default function BulkArtworkTable({
                     </td>
                     
                     <td>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div className="flex flex-col gap-2">
                         <input
                           type="url"
                           value={artwork.imageUrl}
@@ -230,7 +230,7 @@ export default function BulkArtworkTable({
                           disabled={isSubmitting}
                         />
                         {artwork.imageUrl && (
-                          <div style={{ display: 'flex', justifyContent: 'center' }}>
+                          <div className="flex justify-center">
                             <ImageThumbnail url={artwork.imageUrl} />
                           </div>
                         )}
@@ -245,27 +245,16 @@ export default function BulkArtworkTable({
 
         {getTotalErrors() > 0 && (
           <div className="form-group">
-            <div style={{ 
-              padding: '1rem', 
-              backgroundColor: '#fef2f2', 
-              border: '1px solid #fecaca', 
-              borderRadius: '0.375rem',
-              marginTop: '1rem'
-            }}>
-              <h5 style={{ 
-                color: '#dc2626', 
-                margin: '0 0 0.75rem 0', 
-                fontSize: '1rem', 
-                fontWeight: '600' 
-              }}>
+            <div className="p-4 bg-background-light dark:bg-background-light border border-red-300 dark:border-red-700 rounded-md mt-4">
+              <h5 className="text-red-600 dark:text-red-400 mb-3 text-base font-semibold m-0">
                 Erreurs à corriger :
               </h5>
               <div>
                 {Object.entries(validationErrors).map(([index, errors]) => (
                   errors.length > 0 && (
-                    <div key={index} style={{ marginBottom: '0.5rem' }}>
-                      <strong style={{ color: '#dc2626' }}>Œuvre {parseInt(index) + 1} :</strong>
-                      <ul style={{ margin: '0.25rem 0 0 0', paddingLeft: '1rem' }}>
+                    <div key={index} className="mb-2">
+                      <strong className="text-red-600 dark:text-red-400">Œuvre {parseInt(index) + 1} :</strong>
+                      <ul className="mt-1 ml-4 list-disc text-red-700 dark:text-red-300">
                         {errors.map((error, errorIndex) => (
                           <li key={errorIndex} className="form-error">
                             {error}

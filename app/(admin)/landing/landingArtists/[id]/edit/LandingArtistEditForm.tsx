@@ -347,8 +347,7 @@ export default function LandingArtistEditForm({ landingArtist, countries, medium
                   type="text"
                   value={slug}
                   readOnly
-                  className="form-input"
-                  style={{ backgroundColor: '#f9f9f9' }}
+                  className="form-input form-readonly"
                 />
                 
               </div>

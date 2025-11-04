@@ -285,7 +285,7 @@ export default function BulkAddForm({ artists }: BulkAddFormProps) {
               {errors.numberOfArtworks && (
                 <p className="form-error">{errors.numberOfArtworks.message}</p>
               )}
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-text-secondary mt-1">
                 Maximum 50 œuvres par lot
               </p>
             </div>
