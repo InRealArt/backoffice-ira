@@ -62,6 +62,39 @@ html.dark-theme {
     color: #1f2937 !important; // gray-800
   }
   
+  // Exception pour le point d'interrogation du InfoTooltip - doit être noir en dark mode
+  span.info-tooltip-icon {
+    color: #000000 !important; // noir pour contraste sur fond gris
+  }
+  
+  // Exception pour la popup du InfoTooltip - doit être sombre en dark mode
+  div.info-tooltip-popup {
+    background-color: #111827 !important; // gray-900
+    border-color: #374151 !important; // gray-700
+    color: #e5e7eb !important; // gray-200
+    
+    .info-tooltip-header {
+      background-color: #1f2937 !important; // gray-800
+      border-color: #374151 !important; // gray-700
+    }
+    
+    .info-tooltip-title {
+      color: #f3f4f6 !important; // gray-100
+    }
+    
+    .info-tooltip-close {
+      color: #9ca3af !important; // gray-400
+      
+      &:hover {
+        color: #e5e7eb !important; // gray-200
+      }
+    }
+    
+    .info-tooltip-content {
+      color: #e5e7eb !important; // gray-200
+    }
+  }
+  
   // Les StatusBadge gardent le texte blanc (déjà défini dans globals.css)
   // Pas besoin d'exception ici car ils utilisent text-white en light mode
   

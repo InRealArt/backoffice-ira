@@ -510,7 +510,7 @@ model Item {
   @@index([mediumId])
   @@index([styleId])
   @@index([techniqueId])
-  @@schema("public")
+  @@schema("backoffice")
 }
 
 model NftItem {
@@ -527,7 +527,7 @@ model NftItem {
 
   @@index([itemId])
   @@index([idNftResource])
-  @@schema("public")
+  @@schema("backoffice")
 }
 
 model PhysicalItem {
@@ -555,7 +555,7 @@ model PhysicalItem {
 
   @@index([itemId])
   @@index([shippingAddressId])
-  @@schema("public")
+  @@schema("backoffice")
 }
 
 enum NftItemStatus {
