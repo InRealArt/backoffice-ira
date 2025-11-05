@@ -11,22 +11,6 @@ datasource db {
   schemas   = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "backoffice"]
 }
 
-// Imported from Marketplace
-model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean
-  image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-  Order         Order[]
-  Address       Address[]
-
-  @@unique([email])
-  @@map("User")
-  @@schema("auth")
-}
 
 // Orders in the Marketplace
 model Order {
@@ -49,7 +33,6 @@ model Order {
   customerId    String
   customerName  String
   customerEmail String
-  customer      User   @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   // Adresse de facturation (obligatoire fiscalement)
   billingAddressId     Int
@@ -208,9 +191,6 @@ model Address {
   // Numéro TVA pour B2B (obligatoire si client professionnel)
   vatNumber String?
 
-  // Relations Customer (adress d'un client dans la marketplace)
-  customer         User?           @relation(fields: [customerId], references: [id])
-  customerId       String?
   // Relations BackofficeUser (adress d'un artiste dans le backoffice)
   backofficeUser   BackofficeUser? @relation(fields: [backofficeUserId], references: [id], onDelete: Cascade)
   backofficeUserId Int?
