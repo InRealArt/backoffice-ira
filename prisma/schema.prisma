@@ -11,7 +11,6 @@ datasource db {
   schemas   = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "backoffice"]
 }
 
-
 // Orders in the Marketplace
 model Order {
   id          Int      @id @default(autoincrement()) // PostgreSQL supporte nativement UUID
@@ -192,12 +191,7 @@ model Address {
   vatNumber String?
 
   // Relations BackofficeUser (adress d'un artiste dans le backoffice)
-  backofficeUser   BackofficeUser? @relation(fields: [backofficeUserId], references: [id], onDelete: Cascade)
-  backofficeUserId Int?
-
-  // Relations BackofficeAuthUser (adresse d'un utilisateur auth backoffice)
-  backofficeAuthUser   BackofficeAuthUser? @relation(fields: [backofficeAuthUserId], references: [id], onDelete: Cascade)
-  backofficeAuthUserId String?
+  // Note: La relation BackofficeAuthUser a été déplacée dans le schéma backoffice
 
   orders              Order[]
   thirdPartyAddresses ThirdPartyAddress[]
@@ -258,9 +252,9 @@ model Artist {
   Country            Country?             @relation(fields: [countryCode], references: [code])
   items              Item[]
   BackofficeAuthUser BackofficeAuthUser[]
-  WhiteListedUsers WhiteListedUser[]
+  WhiteListedUsers   WhiteListedUser[]
+
   @@schema("public")
-  
 }
 
 // Modèle LandingArtist : données affichées sur la landing
@@ -402,7 +396,6 @@ model BackofficeUser {
   artistId      Int?
   artist        Artist?              @relation(fields: [artistId], references: [id]) // Nouvelle relation
   items         Item[]
-  addresses     Address[]
 
   @@index([email])
   @@index([walletAddress])
@@ -480,35 +473,37 @@ enum CollectionStatus {
 }
 
 model Item {
-  id                 Int               @id @default(autoincrement())
+  id                 Int                @id @default(autoincrement())
   name               String
   description        String
-  idUser             Int
-  user               BackofficeUser    @relation(fields: [idUser], references: [id])
+  idUser             String
+  user               BackofficeAuthUser @relation(fields: [idUser], references: [id])
   artistId           Int?
-  artist             Artist?           @relation(fields: [artistId], references: [id])
-  tags               String[]          @default([])
-  slug               String?           @unique
+  artist             Artist?            @relation(fields: [artistId], references: [id])
+  tags               String[]           @default([])
+  slug               String?            @unique
   metaDescription    String
   metaTitle          String
   mainImageUrl       String?
-  secondaryImagesUrl String[]          @default([])
-  realViewCount      Int               @default(0)
-  fakeViewCount      Int               @default(0)
-  featured           Boolean?          @default(false)
+  secondaryImagesUrl String[]           @default([])
+  realViewCount      Int                @default(0)
+  fakeViewCount      Int                @default(0)
+  featured           Boolean?           @default(false)
   // Nouvelles relations pour les caractéristiques artistiques
   mediumId           Int?
-  medium             ArtworkMedium?    @relation(fields: [mediumId], references: [id])
+  medium             ArtworkMedium?     @relation(fields: [mediumId], references: [id])
   styleId            Int?
-  style              ArtworkStyle?     @relation(fields: [styleId], references: [id])
+  style              ArtworkStyle?      @relation(fields: [styleId], references: [id])
   techniqueId        Int?
-  technique          ArtworkTechnique? @relation(fields: [techniqueId], references: [id])
+  technique          ArtworkTechnique?  @relation(fields: [techniqueId], references: [id])
 
   createdAt DateTime @default(now()) @db.Date
 
   // Relations
-  nftItem      NftItem?
-  physicalItem PhysicalItem?
+  nftItem          NftItem?
+  physicalItem     PhysicalItem?
+  BackofficeUser   BackofficeUser? @relation(fields: [backofficeUserId], references: [id])
+  backofficeUserId Int?
 
   @@index([idUser])
   @@index([artistId])
@@ -967,16 +962,15 @@ model Country {
 }
 
 model WhiteListedUser {
-  id    Int    @id @default(autoincrement())
-  email String @unique
-  role          BackofficeUserRoles?
-  artistId      Int?
-  artist        Artist?                 @relation(fields: [artistId], references: [id])
+  id       Int                  @id @default(autoincrement())
+  email    String               @unique
+  role     BackofficeUserRoles?
+  artistId Int?
+  artist   Artist?              @relation(fields: [artistId], references: [id])
 
   @@index([artistId])
   @@schema("backoffice")
 }
-
 
 /// =============================
 /// Better Auth (schéma backoffice)
@@ -993,13 +987,41 @@ model BackofficeAuthUser {
   role          BackofficeUserRoles?
   artistId      Int?
   artist        Artist?                 @relation(fields: [artistId], references: [id])
-  addresses     Address[]
+  addresses     BackofficeAddress[]
   // relations
   sessions      BackofficeAuthSession[]
   accounts      BackofficeAuthAccount[]
+  Item          Item[]
 
   @@index([artistId])
   @@map("user")
+  @@schema("backoffice")
+}
+
+model BackofficeAddress {
+  id            Int    @id @default(autoincrement())
+  name          String // Name for the address
+  // Champs minimums obligatoires pour facturation valide
+  firstName     String
+  lastName      String
+  streetAddress String
+  postalCode    String
+  city          String
+  country       String // Country name (for VAT rules)
+  countryCode   String // Country code (for VAT rules)
+
+  // Numéro TVA pour B2B (obligatoire si client professionnel)
+  vatNumber String?
+
+  // Relations BackofficeAuthUser
+  backofficeAuthUser   BackofficeAuthUser @relation(fields: [backofficeAuthUserId], references: [id], onDelete: Cascade)
+  backofficeAuthUserId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([backofficeAuthUserId])
+  @@map("Address")
   @@schema("backoffice")
 }
 

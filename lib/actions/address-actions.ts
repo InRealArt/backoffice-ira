@@ -2,14 +2,60 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
-import { Address } from '@prisma/client'
+import { BackofficeAddress } from '@prisma/client'
 
-// Récupérer les adresses d'un utilisateur
-export async function getAddresses(backofficeUserId: number) {
+// Récupérer les adresses d'un utilisateur BackofficeAuthUser (schéma backoffice)
+export async function getAddresses(backofficeAuthUserId: string) {
     try {
-        const addresses = await prisma.address.findMany({
+        const addresses = await prisma.backofficeAddress.findMany({
             where: {
-                backofficeUserId
+                backofficeAuthUserId
+            },
+            orderBy: {
+                name: 'asc'
+            }
+        })
+
+        return {
+            success: true,
+            data: addresses
+        }
+    } catch (error) {
+        console.error('Erreur lors de la récupération des adresses:', error)
+        return {
+            success: false,
+            error: 'Impossible de récupérer les adresses'
+        }
+    }
+}
+
+// Récupérer les adresses d'un artiste via BackofficeAuthUser (schéma backoffice) - pour les admins
+export async function getAddressesByArtistId(artistId: number) {
+    try {
+        // Trouver le BackofficeAuthUser associé à l'artiste
+        const backofficeAuthUser = await prisma.backofficeAuthUser.findFirst({
+            where: {
+                artistId
+            },
+            select: {
+                id: true
+            }
+        })
+
+        if (!backofficeAuthUser) {
+            return {
+                success: true,
+                data: []
+            }
+        }
+
+        // Récupérer les adresses via BackofficeAddress
+        const addresses = await prisma.backofficeAddress.findMany({
+            where: {
+                backofficeAuthUserId: backofficeAuthUser.id
+            },
+            orderBy: {
+                name: 'asc'
             }
         })
 
@@ -29,7 +75,7 @@ export async function getAddresses(backofficeUserId: number) {
 // Récupérer toutes les adresses pour l'administration
 export async function getAllAddressesForAdmin() {
     try {
-        const addresses = await prisma.address.findMany({
+        const addresses = await prisma.backofficeAddress.findMany({
             select: {
                 id: true,
                 name: true,
@@ -39,10 +85,10 @@ export async function getAllAddressesForAdmin() {
                 postalCode: true,
                 city: true,
                 country: true,
-                backofficeUser: {
+                backofficeAuthUser: {
                     select: {
-                        firstName: true,
-                        lastName: true,
+                        id: true,
+                        name: true,
                         email: true
                     }
                 }
@@ -62,7 +108,7 @@ export async function getAllAddressesForAdmin() {
 // Récupérer une adresse par son ID
 export async function getAddressById(id: number) {
     try {
-        const address = await prisma.address.findUnique({
+        const address = await prisma.backofficeAddress.findUnique({
             where: {
                 id
             }
@@ -97,7 +143,7 @@ export async function createAddress(data: {
     city: string
     country: string
     vatNumber?: string
-    backofficeUserId: number
+    backofficeAuthUserId: string
 }) {
     try {
         // Ajout des champs obligatoires manquants
@@ -107,7 +153,7 @@ export async function createAddress(data: {
             countryCode: getCountryCode(data.country) // Obtenir le code pays à partir du nom du pays
         };
 
-        const address = await prisma.address.create({
+        const address = await prisma.backofficeAddress.create({
             data: enrichedData
         })
 
@@ -128,16 +174,18 @@ export async function createAddress(data: {
 
 // Mettre à jour une adresse
 export async function updateAddress(id: number, data: {
+    name?: string
     firstName: string
     lastName: string
     streetAddress: string
     postalCode: string
     city: string
     country: string
+    countryCode?: string
     vatNumber?: string
 }) {
     try {
-        const address = await prisma.address.findUnique({
+        const address = await prisma.backofficeAddress.findUnique({
             where: { id }
         })
 
@@ -151,11 +199,11 @@ export async function updateAddress(id: number, data: {
         // Ajout des champs obligatoires manquants pour la mise à jour
         const enrichedData = {
             ...data,
-            name: `${data.firstName} ${data.lastName}`, // Nom de l'adresse généré à partir du prénom et du nom
-            countryCode: getCountryCode(data.country) // Obtenir le code pays à partir du nom du pays
+            name: data.name || `${data.firstName} ${data.lastName}`, // Nom de l'adresse généré à partir du prénom et du nom
+            countryCode: data.countryCode || getCountryCode(data.country) // Obtenir le code pays à partir du nom du pays
         };
 
-        const updatedAddress = await prisma.address.update({
+        const updatedAddress = await prisma.backofficeAddress.update({
             where: { id },
             data: enrichedData
         })
@@ -179,7 +227,7 @@ export async function updateAddress(id: number, data: {
 // Supprimer une adresse
 export async function deleteAddress(id: number) {
     try {
-        const address = await prisma.address.findUnique({
+        const address = await prisma.backofficeAddress.findUnique({
             where: { id }
         })
 
@@ -190,7 +238,7 @@ export async function deleteAddress(id: number) {
             }
         }
 
-        await prisma.address.delete({
+        await prisma.backofficeAddress.delete({
             where: { id }
         })
 

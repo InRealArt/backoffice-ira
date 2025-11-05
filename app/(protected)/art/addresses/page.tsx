@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { authClient } from '@/lib/auth-client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { Address, BackofficeUser } from '@prisma/client'
+import { BackofficeAddress, BackofficeAuthUser } from '@prisma/client'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { getAddresses } from '@/lib/actions/address-actions'
 import Link from 'next/link'
@@ -11,16 +11,21 @@ import { useRouter } from 'next/navigation'
 
 export default function AddressesPage() {
   const router = useRouter()
-  const { user } = useDynamicContext()
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
   const [isLoading, setIsLoading] = useState(true)
-  const [addresses, setAddresses] = useState<Address[] | null>(null)
+  const [addresses, setAddresses] = useState<BackofficeAddress[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [userDB, setUserDB] = useState<BackofficeUser | null>(null)
+  const [userDB, setUserDB] = useState<BackofficeAuthUser | null>(null)
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [navigatingToAddressId, setNavigatingToAddressId] = useState<number | null>(null)
   
   useEffect(() => {
-    if (!user?.email) {
+    // Attendre que la session soit chargée
+    if (isSessionPending) {
+      return
+    }
+
+    if (!session?.user?.email) {
       setIsLoading(false)
       setError('Vous devez être connecté pour voir vos adresses')
       return
@@ -29,7 +34,7 @@ export default function AddressesPage() {
     let isMounted = true
 
     const loadData = async () => {
-      const email = user.email as string
+      const email = session.user.email as string
       const userDBResult = await getBackofficeUserByEmail(email)
       
       if (!userDBResult) {
@@ -41,7 +46,7 @@ export default function AddressesPage() {
       setUserDB(userDBResult)
       
       // Récupérer les adresses de l'utilisateur connecté
-      const addressesResult = await getAddresses(userDBResult.id)
+      const addressesResult = await getAddresses(userDBResult.id as string)
       
       if (isMounted) {
         if (!addressesResult.success) {
@@ -58,7 +63,7 @@ export default function AddressesPage() {
     return () => {
       isMounted = false
     }
-  }, [user?.email])
+  }, [session?.user?.email, isSessionPending])
 
   const handleAddAddressClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -93,7 +98,7 @@ export default function AddressesPage() {
           </button>
         </div>
         <p className="page-subtitle">
-          Liste des adresses associées à votre compte {userDB?.firstName} {userDB?.lastName}
+          Liste des adresses associées à votre compte {userDB?.name || session?.user?.email}
         </p>
       </div>
 

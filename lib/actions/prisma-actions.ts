@@ -31,7 +31,7 @@ interface StatusUpdateResult {
 }
 
 interface CheckStatusParams {
-  idUser: number
+  idUser: string
 }
 
 interface StatusCheckResult {
@@ -76,7 +76,8 @@ function serializeData(data: any): any {
     return data
   }
 
-  if (data instanceof Decimal) {
+  // Vérifier si c'est un Decimal (instanceof ou par la présence de propriétés spécifiques aux Decimal de Prisma)
+  if (data instanceof Decimal || (typeof data === 'object' && data !== null && 'd' in data && 'e' in data && 's' in data && typeof data.toString === 'function')) {
     return parseFloat(data.toString())
   }
 
@@ -85,9 +86,16 @@ function serializeData(data: any): any {
   }
 
   if (typeof data === 'object') {
+    // Ignorer les objets Date, etc.
+    if (data instanceof Date) {
+      return data.toISOString()
+    }
+
     const result: Record<string, any> = {}
     for (const key in data) {
-      result[key] = serializeData(data[key])
+      if (data.hasOwnProperty(key)) {
+        result[key] = serializeData(data[key])
+      }
     }
     return result
   }
@@ -336,7 +344,7 @@ export async function updateBackofficeUser(
 // Ajouter cette fonction pour récupérer un utilisateur par son email
 export async function getBackofficeUserByEmail(email: string) {
   try {
-    const user = await prisma.backofficeUser.findUnique({
+    const user = await prisma.backofficeAuthUser.findUnique({
       where: { email },
       include: { artist: true }
     })
@@ -351,38 +359,36 @@ export async function getBackofficeUserByEmail(email: string) {
 // Fonction pour récupérer les adresses d'un utilisateur backoffice
 export async function getBackofficeUserAddresses(email: string) {
   try {
-    // Récupérer le BackofficeUser
-    const backofficeUser = await prisma.backofficeUser.findUnique({
-      where: { email }
+    // Récupérer le BackofficeAuthUser avec ses adresses via la relation
+    const backofficeUser = await prisma.backofficeAuthUser.findUnique({
+      where: { email },
+      include: {
+        addresses: {
+          select: {
+            id: true,
+            name: true,
+            firstName: true,
+            lastName: true,
+            streetAddress: true,
+            postalCode: true,
+            city: true,
+            country: true
+          },
+          orderBy: {
+            name: 'asc'
+          }
+        }
+      }
     })
 
     if (!backofficeUser) {
       return []
     }
 
-    // Récupérer les adresses associées à ce BackofficeUser
-    const addresses = await prisma.address.findMany({
-      where: {
-        backofficeUserId: backofficeUser.id
-      },
-      select: {
-        id: true,
-        name: true,
-        firstName: true,
-        lastName: true,
-        streetAddress: true,
-        postalCode: true,
-        city: true,
-        country: true
-      },
-      orderBy: {
-        name: 'asc'
-      }
-    })
-
-    return addresses
+    return serializeData(backofficeUser.addresses || [])
   } catch (error) {
     console.error('Erreur lors de la récupération des adresses:', error)
+    // Retourner un tableau vide en cas d'erreur
     return []
   }
 }
@@ -432,7 +438,7 @@ async function generateUniqueSlug(baseSlug: string): Promise<string> {
 }
 
 export async function createItemRecord(
-  userId: number,
+  userId: string,
   status: string,
   tags: string[] = [],
   itemData?: {
@@ -796,8 +802,12 @@ export async function getAuthCertificateByItemId(itemId: number) {
 export async function getPhysicalCertificateByItemId(itemId: number) {
   try {
     // D'abord récupérer le PhysicalItem associé à l'item
+    // Sélection explicite pour éviter les champs qui n'existent pas en base
     const physicalItem = await prisma.physicalItem.findUnique({
-      where: { itemId }
+      where: { itemId },
+      select: {
+        id: true
+      }
     })
 
     if (!physicalItem) {
@@ -956,8 +966,7 @@ export async function getItemById(itemId: number) {
         user: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             email: true
           }
         }
@@ -1290,7 +1299,7 @@ export async function getActiveCollections() {
   }
 }
 
-export async function getUserMintedItemsCount(userId: number) {
+export async function getUserMintedItemsCount(userId: string) {
   try {
     const count = await prisma.item.count({
       where: {
@@ -1305,7 +1314,7 @@ export async function getUserMintedItemsCount(userId: number) {
   }
 }
 
-export async function getUserListedItemsCount(userId: number) {
+export async function getUserListedItemsCount(userId: string) {
   try {
     const count = await prisma.item.count({
       where: {

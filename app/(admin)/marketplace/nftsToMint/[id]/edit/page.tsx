@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
+import { authClient } from '@/lib/auth-client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { getAuthCertificateByItemId, getUserByItemId, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, isCertificateUriUnique, getItemById } from '@/lib/actions/prisma-actions'
 import React from 'react'
@@ -24,7 +25,8 @@ type ParamsType = Promise<{ id: string }>
 
 export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   const router = useRouter()
-  const { user, primaryWallet } = useDynamicContext()
+  const { primaryWallet } = useDynamicContext()
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
   const { address, status, chain } = useAccount()
   const isConnected = status === 'connected'
   const [isLoading, setIsLoading] = useState(true)
@@ -78,7 +80,12 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
   }
 
   useEffect(() => {
-    if (!user?.email) {
+    // Attendre que la session soit chargée
+    if (isSessionPending) {
+      return
+    }
+
+    if (!session?.user?.email) {
       setError('Vous devez être connecté pour visualiser ce produit')
       setIsLoading(false)
       return
@@ -155,7 +162,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
     return () => {
       isMounted = false
     }
-  }, [id, user?.email])
+  }, [id, session?.user?.email, isSessionPending])
 
   // Fonction pour charger les collections
   useEffect(() => {
@@ -500,7 +507,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
             <label className="form-label">Propriétaire</label>
             <div className="form-readonly">
               {productOwner ? 
-                `${productOwner.firstName || ''} ${productOwner.lastName || ''} (${productOwner.email})` : 
+                `${productOwner.name || ''} (${productOwner.email})` : 
                 "Non trouvé"}
             </div>
           </div>

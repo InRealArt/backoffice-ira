@@ -18,7 +18,7 @@ import { Address } from 'viem'
 import { useChainId, useConfig } from 'wagmi'
 import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
 import { decodeEventLog } from 'viem'
-import { useDynamicContext, useWalletConnectorEvent } from '@/lib/dynamic'
+import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
 
 // Validation pour les adresses Ethereum
 const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/

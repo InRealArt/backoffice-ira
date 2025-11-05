@@ -30,9 +30,9 @@ export default async function RoyaltiesSettingsPage() {
           include: {
             user: {
               select: {
+                id: true,
                 email: true,
-                firstName: true,
-                lastName: true,
+                name: true,
               }
             },
             physicalItem: true

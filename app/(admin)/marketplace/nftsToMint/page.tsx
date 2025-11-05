@@ -40,9 +40,9 @@ export default async function NftsToMintPage() {
           include: {
             user: {
               select: {
+                id: true,
                 email: true,
-                firstName: true,
-                lastName: true,
+                name: true,
               }
             }
           }

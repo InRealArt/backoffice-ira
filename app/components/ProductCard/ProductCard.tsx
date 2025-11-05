@@ -12,7 +12,7 @@ type ProductCardProps = {
   id: number
   name: string
   mainImageUrl: string
-  userId?: number
+  userId?: string
   status?: string
   tags?: string[]
   physicalItem?: {

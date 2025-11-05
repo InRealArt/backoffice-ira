@@ -1,30 +1,35 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { authClient } from '@/lib/auth-client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { useRouter } from 'next/navigation'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { createAddress } from '@/lib/actions/address-actions'
 import AddressForm from '../components/AddressForm'
-import { BackofficeUser } from '@prisma/client'
+import { BackofficeAuthUser } from '@prisma/client'
 
 export default function CreateAddressPage() {
-  const { user } = useDynamicContext()
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
   const [isLoading, setIsLoading] = useState(true)
-  const [backofficeUser, setBackofficeUser] = useState<BackofficeUser | null>(null)
+  const [backofficeUser, setBackofficeUser] = useState<BackofficeAuthUser | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   
   useEffect(() => {
-    if (!user?.email) {
+    // Attendre que la session soit chargée
+    if (isSessionPending) {
+      return
+    }
+
+    if (!session?.user?.email) {
       setIsLoading(false)
       setError('Vous devez être connecté pour créer une adresse')
       return
     }
 
     const loadData = async () => {
-      const email = user.email as string
+      const email = session.user.email as string
       const userDBResult = await getBackofficeUserByEmail(email)
       
       if (!userDBResult) {
@@ -37,7 +42,7 @@ export default function CreateAddressPage() {
     }
 
     loadData()
-  }, [user?.email])
+  }, [session?.user?.email, isSessionPending])
 
   const handleSubmit = async (formData: {
     firstName: string
@@ -58,7 +63,7 @@ export default function CreateAddressPage() {
     try {
       const result = await createAddress({
         ...formData,
-        backofficeUserId: backofficeUser.id
+        backofficeAuthUserId: backofficeUser.id
       })
       
       if (result.success) {
@@ -94,8 +99,8 @@ export default function CreateAddressPage() {
       <div className="card">
         <AddressForm 
           onSubmit={handleSubmit} 
-          defaultFirstName={backofficeUser?.firstName || ''}
-          defaultLastName={backofficeUser?.lastName || ''}
+          defaultFirstName={backofficeUser?.name ? backofficeUser.name.split(' ')[0] : ''}
+          defaultLastName={backofficeUser?.name ? backofficeUser.name.split(' ').slice(1).join(' ') : ''}
         />
       </div>
     </div>

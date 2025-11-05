@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect, use } from 'react'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { authClient } from '@/lib/auth-client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { useRouter } from 'next/navigation'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { getAddressById, updateAddress } from '@/lib/actions/address-actions'
 import AddressForm from '../../components/AddressForm'
-import type { Address } from '@prisma/client'
+import type { BackofficeAddress } from '@prisma/client'
 
 interface EditAddressPageProps {
   params: Promise<{
@@ -17,15 +17,20 @@ interface EditAddressPageProps {
 
 
 export default function EditAddressPage({ params }: EditAddressPageProps) {
-  const { user } = useDynamicContext()
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [address, setAddress] = useState<Address | null>(null)
+  const [address, setAddress] = useState<BackofficeAddress | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const resolvedParams = use(params)
   
   useEffect(() => {
-    if (!user?.email) {
+    // Attendre que la session soit chargée
+    if (isSessionPending) {
+      return
+    }
+
+    if (!session?.user?.email) {
       setIsLoading(false)
       setError('Vous devez être connecté pour modifier une adresse')
       return
@@ -33,7 +38,7 @@ export default function EditAddressPage({ params }: EditAddressPageProps) {
 
     const loadData = async (): Promise<void> => {
       try {
-        const email = user.email
+        const email = session.user.email
         const userDBResult = await getBackofficeUserByEmail(email as string)
         
         if (!userDBResult) {
@@ -52,7 +57,7 @@ export default function EditAddressPage({ params }: EditAddressPageProps) {
         }
         
         // Vérifier que l'adresse appartient bien à l'utilisateur connecté
-        if (addressResult.data.backofficeUserId !== userDBResult.id) {
+        if (addressResult.data.backofficeAuthUserId !== userDBResult.id) {
           setError('Vous n\'êtes pas autorisé à modifier cette adresse')
           setIsLoading(false)
           return
@@ -67,7 +72,7 @@ export default function EditAddressPage({ params }: EditAddressPageProps) {
     }
 
     loadData()
-  }, [user?.email, resolvedParams.id])
+  }, [session?.user?.email, resolvedParams.id, isSessionPending])
 
   const handleSubmit = async (formData: {
     name: string

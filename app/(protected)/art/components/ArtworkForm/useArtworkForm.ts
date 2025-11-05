@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { artworkSchema, artworkEditSchema, ArtworkFormData } from '../../createArtwork/schema'
 import { useToast } from '@/app/components/Toast/ToastContext'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { authClient } from '@/lib/auth-client'
 import { getBackofficeUserByEmail, createItemRecord, updateItemRecord, savePhysicalCertificate, saveNftCertificate } from '@/lib/actions/prisma-actions'
 import { useRouter } from 'next/navigation'
 import { normalizeString } from '@/lib/utils'
@@ -35,7 +35,7 @@ export function useArtworkForm({
     const secondaryImagesInputRef = useRef<HTMLInputElement>(null)
     const [secondaryImages, setSecondaryImages] = useState<string[]>([])
     const [secondaryImagesFiles, setSecondaryImagesFiles] = useState<File[]>([])
-    const { user } = useDynamicContext()
+    const { data: session } = authClient.useSession()
     const [formErrors, setFormErrors] = useState<any>(null)
     const isEditMode = mode === 'edit'
     const router = useRouter()
@@ -540,11 +540,11 @@ export function useArtworkForm({
             try {
                 const artistName = backofficeUser.artist
                     ? `${backofficeUser.artist.name} ${backofficeUser.artist.surname}`.trim()
-                    : `${backofficeUser.firstName} ${backofficeUser.lastName}`.trim()
+                    : backofficeUser.name || ''
 
                 const artistFolder = backofficeUser.artist
                     ? `${backofficeUser.artist.name.toLowerCase()}${backofficeUser.artist.surname.toLowerCase()}`
-                    : `${backofficeUser.firstName?.toLowerCase() || ''}${backofficeUser.lastName?.toLowerCase() || ''}`
+                    : (backofficeUser.name?.toLowerCase() || '').replace(/\s+/g, '')
 
                 const itemSlug = slug || (data.title ? normalizeString(data.title) : '')
 
@@ -632,11 +632,11 @@ export function useArtworkForm({
         setIsSubmitting(true)
 
         try {
-            if (!user?.email) {
+            if (!session?.user?.email) {
                 throw new Error('Vous devez être connecté pour créer ou modifier une œuvre')
             }
 
-            const backofficeUser = await getBackofficeUserByEmail(user.email)
+            const backofficeUser = await getBackofficeUserByEmail(session.user.email)
 
             if (!backofficeUser) {
                 throw new Error('Utilisateur non trouvé dans le backoffice')

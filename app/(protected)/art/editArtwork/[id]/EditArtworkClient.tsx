@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { authClient } from '@/lib/auth-client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import ArtworkForm from '@/app/(protected)/art/components/ArtworkForm'
 import { getAuthCertificateByItemId, getItemById, getBackofficeUserAddresses, getPhysicalCertificateByItemId, getNftCertificateByItemId } from '@/lib/actions/prisma-actions'
@@ -31,11 +31,16 @@ export default function EditArtworkClient({ params, mediums, styles: artStyles, 
   const [addresses, setAddresses] = useState<Address[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user } = useDynamicContext()
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
   const router = useRouter()
 
   useEffect(() => {
-    if (!user?.email) {
+    // Attendre que la session soit chargée
+    if (isSessionPending) {
+      return
+    }
+
+    if (!session?.user?.email) {
       setError('Utilisateur non connecté')
       setIsLoading(false)
       return
@@ -54,7 +59,7 @@ export default function EditArtworkClient({ params, mediums, styles: artStyles, 
         // Récupérer l'item et les adresses en parallèle
         const [itemData, userAddresses] = await Promise.all([
           getItemById(itemId),
-          getBackofficeUserAddresses(user.email!)
+          getBackofficeUserAddresses(session.user.email!)
         ])
 
         if (isMounted) {
@@ -154,7 +159,7 @@ export default function EditArtworkClient({ params, mediums, styles: artStyles, 
     return () => {
       isMounted = false
     }
-  }, [user?.email, resolvedParams.id])
+  }, [session?.user?.email, resolvedParams.id, isSessionPending])
 
   const handleSuccess = () => {
     router.push('/art/collection')

@@ -1,24 +1,28 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { authClient } from '@/lib/auth-client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import ProductCard from '@/app/components/ProductCard/ProductCard'
 import { fetchItemsData, ItemData } from '@/app/utils/items/itemsData'
-import styles from './collection.module.scss'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
-import { BackofficeUser } from '@prisma/client'
+import { BackofficeAuthUser } from '@prisma/client'
 
 export default function CollectionPage() {
-  const { user } = useDynamicContext()
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
   const [isLoading, setIsLoading] = useState(true)
   const [itemsData, setItemsData] = useState<ItemData[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [userDB, setUserDB] = useState<BackofficeUser | null>(null)
+  const [userDB, setUserDB] = useState<BackofficeAuthUser | null>(null)
   
   useEffect(() => {
+    // Attendre que la session soit chargée
+    if (isSessionPending) {
+      return
+    }
+
     // Ne rien faire si l'utilisateur n'est pas connecté
-    if (!user?.email) {
+    if (!session?.user?.email) {
       setIsLoading(false)
       setError('Vous devez être connecté pour voir votre collection')
       return
@@ -29,8 +33,9 @@ export default function CollectionPage() {
     // Récupérer les données des items
     const loadData = async () => {
       // Garantir que email n'est jamais undefined
-      const email = user.email as string
+      const email = session.user.email as string
       const userDB = await getBackofficeUserByEmail(email)
+      
       
       if (!userDB) {
         setError('Votre profil utilisateur n\'a pas été trouvé')
@@ -57,7 +62,7 @@ export default function CollectionPage() {
     return () => {
       isMounted = false
     }
-  }, [user?.email]) // Dépendance uniquement sur l'email
+  }, [session?.user?.email, isSessionPending]) // Dépendance sur l'email de la session
 
   if (isLoading) {
     return <LoadingSpinner message="Chargement de vos œuvres..." />
@@ -78,7 +83,7 @@ export default function CollectionPage() {
       ) : (
         <>
           <div className="card">
-            <h2 className="card-title">Collection de {userDB?.firstName} {userDB?.lastName}</h2>
+            <h2 className="card-title">Collection de {userDB?.name || session?.user?.email}</h2>
           </div>
 
           <div className="section">

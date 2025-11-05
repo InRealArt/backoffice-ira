@@ -15,9 +15,9 @@ import { StatusRow } from '@/app/components/Table'
 // Type pour les NFTs avec statut ROYALTYSET
 type RoyaltysetItemWithRelations = Item & {
   user: {
+    id: string
     email: string | null
-    firstName: string | null
-    lastName: string | null
+    name: string | null
   }
   nftResource: {
     name: string
@@ -206,7 +206,7 @@ export default function MarketplaceListingClient({ royaltysetItems = [], smartCo
                       </td>
                       <td className={isMobile ? 'hidden-mobile' : ''}>
                         {item.user ? 
-                          `${item.user.firstName || ''} ${item.user.lastName || ''} ${item.user.email ? `(${item.user.email})` : ''}`.trim() : 
+                          `${item.user.name || ''} ${item.user.email ? `(${item.user.email})` : ''}`.trim() : 
                           'N/A'
                         }
                       </td>

@@ -23,6 +23,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
+import { authClient } from '@/lib/auth-client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { getItemById, getNftResourceByItemId, getSmartContractAddress, updateNftResourceStatusToListed } from '@/lib/actions/prisma-actions'
@@ -45,7 +46,8 @@ type ParamsType = Promise<{ id: string }>
 
 export default function MarketplaceListingPage({ params }: { params: ParamsType }) {
   const router = useRouter()
-  const { user, primaryWallet } = useDynamicContext()
+  const { primaryWallet } = useDynamicContext()
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
   const { address, status, chain } = useAccount()
   const isConnected = status === 'connected'
   const [isLoading, setIsLoading] = useState(true)
@@ -171,7 +173,12 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
   }, [primaryWallet?.address])
   
   useEffect(() => {
-    if (!user?.email) {
+    // Attendre que la session soit chargée
+    if (isSessionPending) {
+      return
+    }
+
+    if (!session?.user?.email) {
       setError('Vous devez être connecté pour accéder à cette page')
       setIsLoading(false)
       return
@@ -220,7 +227,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
     return () => {
       isMounted = false
     }
-  }, [id, user?.email])
+  }, [id, session?.user?.email, isSessionPending])
 
   const checkCollectionAdmin = () => {
     if (!nftResource?.collection?.addressAdmin || !primaryWallet?.address) return;  

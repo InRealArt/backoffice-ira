@@ -16,9 +16,9 @@ interface Item {
   idUser: number
   idNftResource: number | null
   user?: {
+    id: string
     email: string | null
-    firstName: string | null
-    lastName: string | null
+    name: string | null
   }
   nftResource?: {
     name: string
@@ -71,7 +71,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
       .map(product => ({
         value: String(product.idUser),
         label: product.user 
-          ? `${product.user.firstName || ''} ${product.user.lastName || ''}`.trim() || `ID: ${product.idUser}`
+          ? `${product.user.name || ''}`.trim() || `ID: ${product.idUser}`
           : `ID: ${product.idUser}`
       }))
       .filter((option, index, self) => 
@@ -156,7 +156,7 @@ export default function NftsToMintClient({ products = [] }: ProductListingClient
                       </td>
                       <td className="hidden-mobile">
                         {product.user ? 
-                          `${product.user.firstName || ''} ${product.user.lastName || ''}`.trim() || `ID: ${product.idUser}` : 
+                          `${product.user.name || ''}`.trim() || `ID: ${product.idUser}` : 
                           `ID: ${product.idUser}`
                         }
                       </td>

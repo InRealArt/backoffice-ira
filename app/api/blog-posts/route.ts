@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { headers } from 'next/headers'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
 
 export async function GET() {
     try {

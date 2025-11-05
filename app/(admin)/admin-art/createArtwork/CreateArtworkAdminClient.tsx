@@ -6,7 +6,7 @@ import styles from './createArtworkAdmin.module.scss'
 import { useRouter } from 'next/navigation'
 import { Address } from '@/app/(protected)/art/components/ArtworkForm/types'
 import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from '@prisma/client'
-import { getAddresses } from '@/lib/actions/address-actions'
+import { getAddressesByArtistId } from '@/lib/actions/address-actions'
 
 interface Artist {
   id: number
@@ -67,11 +67,11 @@ export default function CreateArtworkAdminClient({
     const artist = artists.find(a => a.id === artistId)
     setSelectedArtist(artist || null)
     
-    if (artist && artist.backofficeUserId) {
+    if (artist) {
       setIsLoadingAddresses(true)
       try {
-        // Récupérer les adresses de l'artiste sélectionné
-        const addressesResult = await getAddresses(artist.backofficeUserId)
+        // Récupérer les adresses de l'artiste sélectionné via BackofficeAuthUser (schéma backoffice)
+        const addressesResult = await getAddressesByArtistId(artist.id)
         if (addressesResult.success && addressesResult.data) {
           setAddresses(addressesResult.data)
         } else {
@@ -171,16 +171,7 @@ export default function CreateArtworkAdminClient({
           </div>
         )}
 
-        {selectedArtist && !selectedArtist.backofficeUserId && (
-          <div className={styles.noBackofficeUser}>
-            <p style={{ color: '#ff6b6b', fontStyle: 'italic' }}>
-              ⚠️ Cet artiste n'est pas encore associé à un utilisateur backoffice. 
-              Il ne peut pas avoir d'adresses d'expédition.
-            </p>
-          </div>
-        )}
-
-        {selectedArtist && selectedArtist.backofficeUserId && addresses.length === 0 && !isLoadingAddresses && (
+        {selectedArtist && addresses.length === 0 && !isLoadingAddresses && (
           <div className={styles.noAddresses}>
             <p style={{ color: '#ff9500', fontStyle: 'italic' }}>
               ⚠️ Cet artiste n'a pas encore créé d'adresses d'expédition.
@@ -190,7 +181,7 @@ export default function CreateArtworkAdminClient({
       </div>
 
       {/* Formulaire d'œuvre d'art - exactement le même que le groupe protected */}
-      {selectedArtist && selectedArtist.backofficeUserId && addresses.length > 0 && (
+      {selectedArtist && addresses.length > 0 && (
         <ArtworkForm 
           mode="create" 
           addresses={addresses}

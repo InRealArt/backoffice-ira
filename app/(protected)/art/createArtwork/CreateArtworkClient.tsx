@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import ArtworkForm from '../components/ArtworkForm'
 import styles from './createArtwork.module.scss'
-import { useDynamicContext } from '@dynamic-labs/sdk-react-core'
+import { authClient } from '@/lib/auth-client'
 import { getBackofficeUserByEmail, getBackofficeUserAddresses } from '@/lib/actions/prisma-actions'
 import { useRouter } from 'next/navigation'
 import { Address } from '../components/ArtworkForm/types'
@@ -20,7 +20,7 @@ export default function CreateArtworkClient({ mediums, styles: artStyles, techni
   const [artistName, setArtistName] = useState('')
   const [addresses, setAddresses] = useState<Address[]>([])
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(true)
-  const { user } = useDynamicContext()
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
   const router = useRouter()
   
   useEffect(() => {
@@ -37,13 +37,18 @@ export default function CreateArtworkClient({ mediums, styles: artStyles, techni
   }, [])
   
   useEffect(() => {
+    // Attendre que la session soit chargée
+    if (isSessionPending) {
+      return
+    }
+
     const fetchData = async () => {
-      if (user?.email) {
+      if (session?.user?.email) {
         try {
           // Récupérer les informations utilisateur et les adresses en parallèle
           const [backofficeUser, userAddresses] = await Promise.all([
-            getBackofficeUserByEmail(user.email),
-            getBackofficeUserAddresses(user.email)
+            getBackofficeUserByEmail(session.user.email),
+            getBackofficeUserAddresses(session.user.email)
           ])
           
           if (backofficeUser) {
@@ -63,7 +68,7 @@ export default function CreateArtworkClient({ mediums, styles: artStyles, techni
     }
     
     fetchData()
-  }, [user])
+  }, [session?.user?.email, isSessionPending])
   
   const handleSuccess = () => {
     router.push('/art/collection')
