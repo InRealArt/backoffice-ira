@@ -42,14 +42,55 @@ model Order {
   billingCountry       String
   billingVatNumber     String?
 
-  billingAddress Address @relation(fields: [billingAddressId], references: [id])
+  // Relation avec CustomerAddress
+  billingAddress CustomerAddress @relation(fields: [billingAddressId], references: [id])
 
   // Éléments achetés
   items OrderItem[]
 
   @@index([customerId])
   @@index([orderNumber])
+  @@index([billingAddressId])
   @@map("Order")
+  @@schema("marketplace")
+}
+
+model CustomerAddress {
+  id            Int    @id @default(autoincrement())
+  name          String // Name for the address
+  // Champs minimums obligatoires pour facturation valide
+  firstName     String
+  lastName      String
+  streetAddress String
+  postalCode    String
+  city          String
+  country       String // Country name (for VAT rules)
+  countryCode   String // Country code (for VAT rules)
+
+  // Relations Customer (1..N : un client peut avoir plusieurs adresses)
+  customerId String
+
+  // Relation avec Country
+  Country Country? @relation(fields: [countryCode], references: [code])
+
+  // Relations
+  orders              Order[]
+  physicalItems       PhysicalItem[]              @relation("PhysicalItemShipping")
+  thirdPartyAddresses ThirdPartyCustomerAddress[]
+
+  @@index([customerId])
+  @@index([countryCode])
+  @@map("CustomerAddress")
+  @@schema("marketplace")
+}
+
+model ThirdPartyCustomerAddress {
+  id String @id
+
+  // Relations Customer (adresse d'un client dans la marketplace)
+  address   CustomerAddress? @relation(fields: [addressId], references: [id])
+  addressId Int?
+
   @@schema("marketplace")
 }
 
@@ -173,43 +214,6 @@ enum InvoiceType {
   RECEIPT // Reçu
 
   @@schema("marketplace")
-}
-
-model Address {
-  id            Int    @id @default(autoincrement())
-  name          String //Name for the adddress
-  // Champs minimums obligatoires pour facturation valide
-  firstName     String
-  lastName      String
-  streetAddress String
-  postalCode    String
-  city          String
-  country       String // Country name (for VAT rules)
-  countryCode   String // Country code (for VAT rules)
-
-  // Numéro TVA pour B2B (obligatoire si client professionnel)
-  vatNumber String?
-
-  // Relations BackofficeUser (adress d'un artiste dans le backoffice)
-  // Note: La relation BackofficeAuthUser a été déplacée dans le schéma backoffice
-
-  orders              Order[]
-  thirdPartyAddresses ThirdPartyAddress[]
-  physicalItems       PhysicalItem[]      @relation("PhysicalItemShipping")
-  Country             Country?            @relation(fields: [countryCode], references: [code])
-
-  @@map("Address")
-  @@schema("public")
-}
-
-model ThirdPartyAddress {
-  id String @id
-
-  // Relations Customer (adress d'un client dans la marketplace)
-  address   Address? @relation(fields: [addressId], references: [id])
-  addressId Int?
-
-  @@schema("public")
 }
 
 model ArtistCategory {
@@ -548,12 +552,15 @@ model PhysicalItem {
   unitThickness     String?            @default("cm")
   creationYear      Int?
   shippingAddressId Int?
-  shippingAddress   Address?           @relation("PhysicalItemShipping", fields: [shippingAddressId], references: [id])
+  shippingAddress   CustomerAddress?   @relation("PhysicalItemShipping", fields: [shippingAddressId], references: [id])
   orderItems        OrderItem[]
   invoiceItems      InvoiceItem[]
   authCertificate   AuthCertificate?
+  ArtistAddress     ArtistAddress?     @relation(fields: [artistAddressId], references: [id])
+  artistAddressId   Int?
 
   @@index([itemId])
+  @@index([artistAddressId])
   @@index([shippingAddressId])
   @@schema("backoffice")
 }
@@ -565,7 +572,7 @@ enum NftItemStatus {
   listed
   sold
 
-  @@schema("public")
+  @@schema("backoffice")
 }
 
 enum PhysicalItemStatus {
@@ -574,7 +581,7 @@ enum PhysicalItemStatus {
   listed
   sold
 
-  @@schema("public")
+  @@schema("backoffice")
 }
 
 enum ItemStatus {
@@ -583,7 +590,7 @@ enum ItemStatus {
   minted
   listed
 
-  @@schema("public")
+  @@schema("backoffice")
 }
 
 model AuthCertificate {
@@ -596,7 +603,7 @@ model AuthCertificate {
 
   @@index([nftItemId])
   @@index([physicalItemId])
-  @@schema("public")
+  @@schema("backoffice")
 }
 
 model SmartContract {
@@ -953,10 +960,11 @@ model ArtworkTechnique {
 }
 
 model Country {
-  code      String    @id // Code ISO (ex: FR, US, GB)
-  name      String // Nom du pays (ex: France, United States, United Kingdom)
-  addresses Address[]
-  artists   Artist[]
+  code              String            @id // Code ISO (ex: FR, US, GB)
+  name              String // Nom du pays (ex: France, United States, United Kingdom)
+  artistAddresses   ArtistAddress[]
+  customerAddresses CustomerAddress[]
+  artists           Artist[]
 
   @@schema("public")
 }
@@ -977,28 +985,28 @@ model WhiteListedUser {
 /// =============================
 
 model BackofficeAuthUser {
-  id            String                  @id
-  name          String?
-  email         String                  @unique
-  emailVerified Boolean                 @default(false)
-  image         String?
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
-  role          BackofficeUserRoles?
-  artistId      Int?
-  artist        Artist?                 @relation(fields: [artistId], references: [id])
-  addresses     BackofficeAddress[]
+  id              String                  @id
+  name            String?
+  email           String                  @unique
+  emailVerified   Boolean                 @default(false)
+  image           String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  role            BackofficeUserRoles?
+  artistId        Int?
+  artist          Artist?                 @relation(fields: [artistId], references: [id])
+  artistAddresses ArtistAddress[]
   // relations
-  sessions      BackofficeAuthSession[]
-  accounts      BackofficeAuthAccount[]
-  Item          Item[]
+  sessions        BackofficeAuthSession[]
+  accounts        BackofficeAuthAccount[]
+  Item            Item[]
 
   @@index([artistId])
   @@map("user")
   @@schema("backoffice")
 }
 
-model BackofficeAddress {
+model ArtistAddress {
   id            Int    @id @default(autoincrement())
   name          String // Name for the address
   // Champs minimums obligatoires pour facturation valide
@@ -1010,18 +1018,27 @@ model BackofficeAddress {
   country       String // Country name (for VAT rules)
   countryCode   String // Country code (for VAT rules)
 
-  // Numéro TVA pour B2B (obligatoire si client professionnel)
-  vatNumber String?
-
-  // Relations BackofficeAuthUser
+  // Relations BackofficeAuthUser (1..N : un utilisateur peut avoir plusieurs adresses)
   backofficeAuthUser   BackofficeAuthUser @relation(fields: [backofficeAuthUserId], references: [id], onDelete: Cascade)
+  Country              Country?           @relation(fields: [countryCode], references: [code])
   backofficeAuthUserId String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Relations
+  physicalItems       PhysicalItem[]
+  thirdPartyAddresses ThirdPartyArtistAddress[]
 
   @@index([backofficeAuthUserId])
-  @@map("Address")
+  @@map("ArtistAddress")
+  @@schema("backoffice")
+}
+
+model ThirdPartyArtistAddress {
+  id String @id
+
+  // Relations Artist (adresse d'un artiste dans le backoffice)
+  address   ArtistAddress? @relation(fields: [addressId], references: [id])
+  addressId Int?
+
   @@schema("backoffice")
 }
 

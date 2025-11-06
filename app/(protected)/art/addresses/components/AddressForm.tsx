@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Address } from '@prisma/client'
+import { ArtistAddress } from '@prisma/client'
 import { getCountries, Country } from '@/lib/utils'
 import InputField from '@/app/components/Forms/InputField'
 import styles from '@/app/components/Forms/forms.module.css'
@@ -11,9 +11,10 @@ import MapWithMarker, { MapLocation } from './MapWithMarker'
 import GoogleMapsLoader from './GoogleMapsLoader'
 import { useGeocoding } from '@/hooks/useGeocoding'
 
+// Type étendu pour inclure vatNumber qui n'est pas dans le modèle Prisma
 
 interface AddressFormProps {
-  address?: Address
+  address?: ArtistAddress
   defaultFirstName?: string
   defaultLastName?: string
   onSubmit: (data: {
@@ -53,8 +54,7 @@ export default function AddressForm({ address, defaultFirstName = '', defaultLas
     postalCode: address?.postalCode || '',
     city: address?.city || '',
     country: address?.country || findCountryName(defaultCountryCode),
-    countryCode: defaultCountryCode,
-    vatNumber: address?.vatNumber || ''
+    countryCode: defaultCountryCode
   })
 
   // Géocoder automatiquement l'adresse en mode édition
@@ -331,14 +331,6 @@ export default function AddressForm({ address, defaultFirstName = '', defaultLas
           ))}
         </select>
       </div>
-      
-      <InputField
-        id="vatNumber"
-        name="vatNumber"
-        label="Numéro de TVA (pour professionnels)"
-        value={formData.vatNumber}
-        onChange={handleChange}
-      />
       
       <div className="form-actions">
         <button

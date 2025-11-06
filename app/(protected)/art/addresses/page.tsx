@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { authClient } from '@/lib/auth-client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { BackofficeAddress, BackofficeAuthUser } from '@prisma/client'
+import { ArtistAddress, BackofficeAuthUser } from '@prisma/client'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { getAddresses } from '@/lib/actions/address-actions'
 import Link from 'next/link'
@@ -13,7 +13,7 @@ export default function AddressesPage() {
   const router = useRouter()
   const { data: session, isPending: isSessionPending } = authClient.useSession()
   const [isLoading, setIsLoading] = useState(true)
-  const [addresses, setAddresses] = useState<BackofficeAddress[] | null>(null)
+  const [addresses, setAddresses] = useState<ArtistAddress[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [userDB, setUserDB] = useState<BackofficeAuthUser | null>(null)
   const [isAddingAddress, setIsAddingAddress] = useState(false)

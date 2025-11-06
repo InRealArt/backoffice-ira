@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { getAddressById, updateAddress } from '@/lib/actions/address-actions'
 import AddressForm from '../../components/AddressForm'
-import type { BackofficeAddress } from '@prisma/client'
+import type { ArtistAddress } from '@prisma/client'
 
 interface EditAddressPageProps {
   params: Promise<{
@@ -19,7 +19,7 @@ interface EditAddressPageProps {
 export default function EditAddressPage({ params }: EditAddressPageProps) {
   const { data: session, isPending: isSessionPending } = authClient.useSession()
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [address, setAddress] = useState<BackofficeAddress | null>(null)
+  const [address, setAddress] = useState<ArtistAddress | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const resolvedParams = use(params)

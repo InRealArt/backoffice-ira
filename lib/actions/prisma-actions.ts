@@ -363,7 +363,7 @@ export async function getBackofficeUserAddresses(email: string) {
     const backofficeUser = await prisma.backofficeAuthUser.findUnique({
       where: { email },
       include: {
-        addresses: {
+        artistAddresses: {
           select: {
             id: true,
             name: true,
@@ -385,7 +385,7 @@ export async function getBackofficeUserAddresses(email: string) {
       return []
     }
 
-    return serializeData(backofficeUser.addresses || [])
+    return serializeData(backofficeUser.artistAddresses || [])
   } catch (error) {
     console.error('Erreur lors de la récupération des adresses:', error)
     // Retourner un tableau vide en cas d'erreur
