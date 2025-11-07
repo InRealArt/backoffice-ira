@@ -15,7 +15,7 @@ import {
   Column
 } from '../../../components/PageLayout/index'
 
-interface ItemWithRelations {
+export interface ItemWithRelations {
   id: number
   name: string
   description: string

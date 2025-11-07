@@ -22,17 +22,19 @@ import {
   NftCertificateSection
 } from './sections'
 import { useRouter } from 'next/navigation'
-import { deletePhysicalItem, deleteNftItem } from '@/lib/actions/prisma-actions'
+import { deletePhysicalItem } from '@/lib/actions/prisma-actions'
 import { useToast } from '@/app/components/Toast/ToastContext'
+import Button from '@/app/components/Button/Button'
 
-export default function ArtworkForm({ mode = 'create', addresses = [], mediums = [], styles: artStyles = [], techniques = [], initialData = {}, onSuccess }: ArtworkFormProps) {
+export default function ArtworkForm({ mode = 'create', addresses = [], mediums = [], styles: artStyles = [], techniques = [], initialData = {}, onSuccess, isPhysicalOnly = false }: ArtworkFormProps) {
   // État local pour le slug et le titre/nom
   const [localTitle, setLocalTitle] = useState(initialData?.title || '')
   const [localSlug, setLocalSlug] = useState(initialData?.slug || '')
   
   // État local pour les options de tarification
-  const [hasPhysicalOnly, setHasPhysicalOnly] = useState(initialData?.hasPhysicalOnly || false)
-  const [hasNftOnly, setHasNftOnly] = useState(initialData?.hasNftOnly || false)
+  // Si isPhysicalOnly est true, on force hasPhysicalOnly à true
+  const [hasPhysicalOnly, setHasPhysicalOnly] = useState(isPhysicalOnly || initialData?.hasPhysicalOnly || false)
+  const [hasNftOnly, setHasNftOnly] = useState(isPhysicalOnly ? false : (initialData?.hasNftOnly || false))
   const [hasNftPlusPhysical, setHasNftPlusPhysical] = useState(initialData?.hasNftPlusPhysical || false)
   
   // États pour la détection des entités liées à l'Item
@@ -94,6 +96,7 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
     mode, 
     initialData, 
     onSuccess,
+    isPhysicalOnly,
     onTitleChange: (name) => {
       setLocalTitle(name)
       setLocalSlug(normalizeString(name))
@@ -118,9 +121,19 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
     }
   }
   
+  // Forcer hasPhysicalOnly à true si isPhysicalOnly est true
+  useEffect(() => {
+    if (isPhysicalOnly) {
+      setHasPhysicalOnly(true)
+      setHasNftOnly(false)
+      setValue('hasPhysicalOnly', true)
+      setValue('hasNftOnly', false)
+    }
+  }, [isPhysicalOnly, setValue])
+
   // Surveiller les changements des options de tarification
   const handlePricingOptionChange = (option: 'hasPhysicalOnly' | 'hasNftOnly' | 'hasNftPlusPhysical', checked: boolean) => {
-    if (isFormReadOnly) return
+    if (isFormReadOnly || isPhysicalOnly) return
 
     switch (option) {
       case 'hasPhysicalOnly':
@@ -254,21 +267,7 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
           }
         }
         
-        // Gérer la suppression du NftItem si l'option a été décochée
-        if (initialData.nftItem && !hasNftOnly) {
-          try {
-            const nftItemId = initialData.nftItem.id
-            if (nftItemId) {
-              await deleteNftItem(nftItemId)
-              console.log('NftItem supprimé:', nftItemId)
-            } else {
-              console.log('Impossible de supprimer NftItem: ID manquant')
-            }
-          } catch (error) {
-            console.error('Erreur lors de la suppression du NftItem:', error)
-            errorToast('Erreur lors de la suppression du NFT')
-          }
-        }
+       
       }
       
       // Appeler la fonction onSubmit originale
@@ -280,22 +279,17 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
   }
   
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="bg-background-white rounded-lg shadow-md p-8 max-w-[1000px] mx-auto">
-      <div className="mb-8 text-center">
-        <h1 className="text-[1.8rem] text-gray-900 mb-2">
-          {isEditMode ? 'Modifier l\'œuvre' : 'Créer une nouvelle œuvre'}
-        </h1>
-        <p className="text-gray-500 text-base">
-          {isEditMode 
-            ? 'Modifiez les informations de votre œuvre d\'art' 
-            : 'Remplissez le formulaire pour ajouter une nouvelle œuvre d\'art'}
-        </p>
-        {isFormReadOnly && (
-          <div className="block mt-2 p-2 bg-red-100 text-red-700 rounded text-sm font-semibold">
-            Au moins un élément est listé, vous ne pouvez pas modifier l'œuvre.
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full">
+      {isFormReadOnly && (
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm font-medium text-amber-800 dark:text-amber-200">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <span>Au moins un élément est listé, vous ne pouvez pas modifier l'œuvre.</span>
           </div>
-        )}
-      </div>
+        </div>
+      )}
       
       <MainInfoSection 
         register={register} 
@@ -318,21 +312,37 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
         isFormReadOnly={isFormReadOnly}
       />
       
-      <PricingSection 
-        register={register} 
-        errors={errors}
-        setValue={setValue}
-        control={control}
-        getValues={getValues}
-        hasPhysicalOnly={hasPhysicalOnly}
-        hasNftOnly={hasNftOnly}
-        hasNftPlusPhysical={hasNftPlusPhysical}
-        onPricingOptionChange={handlePricingOptionChange}
-        isEditMode={isEditMode}
-        physicalItemStatus={physicalItemStatus}
-        nftItemStatus={nftItemStatus}
-        isFormReadOnly={isFormReadOnly}
-      />
+      {/* Section de tarification - masquée pour les œuvres physiques et en mode édition */}
+      {!isPhysicalOnly && mode !== 'edit' && (
+        <PricingSection 
+          register={register} 
+          errors={errors}
+          setValue={setValue}
+          control={control}
+          getValues={getValues}
+          hasPhysicalOnly={hasPhysicalOnly}
+          hasNftOnly={hasNftOnly}
+          hasNftPlusPhysical={hasNftPlusPhysical}
+          onPricingOptionChange={handlePricingOptionChange}
+          isEditMode={isEditMode}
+          physicalItemStatus={physicalItemStatus}
+          nftItemStatus={nftItemStatus}
+          isFormReadOnly={isFormReadOnly}
+          isPhysicalOnly={isPhysicalOnly}
+        />
+      )}
+      
+      {/* Conditionnellement afficher la section des propriétés physiques basé uniquement sur l'état de la checkbox ou isPhysicalOnly */}
+      {(hasPhysicalOnly || isPhysicalOnly) && (
+        <PhysicalPropertiesSection 
+          register={register} 
+          errors={errors}
+          setValue={setValue} 
+          control={control}
+          getValues={getValues}
+          isFormReadOnly={isFormReadOnly}
+        />
+      )}
       
       {/* Section des caractéristiques artistiques (Support, Style, Technique) */}
       <ArtworkCharacteristicsSection 
@@ -347,20 +357,8 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
         techniques={techniques}
       />
       
-      {/* Conditionnellement afficher la section des propriétés physiques basé uniquement sur l'état de la checkbox */}
-      {hasPhysicalOnly && (
-        <PhysicalPropertiesSection 
-          register={register} 
-          errors={errors}
-          setValue={setValue} 
-          control={control}
-          getValues={getValues}
-          isFormReadOnly={isFormReadOnly}
-        />
-      )}
-      
       {/* Section adresse d'expédition pour les œuvres physiques */}
-      {hasPhysicalOnly && (
+      {(hasPhysicalOnly || isPhysicalOnly) && (
         <ShippingAddressSection 
           register={register} 
           errors={errors}
@@ -413,7 +411,7 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
       />
 
       {/* Section certificat pour œuvre physique */}
-      {hasPhysicalOnly && (
+      {(hasPhysicalOnly || isPhysicalOnly) && (
         <PhysicalCertificateSection 
           register={register} 
           errors={errors}
@@ -463,7 +461,7 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
       )}
       
       {/* Prévisualisation du certificat d'œuvre physique */}
-      {hasPhysicalOnly && (previewPhysicalCertificate || initialData?.physicalCertificateUrl) && (
+      {(hasPhysicalOnly || isPhysicalOnly) && (previewPhysicalCertificate || initialData?.physicalCertificateUrl) && (
         <div className="mt-4 bg-black/5 p-4 rounded-lg">
           <h4>Certificat d'œuvre physique</h4>
           <div className="flex flex-col items-center">
@@ -511,21 +509,27 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
       )}
       
       {/* Actions du formulaire */}
-      <div className="flex justify-end gap-4 mt-8 pt-6 border-t-2 border-border">
-        <button
+      <div className="flex justify-end gap-4 mt-10 pt-8 border-t border-gray-200 dark:border-gray-700">
+        <Button
           type="button"
-          className="px-6 py-3 text-base font-semibold rounded bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200 disabled:opacity-70 disabled:cursor-not-allowed"
+          variant="secondary"
+          size="medium"
           onClick={() => router.back()}
+          className="min-w-[120px]"
         >
           Annuler
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
+          variant="primary"
+          size="medium"
           disabled={isSubmitting || isFormReadOnly}
-          className="px-6 py-3 text-base font-semibold rounded bg-[#4a6cf7] text-white hover:bg-[#3a57e8] disabled:opacity-70 disabled:cursor-not-allowed"
+          isLoading={isSubmitting}
+          loadingText="Traitement en cours..."
+          className="min-w-[160px]"
         >
-          {isSubmitting ? 'Traitement en cours...' : isEditMode ? 'Mettre à jour' : 'Créer l\'œuvre'}
-        </button>
+          {isEditMode ? 'Mettre à jour' : 'Créer l\'œuvre'}
+        </Button>
       </div>
     </form>
   )

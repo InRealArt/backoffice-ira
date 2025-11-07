@@ -26,7 +26,7 @@ import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-re
 import { authClient } from '@/lib/auth-client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
-import { getItemById, getNftResourceByItemId, getSmartContractAddress, updateNftResourceStatusToListed } from '@/lib/actions/prisma-actions'
+import { getItemById, getSmartContractAddress, updateNftResourceStatusToListed } from '@/lib/actions/prisma-actions'
 import styles from './marketplaceListing.module.scss'
 import React from 'react'
 import { useToast } from '@/app/components/Toast/ToastContext'
@@ -195,7 +195,7 @@ export default function MarketplaceListingPage({ params }: { params: ParamsType 
             
             // Ensuite récupérer la ressource NFT
             try {
-              const nftResourceResult = await getNftResourceByItemId(itemResult.id)
+              const nftResourceResult = {status: null, name: null, description: null, collectionId: ''}
               if (nftResourceResult) {
                 if (nftResourceResult.status !== 'ROYALTYSET') {
                   setError('Ce NFT n\'a pas encore ses royalties configurées')

@@ -6,7 +6,7 @@ import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-re
 import { authClient } from '@/lib/auth-client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
-import { getItemById, getUserByItemId, getNftResourceByItemId, getActiveCollections, getSmartContractAddress, getAuthCertificateByItemId } from '@/lib/actions/prisma-actions'
+import { getItemById, getUserByItemId, getActiveCollections, getSmartContractAddress, getPhysicalCertificateByItemId } from '@/lib/actions/prisma-actions'
 import styles from './royaltySettings.module.scss'
 import React, { use } from 'react'
 import { z } from 'zod'
@@ -163,7 +163,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
             })
             
             try {
-              const certificateResult = await getAuthCertificateByItemId(itemResult.id)
+              const certificateResult = await getPhysicalCertificateByItemId(itemResult.id)
               if (certificateResult && certificateResult.id) {
                 setCertificate(certificateResult)
               }
@@ -174,7 +174,7 @@ export default function ViewRoyaltysettingPage({ params }: { params: ParamsType 
               }
               
               console.log('itemResult : ', itemResult)
-              const nftResourceResult = await getNftResourceByItemId(itemResult.id)
+              const nftResourceResult = {status: null, name: null, description: null, collectionId: ''}
               console.log('nftResourceResult : ', nftResourceResult)
               fetchCollections()
               if (nftResourceResult) {

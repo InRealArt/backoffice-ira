@@ -28,7 +28,7 @@ export default function ShippingAddressSection({
   }
 
   return (
-    <FormSection title="Adresse d'expédition">
+    <FormSection title="Adresse d'expédition" bgVariant="subtle-5">
       <p className="form-help mb-4">
         Sélectionnez l'adresse depuis laquelle l'œuvre physique sera expédiée
       </p>

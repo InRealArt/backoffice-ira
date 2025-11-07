@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback, RefObject } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { artworkSchema, artworkEditSchema, ArtworkFormData } from '../../createArtwork/schema'
+import { artworkSchema as physicalArtworkSchema, artworkEditSchema as physicalArtworkEditSchema } from '../../createPhysicalArtwok/schema'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import { authClient } from '@/lib/auth-client'
 import { getBackofficeUserByEmail, createItemRecord, updateItemRecord, savePhysicalCertificate, saveNftCertificate } from '@/lib/actions/prisma-actions'
@@ -17,7 +18,8 @@ export function useArtworkForm({
     initialData = {},
     onSuccess,
     onTitleChange,
-    onPricingOptionsChange
+    onPricingOptionsChange,
+    isPhysicalOnly = false
 }: ArtworkFormProps): UseArtworkFormReturn {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [previewImages, setPreviewImages] = useState<string[]>([])
@@ -59,8 +61,10 @@ export function useArtworkForm({
         icon: '⚠️',
     }
 
-    // Choose validation schema based on mode
-    const validationSchema = isEditMode ? artworkEditSchema : artworkSchema
+    // Choose validation schema based on mode and isPhysicalOnly
+    const validationSchema = isPhysicalOnly 
+        ? (isEditMode ? physicalArtworkEditSchema : physicalArtworkSchema)
+        : (isEditMode ? artworkEditSchema : artworkSchema)
 
     // Form initialization
     const {
@@ -93,8 +97,8 @@ export function useArtworkForm({
             images: undefined,
             physicalCertificate: undefined,
             nftCertificate: undefined,
-            hasPhysicalOnly: initialData?.hasPhysicalOnly || false,
-            hasNftOnly: initialData?.hasNftOnly || false,
+            hasPhysicalOnly: isPhysicalOnly || initialData?.hasPhysicalOnly || false,
+            hasNftOnly: isPhysicalOnly ? false : (initialData?.hasNftOnly || false),
             pricePhysicalBeforeTax: initialData?.pricePhysicalBeforeTax || '',
             priceNftBeforeTax: initialData?.priceNftBeforeTax || '',
             certificateUrl: initialData?.certificateUrl || '',

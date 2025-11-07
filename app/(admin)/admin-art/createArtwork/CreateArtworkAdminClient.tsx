@@ -18,7 +18,6 @@ interface Artist {
   imageUrl: string | null
   isGallery: boolean
   backgroundImage: string | null
-  backofficeUserId: number | null
 }
 
 interface CreateArtworkAdminClientProps {

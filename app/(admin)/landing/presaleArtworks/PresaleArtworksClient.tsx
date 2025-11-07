@@ -15,7 +15,7 @@ type FilterArtist = {
   imageUrl: string
   isGallery: boolean
   backgroundImage: string | null
-  backofficeUserId: number | null
+  idUser: string | null
 }
 import Image from 'next/image'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'

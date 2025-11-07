@@ -100,8 +100,8 @@ model OrderItem {
   order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   // Nouvelles relations directes avec NftItem et PhysicalItem
-  nftItemId      Int?
-  nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
+  // nftItemId      Int?
+  // nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
   physicalItemId Int?
   physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id])
 
@@ -115,7 +115,7 @@ model OrderItem {
   totalPrice Decimal @db.Decimal(10, 2) // Prix TTC
 
   @@index([orderId])
-  @@index([nftItemId])
+  // @@index([nftItemId])
   @@index([physicalItemId])
   @@map("OrderItem")
   @@schema("marketplace")
@@ -185,8 +185,8 @@ model InvoiceItem {
   invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   // Nouvelles relations directes avec NftItem et PhysicalItem
-  nftItemId      Int?
-  nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
+  // nftItemId      Int?
+  // nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
   physicalItemId Int?
   physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id])
 
@@ -201,7 +201,7 @@ model InvoiceItem {
   totalPrice Decimal @db.Decimal(10, 2) // Prix TTC
 
   @@index([invoiceId])
-  @@index([nftItemId])
+  // @@index([nftItemId])
   @@index([physicalItemId])
   @@map("InvoiceItem")
   @@schema("marketplace")
@@ -344,7 +344,7 @@ model NftResource {
   collection              NftCollection            @relation(fields: [collectionId], references: [id])
   royaltyBeneficiaries    RoyaltyBeneficiary[]
   marketPlaceTransactions MarketPlaceTransaction[]
-  NftItem                 NftItem[]
+  // NftItem                 NftItem[]
 
   @@schema("public")
 }
@@ -399,7 +399,6 @@ model BackofficeUser {
   createdAt     DateTime             @default(now()) @db.Timestamp(6)
   artistId      Int?
   artist        Artist?              @relation(fields: [artistId], references: [id]) // Nouvelle relation
-  items         Item[]
 
   @@index([email])
   @@index([walletAddress])
@@ -490,8 +489,6 @@ model Item {
   metaTitle          String
   mainImageUrl       String?
   secondaryImagesUrl String[]           @default([])
-  realViewCount      Int                @default(0)
-  fakeViewCount      Int                @default(0)
   featured           Boolean?           @default(false)
   // Nouvelles relations pour les caractéristiques artistiques
   mediumId           Int?
@@ -504,10 +501,8 @@ model Item {
   createdAt DateTime @default(now()) @db.Date
 
   // Relations
-  nftItem          NftItem?
-  physicalItem     PhysicalItem?
-  BackofficeUser   BackofficeUser? @relation(fields: [backofficeUserId], references: [id])
-  backofficeUserId Int?
+  // nftItem      NftItem?
+  physicalItem PhysicalItem?
 
   @@index([idUser])
   @@index([artistId])
@@ -517,47 +512,53 @@ model Item {
   @@schema("backoffice")
 }
 
-model NftItem {
-  id              Int              @id @default(autoincrement())
-  itemId          Int              @unique
-  item            Item             @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  idNftResource   Int?
-  nftResource     NftResource?     @relation(fields: [idNftResource], references: [id])
-  price           Int              @default(0)
-  status          NftItemStatus    @default(created)
-  authCertificate AuthCertificate?
-  orderItems      OrderItem[]
-  invoiceItems    InvoiceItem[]
+// model NftItem {
+//   id            Int           @id @default(autoincrement())
+//   itemId        Int           @unique
+//   item          Item          @relation(fields: [itemId], references: [id], onDelete: Cascade)
+//   idNftResource Int?
+//   nftResource   NftResource?  @relation(fields: [idNftResource], references: [id])
+//   price         Int           @default(0)
+//   status        NftItemStatus @default(created)
+//   orderItems    OrderItem[]
+//   invoiceItems  InvoiceItem[]
 
-  @@index([itemId])
-  @@index([idNftResource])
-  @@schema("backoffice")
-}
+//   @@index([itemId])
+//   @@index([idNftResource])
+//   @@schema("backoffice")
+// }
 
 model PhysicalItem {
-  id                Int                @id @default(autoincrement())
-  itemId            Int                @unique
-  item              Item               @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  price             Int                @default(0)
-  status            PhysicalItemStatus @default(created)
-  stockQty          Int                @default(0)
-  initialQty        Int                @default(1)
-  height            Decimal?           @db.Decimal(10, 2)
-  width             Decimal?           @db.Decimal(10, 2)
-  weight            Decimal?           @db.Decimal(10, 2)
-  thickness         Decimal?           @db.Decimal(10, 2)
-  unitHeight        String?            @default("cm")
-  unitWidth         String?            @default("cm")
-  unitWeight        String?            @default("kg")
-  unitThickness     String?            @default("cm")
+  id                Int                             @id @default(autoincrement())
+  itemId            Int                             @unique
+  item              Item                            @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  price             Int                             @default(0)
+  status            PhysicalItemStatus              @default(created)
+  stockQty          Int                             @default(0)
+  initialQty        Int                             @default(1)
+  height            Decimal?                        @db.Decimal(10, 2)
+  width             Decimal?                        @db.Decimal(10, 2)
+  weight            Decimal?                        @db.Decimal(10, 2)
+  thickness         Decimal?                        @db.Decimal(10, 2)
+  unitHeight        String?                         @default("cm")
+  unitWidth         String?                         @default("cm")
+  unitWeight        String?                         @default("kg")
+  unitThickness     String?                         @default("cm")
   creationYear      Int?
   shippingAddressId Int?
-  shippingAddress   CustomerAddress?   @relation("PhysicalItemShipping", fields: [shippingAddressId], references: [id])
+  shippingAddress   CustomerAddress?                @relation("PhysicalItemShipping", fields: [shippingAddressId], references: [id])
   orderItems        OrderItem[]
   invoiceItems      InvoiceItem[]
-  authCertificate   AuthCertificate?
-  ArtistAddress     ArtistAddress?     @relation(fields: [artistAddressId], references: [id])
+
+  realViewCount      Int                @default(0)
+  fakeViewCount      Int                @default(0)
+
+  // Relations
+  authCertificate   AuthCertificatePhysicalArtwork?
+  ArtistAddress     ArtistAddress?                  @relation(fields: [artistAddressId], references: [id])
   artistAddressId   Int?
+
+  createdAt         DateTime   @default(now())
 
   @@index([itemId])
   @@index([artistAddressId])
@@ -593,15 +594,12 @@ enum ItemStatus {
   @@schema("backoffice")
 }
 
-model AuthCertificate {
-  id             Int           @id @default(autoincrement())
-  nftItemId      Int?          @unique
-  nftItem        NftItem?      @relation(fields: [nftItemId], references: [id], onDelete: Cascade)
-  physicalItemId Int?          @unique
-  physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+model AuthCertificatePhysicalArtwork {
+  id             Int          @id @default(autoincrement())
+  physicalItemId Int          @unique
+  physicalItem   PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
   file           Bytes
 
-  @@index([nftItemId])
   @@index([physicalItemId])
   @@schema("backoffice")
 }

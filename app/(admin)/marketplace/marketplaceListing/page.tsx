@@ -19,70 +19,12 @@ export default async function MarketplaceListingPage() {
     }) || []
 
     // Récupération des items avec statut ROYALTYSET et leurs relations
-    const royaltysetItems = await prisma.nftItem.findMany({
-      where: {
-        nftResource: {
-          status: 'ROYALTYSET'
-        }
-      },
-      include: {
-        item: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                name: true,
-              }
-            },
-            physicalItem: true
-          }
-        },
-        nftResource: {
-          select: {
-            name: true,
-            status: true,
-            type: true,
-            imageUri: true,
-            certificateUri: true,
-            tokenId: true,
-            collection: {
-              select: {
-                id: true,
-                name: true,
-                smartContractId: true,
-                smartContract: {
-                  select: {
-                    id: true,
-                    active: true,
-                    factoryAddress: true,
-                    network: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }) || []
+    const royaltysetItems = []
 
     // Conversion des objets Decimal en nombres standard
-    const serializedItems = royaltysetItems.map(item => ({
-      ...item,
-      item: {
-        ...item.item,
-        physicalItem: item.item.physicalItem ? {
-          ...item.item.physicalItem,
-          height: item.item.physicalItem.height ? Number(item.item.physicalItem.height) : null,
-          width: item.item.physicalItem.width ? Number(item.item.physicalItem.width) : null,
-        } : null,
-      },
-      priceNftBeforeTax: null, // Ces propriétés seront à définir autrement
-      pricePhysicalBeforeTax: null, // ou à supprimer si non nécessaires
-      priceNftPlusPhysicalBeforeTax: null,
-    }))
+    const serializedItems = []
 
-    return <MarketplaceListingClient royaltysetItems={serializedItems as any} smartContracts={smartContracts} />
+    return <MarketplaceListingClient royaltysetItems={[]} smartContracts={smartContracts} />
   } catch (error) {
     console.error('Erreur lors de la récupération des données:', error)
     return <MarketplaceListingClient royaltysetItems={[]} smartContracts={[]} />

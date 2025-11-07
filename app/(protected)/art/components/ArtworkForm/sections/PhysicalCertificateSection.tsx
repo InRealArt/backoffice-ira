@@ -18,7 +18,7 @@ function PhysicalCertificateSection({
   const hasExistingCertificate = isEditMode && certificateUrl
 
   return (
-    <FormSection title="Certificat Œuvre Physique">
+    <FormSection title="Certificat Œuvre Physique" bgVariant="subtle-3">
       {/* Certificat d'œuvre physique */}
       <div className="mb-6">
         <label htmlFor="physicalCertificate" className="flex items-center gap-1" data-required={!hasExistingCertificate}>

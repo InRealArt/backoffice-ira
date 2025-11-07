@@ -26,7 +26,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
       <AuthObserver />
       <Navbar />
       <div className="min-h-[calc(100vh-90px)] mt-[90px] bg-background-main transition-colors duration-300">
-        <div className="w-full p-xxl transition-all duration-300 overflow-x-hidden bg-background-main md:p-xl xs:p-lg">
+        <div className="w-full max-w-[1400px] mx-auto px-8 lg:px-16 xl:px-24 py-8 transition-all duration-300 overflow-x-hidden bg-background-main md:px-12 sm:px-6">
           {children}
         </div>
       </div>

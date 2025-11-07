@@ -14,31 +14,49 @@ function PhysicalPropertiesSection({
   isFormReadOnly = false
 }: PhysicalPropertiesSectionProps) {
   return (
-    <FormSection title="Caractéristiques physiques">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
-        {/* Prix de l'œuvre physique */}
+    <FormSection title="Caractéristiques physiques" bgVariant="subtle-3">
+      {/* Prix de l'œuvre physique */}
+      <div className="mb-6">
+        <label htmlFor="pricePhysicalBeforeTax" className="flex items-center gap-1" data-required={true}>
+          Prix de l'œuvre physique (HT)
+        </label>
+        <input
+          id="pricePhysicalBeforeTax"
+          type="number"
+          {...register("pricePhysicalBeforeTax", {
+            required: true,
+            min: {
+              value: 0,
+              message: "Le prix doit être supérieur ou égal à 0"
+            }
+          })}
+          className={`form-input ${errors.pricePhysicalBeforeTax ? 'input-error' : ''}`}
+          placeholder="Prix HT en euros"
+          disabled={isFormReadOnly}
+        />
+        {errors.pricePhysicalBeforeTax && <p className="form-error">{String(errors.pricePhysicalBeforeTax?.message || "Le prix est requis")}</p>}
+      </div>
+
+      {/* Ligne 1: Année de création, Quantité disponible, Poids */}
+      <div className="grid grid-cols-3 gap-4 md:gap-6 mb-6">
+        {/* Année de création */}
         <div className="mb-6">
-          <label htmlFor="pricePhysicalBeforeTax" className="flex items-center gap-1" data-required={true}>
-            Prix de l'œuvre physique (HT)
+          <label htmlFor="creationYear" className="flex items-center gap-1">
+            Année de création
           </label>
           <input
-            id="pricePhysicalBeforeTax"
+            id="creationYear"
             type="number"
-            {...register("pricePhysicalBeforeTax", {
-              required: true,
-              min: {
-                value: 0,
-                message: "Le prix doit être supérieur ou égal à 0"
-              }
-            })}
-            className={`form-input ${errors.pricePhysicalBeforeTax ? 'input-error' : ''}`}
-            placeholder="Prix HT en euros"
+            max={new Date().getFullYear()}
+            {...register("creationYear")}
+            className={`form-input ${errors.creationYear ? 'input-error' : ''}`}
+            placeholder="Année de création"
             disabled={isFormReadOnly}
           />
-          {errors.pricePhysicalBeforeTax && <p className="form-error">{String(errors.pricePhysicalBeforeTax?.message || "Le prix est requis")}</p>}
+          {errors.creationYear && <p className="form-error">{String(errors.creationYear?.message)}</p>}
         </div>
 
-        {/* Quantité initiale */}
+        {/* Quantité disponible */}
         <div className="mb-6">
           <label htmlFor="initialQty" className="flex items-center gap-1" data-required={true}>
             Quantité disponible
@@ -59,9 +77,29 @@ function PhysicalPropertiesSection({
           />
           {errors.initialQty && <p className="form-error">{String(errors.initialQty?.message || "La quantité est requise")}</p>}
         </div>
+
+        {/* Poids */}
+        <div className="mb-6">
+          <label htmlFor="weight" className="flex items-center gap-1" data-required={true}>
+            Poids (kg)
+          </label>
+          <input
+            id="weight"
+            type="number"
+            step="0.01"
+            {...register("weight", {
+              required: true
+            })}
+            className={`form-input ${errors.weight ? 'input-error' : ''}`}
+            placeholder="Poids en kg"
+            disabled={isFormReadOnly}
+          />
+          {errors.weight && <p className="form-error">{String(errors.weight?.message || "Le poids est requis")}</p>}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+      {/* Ligne 2: Largeur, Hauteur, Épaisseur */}
+      <div className="grid grid-cols-3 gap-4 md:gap-6">
         {/* Largeur */}
         <div className="mb-6">
           <label htmlFor="width" className="flex items-center gap-1" data-required={true}>
@@ -101,43 +139,24 @@ function PhysicalPropertiesSection({
           />
           {errors.height && <p className="form-error">{String(errors.height?.message || "La hauteur est requise")}</p>}
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
-        {/* Poids */}
+        {/* Épaisseur */}
         <div className="mb-6">
-          <label htmlFor="weight" className="flex items-center gap-1" data-required={true}>
-            Poids (kg)
+          <label htmlFor="thickness" className="flex items-center gap-1">
+            Épaisseur (cm)
           </label>
           <input
-            id="weight"
+            id="thickness"
             type="number"
             step="0.01"
-            {...register("weight", {
-              required: true
+            {...register("thickness", {
+              validate: value => !value || !isNaN(parseFloat(value)) || "L'épaisseur doit être un nombre valide"
             })}
-            className={`form-input ${errors.weight ? 'input-error' : ''}`}
-            placeholder="Poids en kg"
+            className={`form-input ${errors.thickness ? 'input-error' : ''}`}
+            placeholder="Épaisseur en cm"
             disabled={isFormReadOnly}
           />
-          {errors.weight && <p className="form-error">{String(errors.weight?.message || "Le poids est requis")}</p>}
-        </div>
-
-        {/* Année de création */}
-        <div className="mb-6">
-          <label htmlFor="creationYear" className="flex items-center gap-1">
-            Année de création
-          </label>
-          <input
-            id="creationYear"
-            type="number"
-            max={new Date().getFullYear()}
-            {...register("creationYear")}
-            className={`form-input ${errors.creationYear ? 'input-error' : ''}`}
-            placeholder="Année de création"
-            disabled={isFormReadOnly}
-          />
-          {errors.creationYear && <p className="form-error">{String(errors.creationYear?.message)}</p>}
+          {errors.thickness && <p className="form-error">{String(errors.thickness?.message)}</p>}
         </div>
       </div>
     </FormSection>

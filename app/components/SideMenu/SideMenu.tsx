@@ -90,9 +90,9 @@ export default function SideMenu() {
           <>
             <MenuSeparator isCollapsed={isMenuCollapsed} />
             <SideMenuItem 
-              label="Ma Collection"
-              isActive={activeItem === 'collection'}
-              onClick={() => handleNavigation('/art/collection', 'collection')}
+              label="Mes œuvres physiques"
+              isActive={activeItem === 'myPhysicalArtwork'}
+              onClick={() => handleNavigation('/art/myPhysicalArtwork', 'myPhysicalArtwork')}
               isCollapsed={isMenuCollapsed}
               icon={<span>🖼️</span>}
             />
@@ -104,9 +104,9 @@ export default function SideMenu() {
               icon={<span>📍</span>}
             />
             <SideMenuItem 
-              label="Créer une œuvre"
+              label="Créer une œuvre physique"
               isActive={activeItem === 'createArtwork'}
-              onClick={() => handleNavigation('/art/createArtwork', 'createArtwork')}
+              onClick={() => handleNavigation('/art/createPhysicalArtwok', 'createArtwork')}
               isCollapsed={isMenuCollapsed}
               icon={<span>➕</span>}
             />

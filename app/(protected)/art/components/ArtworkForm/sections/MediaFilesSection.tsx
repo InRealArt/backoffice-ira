@@ -18,7 +18,7 @@ function MediaFilesSection({
   isFormReadOnly
 }: MediaFilesSectionProps) {
   return (
-    <FormSection title="Fichiers Media">
+    <FormSection title="Fichiers Media" bgVariant="subtle-2">
       {/* Image Principale */}
       <div className="mb-6">
         <label htmlFor="images" className="flex items-center gap-1" data-required={!isEditMode || !initialImageUrl}>

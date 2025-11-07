@@ -63,7 +63,8 @@ const protectedRoutes: Record<string, AccessLevel> = {
     "/tools/webp-converter": "admin",
     // Routes artiste
     "/art/createArtwork": "artist",
-    "/art/collection": "artist",
+    "/art/createPhysicalArtwok": "artist",
+    "/art/myPhysicalArtwork": "artist",
     "/art/artworks": "artist",
     "/art/artworks/[id]/edit": "artist",
     "/art/addresses": "artist",

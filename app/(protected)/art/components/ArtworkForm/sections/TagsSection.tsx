@@ -12,7 +12,7 @@ function TagsSection({
   setTags
 }: TagsSectionProps) {
   return (
-    <FormSection title="Tags et catégories">
+    <FormSection title="Tags et catégories" bgVariant="subtle-1">
       <div className="mb-6">
         <label className="flex items-center gap-1">
           Tags

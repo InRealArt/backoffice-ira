@@ -23,6 +23,7 @@ export interface ArtworkFormProps {
     mediums?: ArtworkMedium[]
     styles?: ArtworkStyle[]
     techniques?: ArtworkTechnique[]
+    isPhysicalOnly?: boolean
     initialData?: {
         id?: number
         title?: string
@@ -91,6 +92,7 @@ export interface InfoTooltipProps {
 export interface FormSectionProps {
     title: string
     children: React.ReactNode
+    bgVariant?: 'default' | 'subtle-1' | 'subtle-2' | 'subtle-3' | 'subtle-4' | 'subtle-5'
 }
 
 export interface TagInputProps {
@@ -190,6 +192,7 @@ export interface PricingSectionProps extends FormFields {
     physicalItemStatus?: string
     nftItemStatus?: string
     isFormReadOnly?: boolean
+    isPhysicalOnly?: boolean
 }
 
 export interface TagsSectionProps extends FormFields {

@@ -15,62 +15,7 @@ export const metadata = {
 export default async function NftsToMintPage() {
   try {
     // Récupération des items avec les relations user et nftResource
-    const productsRaw = await prisma.nftItem.findMany({
-      where: {
-        OR: [
-          {
-            nftResource: {
-              status: {
-                not: {
-                  in: ['MINED', 'LISTED', 'ROYALTYSET', 'SOLD']
-                }
-              }
-            }
-          },
-          {
-            nftResource: null
-          }
-        ]
-      },
-      orderBy: {
-        id: 'desc',
-      },
-      include: {
-        item: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                name: true,
-              }
-            }
-          }
-        },
-        nftResource: {
-          select: {
-            name: true,
-            status: true,
-            type: true,
-            imageUri: true,
-            certificateUri: true,
-            mockups: true,
-            tags: true,
-            collection: {
-              select: {
-                name: true,
-                smartContract: {
-                  select: {
-                    active: true,
-                    factoryAddress: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }) || []
+    const productsRaw: any[] = []
 
     // Fonction pour sérialiser correctement un objet (y compris les dates)
     const serializeData = (obj: any): any => {

@@ -38,6 +38,10 @@ export function useSideMenuLogic() {
   // État de chargement pour les vérifications d'authentification
   const [isLoading, setIsLoading] = useState(true)
 
+  // État de navigation pour afficher le spinner
+  const [isNavigating, setIsNavigating] = useState(false)
+  const [navigatingItem, setNavigatingItem] = useState<string | null>(null)
+
   // Fermer tous les sous-menus sauf celui spécifié
   const closeAllSubmenusExcept = useCallback((menuToKeepOpen: string | null) => {
     if (menuToKeepOpen !== 'backofficeAdmin') setShowBackofficeAdminSubmenu(false)
@@ -114,15 +118,27 @@ export function useSideMenuLogic() {
   }, [isMenuCollapsed])
 
   // Fonction pour la navigation - Utiliser useRouter pour une navigation côté client
-  const handleNavigation = useCallback((path: string, item: string) => {
+  const handleNavigation = useCallback(async (path: string, item: string) => {
+    // Activer l'état de navigation
+    setIsNavigating(true)
+    setNavigatingItem(item)
+    
     // Utiliser le router Next.js pour une navigation sans rechargement de page
     router.push(path)
     setActiveItem(item)
     closeAllSubmenusExcept(null)
+    
     // Si le menu est plié sur mobile, le replier après la navigation
     if (window.innerWidth <= 768 && !isMenuCollapsed) {
       toggleMenuCollapse()
     }
+    
+    // Désactiver l'état de navigation après un court délai
+    // pour permettre à l'utilisateur de voir le spinner
+    setTimeout(() => {
+      setIsNavigating(false)
+      setNavigatingItem(null)
+    }, 500)
   }, [router, closeAllSubmenusExcept, isMenuCollapsed, toggleMenuCollapse])
 
   // Déterminer l'élément actif en fonction du chemin
@@ -130,9 +146,9 @@ export function useSideMenuLogic() {
     if (pathname) {
       if (pathname.includes('/dashboard')) {
         setActiveItem('dashboard')
-      } else if (pathname.includes('/art/collection')) {
-        setActiveItem('collection')
-      } else if (pathname.includes('/art/createArtwork')) {
+      } else if (pathname.includes('/art/myPhysicalArtwork')) {
+        setActiveItem('myPhysicalArtwork')
+      } else if (pathname.includes('/art/createArtwork') || pathname.includes('/art/createPhysicalArtwok')) {
         setActiveItem('createArtwork')
       } else if (pathname.includes('/admin-art/createArtwork')) {
         setActiveItem('adminMarketplace')
@@ -250,6 +266,8 @@ export function useSideMenuLogic() {
     canAccessCollection,
     isAdmin,
     isLoading,
+    isNavigating,
+    navigatingItem,
     showBackofficeAdminSubmenu,
     showBlockchainSubmenu,
     showMarketplaceSubmenu,

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useDynamicContext, useWalletConnectorEvent } from '@dynamic-labs/sdk-react-core'
 import { authClient } from '@/lib/auth-client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { getAuthCertificateByItemId, getUserByItemId, createNftResource, getNftResourceByItemId, getActiveCollections, checkNftResourceNameExists, isCertificateUriUnique, getItemById } from '@/lib/actions/prisma-actions'
+import { getUserByItemId, createNftResource, getActiveCollections, checkNftResourceNameExists, isCertificateUriUnique, getItemById, getPhysicalCertificateByItemId } from '@/lib/actions/prisma-actions'
 import React from 'react'
 import { z } from 'zod'
 import { useToast } from '@/app/components/Toast/ToastContext'
@@ -115,7 +115,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
           
           try {
             // Récupérer le certificat d'authenticité
-            const certificateResult = await getAuthCertificateByItemId(itemResult.id)
+            const certificateResult = await getPhysicalCertificateByItemId(itemResult.id)
             if (certificateResult && certificateResult.id) {
               setCertificate(certificateResult)
             }
@@ -127,7 +127,7 @@ export default function ViewNftToMintPage({ params }: { params: ParamsType }) {
             }
             
             // Récupérer le nftResource associé à cet item
-            const nftResourceResult = await getNftResourceByItemId(itemResult.id)
+            const nftResourceResult = {status: null, name: null, description: null, collectionId: ''}
             fetchCollections()
             if (nftResourceResult) {
               console.log('nftResourceResult', nftResourceResult)

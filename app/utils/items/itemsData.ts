@@ -11,10 +11,13 @@ export type ItemData = {
     description: string
     metaTitle: string
     metaDescription: string
+    createdAt: string // ISO date string for client-side formatting
     physicalItem?: {
         id: number
         status: string
         price: number
+        realViewCount?: number
+        fakeViewCount?: number
     } | null
     nftItem?: {
         id: number
@@ -54,18 +57,14 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
                 description: true,
                 metaTitle: true,
                 metaDescription: true,
+                createdAt: true,
                 physicalItem: {
                     select: {
                         id: true,
                         status: true,
-                        price: true
-                    }
-                },
-                nftItem: {
-                    select: {
-                        id: true,
-                        status: true,
-                        price: true
+                        price: true,
+                        realViewCount: true,
+                        fakeViewCount: true
                     }
                 }
             },
@@ -83,7 +82,11 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
 
         return {
             success: true,
-            data: items as ItemData[]
+            data: items.map((it) => ({
+                ...it,
+                // Normaliser createdAt en string pour la sérialisation côté client
+                createdAt: (it as any).createdAt instanceof Date ? (it as any).createdAt.toISOString() : (it as any).createdAt
+            })) as ItemData[]
         }
     } catch (error) {
         console.error('Erreur lors de la récupération des items:', error)

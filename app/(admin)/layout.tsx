@@ -31,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <>
       <Navbar />
       <div className="min-h-[calc(100vh-90px)] mt-[90px] bg-background-main transition-colors duration-300">
-        <div className="w-full p-xxl transition-all duration-300 overflow-x-hidden bg-background-main md:p-xl xs:p-lg">
+        <div className="w-full max-w-[1400px] mx-auto px-8 lg:px-16 xl:px-24 py-8 transition-all duration-300 overflow-x-hidden bg-background-main md:px-12 sm:px-6">
           {children}
         </div>
       </div>
@@ -40,7 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <>
       <Navbar />
       <div className="min-h-[calc(100vh-90px)] mt-[90px] bg-background-main transition-colors duration-300">
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] p-xxl md:p-xl xs:p-lg">
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] w-full max-w-[1400px] mx-auto px-8 lg:px-16 xl:px-24 py-8 md:px-12 sm:px-6">
           <div className="max-w-md w-full text-center space-y-6">
             <div className="space-y-4">
               <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center">

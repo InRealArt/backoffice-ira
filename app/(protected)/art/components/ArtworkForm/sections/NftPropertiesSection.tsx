@@ -3,7 +3,7 @@ import FormSection from '../FormSection'
 
 function NftPropertiesSection({ register, errors, control, setValue, getValues }: FormFields) {
   return (
-    <FormSection title="Caractéristiques NFT">
+    <FormSection title="Caractéristiques NFT" bgVariant="subtle-5">
       {/* Prix du NFT */}
       <div className="mb-6">
         <label htmlFor="priceNftBeforeTax" className="flex items-center gap-1" data-required={true}>

@@ -4,7 +4,7 @@ import FormSection from '../FormSection'
 
 function SeoSection({ register, errors }: FormFields) {
   return (
-    <FormSection title="Informations SEO">
+    <FormSection title="Informations SEO" bgVariant="subtle-1">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
         {/* Meta Title */}
         <div className="mb-6">

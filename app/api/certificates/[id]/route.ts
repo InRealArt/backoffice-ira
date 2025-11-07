@@ -13,7 +13,7 @@ export async function GET(
             return new NextResponse('ID invalide', { status: 400 })
         }
 
-        const certificate = await prisma.authCertificate.findUnique({
+        const certificate = await prisma.authCertificatePhysicalArtwork.findUnique({
             where: { id }
         })
 

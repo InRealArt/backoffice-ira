@@ -18,7 +18,7 @@ function NftCertificateSection({
   const hasExistingCertificate = isEditMode && certificateUrl
 
   return (
-    <FormSection title="Certificat NFT">
+    <FormSection title="Certificat NFT" bgVariant="subtle-4">
       {/* Certificat NFT */}
       <div className="mb-6">
         <label htmlFor="nftCertificate" className="flex items-center gap-1" data-required={!hasExistingCertificate}>

@@ -821,15 +821,17 @@
 .tag {
   display: inline-flex;
   align-items: center;
-  background-color: $color-background-light;
+  background-color: #6052ff; // Couleur purple du bouton primary
   border-radius: 16px;
   padding: $spacing-xs $spacing-md;
   font-size: $font-size-sm;
-  color: $color-text-primary;
+  color: #000000; // Texte en noir
+  font-weight: 500;
   
+  // Identique en light et dark mode
   .dark-mode & {
-    background-color: $color-border-dark;
-    color: $color-text-dark-primary;
+    background-color: #6052ff; // Couleur purple du bouton primary
+    color: #000000; // Texte en noir
   }
 }
 
@@ -846,21 +848,24 @@
   cursor: pointer;
   font-size: $font-size-md;
   line-height: 1;
-  color: $color-text-secondary;
+  color: #000000; // Texte en noir pour être visible sur fond purple
   
   &:hover {
-    color: $color-error;
+    color: #ffffff; // Blanc au survol pour contraste
+    background-color: rgba(0, 0, 0, 0.2);
   }
   
   &:focus {
     outline: none;
   }
   
+  // Identique en light et dark mode
   .dark-mode & {
-    color: $color-text-dark-muted;
+    color: #000000; // Texte en noir pour être visible sur fond purple
     
     &:hover {
-      color: $color-error-light;
+      color: #ffffff; // Blanc au survol pour contraste
+      background-color: rgba(0, 0, 0, 0.2);
     }
   }
 }

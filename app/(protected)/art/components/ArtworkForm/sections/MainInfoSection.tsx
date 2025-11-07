@@ -15,7 +15,7 @@ function MainInfoSection({
   onNameChange?: (e: React.ChangeEvent<HTMLInputElement>) => void 
 }) {
   return (
-    <FormSection title="Caractéristiques principales">
+    <FormSection title="Caractéristiques principales" bgVariant="default">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
         {/* Name */}
         <div className="mb-6">
@@ -37,7 +37,7 @@ function MainInfoSection({
         </div>
         
         {/* Slug généré automatiquement */}
-        <div className="mb-6">
+        {/* <div className="mb-6">
           <label htmlFor="slug" className="flex items-center gap-1">
             Slug
             <InfoTooltip
@@ -53,7 +53,7 @@ function MainInfoSection({
             className="form-input bg-gray-100 text-gray-600 cursor-not-allowed"
           />
           <p className="form-help">Ce champ est généré automatiquement à partir du nom</p>
-        </div>
+        </div> */}
       </div>
 
       {/* Description */}

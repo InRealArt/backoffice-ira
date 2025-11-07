@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import ArtworkForm from '@/app/(protected)/art/components/ArtworkForm'
-import { getAuthCertificateByItemId, getPhysicalCertificateByItemId, getNftCertificateByItemId } from '@/lib/actions/prisma-actions'
+import { getPhysicalCertificateByItemId } from '@/lib/actions/prisma-actions'
 import { getAllAddressesForAdmin } from '@/lib/actions/address-actions'
 import styles from './editArtworkAdmin.module.scss'
 import { normalizeString } from '@/lib/utils'
@@ -64,18 +64,6 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
           // Récupérer les certificats en parallèle
           const certificatePromises = []
 
-          // Certificat NFT (pour rétrocompatibilité)
-          if (item.nftItem) {
-            certificatePromises.push(
-              getAuthCertificateByItemId(item.id).catch(error => {
-                console.error('Erreur lors de la récupération du certificat d\'authenticité:', error)
-                return null
-              })
-            )
-          } else {
-            certificatePromises.push(Promise.resolve(null))
-          }
-
           // Certificat d'œuvre physique
           if (item.physicalItem) {
             certificatePromises.push(
@@ -84,39 +72,16 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
                 return null
               })
             )
-          } else {
-            certificatePromises.push(Promise.resolve(null))
-          }
-
-          // Certificat NFT
-          if (item.nftItem) {
-            certificatePromises.push(
-              getNftCertificateByItemId(item.id).catch(error => {
-                console.error('Erreur lors de la récupération du certificat NFT:', error)
-                return null
-              })
-            )
-          } else {
-            certificatePromises.push(Promise.resolve(null))
-          }
+          } 
 
           try {
-            const [authCertificateResult, physicalCertificateResult, nftCertificateResult] = await Promise.all(certificatePromises)
+            const [physicalCertificateResult] = await Promise.all(certificatePromises)
             
-            if (authCertificateResult) {
-              console.log('Certificat d\'authenticité trouvé:', authCertificateResult)
-              setCertificate(authCertificateResult)
-            }
-
             if (physicalCertificateResult) {
               console.log('Certificat d\'œuvre physique trouvé:', physicalCertificateResult)
               setPhysicalCertificate(physicalCertificateResult)
             }
 
-            if (nftCertificateResult) {
-              console.log('Certificat NFT trouvé:', nftCertificateResult)
-              setNftCertificate(nftCertificateResult)
-            }
           } catch (certError) {
             console.error('Erreur lors de la récupération des certificats:', certError)
           }

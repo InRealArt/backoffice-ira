@@ -1,0 +1,112 @@
+.listContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 12px;
+  background: var(--background-white, #fff);
+}
+
+.thumb {
+  flex: 0 0 auto;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f2f2f2;
+}
+
+.info {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-color, #111827);
+}
+
+.meta {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.price {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border, #e5e7eb);
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #fff;
+  color: #4f46e5;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+.btnPrimary {
+  background: #4f46e5;
+  color: #fff;
+  border-color: #4f46e5;
+}
+
+.btn:hover { background: #f9fafb; }
+.btnPrimary:hover { background: #4338ca; border-color: #4338ca; }
+
+.stats {
+  flex: 0 0 auto;
+  display: grid;
+  grid-auto-flow: row;
+  gap: 10px;
+  min-width: 180px;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  padding-left: 8px;
+}
+
+.quality {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #059669;
+  font-weight: 600;
+}
+
+.number {
+  color: #374151;
+  font-weight: 600;
+}
+
+.bigTitle {
+  font-size: 28px;
+}
+

@@ -9,7 +9,7 @@ import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { InRealArtRoles } from '@/lib/blockchain/smartContractConstants'
 import { publicClient } from '@/lib/providers'
 import { marketplaceAbi } from '@/lib/contracts/MarketplaceAbi'
-import { getSmartContractAddress, updateItemStatusToListedByNftResourceId, updateNftResourceStatusToListed, updateNftResourceStatusToMinted, createMarketPlaceTransaction, updateNftResourceOwner } from '@/lib/actions/prisma-actions'
+import { getSmartContractAddress, updateNftResourceStatusToListed, updateNftResourceStatusToMinted, createMarketPlaceTransaction, updateNftResourceOwner } from '@/lib/actions/prisma-actions'
 import { NetworkType } from '@prisma/client'
 
 interface ListingParams {
@@ -200,8 +200,6 @@ export function useMarketplaceListing(): UseMarketplaceListingReturn {
                 // Mettre à jour le statut de la ressource NFT
                 await updateNftResourceStatusToListed(Number(nftResource.id))
 
-                // Mettre à jour le statut de l'item
-                await updateItemStatusToListedByNftResourceId(Number(nftResource.id))
 
                 // Ajouter l'enregistrement de la transaction
                 await createMarketPlaceTransaction({

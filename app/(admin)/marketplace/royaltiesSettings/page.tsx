@@ -19,52 +19,7 @@ export default async function RoyaltiesSettingsPage() {
     }) || []
 
     // Récupération des items avec statut MINED et leurs relations
-    const minedItems = await prisma.nftItem.findMany({
-      where: {
-        nftResource: {
-          status: 'MINED'
-        }
-      },
-      include: {
-        item: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                name: true,
-              }
-            },
-            physicalItem: true
-          }
-        },
-        nftResource: {
-          select: {
-            name: true,
-            status: true,
-            type: true,
-            imageUri: true,
-            certificateUri: true,
-            tokenId: true,
-            collection: {
-              select: {
-                id: true,
-                name: true,
-                smartContractId: true,
-                smartContract: {
-                  select: {
-                    id: true,
-                    active: true,
-                    factoryAddress: true,
-                    network: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }) || []
+    const minedItems: any[] =[]
 
     // Conversion des objets Decimal en nombres standard
     const serializedItems = minedItems.map(item => ({
