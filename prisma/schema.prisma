@@ -8,7 +8,7 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "backoffice"]
+  schemas   = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "backoffice", "statistics"]
 }
 
 // Orders in the Marketplace
@@ -102,7 +102,7 @@ model OrderItem {
   // Nouvelles relations directes avec NftItem et PhysicalItem
   // nftItemId      Int?
   // nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
-  physicalItemId Int?
+  physicalItemId BigInt?
   physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id])
 
   // Données figées obligatoires (pour conformité facture)
@@ -187,7 +187,7 @@ model InvoiceItem {
   // Nouvelles relations directes avec NftItem et PhysicalItem
   // nftItemId      Int?
   // nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
-  physicalItemId Int?
+  physicalItemId BigInt?
   physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id])
 
   // Données figées de l'article (pour historique complet)
@@ -529,7 +529,7 @@ model Item {
 // }
 
 model PhysicalItem {
-  id                Int                             @id @default(autoincrement())
+  id                BigInt                             @id @default(autoincrement())
   itemId            Int                             @unique
   item              Item                            @relation(fields: [itemId], references: [id], onDelete: Cascade)
   price             Int                             @default(0)
@@ -564,6 +564,8 @@ model PhysicalItem {
   @@index([artistAddressId])
   @@index([shippingAddressId])
   @@schema("backoffice")
+  physicalArtworkViews PhysicalArtworkView[]
+  physicalArtworkViewStats PhysicalArtworkViewStat[]
 }
 
 enum NftItemStatus {
@@ -596,7 +598,7 @@ enum ItemStatus {
 
 model AuthCertificatePhysicalArtwork {
   id             Int          @id @default(autoincrement())
-  physicalItemId Int          @unique
+  physicalItemId BigInt          @unique
   physicalItem   PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
   file           Bytes
 
@@ -1085,4 +1087,39 @@ model BackofficeAuthVerification {
 
   @@map("verification")
   @@schema("backoffice")
+}
+
+
+// Schéma statistiques
+
+model PhysicalArtworkView {
+  id          BigInt      @id @default(autoincrement())
+  artworkId   BigInt
+  viewerId    BigInt?
+  viewedAt    DateTime    @default(now())
+  ipAddress   String?     @db.Inet
+  userAgent   String?
+
+  // Relations
+  artwork     PhysicalItem     @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@index([artworkId, viewedAt], name: "idx_artworkViews_artworkId_viewedAt")
+  @@map("artworkViews")
+  @@schema("statistics")
+}
+
+model PhysicalArtworkViewStat {
+  id          BigInt      @id @default(autoincrement())
+  artworkId   BigInt
+  year        Int
+  month       Int
+  viewCount   Int          @default(0)
+
+  // Relations
+  artwork     PhysicalItem      @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@unique([artworkId, year, month], name: "unique_artwork_month")
+  @@index([artworkId, year, month], name: "idx_artworkViewStats_artworkId_year_month")
+  @@map("artworkViewStats")
+  @@schema("statistics")
 }

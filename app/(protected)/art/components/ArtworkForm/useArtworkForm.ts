@@ -62,7 +62,7 @@ export function useArtworkForm({
     }
 
     // Choose validation schema based on mode and isPhysicalOnly
-    const validationSchema = isPhysicalOnly 
+    const validationSchema = isPhysicalOnly
         ? (isEditMode ? physicalArtworkEditSchema : physicalArtworkSchema)
         : (isEditMode ? artworkEditSchema : artworkSchema)
 
@@ -77,7 +77,7 @@ export function useArtworkForm({
         getValues,
         formState: { errors }
     } = useForm<ArtworkFormData>({
-        resolver: zodResolver(validationSchema) as any,
+        resolver: zodResolver(validationSchema as any) as any, // Cast nécessaire due aux validations conditionnelles Zod complexes
         defaultValues: {
             name: initialData?.title || '',
             title: initialData?.title || '',
@@ -570,7 +570,21 @@ export function useArtworkForm({
                         }
                     }
 
-                    mainImageUrl = await uploadImageToFirebase(fileInputRef.current.files[0], {
+                    // Import de la fonction de conversion WebP
+                    const { convertToWebPIfNeeded } = await import('@/lib/utils/webp-converter')
+
+                    // Convertir l'image principale en WebP si nécessaire
+                    infoToastFn('Traitement de l\'image principale...')
+                    const conversionResult = await convertToWebPIfNeeded(fileInputRef.current.files[0])
+
+                    if (!conversionResult.success) {
+                        console.warn('Échec de la conversion WebP, upload de l\'image originale:', conversionResult.error)
+                        infoToastFn('Conversion WebP échouée, upload de l\'image originale')
+                    } else if (conversionResult.wasConverted) {
+                        successToastFn(`Image convertie en WebP (compression: ${conversionResult.compressionRatio?.toFixed(1) || 0}%)`)
+                    }
+
+                    mainImageUrl = await uploadImageToFirebase(conversionResult.file, {
                         artistFolder,
                         itemSlug,
                         isMain: true
@@ -580,7 +594,38 @@ export function useArtworkForm({
                 }
 
                 if (hasNewSecondaryImages && secondaryImagesFiles.length > 0) {
-                    newSecondaryImageUrls = await uploadMultipleImagesToFirebase(secondaryImagesFiles, {
+                    // Import de la fonction de conversion WebP pour les images multiples
+                    const { convertMultipleToWebP } = await import('@/lib/utils/webp-converter')
+
+                    // Convertir les images secondaires en WebP si nécessaire
+                    infoToastFn(`Traitement de ${secondaryImagesFiles.length} image(s) secondaire(s)...`)
+                    const conversionResults = await convertMultipleToWebP(secondaryImagesFiles)
+
+                    // Extraire les fichiers convertis
+                    const processedFiles: File[] = []
+                    let convertedCount = 0
+                    let failedCount = 0
+
+                    for (const result of conversionResults) {
+                        processedFiles.push(result.file)
+
+                        if (result.success && result.wasConverted) {
+                            convertedCount++
+                        } else if (!result.success) {
+                            failedCount++
+                            console.warn(`Échec de conversion pour une image secondaire: ${result.error}`)
+                        }
+                    }
+
+                    if (convertedCount > 0) {
+                        successToastFn(`${convertedCount} image(s) secondaire(s) convertie(s) en WebP`)
+                    }
+
+                    if (failedCount > 0) {
+                        infoToastFn(`${failedCount} image(s) uploadée(s) dans leur format original`)
+                    }
+
+                    newSecondaryImageUrls = await uploadMultipleImagesToFirebase(processedFiles, {
                         artistFolder,
                         itemSlug,
                         isMain: false
