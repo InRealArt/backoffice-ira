@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
 
   // Configurer les fichiers externes pour Prisma (nouvelle syntaxe Next.js 16)
-  serverExternalPackages: ['@prisma/client', '@prisma/engines'],
+  serverExternalPackages: ['@prisma/client', '@prisma/engines', 'exceljs', 'rimraf', 'fstream'],
 
   // SOLUTION FINALE : Inclure les moteurs Prisma dans le file tracing
   outputFileTracingIncludes: {

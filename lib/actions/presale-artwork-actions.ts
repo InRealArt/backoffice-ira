@@ -340,4 +340,147 @@ export async function createBulkPresaleArtworks(data: {
             message: (error as Error).message
         }
     }
+}
+
+/**
+ * Traite un fichier Excel et crée les œuvres en prévente
+ */
+export async function processExcelImport(data: {
+    artistId: number
+    fileBase64: string
+}) {
+    try {
+        console.log('🔵 [SERVER] Début du traitement Excel')
+        console.log('👤 [SERVER] Artist ID:', data.artistId)
+        console.log('📦 [SERVER] Base64 reçu, longueur:', data.fileBase64.length)
+        console.log('📦 [SERVER] Premiers caractères:', data.fileBase64.substring(0, 50))
+
+        // Importation dynamique d'exceljs
+        console.log('📚 [SERVER] Import d\'ExcelJS...')
+        const ExcelJS = (await import('exceljs')).default
+        console.log('✅ [SERVER] ExcelJS importé')
+
+        // Décoder le fichier base64 en ArrayBuffer
+        console.log('🔓 [SERVER] Décodage base64...')
+        const buffer = Buffer.from(data.fileBase64, 'base64')
+        console.log('✅ [SERVER] Buffer créé, taille:', buffer.length)
+
+        const arrayBuffer = buffer.buffer.slice(
+            buffer.byteOffset,
+            buffer.byteOffset + buffer.byteLength
+        )
+        console.log('✅ [SERVER] ArrayBuffer créé, taille:', arrayBuffer.byteLength)
+
+        // Créer un workbook et charger le ArrayBuffer
+        console.log('📖 [SERVER] Chargement du workbook...')
+        const workbook = new ExcelJS.Workbook()
+        await workbook.xlsx.load(arrayBuffer)
+        console.log('✅ [SERVER] Workbook chargé, nombre de feuilles:', workbook.worksheets.length)
+
+        // Récupérer la première feuille
+        const worksheet = workbook.worksheets[0]
+        console.log('📄 [SERVER] Première feuille récupérée:', worksheet?.name)
+
+        if (!worksheet) {
+            return {
+                success: false,
+                message: 'Le fichier Excel ne contient aucune feuille'
+            }
+        }
+
+        // Lire les en-têtes (première ligne)
+        const headerRow = worksheet.getRow(1)
+        const headers: string[] = []
+        headerRow.eachCell({ includeEmpty: true }, (cell) => {
+            headers.push(cell.value?.toString().toLowerCase().trim() || '')
+        })
+
+        // Trouver les indices des colonnes
+        const nameIndex = headers.findIndex(h => h.includes('nom'))
+        const descriptionIndex = headers.findIndex(h => h.includes('description'))
+        const heightIndex = headers.findIndex(h => h.includes('hauteur'))
+        const widthIndex = headers.findIndex(h => h.includes('largeur'))
+        const priceIndex = headers.findIndex(h => h.includes('prix'))
+        const imageUrlIndex = headers.findIndex(h => h.includes('url'))
+
+        // Vérifier que toutes les colonnes requises sont présentes
+        if (nameIndex === -1 || imageUrlIndex === -1) {
+            return {
+                success: false,
+                message: 'Le fichier Excel doit contenir au minimum les colonnes "Nom oeuvre" et "url oeuvre"'
+            }
+        }
+
+        // Lire les données (à partir de la ligne 2)
+        const artworks: Array<{
+            name: string
+            description?: string
+            price?: number | null
+            imageUrl: string
+            width?: number | null
+            height?: number | null
+        }> = []
+
+        for (let i = 2; i <= worksheet.rowCount; i++) {
+            const row = worksheet.getRow(i)
+
+            // Vérifier si la ligne contient des données
+            const name = row.getCell(nameIndex + 1).value?.toString().trim()
+            const imageUrl = row.getCell(imageUrlIndex + 1).value?.toString().trim()
+
+            if (!name || !imageUrl) {
+                // Ligne vide ou incomplète, on passe
+                continue
+            }
+
+            const description = descriptionIndex !== -1
+                ? row.getCell(descriptionIndex + 1).value?.toString().trim()
+                : undefined
+
+            const height = heightIndex !== -1
+                ? parseFloat(row.getCell(heightIndex + 1).value?.toString() || '') || null
+                : null
+
+            const width = widthIndex !== -1
+                ? parseFloat(row.getCell(widthIndex + 1).value?.toString() || '') || null
+                : null
+
+            const price = priceIndex !== -1
+                ? parseFloat(row.getCell(priceIndex + 1).value?.toString() || '') || null
+                : null
+
+            artworks.push({
+                name,
+                description,
+                price,
+                imageUrl,
+                width: width ? Math.round(width) : null,
+                height: height ? Math.round(height) : null
+            })
+        }
+
+        if (artworks.length === 0) {
+            return {
+                success: false,
+                message: 'Aucune œuvre valide trouvée dans le fichier Excel'
+            }
+        }
+
+        // Utiliser la fonction existante pour créer les œuvres en masse
+        const result = await createBulkPresaleArtworks({
+            artistId: data.artistId,
+            artworks
+        })
+
+        return result
+    } catch (error) {
+        console.error('❌ [SERVER] Erreur lors du traitement du fichier Excel:', error)
+        console.error('❌ [SERVER] Type d\'erreur:', typeof error)
+        console.error('❌ [SERVER] Message:', (error as Error).message)
+        console.error('❌ [SERVER] Stack:', (error as Error).stack)
+        return {
+            success: false,
+            message: `Erreur serveur: ${(error as Error).message}`
+        }
+    }
 } 

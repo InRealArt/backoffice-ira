@@ -111,6 +111,11 @@ export default function PresaleArtworksClient({
     router.push(`/landing/presaleArtworks/bulk-add`)
   }
 
+  const handleImportExcel = () => {
+    // Navigation vers la page d'import Excel
+    router.push(`/landing/presaleArtworks/import-excel`)
+  }
+
   const handleDelete = async (artworkId: number) => {
     try {
       const result = await deletePresaleArtwork(artworkId)
@@ -246,6 +251,12 @@ export default function PresaleArtworksClient({
         subtitle="Gérez les œuvres disponibles en prévente"
         actions={
           <div className="d-flex gap-sm">
+            <ActionButton 
+              label="Ajout par import"
+              onClick={handleImportExcel}
+              size="small"
+              variant="secondary"
+            />
             <ActionButton 
               label="Ajouter en masse"
               onClick={handleBulkAdd}
