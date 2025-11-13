@@ -23,9 +23,9 @@ const formSchema = z.object({
   publicKey: z.string().min(1, 'La clé publique est requise'),
   imageUrl: z.string().url('URL d\'image invalide'),
   isGallery: z.boolean().default(false),
-  backgroundImage: z.string().url('URL d\'image d\'arrière-plan invalide').nullable().optional(),
+  backgroundImage: z.string().optional().or(z.literal('')).nullable(),
   slug: z.string().min(1, 'Le slug est requis'),
-  featuredArtwork: z.string().url('URL d\'image de l\'œuvre vedette invalide'),
+  featuredArtwork: z.string().optional().or(z.literal('')).nullable(),
   // Nouveaux champs biographie
   birthYear: z.number().min(1900, 'L\'année de naissance doit être supérieure à 1900').max(new Date().getFullYear(), 'L\'année de naissance ne peut pas être dans le futur').nullable().optional(),
   countryCode: z.string().min(2, 'Le code pays doit contenir au moins 2 caractères').max(3, 'Le code pays ne peut pas dépasser 3 caractères').nullable().optional(),
@@ -101,14 +101,8 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
     
-    // Debug: Vérifier s'il y a des champs non autorisés
+    // Debug: Vérifier les données du formulaire
     console.log('🔍 Données du formulaire d\'édition à soumettre:', data)
-    const allowedFields = ['name', 'surname', 'pseudo', 'description', 'publicKey', 'imageUrl', 'isGallery', 'backgroundImage', 'slug', 'featuredArtwork', 'birthYear', 'countryCode', 'websiteUrl', 'facebookUrl', 'instagramUrl', 'twitterUrl', 'linkedinUrl']
-    const extraFields = Object.keys(data).filter(key => !allowedFields.includes(key))
-    if (extraFields.length > 0) {
-      console.warn('⚠️ Champs non autorisés détectés dans l\'édition:', extraFields)
-      console.warn('⚠️ Valeurs des champs non autorisés:', extraFields.reduce((obj, key) => ({ ...obj, [key]: (data as any)[key] }), {}))
-    }
     
     try {
       // Filtrer explicitement les champs autorisés pour éviter les champs fantômes
@@ -132,10 +126,16 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
         linkedinUrl: data.linkedinUrl,
       }
       
-      // Transformer undefined en null pour backgroundImage
+      // Transformer undefined et chaînes vides en null pour les champs optionnels
       const formattedData = {
         ...cleanedData,
         backgroundImage: cleanedData.backgroundImage || null,
+        featuredArtwork: cleanedData.featuredArtwork || null,
+        websiteUrl: cleanedData.websiteUrl || null,
+        facebookUrl: cleanedData.facebookUrl || null,
+        instagramUrl: cleanedData.instagramUrl || null,
+        twitterUrl: cleanedData.twitterUrl || null,
+        linkedinUrl: cleanedData.linkedinUrl || null,
       }
       
       const result = await updateArtist(artist.id, formattedData)
