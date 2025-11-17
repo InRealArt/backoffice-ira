@@ -450,10 +450,7 @@ export async function createItemRecord(
     description?: string,
     slug?: string,
     mainImageUrl?: string | null,
-    artistId?: number | null,
-    mediumId?: number,
-    styleId?: number,
-    techniqueId?: number
+    artistId?: number | null
   },
   physicalItemData?: {
     price?: number,
@@ -462,7 +459,11 @@ export async function createItemRecord(
     width?: number,
     weight?: number,
     creationYear?: number | null,
-    shippingAddressId?: number
+    shippingAddressId?: number,
+    mediumId?: number,
+    styleIds?: number[],
+    techniqueIds?: number[],
+    themeIds?: number[]
   } | null,
   nftItemData?: {
     price?: number,
@@ -491,22 +492,16 @@ export async function createItemRecord(
           description: itemData?.description || '',
           slug: uniqueSlug,
           mainImageUrl: itemData?.mainImageUrl || null,
-          artistId: itemData?.artistId || null,
-          mediumId: itemData?.mediumId || null,
-          styleId: itemData?.styleId || null,
-          techniqueId: itemData?.techniqueId || null
+          artistId: itemData?.artistId || null
         },
         include: {
-          user: true,
-          medium: true,
-          style: true,
-          technique: true
+          user: true
         }
       })
 
       // Créer le PhysicalItem si les données sont fournies
       if (physicalItemData) {
-        await tx.physicalItem.create({
+        const physicalItem = await tx.physicalItem.create({
           data: {
             itemId: newItem.id,
             price: physicalItemData.price || 0,
@@ -517,9 +512,40 @@ export async function createItemRecord(
             weight: physicalItemData.weight ? new Decimal(physicalItemData.weight) : null,
             creationYear: physicalItemData.creationYear || null,
             shippingAddressId: physicalItemData.shippingAddressId || null,
+            mediumId: physicalItemData.mediumId || null,
             status: status as PhysicalItemStatus // Utiliser status comme enum pour PhysicalItem
           }
         })
+
+        // Créer les relations many-to-many pour les styles
+        if (physicalItemData.styleIds && physicalItemData.styleIds.length > 0) {
+          await tx.itemStyle.createMany({
+            data: physicalItemData.styleIds.map(styleId => ({
+              physicalItemId: physicalItem.id,
+              styleId
+            }))
+          })
+        }
+
+        // Créer les relations many-to-many pour les techniques
+        if (physicalItemData.techniqueIds && physicalItemData.techniqueIds.length > 0) {
+          await tx.itemTechnique.createMany({
+            data: physicalItemData.techniqueIds.map(techniqueId => ({
+              physicalItemId: physicalItem.id,
+              techniqueId
+            }))
+          })
+        }
+
+        // Créer les relations many-to-many pour les thèmes
+        if (physicalItemData.themeIds && physicalItemData.themeIds.length > 0) {
+          await tx.itemTheme.createMany({
+            data: physicalItemData.themeIds.map(themeId => ({
+              physicalItemId: physicalItem.id,
+              themeId
+            }))
+          })
+        }
       }
 
       return newItem
@@ -566,8 +592,13 @@ export async function updateItemStatus(
     // Vérifier si l'item existe
     const existingItem = await prisma.item.findUnique({
       where: { id: itemId },
-      include: {
-        physicalItem: true
+      select: {
+        id: true,
+        physicalItem: {
+          select: {
+            id: true
+          }
+        }
       }
     })
 
@@ -823,29 +854,6 @@ export async function getItemById(itemId: number) {
         secondaryImagesUrl: true,
         idUser: true,
         artistId: true,
-        // Nouveaux champs pour les caractéristiques artistiques
-        mediumId: true,
-        styleId: true,
-        techniqueId: true,
-        // Inclure les relations
-        medium: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        style: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        technique: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
         physicalItem: {
           select: {
             id: true,
@@ -853,13 +861,58 @@ export async function getItemById(itemId: number) {
             status: true,
             initialQty: true,
             stockQty: true,
+            isOnline: true,
             height: true,
             width: true,
             weight: true,
             creationYear: true,
             shippingAddressId: true,
             realViewCount: true,
-            fakeViewCount: true
+            fakeViewCount: true,
+            // Caractéristiques artistiques (déplacées de Item vers PhysicalItem)
+            mediumId: true,
+            medium: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            itemStyles: {
+              select: {
+                id: true,
+                styleId: true,
+                style: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            },
+            itemTechniques: {
+              select: {
+                id: true,
+                techniqueId: true,
+                technique: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            },
+            itemThemes: {
+              select: {
+                id: true,
+                themeId: true,
+                theme: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            }
           }
         },
         // Inclure l'utilisateur associé
@@ -1885,29 +1938,56 @@ export async function getAllItemsForAdmin() {
             price: true,
             initialQty: true,
             stockQty: true,
+            isOnline: true,
             height: true,
             width: true,
             weight: true,
             creationYear: true,
-            status: true
-          }
-        },
-        medium: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        style: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        technique: {
-          select: {
-            id: true,
-            name: true
+            status: true,
+            // Caractéristiques artistiques
+            mediumId: true,
+            medium: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+            itemStyles: {
+              select: {
+                id: true,
+                styleId: true,
+                style: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            },
+            itemTechniques: {
+              select: {
+                id: true,
+                techniqueId: true,
+                technique: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            },
+            itemThemes: {
+              select: {
+                id: true,
+                themeId: true,
+                theme: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -1948,9 +2028,6 @@ export async function updateItemRecord(
     tags?: string[],
     mainImageUrl?: string | null,
     artistId?: number | null,
-    mediumId?: number,
-    styleId?: number,
-    techniqueId?: number,
     physicalItemData?: {
       price?: number,
       initialQty?: number,
@@ -1958,7 +2035,11 @@ export async function updateItemRecord(
       width?: number,
       weight?: number,
       creationYear?: number | null,
-      shippingAddressId?: number
+      shippingAddressId?: number,
+      mediumId?: number,
+      styleIds?: number[],
+      techniqueIds?: number[],
+      themeIds?: number[]
     },
     nftItemData?: {
       price?: number
@@ -1969,8 +2050,13 @@ export async function updateItemRecord(
     // Vérifier si l'item existe
     const existingItem = await prisma.item.findUnique({
       where: { id: itemId },
-      include: {
-        physicalItem: true
+      select: {
+        id: true,
+        physicalItem: {
+          select: {
+            id: true
+          }
+        }
       }
     })
 
@@ -1993,9 +2079,6 @@ export async function updateItemRecord(
     if (data?.tags) updateData.tags = data.tags
     if (data?.mainImageUrl !== undefined) updateData.mainImageUrl = data.mainImageUrl
     if (data?.artistId !== undefined) updateData.artistId = data.artistId
-    if (data?.mediumId !== undefined) updateData.mediumId = data.mediumId
-    if (data?.styleId !== undefined) updateData.styleId = data.styleId
-    if (data?.techniqueId !== undefined) updateData.techniqueId = data.techniqueId
 
     // Mise à jour transaction avec Prisma pour assurer la cohérence des données
     const result = await prisma.$transaction(async (tx) => {
@@ -2003,9 +2086,19 @@ export async function updateItemRecord(
       const updatedItem = await tx.item.update({
         where: { id: itemId },
         data: updateData,
-        include: {
-          user: true,
-          physicalItem: true
+        select: {
+          id: true,
+          user: {
+            select: {
+              id: true,
+              email: true
+            }
+          },
+          physicalItem: {
+            select: {
+              id: true
+            }
+          }
         }
       })
 
@@ -2025,14 +2118,68 @@ export async function updateItemRecord(
         if (physicalData.weight !== undefined) physicalUpdateData.weight = new Decimal(physicalData.weight)
         if (physicalData.creationYear !== undefined) physicalUpdateData.creationYear = physicalData.creationYear
         if (physicalData.shippingAddressId !== undefined) physicalUpdateData.shippingAddressId = physicalData.shippingAddressId
+        if (physicalData.mediumId !== undefined) physicalUpdateData.mediumId = physicalData.mediumId
 
         if (existingPhysicalItem) {
+          // Mettre à jour le PhysicalItem existant
           await tx.physicalItem.update({
             where: { itemId },
             data: physicalUpdateData
           })
+
+          // Gérer les relations many-to-many pour les styles
+          if (physicalData.styleIds !== undefined) {
+            // Supprimer les anciennes associations
+            await tx.itemStyle.deleteMany({
+              where: { physicalItemId: existingPhysicalItem.id }
+            })
+            // Créer les nouvelles associations
+            if (physicalData.styleIds.length > 0) {
+              await tx.itemStyle.createMany({
+                data: physicalData.styleIds.map(styleId => ({
+                  physicalItemId: existingPhysicalItem.id,
+                  styleId
+                }))
+              })
+            }
+          }
+
+          // Gérer les relations many-to-many pour les techniques
+          if (physicalData.techniqueIds !== undefined) {
+            // Supprimer les anciennes associations
+            await tx.itemTechnique.deleteMany({
+              where: { physicalItemId: existingPhysicalItem.id }
+            })
+            // Créer les nouvelles associations
+            if (physicalData.techniqueIds.length > 0) {
+              await tx.itemTechnique.createMany({
+                data: physicalData.techniqueIds.map(techniqueId => ({
+                  physicalItemId: existingPhysicalItem.id,
+                  techniqueId
+                }))
+              })
+            }
+          }
+
+          // Gérer les relations many-to-many pour les thèmes
+          if (physicalData.themeIds !== undefined) {
+            // Supprimer les anciennes associations
+            await tx.itemTheme.deleteMany({
+              where: { physicalItemId: existingPhysicalItem.id }
+            })
+            // Créer les nouvelles associations
+            if (physicalData.themeIds.length > 0) {
+              await tx.itemTheme.createMany({
+                data: physicalData.themeIds.map(themeId => ({
+                  physicalItemId: existingPhysicalItem.id,
+                  themeId
+                }))
+              })
+            }
+          }
         } else {
-          await tx.physicalItem.create({
+          // Créer un nouveau PhysicalItem
+          const newPhysicalItem = await tx.physicalItem.create({
             data: {
               itemId,
               price: physicalData.price || 0,
@@ -2043,9 +2190,40 @@ export async function updateItemRecord(
               weight: physicalData.weight ? new Decimal(physicalData.weight) : null,
               creationYear: physicalData.creationYear || null,
               shippingAddressId: physicalData.shippingAddressId || null,
+              mediumId: physicalData.mediumId || null,
               status: PhysicalItemStatus.created
             }
           })
+
+          // Créer les relations many-to-many pour les styles
+          if (physicalData.styleIds && physicalData.styleIds.length > 0) {
+            await tx.itemStyle.createMany({
+              data: physicalData.styleIds.map(styleId => ({
+                physicalItemId: newPhysicalItem.id,
+                styleId
+              }))
+            })
+          }
+
+          // Créer les relations many-to-many pour les techniques
+          if (physicalData.techniqueIds && physicalData.techniqueIds.length > 0) {
+            await tx.itemTechnique.createMany({
+              data: physicalData.techniqueIds.map(techniqueId => ({
+                physicalItemId: newPhysicalItem.id,
+                techniqueId
+              }))
+            })
+          }
+
+          // Créer les relations many-to-many pour les thèmes
+          if (physicalData.themeIds && physicalData.themeIds.length > 0) {
+            await tx.itemTheme.createMany({
+              data: physicalData.themeIds.map(themeId => ({
+                physicalItemId: newPhysicalItem.id,
+                themeId
+              }))
+            })
+          }
         }
       }
 
@@ -2233,6 +2411,62 @@ export async function deletePhysicalItem(
       success: false,
       message: 'Une erreur est survenue lors de la suppression du PhysicalItem'
     }
+  }
+}
+
+/**
+ * Récupère tous les mediums artistiques
+ */
+export async function getAllArtworkMediums() {
+  try {
+    return await prisma.artworkMedium.findMany({
+      orderBy: { name: 'asc' }
+    })
+  } catch (error) {
+    console.error('Erreur lors de la récupération des mediums:', error)
+    return []
+  }
+}
+
+/**
+ * Récupère tous les styles artistiques
+ */
+export async function getAllArtworkStyles() {
+  try {
+    return await prisma.artworkStyle.findMany({
+      orderBy: { name: 'asc' }
+    })
+  } catch (error) {
+    console.error('Erreur lors de la récupération des styles:', error)
+    return []
+  }
+}
+
+/**
+ * Récupère toutes les techniques artistiques
+ */
+export async function getAllArtworkTechniques() {
+  try {
+    return await prisma.artworkTechnique.findMany({
+      orderBy: { name: 'asc' }
+    })
+  } catch (error) {
+    console.error('Erreur lors de la récupération des techniques:', error)
+    return []
+  }
+}
+
+/**
+ * Récupère tous les thèmes artistiques
+ */
+export async function getAllArtworkThemes() {
+  try {
+    return await prisma.artworkTheme.findMany({
+      orderBy: { name: 'asc' }
+    })
+  } catch (error) {
+    console.error('Erreur lors de la récupération des thèmes:', error)
+    return []
   }
 }
 

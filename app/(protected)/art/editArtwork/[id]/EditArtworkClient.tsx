@@ -11,16 +11,17 @@ import styles from './editArtwork.module.scss'
 import { normalizeString } from '@/lib/utils'
 import Button from '@/app/components/Button/Button'
 import { Address } from '@/app/(protected)/art/components/ArtworkForm/types'
-import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from '@prisma/client'
+import { ArtworkMedium, ArtworkStyle, ArtworkTechnique, ArtworkTheme } from '@prisma/client'
 
 interface EditArtworkClientProps {
   params: Promise<{ id: string }>
   mediums: ArtworkMedium[]
   styles: ArtworkStyle[]
   techniques: ArtworkTechnique[]
+  themes: ArtworkTheme[]
 }
 
-export default function EditArtworkClient({ params, mediums, styles: artStyles, techniques }: EditArtworkClientProps) {
+export default function EditArtworkClient({ params, mediums, styles: artStyles, techniques, themes }: EditArtworkClientProps) {
   // Utiliser React.use pour extraire les paramètres de la promesse
   const resolvedParams = use(params)
   
@@ -77,6 +78,10 @@ export default function EditArtworkClient({ params, mediums, styles: artStyles, 
               // Vérifier si l'item a des relations
               hasPhysicalItem: !!itemData.physicalItem,
               hasNftItem: !!itemData.nftItem,
+              // Vérifier les caractéristiques artistiques
+              physicalItemThemes: itemData.physicalItem?.itemThemes,
+              physicalItemStyles: itemData.physicalItem?.itemStyles,
+              physicalItemTechniques: itemData.physicalItem?.itemTechniques,
               // Afficher l'objet complet pour debugging
               itemComplet: itemData
             })
@@ -129,7 +134,7 @@ export default function EditArtworkClient({ params, mediums, styles: artStyles, 
   }, [session?.user?.email, resolvedParams.id, isSessionPending])
 
   const handleSuccess = () => {
-    router.push('/art/collection')
+    router.push('/art/myPhysicalArtwork')
   }
 
   if (isLoading) {
@@ -151,6 +156,7 @@ export default function EditArtworkClient({ params, mediums, styles: artStyles, 
             mediums={mediums}
             styles={artStyles}
             techniques={techniques}
+            themes={themes}
             initialData={{
               id: item.id,
               title: item.name,
@@ -160,10 +166,11 @@ export default function EditArtworkClient({ params, mediums, styles: artStyles, 
               slug: item.slug || (item.name ? normalizeString(item.name) : ''),
               imageUrl: item.mainImageUrl,
               secondaryImagesUrl: item.secondaryImagesUrl || [],
-              // Nouvelles caractéristiques artistiques depuis Item
-              mediumId: item.mediumId,
-              styleId: item.styleId,
-              techniqueId: item.techniqueId,
+              // Caractéristiques artistiques depuis PhysicalItem
+              mediumId: item.physicalItem?.mediumId,
+              styleIds: item.physicalItem?.itemStyles?.map((is: any) => is.styleId) || [],
+              techniqueIds: item.physicalItem?.itemTechniques?.map((it: any) => it.techniqueId) || [],
+              themeIds: item.physicalItem?.itemThemes?.map((ith: any) => ith.themeId) || [],
               // Transmettre les données du physicalItem s'il existe
               physicalItem: item.physicalItem ? {
                 id: item.physicalItem.id,
@@ -175,7 +182,11 @@ export default function EditArtworkClient({ params, mediums, styles: artStyles, 
                 weight: item.physicalItem.weight,
                 creationYear: item.physicalItem.creationYear,
                 status: item.physicalItem.status,
-                shippingAddressId: item.physicalItem.shippingAddressId
+                shippingAddressId: item.physicalItem.shippingAddressId,
+                mediumId: item.physicalItem.mediumId,
+                itemStyles: item.physicalItem.itemStyles || [],
+                itemTechniques: item.physicalItem.itemTechniques || [],
+                itemThemes: item.physicalItem.itemThemes || []
               } : null,
               // Transmettre les données du nftItem s'il existe
               nftItem: item.nftItem ? {

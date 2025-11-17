@@ -26,7 +26,7 @@ import { deletePhysicalItem } from '@/lib/actions/prisma-actions'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import Button from '@/app/components/Button/Button'
 
-export default function ArtworkForm({ mode = 'create', addresses = [], mediums = [], styles: artStyles = [], techniques = [], initialData = {}, onSuccess, isPhysicalOnly = false }: ArtworkFormProps) {
+export default function ArtworkForm({ mode = 'create', addresses = [], mediums = [], styles: artStyles = [], techniques = [], themes = [], initialData = {}, onSuccess, isPhysicalOnly = false }: ArtworkFormProps) {
   // État local pour le slug et le titre/nom
   const [localTitle, setLocalTitle] = useState(initialData?.title || '')
   const [localSlug, setLocalSlug] = useState(initialData?.slug || '')
@@ -191,17 +191,40 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
         if (initialData.physicalItem.shippingAddressId) {
           setValue('shippingAddressId', initialData.physicalItem.shippingAddressId.toString())
         }
+        
+        // Initialiser les caractéristiques artistiques depuis PhysicalItem
+        if (initialData.physicalItem.mediumId) {
+          setValue('mediumId', initialData.physicalItem.mediumId.toString())
+        }
+        if (initialData.physicalItem.itemStyles && initialData.physicalItem.itemStyles.length > 0) {
+          const styleIds = initialData.physicalItem.itemStyles.map(is => is.styleId)
+          setValue('styleIds', styleIds)
+        }
+        if (initialData.physicalItem.itemTechniques && initialData.physicalItem.itemTechniques.length > 0) {
+          const techniqueIds = initialData.physicalItem.itemTechniques.map(it => it.techniqueId)
+          setValue('techniqueIds', techniqueIds)
+        }
+        if (initialData.physicalItem.itemThemes && initialData.physicalItem.itemThemes.length > 0) {
+          const themeIds = initialData.physicalItem.itemThemes.map(ith => ith.themeId)
+          setValue('themeIds', themeIds)
+        }
       }
       
-      // Initialiser les caractéristiques artistiques depuis Item
-      if (initialData.mediumId) {
+      // Initialiser les caractéristiques artistiques depuis Item (pour rétrocompatibilité)
+      if (initialData.mediumId && !initialData.physicalItem?.mediumId) {
         setValue('mediumId', initialData.mediumId.toString())
       }
-      if (initialData.styleId) {
-        setValue('styleId', initialData.styleId.toString())
+      // Initialiser styleIds depuis initialData si pas dans physicalItem
+      if (initialData.styleIds && initialData.styleIds.length > 0 && !initialData.physicalItem?.itemStyles) {
+        setValue('styleIds', initialData.styleIds)
       }
-      if (initialData.techniqueId) {
-        setValue('techniqueId', initialData.techniqueId.toString())
+      // Initialiser techniqueIds depuis initialData si pas dans physicalItem
+      if (initialData.techniqueIds && initialData.techniqueIds.length > 0 && !initialData.physicalItem?.itemTechniques) {
+        setValue('techniqueIds', initialData.techniqueIds)
+      }
+      // Initialiser themeIds depuis initialData si pas dans physicalItem
+      if (initialData.themeIds && initialData.themeIds.length > 0 && !initialData.physicalItem?.itemThemes) {
+        setValue('themeIds', initialData.themeIds)
       }
       
       // Détection du NftItem
@@ -355,6 +378,7 @@ export default function ArtworkForm({ mode = 'create', addresses = [], mediums =
         mediums={mediums}
         styles={artStyles}
         techniques={techniques}
+        themes={themes}
       />
       
       {/* Section adresse d'expédition pour les œuvres physiques */}

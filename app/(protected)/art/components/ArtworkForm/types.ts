@@ -1,7 +1,7 @@
 // Types pour les formulaires et composants d'artwork
 import { ArtworkFormData } from '../../createArtwork/schema'
 import { Control, FieldErrors, UseFormRegister, UseFormSetValue, UseFormGetValues } from 'react-hook-form'
-import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from '@prisma/client'
+import { ArtworkMedium, ArtworkStyle, ArtworkTechnique, ArtworkTheme } from '@prisma/client'
 
 // Ré-export du type ArtworkFormData pour qu'il soit disponible
 export type { ArtworkFormData }
@@ -23,6 +23,7 @@ export interface ArtworkFormProps {
     mediums?: ArtworkMedium[]
     styles?: ArtworkStyle[]
     techniques?: ArtworkTechnique[]
+    themes?: ArtworkTheme[]
     isPhysicalOnly?: boolean
     initialData?: {
         id?: number
@@ -54,8 +55,9 @@ export interface ArtworkFormProps {
         initialQty?: number
         shippingAddressId?: number
         mediumId?: number
-        styleId?: number
-        techniqueId?: number
+        styleIds?: number[]
+        techniqueIds?: number[]
+        themeIds?: number[]
         // Nouvelles propriétés pour les entités liées
         physicalItem?: {
             id?: number
@@ -68,6 +70,10 @@ export interface ArtworkFormProps {
             creationYear?: number | string
             status?: string
             shippingAddressId?: number
+            mediumId?: number
+            itemStyles?: Array<{ styleId: number; style: { name: string } }>
+            itemTechniques?: Array<{ techniqueId: number; technique: { name: string } }>
+            itemThemes?: Array<{ themeId: number; theme: { name: string } }>
         } | null
         nftItem?: {
             id?: number
@@ -141,6 +147,7 @@ export type FormFields = {
     mediums?: ArtworkMedium[]
     styles?: ArtworkStyle[]
     techniques?: ArtworkTechnique[]
+    themes?: ArtworkTheme[]
 }
 
 export type UseArtworkFormReturn = {

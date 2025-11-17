@@ -85,9 +85,10 @@ export function useArtworkForm({
             metaTitle: initialData?.metaTitle || '',
             metaDescription: initialData?.metaDescription || '',
             medium: initialData?.medium || '',
-            mediumId: initialData?.mediumId?.toString() || '',
-            styleId: initialData?.styleId?.toString() || '',
-            techniqueId: initialData?.techniqueId?.toString() || '',
+            mediumId: initialData?.physicalItem?.mediumId?.toString() || initialData?.mediumId?.toString() || '',
+            styleIds: initialData?.styleIds || initialData?.physicalItem?.itemStyles?.map(is => is.styleId) || [],
+            techniqueIds: initialData?.techniqueIds || initialData?.physicalItem?.itemTechniques?.map(it => it.techniqueId) || [],
+            themeIds: initialData?.themeIds || initialData?.physicalItem?.itemThemes?.map(ith => ith.themeId) || [],
             width: initialData?.width || '',
             height: initialData?.height || '',
             weight: initialData?.weight || '',
@@ -759,6 +760,11 @@ export function useArtworkForm({
                             weight: data.weight ? parseFloat(data.weight) : undefined,
                             creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
                             shippingAddressId: data.shippingAddressId ? parseInt(data.shippingAddressId, 10) : undefined,
+                            // Caractéristiques artistiques (maintenant dans PhysicalItem)
+                            mediumId: data.mediumId ? parseInt(data.mediumId, 10) : undefined,
+                            styleIds: data.styleIds ? data.styleIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
+                            techniqueIds: data.techniqueIds ? data.techniqueIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
+                            themeIds: data.themeIds ? data.themeIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
                         }
                     }
 
@@ -767,11 +773,6 @@ export function useArtworkForm({
                             price: data.priceNftBeforeTax ? parseInt(data.priceNftBeforeTax, 10) : 0,
                         }
                     }
-
-                    // Ajouter les caractéristiques artistiques à l'Item principal
-                    if (data.mediumId) updateData.mediumId = parseInt(data.mediumId, 10)
-                    if (data.styleId) updateData.styleId = parseInt(data.styleId, 10)
-                    if (data.techniqueId) updateData.techniqueId = parseInt(data.techniqueId, 10)
 
                     if (isRealNewImage && mainImageUrl && mainImageUrl !== initialData.imageUrl) {
                         updateData.mainImageUrl = mainImageUrl
@@ -850,9 +851,6 @@ export function useArtworkForm({
                         slug: slug || normalizeString(data.name),
                         mainImageUrl: mainImageUrl || null,
                         artistId: finalArtistId,
-                        mediumId: data.mediumId ? parseInt(data.mediumId, 10) : undefined,
-                        styleId: data.styleId ? parseInt(data.styleId, 10) : undefined,
-                        techniqueId: data.techniqueId ? parseInt(data.techniqueId, 10) : undefined,
                     }
 
                     // Debug: vérifier les données envoyées
@@ -867,6 +865,11 @@ export function useArtworkForm({
                         weight: data.weight ? parseFloat(data.weight) : undefined,
                         creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
                         shippingAddressId: data.shippingAddressId ? parseInt(data.shippingAddressId, 10) : undefined,
+                        // Caractéristiques artistiques (maintenant dans PhysicalItem)
+                        mediumId: data.mediumId ? parseInt(data.mediumId, 10) : undefined,
+                        styleIds: data.styleIds ? data.styleIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
+                        techniqueIds: data.techniqueIds ? data.techniqueIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
+                        themeIds: data.themeIds ? data.themeIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
                     } : null
 
                     // Données pour NftItem, si applicable

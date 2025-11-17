@@ -173,10 +173,11 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
               slug: item.slug || (item.name ? normalizeString(item.name) : ''),
               imageUrl: item.mainImageUrl,
               secondaryImagesUrl: item.secondaryImagesUrl || [],
-              // Nouvelles caractéristiques artistiques depuis Item
-              mediumId: item.mediumId,
-              styleId: item.styleId,
-              techniqueId: item.techniqueId,
+              // Caractéristiques artistiques depuis PhysicalItem
+              mediumId: item.physicalItem?.mediumId,
+              styleIds: item.physicalItem?.itemStyles?.map((is: any) => is.styleId) || [],
+              techniqueIds: item.physicalItem?.itemTechniques?.map((it: any) => it.techniqueId) || [],
+              themeIds: item.physicalItem?.itemThemes?.map((ith: any) => ith.themeId) || [],
               // Adresse d'expédition depuis PhysicalItem
               shippingAddressId: item.physicalItem?.shippingAddressId,
               // Transmettre les données du physicalItem s'il existe
@@ -190,7 +191,11 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
                 weight: item.physicalItem.weight,
                 creationYear: item.physicalItem.creationYear,
                 status: item.physicalItem.status,
-                shippingAddressId: item.physicalItem.shippingAddressId
+                shippingAddressId: item.physicalItem.shippingAddressId,
+                mediumId: item.physicalItem.mediumId,
+                itemStyles: item.physicalItem.itemStyles || [],
+                itemTechniques: item.physicalItem.itemTechniques || [],
+                itemThemes: item.physicalItem.itemThemes || []
               } : null,
               // Transmettre les données du nftItem s'il existe
               nftItem: item.nftItem ? {

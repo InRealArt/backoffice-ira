@@ -35,10 +35,12 @@ export const artworkSchema = z.object({
         .optional(),
     mediumId: z.string()
         .min(1, "Le support/medium est requis"),
-    styleId: z.string()
-        .min(1, "Le style est requis"),
-    techniqueId: z.string()
-        .min(1, "La technique est requise"),
+    styleIds: z.array(z.union([z.string(), z.number()]))
+        .min(1, "Au moins un style est requis"),
+    techniqueIds: z.array(z.union([z.string(), z.number()]))
+        .min(1, "Au moins une technique est requise"),
+    themeIds: z.array(z.union([z.string(), z.number()]))
+        .optional(),
     width: z.string()
         .optional()
         .refine((val) => !val || !isNaN(parseFloat(val)), "La largeur doit être un nombre valide"),
@@ -187,10 +189,12 @@ export const artworkEditSchema = z.object({
         .optional(),
     mediumId: z.string()
         .min(1, "Le support/medium est requis"),
-    styleId: z.string()
-        .min(1, "Le style est requis"),
-    techniqueId: z.string()
-        .min(1, "La technique est requise"),
+    styleIds: z.array(z.union([z.string(), z.number()]))
+        .min(1, "Au moins un style est requis"),
+    techniqueIds: z.array(z.union([z.string(), z.number()]))
+        .min(1, "Au moins une technique est requise"),
+    themeIds: z.array(z.union([z.string(), z.number()]))
+        .optional(),
     width: z.string()
         .optional()
         .refine((val) => !val || !isNaN(parseFloat(val)), "La largeur doit être un nombre valide"),
@@ -299,8 +303,9 @@ export type ArtworkFormData = {
     hasNftOnly?: boolean;
     medium?: string;
     mediumId?: string;
-    styleId?: string;
-    techniqueId?: string;
+    styleIds?: (string | number)[];
+    techniqueIds?: (string | number)[];
+    themeIds?: (string | number)[];
     width?: string;
     height?: string;
     weight?: string;

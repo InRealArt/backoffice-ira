@@ -490,13 +490,6 @@ model Item {
   mainImageUrl       String?
   secondaryImagesUrl String[]           @default([])
   featured           Boolean?           @default(false)
-  // Nouvelles relations pour les caractéristiques artistiques
-  mediumId           Int?
-  medium             ArtworkMedium?     @relation(fields: [mediumId], references: [id])
-  styleId            Int?
-  style              ArtworkStyle?      @relation(fields: [styleId], references: [id])
-  techniqueId        Int?
-  technique          ArtworkTechnique?  @relation(fields: [techniqueId], references: [id])
 
   createdAt DateTime @default(now()) @db.Date
 
@@ -506,9 +499,6 @@ model Item {
 
   @@index([idUser])
   @@index([artistId])
-  @@index([mediumId])
-  @@index([styleId])
-  @@index([techniqueId])
   @@schema("backoffice")
 }
 
@@ -529,43 +519,54 @@ model Item {
 // }
 
 model PhysicalItem {
-  id                BigInt                             @id @default(autoincrement())
-  itemId            Int                             @unique
-  item              Item                            @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  price             Int                             @default(0)
-  status            PhysicalItemStatus              @default(created)
-  stockQty          Int                             @default(0)
-  initialQty        Int                             @default(1)
-  height            Decimal?                        @db.Decimal(10, 2)
-  width             Decimal?                        @db.Decimal(10, 2)
-  weight            Decimal?                        @db.Decimal(10, 2)
-  thickness         Decimal?                        @db.Decimal(10, 2)
-  unitHeight        String?                         @default("cm")
-  unitWidth         String?                         @default("cm")
-  unitWeight        String?                         @default("kg")
-  unitThickness     String?                         @default("cm")
+  id                BigInt             @id @default(autoincrement())
+  itemId            Int                @unique
+  item              Item               @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  price             Int                @default(0)
+  status            PhysicalItemStatus @default(created)
+  stockQty          Int                @default(0)
+  initialQty        Int                @default(1)
+  isOnline          Boolean            @default(false)
+  height            Decimal?           @db.Decimal(10, 2)
+  width             Decimal?           @db.Decimal(10, 2)
+  weight            Decimal?           @db.Decimal(10, 2)
+  thickness         Decimal?           @db.Decimal(10, 2)
+  unitHeight        String?            @default("cm")
+  unitWidth         String?            @default("cm")
+  unitWeight        String?            @default("kg")
+  unitThickness     String?            @default("cm")
   creationYear      Int?
   shippingAddressId Int?
-  shippingAddress   CustomerAddress?                @relation("PhysicalItemShipping", fields: [shippingAddressId], references: [id])
+  shippingAddress   CustomerAddress?   @relation("PhysicalItemShipping", fields: [shippingAddressId], references: [id])
   orderItems        OrderItem[]
   invoiceItems      InvoiceItem[]
 
-  realViewCount      Int                @default(0)
-  fakeViewCount      Int                @default(0)
+  realViewCount Int @default(0)
+  fakeViewCount Int @default(0)
+
+  // Caractéristiques artistiques
+  mediumId       Int?
+  medium         ArtworkMedium?  @relation(fields: [mediumId], references: [id])
+  // Relations many-to-many via tables de jointure
+  itemStyles     ItemStyle[]
+  itemTechniques ItemTechnique[]
+  itemThemes     ItemTheme[]
 
   // Relations
-  authCertificate   AuthCertificatePhysicalArtwork?
-  ArtistAddress     ArtistAddress?                  @relation(fields: [artistAddressId], references: [id])
-  artistAddressId   Int?
+  authCertificate AuthCertificatePhysicalArtwork?
+  ArtistAddress   ArtistAddress?                  @relation(fields: [artistAddressId], references: [id])
+  artistAddressId Int?
 
-  createdAt         DateTime   @default(now())
+  createdAt                DateTime                  @default(now())
+  physicalArtworkViews     PhysicalArtworkView[]
+  physicalArtworkViewStats PhysicalArtworkViewStat[]
 
   @@index([itemId])
   @@index([artistAddressId])
   @@index([shippingAddressId])
+  @@index([mediumId])
+  @@index([isOnline])
   @@schema("backoffice")
-  physicalArtworkViews PhysicalArtworkView[]
-  physicalArtworkViewStats PhysicalArtworkViewStat[]
 }
 
 enum NftItemStatus {
@@ -598,7 +599,7 @@ enum ItemStatus {
 
 model AuthCertificatePhysicalArtwork {
   id             Int          @id @default(autoincrement())
-  physicalItemId BigInt          @unique
+  physicalItemId BigInt       @unique
   physicalItem   PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
   file           Bytes
 
@@ -936,27 +937,93 @@ enum PostStatus {
 }
 
 model ArtworkMedium {
-  id    Int    @id @default(autoincrement())
-  name  String
-  items Item[]
+  id            Int            @id @default(autoincrement())
+  name          String
+  physicalItems PhysicalItem[]
 
-  @@schema("public")
+  @@schema("backoffice")
 }
 
 model ArtworkStyle {
-  id    Int    @id @default(autoincrement())
-  name  String
-  items Item[]
+  id         Int         @id @default(autoincrement())
+  name       String
+  itemStyles ItemStyle[]
 
-  @@schema("public")
+  @@schema("backoffice")
+}
+
+// Table de jointure pour la relation many-to-many PhysicalItem <-> ArtworkStyle
+model ItemStyle {
+  id             Int      @id @default(autoincrement())
+  physicalItemId BigInt
+  styleId        Int
+  createdAt      DateTime @default(now())
+
+  physicalItem PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+  style        ArtworkStyle @relation(fields: [styleId], references: [id], onDelete: Cascade)
+
+  @@unique([physicalItemId, styleId])
+  @@index([physicalItemId])
+  @@index([styleId])
+  @@map("ItemStyle")
+  @@schema("backoffice")
+}
+
+// Table de jointure pour la relation many-to-many PhysicalItem <-> ArtworkTechnique
+model ItemTechnique {
+  id             Int      @id @default(autoincrement())
+  physicalItemId BigInt
+  techniqueId    Int
+  createdAt      DateTime @default(now())
+
+  physicalItem PhysicalItem     @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+  technique    ArtworkTechnique @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+
+  @@unique([physicalItemId, techniqueId])
+  @@index([physicalItemId])
+  @@index([techniqueId])
+  @@map("ItemTechnique")
+  @@schema("backoffice")
+}
+
+// Table de jointure pour la relation many-to-many PhysicalItem <-> ArtworkTheme
+model ItemTheme {
+  id             Int      @id @default(autoincrement())
+  physicalItemId BigInt
+  themeId        Int
+  createdAt      DateTime @default(now())
+
+  physicalItem PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+  theme        ArtworkTheme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@unique([physicalItemId, themeId])
+  @@index([physicalItemId])
+  @@index([themeId])
+  @@map("ItemTheme")
+  @@schema("backoffice")
 }
 
 model ArtworkTechnique {
-  id    Int    @id @default(autoincrement())
-  name  String
-  items Item[]
+  id             Int             @id @default(autoincrement())
+  name           String
+  itemTechniques ItemTechnique[]
 
-  @@schema("public")
+  @@schema("backoffice")
+}
+
+model ArtworkSupport {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  @@schema("backoffice")
+}
+
+model ArtworkTheme {
+  id         Int         @id @default(autoincrement())
+  name       String
+  itemThemes ItemTheme[]
+
+  @@schema("backoffice")
 }
 
 model Country {
@@ -1089,19 +1156,18 @@ model BackofficeAuthVerification {
   @@schema("backoffice")
 }
 
-
 // Schéma statistiques
 
 model PhysicalArtworkView {
-  id          BigInt      @id @default(autoincrement())
-  artworkId   BigInt
-  viewerId    BigInt?
-  viewedAt    DateTime    @default(now())
-  ipAddress   String?     @db.Inet
-  userAgent   String?
+  id        BigInt   @id @default(autoincrement())
+  artworkId BigInt
+  viewerId  BigInt?
+  viewedAt  DateTime @default(now())
+  ipAddress String?  @db.Inet
+  userAgent String?
 
   // Relations
-  artwork     PhysicalItem     @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  artwork PhysicalItem @relation(fields: [artworkId], references: [id], onDelete: Cascade)
 
   @@index([artworkId, viewedAt], name: "idx_artworkViews_artworkId_viewedAt")
   @@map("artworkViews")
@@ -1109,14 +1175,14 @@ model PhysicalArtworkView {
 }
 
 model PhysicalArtworkViewStat {
-  id          BigInt      @id @default(autoincrement())
-  artworkId   BigInt
-  year        Int
-  month       Int
-  viewCount   Int          @default(0)
+  id        BigInt @id @default(autoincrement())
+  artworkId BigInt
+  year      Int
+  month     Int
+  viewCount Int    @default(0)
 
   // Relations
-  artwork     PhysicalItem      @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+  artwork PhysicalItem @relation(fields: [artworkId], references: [id], onDelete: Cascade)
 
   @@unique([artworkId, year, month], name: "unique_artwork_month")
   @@index([artworkId, year, month], name: "idx_artworkViewStats_artworkId_year_month")

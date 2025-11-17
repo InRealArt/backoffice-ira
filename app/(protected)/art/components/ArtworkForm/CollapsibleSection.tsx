@@ -59,11 +59,12 @@ export default function CollapsibleSection({
         />
       </button>
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+        className={`overflow-visible transition-all duration-300 ease-in-out ${
           isExpanded ? 'max-h-[10000px] opacity-100' : 'max-h-0 opacity-0'
         }`}
+        style={isExpanded ? {} : { overflow: 'hidden' }}
       >
-        <div className="px-6 pb-6 pt-4 border-t border-gray-100 dark:border-gray-700 w-full">
+        <div className="px-6 pb-6 pt-4 border-t border-gray-100 dark:border-gray-700 w-full overflow-visible">
           {children}
         </div>
       </div>

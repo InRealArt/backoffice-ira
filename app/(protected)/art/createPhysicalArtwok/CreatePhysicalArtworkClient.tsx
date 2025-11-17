@@ -7,15 +7,16 @@ import { authClient } from '@/lib/auth-client'
 import { getBackofficeUserByEmail, getBackofficeUserAddresses } from '@/lib/actions/prisma-actions'
 import { useRouter } from 'next/navigation'
 import { Address } from '../components/ArtworkForm/types'
-import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from '@prisma/client'
+import { ArtworkMedium, ArtworkStyle, ArtworkTechnique, ArtworkTheme } from '@prisma/client'
 
 interface CreatePhysicalArtworkClientProps {
   mediums: ArtworkMedium[]
   styles: ArtworkStyle[]
   techniques: ArtworkTechnique[]
+  themes: ArtworkTheme[]
 }
 
-export default function CreatePhysicalArtworkClient({ mediums, styles: artStyles, techniques }: CreatePhysicalArtworkClientProps) {
+export default function CreatePhysicalArtworkClient({ mediums, styles: artStyles, techniques, themes }: CreatePhysicalArtworkClientProps) {
   const [isMobile, setIsMobile] = useState(false)
   const [artistName, setArtistName] = useState('')
   const [addresses, setAddresses] = useState<Address[]>([])
@@ -97,6 +98,7 @@ export default function CreatePhysicalArtworkClient({ mediums, styles: artStyles
           mediums={mediums}
           styles={artStyles}
           techniques={techniques}
+          themes={themes}
           onSuccess={handleSuccess}
           isPhysicalOnly={true}
         />
