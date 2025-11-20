@@ -64,6 +64,24 @@ export async function getMaxPresaleArtworkOrder() {
 }
 
 /**
+ * Compte le nombre d'œuvres en prévente pour un artiste
+ */
+export async function getPresaleArtworkCountByArtist(artistId: number) {
+    try {
+        const count = await prisma.presaleArtwork.count({
+            where: {
+                artistId
+            }
+        })
+
+        return { count, success: true }
+    } catch (error) {
+        console.error('Erreur lors du comptage des œuvres en prévente:', error)
+        return { count: 0, success: false }
+    }
+}
+
+/**
  * Récupère une œuvre en prévente par son ordre
  */
 export async function getPresaleArtworkByOrder(order: number) {
