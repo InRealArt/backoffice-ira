@@ -2,6 +2,7 @@
 
 import React from 'react'
 import SideMenuItem from './SideMenuItem'
+import { Store, PlusCircle, Folder, Sparkles, Coins, ShoppingBag, Receipt, FileText } from 'lucide-react'
 
 interface MarketplaceSubMenuProps {
   isActive: boolean
@@ -21,6 +22,7 @@ export default function MarketplaceSubMenu({ isActive, isOpen, toggleSubmenu, on
         isSubmenuOpen={isOpen}
         onClick={toggleSubmenu}
         isCollapsed={isCollapsed}
+        icon={<Store size={20} />}
       />
       
       {isOpen && !isCollapsed && (
@@ -29,38 +31,43 @@ export default function MarketplaceSubMenu({ isActive, isOpen, toggleSubmenu, on
             label="Créer une œuvre" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/admin-art/createArtwork', 'adminCreateArtwork')}
-            icon={<span>➕</span>}
+            icon={<PlusCircle size={18} />}
           />
           <SideMenuItem 
             label="Collection d'œuvres" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/admin-art/collection', 'adminArtCollection')}
-            icon={<span>🎨</span>}
+            icon={<Folder size={18} />}
           />
           <SideMenuItem 
             label="NFTs à minter" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/nftsToMint', 'nftsToMint')}
+            icon={<Sparkles size={18} />}
           />
           <SideMenuItem 
             label="Royalties" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/royaltiesSettings', 'royaltiesSettings')}
+            icon={<Coins size={18} />}
           />
           <SideMenuItem 
             label="Marketplace Listing" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/marketplaceListing', 'marketplaceListing')}
+            icon={<ShoppingBag size={18} />}
           />
           <SideMenuItem 
             label="Transactions Marketplace" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/transactions', 'transactions')}
+            icon={<Receipt size={18} />}
           />
           <SideMenuItem 
             label="Factures" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/invoices', 'invoices')}
+            icon={<FileText size={18} />}
           />
         </ul>
       )}
@@ -71,38 +78,43 @@ export default function MarketplaceSubMenu({ isActive, isOpen, toggleSubmenu, on
             label="Créer une œuvre" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/admin-art/createArtwork', 'adminCreateArtwork')}
-            icon={<span>➕</span>}
+            icon={<PlusCircle size={18} />}
           />
           <SideMenuItem 
             label="Collection d'œuvres" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/admin-art/collection', 'adminArtCollection')}
-            icon={<span>🎨</span>}
+            icon={<Folder size={18} />}
           />
           <SideMenuItem 
             label="NFTs à minter" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/nftsToMint', 'nftsToMint')}
+            icon={<Sparkles size={18} />}
           />
           <SideMenuItem 
             label="Royalties" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/royaltiesSettings', 'royaltiesSettings')}
+            icon={<Coins size={18} />}
           />
           <SideMenuItem 
             label="Marketplace Listing" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/marketplaceListing', 'marketplaceListing')}
+            icon={<ShoppingBag size={18} />}
           />
           <SideMenuItem 
             label="Transactions Marketplace" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/transactions', 'transactions')}
+            icon={<Receipt size={18} />}
           />
           <SideMenuItem 
             label="Factures" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/marketplace/invoices', 'invoices')}
+            icon={<FileText size={18} />}
           />
         </ul>
       )}

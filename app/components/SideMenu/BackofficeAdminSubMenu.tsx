@@ -2,6 +2,7 @@
 
 import React from 'react'
 import SideMenuItem from './SideMenuItem'
+import { Shield, Users, UserPlus } from 'lucide-react'
 
 interface BackofficeAdminSubMenuProps {
   isActive: boolean
@@ -21,6 +22,7 @@ export default function BackofficeAdminSubMenu({ isActive, isOpen, toggleSubmenu
         isSubmenuOpen={isOpen}
         onClick={toggleSubmenu}
         isCollapsed={isCollapsed}
+        icon={<Shield size={20} />}
       />
       
       {isOpen && !isCollapsed && (
@@ -29,6 +31,7 @@ export default function BackofficeAdminSubMenu({ isActive, isOpen, toggleSubmenu
             label="Gestion des Membres" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/boAdmin/users', 'boUsers')}
+            icon={<Users size={18} />}
           />
         </ul>
       )}
@@ -39,11 +42,13 @@ export default function BackofficeAdminSubMenu({ isActive, isOpen, toggleSubmenu
             label="Gestion des Membres" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/boAdmin/users', 'boUsers')}
+            icon={<Users size={18} />}
           />
           <SideMenuItem 
             label="Créer un Membre" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/boAdmin/create-member', 'createMember')}
+            icon={<UserPlus size={18} />}
           />
         </ul>
       )}

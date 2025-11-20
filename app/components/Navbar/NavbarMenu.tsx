@@ -4,6 +4,35 @@ import { useState, useRef, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useSideMenuLogic } from '../SideMenu/useSideMenuLogic'
 import { authClient } from '@/lib/auth-client'
+import {
+  LayoutDashboard,
+  Image,
+  MapPin,
+  PlusCircle,
+  Globe,
+  Languages,
+  FileText,
+  Users,
+  HelpCircle,
+  BookOpen,
+  ShoppingCart,
+  Folder,
+  Layout,
+  Database,
+  Tag,
+  Palette,
+  Brush,
+  Wrench,
+  Shield,
+  UserPlus,
+  Link,
+  FileCode,
+  Coins,
+  Store,
+  Sparkles,
+  ShoppingBag,
+  Receipt
+} from 'lucide-react'
 
 export default function NavbarMenu() {
   const pathname = usePathname()
@@ -110,26 +139,37 @@ export default function NavbarMenu() {
               {isItemNavigating('dashboard') ? (
                 <>
                   <span className="loading loading-spinner loading-sm"></span>
-                  <span>📊 Dashboard</span>
+                  <LayoutDashboard size={18} />
+                  <span>Dashboard</span>
                 </>
               ) : (
-                <span>📊 Dashboard</span>
+                <>
+                  <LayoutDashboard size={18} />
+                  <span>Dashboard</span>
+                </>
               )}
             </a>
           </li>
           <li className="divider my-1"></li>
           <li>
-            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">🖼️ MA COLLECTION</a>
+            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
+              <Image size={16} />
+              MA COLLECTION
+            </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a onClick={() => handleMenuNavigation('/art/myPhysicalArtwork', 'myPhysicalArtwork')} className="flex items-center gap-2">
                   {isItemNavigating('myPhysicalArtwork') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
-                      <span>🖼️ Mes œuvres physiques</span>
+                      <Image size={18} />
+                      <span>Mes œuvres physiques</span>
                     </>
                   ) : (
-                    <span>🖼️ Mes œuvres physiques</span>
+                    <>
+                      <Image size={18} />
+                      <span>Mes œuvres physiques</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -138,10 +178,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('addresses') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
-                      <span>📍 Adresses</span>
+                      <MapPin size={18} />
+                      <span>Adresses</span>
                     </>
                   ) : (
-                    <span>📍 Adresses</span>
+                    <>
+                      <MapPin size={18} />
+                      <span>Adresses</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -150,10 +194,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('createPhysicalArtwok') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
-                      <span>➕ Créer une œuvre</span>
+                      <PlusCircle size={18} />
+                      <span>Créer une œuvre</span>
                     </>
                   ) : (
-                    <span>➕ Créer une œuvre</span>
+                    <>
+                      <PlusCircle size={18} />
+                      <span>Créer une œuvre</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -171,26 +219,37 @@ export default function NavbarMenu() {
               {isItemNavigating('dashboard') ? (
                 <>
                   <span className="loading loading-spinner loading-sm"></span>
-                  <span>📊 Dashboard</span>
+                  <LayoutDashboard size={18} />
+                  <span>Dashboard</span>
                 </>
               ) : (
-                <span>📊 Dashboard</span>
+                <>
+                  <LayoutDashboard size={18} />
+                  <span>Dashboard</span>
+                </>
               )}
             </a>
           </li>
           <li className="divider my-1"></li>
           <li>
-            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">🏠 LANDING PAGES</a>
+            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
+              <Globe size={16} />
+              LANDING PAGES
+            </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a onClick={() => handleMenuNavigation('/landing/languages', 'languages')} className="flex items-center gap-2">
                   {isItemNavigating('languages') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Languages size={18} />
                       <span>Languages</span>
                     </>
                   ) : (
-                    <span>Languages</span>
+                    <>
+                      <Languages size={18} />
+                      <span>Languages</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -199,10 +258,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('translations') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <FileText size={18} />
                       <span>Translations</span>
                     </>
                   ) : (
-                    <span>Translations</span>
+                    <>
+                      <FileText size={18} />
+                      <span>Translations</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -211,10 +274,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('team') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Users size={18} />
                       <span>Team</span>
                     </>
                   ) : (
-                    <span>Team</span>
+                    <>
+                      <Users size={18} />
+                      <span>Team</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -223,10 +290,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('faq') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <HelpCircle size={18} />
                       <span>FAQ</span>
                     </>
                   ) : (
-                    <span>FAQ</span>
+                    <>
+                      <HelpCircle size={18} />
+                      <span>FAQ</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -235,10 +306,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('detailedFaq') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <FileText size={18} />
                       <span>FAQ détaillée</span>
                     </>
                   ) : (
-                    <span>FAQ détaillée</span>
+                    <>
+                      <FileText size={18} />
+                      <span>FAQ détaillée</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -247,10 +322,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('detailedFaqPage') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <BookOpen size={18} />
                       <span>FAQ par page</span>
                     </>
                   ) : (
-                    <span>FAQ par page</span>
+                    <>
+                      <BookOpen size={18} />
+                      <span>FAQ par page</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -259,10 +338,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('detailedGlossary') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <BookOpen size={18} />
                       <span>Glossaire détaillé</span>
                     </>
                   ) : (
-                    <span>Glossaire détaillé</span>
+                    <>
+                      <BookOpen size={18} />
+                      <span>Glossaire détaillé</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -271,10 +354,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('landingArtists') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Users size={18} />
                       <span>Page artistes</span>
                     </>
                   ) : (
-                    <span>Page artistes</span>
+                    <>
+                      <Users size={18} />
+                      <span>Page artistes</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -283,10 +370,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('presaleArtworks') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <ShoppingCart size={18} />
                       <span>Œuvres en prévente</span>
                     </>
                   ) : (
-                    <span>Œuvres en prévente</span>
+                    <>
+                      <ShoppingCart size={18} />
+                      <span>Œuvres en prévente</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -295,10 +386,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('seoPosts') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <FileText size={18} />
                       <span>Articles de blog</span>
                     </>
                   ) : (
-                    <span>Articles de blog</span>
+                    <>
+                      <FileText size={18} />
+                      <span>Articles de blog</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -306,17 +401,24 @@ export default function NavbarMenu() {
           </li>
           <li className="divider my-1"></li>
           <li>
-            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">📊 DATA ADMINISTRATION</a>
+            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
+              <Database size={16} />
+              DATA ADMINISTRATION
+            </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a onClick={() => handleMenuNavigation('/dataAdministration/artists', 'artists')} className="flex items-center gap-2">
                   {isItemNavigating('artists') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Users size={18} />
                       <span>Artistes</span>
                     </>
                   ) : (
-                    <span>Artistes</span>
+                    <>
+                      <Users size={18} />
+                      <span>Artistes</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -325,10 +427,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('artist-categories') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Tag size={18} />
                       <span>Catégories d'artistes</span>
                     </>
                   ) : (
-                    <span>Catégories d'artistes</span>
+                    <>
+                      <Tag size={18} />
+                      <span>Catégories d'artistes</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -337,10 +443,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('artwork-mediums') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Palette size={18} />
                       <span>Mediums d'œuvres</span>
                     </>
                   ) : (
-                    <span>Mediums d'œuvres</span>
+                    <>
+                      <Palette size={18} />
+                      <span>Mediums d'œuvres</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -349,10 +459,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('artwork-styles') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Brush size={18} />
                       <span>Styles d'œuvres</span>
                     </>
                   ) : (
-                    <span>Styles d'œuvres</span>
+                    <>
+                      <Brush size={18} />
+                      <span>Styles d'œuvres</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -361,10 +475,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('artwork-techniques') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Wrench size={18} />
                       <span>Techniques d'œuvres</span>
                     </>
                   ) : (
-                    <span>Techniques d'œuvres</span>
+                    <>
+                      <Wrench size={18} />
+                      <span>Techniques d'œuvres</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -372,17 +490,24 @@ export default function NavbarMenu() {
           </li>
           <li className="divider my-1"></li>
           <li>
-            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">👥 BACKOFFICE ADMIN</a>
+            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
+              <Shield size={16} />
+              BACKOFFICE ADMIN
+            </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a onClick={() => handleMenuNavigation('/boAdmin/users', 'boUsers')} className="flex items-center gap-2">
                   {isItemNavigating('boUsers') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Users size={18} />
                       <span>Gestion des Membres</span>
                     </>
                   ) : (
-                    <span>Gestion des Membres</span>
+                    <>
+                      <Users size={18} />
+                      <span>Gestion des Membres</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -391,10 +516,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('createMember') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <UserPlus size={18} />
                       <span>Créer un Membre</span>
                     </>
                   ) : (
-                    <span>Créer un Membre</span>
+                    <>
+                      <UserPlus size={18} />
+                      <span>Créer un Membre</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -402,17 +531,24 @@ export default function NavbarMenu() {
           </li>
           <li className="divider my-1"></li>
           <li>
-            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">⛓️ BLOCKCHAIN</a>
+            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
+              <Link size={16} />
+              BLOCKCHAIN
+            </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a onClick={() => handleMenuNavigation('/blockchain/smartContracts', 'smartContracts')} className="flex items-center gap-2">
                   {isItemNavigating('smartContracts') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <FileCode size={18} />
                       <span>Smart Contracts</span>
                     </>
                   ) : (
-                    <span>Smart Contracts</span>
+                    <>
+                      <FileCode size={18} />
+                      <span>Smart Contracts</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -421,10 +557,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('collections') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Folder size={18} />
                       <span>Collections</span>
                     </>
                   ) : (
-                    <span>Collections</span>
+                    <>
+                      <Folder size={18} />
+                      <span>Collections</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -433,10 +573,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('royaltyBeneficiaries') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Coins size={18} />
                       <span>Royalties</span>
                     </>
                   ) : (
-                    <span>Royalties</span>
+                    <>
+                      <Coins size={18} />
+                      <span>Royalties</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -444,17 +588,24 @@ export default function NavbarMenu() {
           </li>
           <li className="divider my-1"></li>
           <li>
-            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">🛒 MARKETPLACE</a>
+            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
+              <Store size={16} />
+              MARKETPLACE
+            </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a onClick={() => handleMenuNavigation('/admin-art/createArtwork', 'adminCreateArtwork')} className="flex items-center gap-2">
                   {isItemNavigating('adminCreateArtwork') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
-                      <span>➕ Créer une œuvre</span>
+                      <PlusCircle size={18} />
+                      <span>Créer une œuvre</span>
                     </>
                   ) : (
-                    <span>➕ Créer une œuvre</span>
+                    <>
+                      <PlusCircle size={18} />
+                      <span>Créer une œuvre</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -463,10 +614,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('adminArtCollection') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
-                      <span>🎨 Collection d'œuvres</span>
+                      <Folder size={18} />
+                      <span>Collection d'œuvres</span>
                     </>
                   ) : (
-                    <span>🎨 Collection d'œuvres</span>
+                    <>
+                      <Folder size={18} />
+                      <span>Collection d'œuvres</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -475,10 +630,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('nftsToMint') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Sparkles size={18} />
                       <span>NFTs à minter</span>
                     </>
                   ) : (
-                    <span>NFTs à minter</span>
+                    <>
+                      <Sparkles size={18} />
+                      <span>NFTs à minter</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -487,10 +646,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('royaltiesSettings') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Coins size={18} />
                       <span>Royalties</span>
                     </>
                   ) : (
-                    <span>Royalties</span>
+                    <>
+                      <Coins size={18} />
+                      <span>Royalties</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -499,10 +662,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('marketplaceListing') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <ShoppingBag size={18} />
                       <span>Marketplace Listing</span>
                     </>
                   ) : (
-                    <span>Marketplace Listing</span>
+                    <>
+                      <ShoppingBag size={18} />
+                      <span>Marketplace Listing</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -511,10 +678,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('transactions') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <Receipt size={18} />
                       <span>Transactions Marketplace</span>
                     </>
                   ) : (
-                    <span>Transactions Marketplace</span>
+                    <>
+                      <Receipt size={18} />
+                      <span>Transactions Marketplace</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -523,10 +694,14 @@ export default function NavbarMenu() {
                   {isItemNavigating('invoices') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
+                      <FileText size={18} />
                       <span>Factures</span>
                     </>
                   ) : (
-                    <span>Factures</span>
+                    <>
+                      <FileText size={18} />
+                      <span>Factures</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -534,17 +709,24 @@ export default function NavbarMenu() {
           </li>
           <li className="divider my-1"></li>
           <li>
-            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest">🔧 TOOLS</a>
+            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
+              <Wrench size={16} />
+              TOOLS
+            </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a onClick={() => handleMenuNavigation('/tools/webp-converter', 'toolsWebpConverter')} className="flex items-center gap-2">
                   {isItemNavigating('toolsWebpConverter') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
-                      <span>🖼️ Convertisseur WebP</span>
+                      <Image size={18} />
+                      <span>Convertisseur WebP</span>
                     </>
                   ) : (
-                    <span>🖼️ Convertisseur WebP</span>
+                    <>
+                      <Image size={18} />
+                      <span>Convertisseur WebP</span>
+                    </>
                   )}
                 </a>
               </li>
@@ -578,28 +760,35 @@ export default function NavbarMenu() {
             <li>
               <a 
                 onClick={() => handleNavigation('/dashboard', 'dashboard')}
-                className={activeItem === 'dashboard' ? 'active' : ''}
+                className={`flex items-center gap-2 ${activeItem === 'dashboard' ? 'active' : ''}`}
               >
-                📊 Dashboard
+                <LayoutDashboard size={18} />
+                Dashboard
               </a>
             </li>
             <li>
               <details>
-                <summary>🖼️ Ma Collection</summary>
+                <summary className="flex items-center gap-2">
+                  <Image size={18} />
+                  Ma Collection
+                </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                   <li>
-                    <a onClick={() => handleNavigation('/art/myPhysicalArtwork', 'myPhysicalArtwork')}>
-                      🖼️ Mes œuvres physiques
+                    <a onClick={() => handleNavigation('/art/myPhysicalArtwork', 'myPhysicalArtwork')} className="flex items-center gap-2">
+                      <Image size={18} />
+                      Mes œuvres physiques
                     </a>
                   </li>
                   <li>
-                    <a onClick={() => handleNavigation('/art/addresses', 'addresses')}>
-                      📍 Adresses
+                    <a onClick={() => handleNavigation('/art/addresses', 'addresses')} className="flex items-center gap-2">
+                      <MapPin size={18} />
+                      Adresses
                     </a>
                   </li>
                   <li>
-                    <a onClick={() => handleNavigation('/art/createArtwork', 'createArtwork')}>
-                      ➕ Créer une œuvre
+                    <a onClick={() => handleNavigation('/art/createArtwork', 'createArtwork')} className="flex items-center gap-2">
+                      <PlusCircle size={18} />
+                      Créer une œuvre
                     </a>
                   </li>
                 </ul>
@@ -614,78 +803,97 @@ export default function NavbarMenu() {
             <li>
               <a 
                 onClick={() => handleNavigation('/dashboard', 'dashboard')}
-                className={activeItem === 'dashboard' ? 'active' : ''}
+                className={`flex items-center gap-2 ${activeItem === 'dashboard' ? 'active' : ''}`}
               >
-                📊 Dashboard
+                <LayoutDashboard size={18} />
+                Dashboard
               </a>
             </li>
             <li>
               <details>
-                <summary>🏠 Landing</summary>
+                <summary className="flex items-center gap-2">
+                  <Globe size={18} />
+                  Landing
+                </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60 max-h-80 overflow-y-auto">
-                  <li><a onClick={() => handleNavigation('/landing/languages', 'languages')}>Languages</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/translations', 'translations')}>Translations</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/team', 'team')}>Team</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/faq', 'faq')}>FAQ</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/detailedFaq', 'detailedFaq')}>FAQ détaillée</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/detailedFaqPage', 'detailedFaqPage')}>FAQ par page</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/detailedGlossary', 'detailedGlossary')}>Glossaire détaillé</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/landingArtists', 'landingArtists')}>Page artistes</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/presaleArtworks', 'presaleArtworks')}>Œuvres en prévente</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/blog', 'blog')}>Articles de blog</a></li>
+                  <li><a onClick={() => handleNavigation('/landing/languages', 'languages')} className="flex items-center gap-2"><Languages size={18} />Languages</a></li>
+                  <li><a onClick={() => handleNavigation('/landing/translations', 'translations')} className="flex items-center gap-2"><FileText size={18} />Translations</a></li>
+                  <li><a onClick={() => handleNavigation('/landing/team', 'team')} className="flex items-center gap-2"><Users size={18} />Team</a></li>
+                  <li><a onClick={() => handleNavigation('/landing/faq', 'faq')} className="flex items-center gap-2"><HelpCircle size={18} />FAQ</a></li>
+                  <li><a onClick={() => handleNavigation('/landing/detailedFaq', 'detailedFaq')} className="flex items-center gap-2"><FileText size={18} />FAQ détaillée</a></li>
+                  <li><a onClick={() => handleNavigation('/landing/detailedFaqPage', 'detailedFaqPage')} className="flex items-center gap-2"><BookOpen size={18} />FAQ par page</a></li>
+                  <li><a onClick={() => handleNavigation('/landing/detailedGlossary', 'detailedGlossary')} className="flex items-center gap-2"><BookOpen size={18} />Glossaire détaillé</a></li>
+                  <li><a onClick={() => handleNavigation('/landing/landingArtists', 'landingArtists')} className="flex items-center gap-2"><Users size={18} />Page artistes</a></li>
+                  <li><a onClick={() => handleNavigation('/landing/presaleArtworks', 'presaleArtworks')} className="flex items-center gap-2"><ShoppingCart size={18} />Œuvres en prévente</a></li>
+                  <li><a onClick={() => handleNavigation('/landing/blog', 'blog')} className="flex items-center gap-2"><FileText size={18} />Articles de blog</a></li>
                 </ul>
               </details>
             </li>
             <li>
               <details>
-                <summary>📊 Data</summary>
+                <summary className="flex items-center gap-2">
+                  <Database size={18} />
+                  Data
+                </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60">
-                  <li><a onClick={() => handleNavigation('/dataAdministration/artists', 'artists')}>Artistes</a></li>
-                  <li><a onClick={() => handleNavigation('/dataAdministration/artist-categories', 'artist-categories')}>Catégories d'artistes</a></li>
-                  <li><a onClick={() => handleNavigation('/dataAdministration/artwork-mediums', 'artwork-mediums')}>Mediums d'œuvres</a></li>
-                  <li><a onClick={() => handleNavigation('/dataAdministration/artwork-styles', 'artwork-styles')}>Styles d'œuvres</a></li>
-                  <li><a onClick={() => handleNavigation('/dataAdministration/artwork-techniques', 'artwork-techniques')}>Techniques d'œuvres</a></li>
+                  <li><a onClick={() => handleNavigation('/dataAdministration/artists', 'artists')} className="flex items-center gap-2"><Users size={18} />Artistes</a></li>
+                  <li><a onClick={() => handleNavigation('/dataAdministration/artist-categories', 'artist-categories')} className="flex items-center gap-2"><Tag size={18} />Catégories d'artistes</a></li>
+                  <li><a onClick={() => handleNavigation('/dataAdministration/artwork-mediums', 'artwork-mediums')} className="flex items-center gap-2"><Palette size={18} />Mediums d'œuvres</a></li>
+                  <li><a onClick={() => handleNavigation('/dataAdministration/artwork-styles', 'artwork-styles')} className="flex items-center gap-2"><Brush size={18} />Styles d'œuvres</a></li>
+                  <li><a onClick={() => handleNavigation('/dataAdministration/artwork-techniques', 'artwork-techniques')} className="flex items-center gap-2"><Wrench size={18} />Techniques d'œuvres</a></li>
                 </ul>
               </details>
             </li>
             <li>
               <details>
-                <summary>👥 Admin</summary>
+                <summary className="flex items-center gap-2">
+                  <Shield size={18} />
+                  Admin
+                </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
-                  <li><a onClick={() => handleNavigation('/boAdmin/users', 'boUsers')}>Gestion des Membres</a></li>
-                  <li><a onClick={() => handleNavigation('/boAdmin/create-member', 'createMember')}>Créer un Membre</a></li>
+                  <li><a onClick={() => handleNavigation('/boAdmin/users', 'boUsers')} className="flex items-center gap-2"><Users size={18} />Gestion des Membres</a></li>
+                  <li><a onClick={() => handleNavigation('/boAdmin/create-member', 'createMember')} className="flex items-center gap-2"><UserPlus size={18} />Créer un Membre</a></li>
                 </ul>
               </details>
             </li>
             <li>
               <details>
-                <summary>⛓️ Blockchain</summary>
+                <summary className="flex items-center gap-2">
+                  <Link size={18} />
+                  Blockchain
+                </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
-                  <li><a onClick={() => handleNavigation('/blockchain/smartContracts', 'smartContracts')}>Smart Contracts</a></li>
-                  <li><a onClick={() => handleNavigation('/blockchain/collections', 'collections')}>Collections</a></li>
-                  <li><a onClick={() => handleNavigation('/blockchain/royaltyBeneficiaries', 'royaltyBeneficiaries')}>Royalties</a></li>
+                  <li><a onClick={() => handleNavigation('/blockchain/smartContracts', 'smartContracts')} className="flex items-center gap-2"><FileCode size={18} />Smart Contracts</a></li>
+                  <li><a onClick={() => handleNavigation('/blockchain/collections', 'collections')} className="flex items-center gap-2"><Folder size={18} />Collections</a></li>
+                  <li><a onClick={() => handleNavigation('/blockchain/royaltyBeneficiaries', 'royaltyBeneficiaries')} className="flex items-center gap-2"><Coins size={18} />Royalties</a></li>
                 </ul>
               </details>
             </li>
             <li>
               <details>
-                <summary>🛒 Marketplace</summary>
+                <summary className="flex items-center gap-2">
+                  <Store size={18} />
+                  Marketplace
+                </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60">
-                  <li><a onClick={() => handleNavigation('/admin-art/createArtwork', 'adminCreateArtwork')}>➕ Créer une œuvre</a></li>
-                  <li><a onClick={() => handleNavigation('/admin-art/collection', 'adminArtCollection')}>🎨 Collection d'œuvres</a></li>
-                  <li><a onClick={() => handleNavigation('/marketplace/nftsToMint', 'nftsToMint')}>NFTs à minter</a></li>
-                  <li><a onClick={() => handleNavigation('/marketplace/royaltiesSettings', 'royaltiesSettings')}>Royalties</a></li>
-                  <li><a onClick={() => handleNavigation('/marketplace/marketplaceListing', 'marketplaceListing')}>Marketplace Listing</a></li>
-                  <li><a onClick={() => handleNavigation('/marketplace/transactions', 'transactions')}>Transactions Marketplace</a></li>
-                  <li><a onClick={() => handleNavigation('/marketplace/invoices', 'invoices')}>Factures</a></li>
+                  <li><a onClick={() => handleNavigation('/admin-art/createArtwork', 'adminCreateArtwork')} className="flex items-center gap-2"><PlusCircle size={18} />Créer une œuvre</a></li>
+                  <li><a onClick={() => handleNavigation('/admin-art/collection', 'adminArtCollection')} className="flex items-center gap-2"><Folder size={18} />Collection d'œuvres</a></li>
+                  <li><a onClick={() => handleNavigation('/marketplace/nftsToMint', 'nftsToMint')} className="flex items-center gap-2"><Sparkles size={18} />NFTs à minter</a></li>
+                  <li><a onClick={() => handleNavigation('/marketplace/royaltiesSettings', 'royaltiesSettings')} className="flex items-center gap-2"><Coins size={18} />Royalties</a></li>
+                  <li><a onClick={() => handleNavigation('/marketplace/marketplaceListing', 'marketplaceListing')} className="flex items-center gap-2"><ShoppingBag size={18} />Marketplace Listing</a></li>
+                  <li><a onClick={() => handleNavigation('/marketplace/transactions', 'transactions')} className="flex items-center gap-2"><Receipt size={18} />Transactions Marketplace</a></li>
+                  <li><a onClick={() => handleNavigation('/marketplace/invoices', 'invoices')} className="flex items-center gap-2"><FileText size={18} />Factures</a></li>
                 </ul>
               </details>
             </li>
             <li>
               <details>
-                <summary>🔧 Tools</summary>
+                <summary className="flex items-center gap-2">
+                  <Wrench size={18} />
+                  Tools
+                </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
-                  <li><a onClick={() => handleNavigation('/tools/webp-converter', 'toolsWebpConverter')}>🖼️ Convertisseur WebP</a></li>
+                  <li><a onClick={() => handleNavigation('/tools/webp-converter', 'toolsWebpConverter')} className="flex items-center gap-2"><Image size={18} />Convertisseur WebP</a></li>
                 </ul>
               </details>
             </li>

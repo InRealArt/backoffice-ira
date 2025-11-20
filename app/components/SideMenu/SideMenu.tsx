@@ -9,6 +9,7 @@ import MarketplaceSubMenu from './MarketplaceSubMenu'
 import DataAdministrationSubMenu from './DataAdministrationSubMenu'
 import LandingSubMenu from './LandingSubMenu'
 import ToolsSubMenu from './ToolsSubMenu'
+import { LayoutDashboard, Image, MapPin, PlusCircle } from 'lucide-react'
 
 // Composant de fallback pour le chargement
 function SideMenuSkeleton({ isMenuCollapsed }: { isMenuCollapsed: boolean }) {
@@ -83,7 +84,7 @@ export default function SideMenu() {
           isActive={activeItem === 'dashboard'}
           onClick={() => handleNavigation('/dashboard', 'dashboard')}
           isCollapsed={isMenuCollapsed}
-          icon={<span>📊</span>}
+          icon={<LayoutDashboard size={20} />}
         />
         
         {canAccessCollection && !isAdmin && (
@@ -94,21 +95,21 @@ export default function SideMenu() {
               isActive={activeItem === 'myPhysicalArtwork'}
               onClick={() => handleNavigation('/art/myPhysicalArtwork', 'myPhysicalArtwork')}
               isCollapsed={isMenuCollapsed}
-              icon={<span>🖼️</span>}
+              icon={<Image size={20} />}
             />
             <SideMenuItem 
               label="Adresses"
               isActive={activeItem === 'addresses'}
               onClick={() => handleNavigation('/art/addresses', 'addresses')}
               isCollapsed={isMenuCollapsed}
-              icon={<span>📍</span>}
+              icon={<MapPin size={20} />}
             />
             <SideMenuItem 
               label="Créer une œuvre physique"
               isActive={activeItem === 'createArtwork'}
               onClick={() => handleNavigation('/art/createPhysicalArtwok', 'createArtwork')}
               isCollapsed={isMenuCollapsed}
-              icon={<span>➕</span>}
+              icon={<PlusCircle size={20} />}
             />
           </>
         )}

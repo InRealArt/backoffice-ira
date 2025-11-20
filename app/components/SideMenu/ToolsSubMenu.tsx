@@ -2,6 +2,7 @@
 
 import SideMenuItem from './SideMenuItem'
 import MenuSeparator from './MenuSeparator'
+import { Wrench, Image } from 'lucide-react'
 
 interface ToolsSubMenuProps {
   isActive: boolean
@@ -25,7 +26,7 @@ export default function ToolsSubMenu({
         isActive={isActive}
         onClick={toggleSubmenu}
         isCollapsed={isCollapsed}
-        icon={<span>🔧</span>}
+        icon={<Wrench size={20} />}
         hasSubmenu={true}
         isSubmenuOpen={isOpen}
       />
@@ -37,7 +38,7 @@ export default function ToolsSubMenu({
             isActive={isActive}
             onClick={() => onNavigate('/tools/webp-converter', 'toolsWebpConverter')}
             isCollapsed={isCollapsed}
-            icon={<span>🖼️</span>}
+            icon={<Image size={18} />}
             isSubmenuItem={true}
           />
         </div>

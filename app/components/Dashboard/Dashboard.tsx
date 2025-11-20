@@ -169,18 +169,18 @@ export default function Dashboard() {
             <DashboardCard title="Ma Collection">
               <p>Explorez et gérez votre collection d'œuvres d'art.</p>
               <Button onClick={() => router.push('/art/collection')}>
-                Voir ma collection d'œuvres d'art
+                Voir ma collection
               </Button>
             </DashboardCard>
             
             <DashboardCard title="Création d'œuvre">
               <p>Créez et publiez une nouvelle œuvre d'art.</p>
-              <button 
-                className="dashboard-button" 
+              <Button 
                 onClick={() => router.push('/art/createArtwork')}
               >
                 Créer une œuvre
-              </button>
+              </Button>
+              
             </DashboardCard>
 
             <DashboardCard title="Statut de mes œuvres">

@@ -2,6 +2,7 @@
 
 import React from 'react'
 import SideMenuItem from './SideMenuItem'
+import { Link, FileCode, Folder, Coins } from 'lucide-react'
 
 interface BlockchainSubMenuProps {
   isActive: boolean
@@ -21,6 +22,7 @@ export default function BlockchainSubMenu({ isActive, isOpen, toggleSubmenu, onN
         isSubmenuOpen={isOpen}
         onClick={toggleSubmenu}
         isCollapsed={isCollapsed}
+        icon={<Link size={20} />}
       />
       
       {isOpen && !isCollapsed && (
@@ -29,16 +31,19 @@ export default function BlockchainSubMenu({ isActive, isOpen, toggleSubmenu, onN
             label="Smart Contracts" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/blockchain/smartContracts', 'smartContracts')}
+            icon={<FileCode size={18} />}
           />
           <SideMenuItem 
             label="Collections" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/blockchain/collections', 'collections')}
+            icon={<Folder size={18} />}
           />
           <SideMenuItem 
             label="Royalties" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/blockchain/royaltyBeneficiaries', 'royaltyBeneficiaries')}
+            icon={<Coins size={18} />}
           />
         </ul>
       )}
@@ -49,16 +54,19 @@ export default function BlockchainSubMenu({ isActive, isOpen, toggleSubmenu, onN
             label="Smart Contracts" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/blockchain/smartContracts', 'smartContracts')}
+            icon={<FileCode size={18} />}
           />
           <SideMenuItem 
             label="Collections" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/blockchain/collections', 'collections')}
+            icon={<Folder size={18} />}
           />
           <SideMenuItem 
             label="Royalties" 
             isSubmenuItem={true}
             onClick={() => onNavigate('/blockchain/royalties', 'royalties')}
+            icon={<Coins size={18} />}
           />
         </ul>
       )}
