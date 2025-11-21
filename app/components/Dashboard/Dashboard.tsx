@@ -74,10 +74,16 @@ export default function Dashboard() {
             return;
           }
           
+          console.log('🔍 DEBUG - backofficeUser:', backofficeUser);
+          console.log('🔍 DEBUG - backofficeUser.artistId:', backofficeUser.artistId);
+          console.log('🔍 DEBUG - backofficeUser.artist:', backofficeUser.artist);
+          
           // Récupérer l'artiste associé via l'artistId
           if (backofficeUser.artistId) {
             const artist = await getArtistById(backofficeUser.artistId);
             if (!isMounted) return
+            
+            console.log('🔍 DEBUG - artist from getArtistById:', artist);
             
             if (artist) {
               setAssociatedArtist(artist);
@@ -87,6 +93,8 @@ export default function Dashboard() {
               if (!isMounted) return
               setPresaleArtworkCount(presaleCountResult.count);
             }
+          } else {
+            console.log('⚠️ DEBUG - Pas d\'artistId sur backofficeUser');
           }
           
           if (!isMounted) return
@@ -170,7 +178,17 @@ export default function Dashboard() {
                   )}
                 </>
               ) : (
-                <p><strong>Artiste associé:</strong> Aucun</p>
+                <>
+                  <p><strong>Artiste associé:</strong> Aucun</p>
+                  <div className="mt-3">
+                    <Button
+                      onClick={() => router.push('/art/create-artist-profile')}
+                      variant="primary"
+                    >
+                      Créer mon profil Artiste
+                    </Button>
+                  </div>
+                </>
               )}
             </>
           )}
@@ -197,30 +215,33 @@ export default function Dashboard() {
           </>
         ) : (
           <>
-            <DashboardCard 
-              title="Ma Collection"
-              icon={<FolderOpen />}
-              description="Explorez et gérez vos œuvres"
-            >
-              <p>Explorez et gérez votre collection d'œuvres d'art.</p>
-              <Button onClick={() => router.push('/art/collection')}>
-                Voir ma collection
-              </Button>
-            </DashboardCard>
-            
-            <DashboardCard 
-              title="Création d'œuvre"
-              icon={<PlusCircle />}
-              description="Créez de nouvelles œuvres d'art"
-            >
-              <p>Créez et publiez une nouvelle œuvre d'art.</p>
-              <Button 
-                onClick={() => router.push('/art/createArtwork')}
-              >
-                Créer une œuvre
-              </Button>
-            </DashboardCard>
-
+            {!isLoadingArtist && associatedArtist && (
+              <>
+                <DashboardCard 
+                  title="Ma Collection"
+                  icon={<FolderOpen />}
+                  description="Explorez et gérez vos œuvres"
+                >
+                  <p>Explorez et gérez votre collection d'œuvres d'art.</p>
+                  <Button onClick={() => router.push('/art/collection')}>
+                    Voir ma collection
+                  </Button>
+                </DashboardCard>
+                
+                <DashboardCard 
+                  title="Création d'œuvre"
+                  icon={<PlusCircle />}
+                  description="Créez de nouvelles œuvres d'art"
+                >
+                  <p>Créez et publiez une nouvelle œuvre d'art.</p>
+                  <Button 
+                    onClick={() => router.push('/art/createArtwork')}
+                  >
+                    Créer une œuvre
+                  </Button>
+                </DashboardCard>
+              </>
+            )}
           </>
         )}
       </div>

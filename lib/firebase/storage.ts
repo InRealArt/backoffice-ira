@@ -158,6 +158,42 @@ export function extractFirebaseStoragePath(url: string): string | null {
 }
 
 /**
+ * Upload une image d'artiste vers Firebase Storage dans le répertoire /artists/{artistName}
+ * 
+ * @param file - Le fichier à uploader
+ * @param fileName - Le nom du fichier (en camelCase, sans extension) - utilisé comme nom de répertoire
+ * @returns URL de l'image uploadée
+ */
+export async function uploadArtistImageToFirebase(
+    file: File,
+    fileName: string
+): Promise<string> {
+    try {
+        // Le fichier devrait déjà être en WebP à ce stade
+        const fileExtension = 'webp'
+        // Créer un répertoire par artiste : artists/{artistName}/profile.webp
+        const storagePath = `artists/${fileName}/profile.${fileExtension}`
+
+        console.log('✓ Upload de l\'image artiste vers:', storagePath)
+
+        // Créer une référence au fichier dans Firebase Storage
+        const storageRef = ref(storage, storagePath)
+
+        // Upload du fichier
+        const snapshot = await uploadBytes(storageRef, file)
+
+        // Récupérer l'URL de téléchargement
+        const downloadURL = await getDownloadURL(snapshot.ref)
+
+        console.log('✓ Image artiste uploadée avec succès:', downloadURL)
+        return downloadURL
+    } catch (error) {
+        console.error('Erreur lors de l\'upload de l\'image artiste vers Firebase:', error)
+        throw new Error(`Échec de l'upload vers Firebase: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+    }
+}
+
+/**
  * Supprime une image de Firebase Storage
  * 
  * @param imageUrl - URL de l'image à supprimer

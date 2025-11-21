@@ -19,6 +19,9 @@ const nextConfig: NextConfig = {
   // Configuration expérimentale pour le cache du système de fichiers Turbopack
   experimental: {
     turbopackFileSystemCacheForDev: true,
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
   },
 
   images: {

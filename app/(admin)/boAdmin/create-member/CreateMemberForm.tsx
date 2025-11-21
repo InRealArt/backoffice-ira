@@ -105,22 +105,11 @@ export default function CreateMemberForm() {
       const result = await createMember(data)
       
       if (result.success) {
-        if (data.role === 'artist' || (data.role === 'galleryManager')) {
-          // Récupérer les informations de l'artiste associé
-          const artist = await getArtistById(data.artistId as number)
-          
-          if (!artist) {
-            error('Erreur : Artiste associé non trouvé')
-            setIsSubmitting(false)
-            return
-          }
-          
-        } else {
-          success(result.message, {
-            duration: 5000,
-            position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
-          })
-        }
+        // Afficher le message de succès
+        success(result.message, {
+          duration: 5000,
+          position: window.innerWidth < 768 ? 'bottom-center' : 'top-right'
+        })
         reset()
         setUniqueError(null)
         
@@ -197,7 +186,7 @@ export default function CreateMemberForm() {
             {selectedRole === 'artist' && (
               <div className="form-group">
                 <label htmlFor="artistId" className="form-label">
-                  Artiste associé
+                  Artiste associé <span className="text-muted">(optionnel)</span>
                 </label>
                 {isLoadingArtists ? (
                   <div className="loading-container">
@@ -208,12 +197,16 @@ export default function CreateMemberForm() {
                     <select
                       id="artistId"
                       {...register('artistId', {
-                        required: selectedRole === 'artist' ? 'Veuillez sélectionner un artiste' : false,
-                        valueAsNumber: true
+                        setValueAs: (value) => {
+                          if (value === '' || value === null || value === undefined) {
+                            return null
+                          }
+                          return Number(value)
+                        }
                       })}
                       className={`form-select ${errors.artistId ? 'input-error' : ''}`}
                     >
-                      <option value="">Sélectionnez un artiste</option>
+                      <option value="">Aucun artiste (l'utilisateur créera son profil plus tard)</option>
                       {artists.map((artist) => (
                         <option key={artist.id} value={artist.id}>
                           {artist.name} {artist.surname} ({artist.pseudo})
@@ -223,6 +216,9 @@ export default function CreateMemberForm() {
                     {errors.artistId && (
                       <p className="form-error text-danger">{String(errors.artistId.message || '')}</p>
                     )}
+                    <p className="form-help text-muted mt-1">
+                      Si aucun artiste n'est sélectionné, l'utilisateur pourra créer son propre profil artiste ultérieurement.
+                    </p>
                   </>
                 )}
               </div>

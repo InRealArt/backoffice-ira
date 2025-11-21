@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { headers } from 'next/headers'
+import { auth } from '@/lib/auth'
 import { getRequiredAccessLevel } from './app/config/protectedRoutes'
-import { getSessionCookie } from 'better-auth/cookies'
 
 // Pages publiques qui ne nécessitent pas d'authentification
 const publicPaths = ['/', '/api/auth/callback', '/login', '/sign-in', '/sign-up', '/sign-out']
 
-export default function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname
     const method = request.method
 
@@ -37,25 +38,18 @@ export default function proxy(request: NextRequest) {
         return NextResponse.next()
     }
 
-    // Vérifier si l'utilisateur est connecté via le cookie Better-Auth
-    // Note: Ceci est une vérification optimiste basée sur la présence du cookie
-    // La validation complète de la session sera effectuée côté serveur/page
-    // Seulement pour les requêtes GET (navigations utilisateur)
+    // Validation complète de la session avec better-auth
+    // Utilisation de auth.api.getSession pour une vérification sécurisée incluant la DB
     if (method === 'GET') {
-        const sessionCookie = getSessionCookie(request)
-        const isLoggedIn = !!sessionCookie
+        const session = await auth.api.getSession({
+            headers: await headers()
+        })
 
-        // Si l'utilisateur n'est pas connecté, rediriger vers la page d'accueil
-        if (!isLoggedIn) {
-            const url = new URL('/', request.url)
-            return NextResponse.redirect(url)
+        // Si l'utilisateur n'est pas authentifié, rediriger vers la page de connexion
+        if (!session?.user) {
+            return NextResponse.redirect(new URL('/sign-in', request.url))
         }
     }
-
-    // Nous ne pouvons pas vérifier l'email dans le proxy car 
-    // nous n'avons pas accès aux informations de l'utilisateur
-    // La vérification d'autorisation sera gérée par le composant AuthObserver
-    // et la page elle-même
 
     return NextResponse.next()
 }
@@ -68,5 +62,12 @@ export const config = {
         '/art/:path*',
         '/profile/:path*',
         '/notifications/:path*',
+        '/boAdmin/:path*',
+        '/dataAdministration/:path*',
+        '/blockchain/:path*',
+        '/marketplace/:path*',
+        '/presale-artworks/:path*',
+        '/tools/:path*',
+        '/landing/:path*',
     ],
 }

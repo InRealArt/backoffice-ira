@@ -4,6 +4,7 @@ import { authClient } from '@/lib/auth-client'
 import { useState, useEffect } from 'react'
 import { getUserRole } from '@/lib/actions/auth-actions'
 import { Badge } from '@/app/components/PageLayout'
+import { User, LogOut, UserCircle } from 'lucide-react'
 
 export default function UserProfile() {
   const { data: session, isPending } = authClient.useSession()
@@ -84,7 +85,7 @@ export default function UserProfile() {
     <div className="dropdown dropdown-end">
       <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
         <div className="w-10 rounded-full bg-neutral text-neutral-content flex items-center justify-center">
-          <span className="text-sm">{user?.email?.charAt(0).toUpperCase()}</span>
+          <UserCircle className="w-6 h-6" />
         </div>
       </div>
       <ul
@@ -93,7 +94,10 @@ export default function UserProfile() {
       >
         <li>
           <a className="justify-between font-semibold">
-            Profil
+            <span className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Profil
+            </span>
             <Badge 
               variant={getRoleBadgeVariant(userRole)} 
               text={getRoleText(userRole)}
@@ -106,7 +110,10 @@ export default function UserProfile() {
         <li className="divider my-0"></li>
         <li>
           <a onClick={handleSignOut} className="text-error hover:bg-error/10">
-            🚪 Déconnexion
+            <span className="flex items-center gap-2">
+              <LogOut className="w-4 h-4" />
+              Déconnexion
+            </span>
           </a>
         </li>
       </ul>

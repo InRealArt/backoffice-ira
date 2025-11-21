@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useSideMenuLogic } from '../SideMenu/useSideMenuLogic'
 import { authClient } from '@/lib/auth-client'
+import { getBackofficeUserByEmail, getArtistById } from '@/lib/actions/prisma-actions'
 import {
   LayoutDashboard,
   Image,
@@ -31,7 +32,8 @@ import {
   Store,
   Sparkles,
   ShoppingBag,
-  Receipt
+  Receipt,
+  UserCircle
 } from 'lucide-react'
 
 export default function NavbarMenu() {
@@ -46,6 +48,14 @@ export default function NavbarMenu() {
     navigatingItem,
     handleNavigation
   } = useSideMenuLogic()
+
+  // Récupérer la session utilisateur
+  const { data: session } = authClient.useSession()
+  const user = session?.user
+
+  // État pour l'artiste associé
+  const [associatedArtist, setAssociatedArtist] = useState<any>(null)
+  const [isLoadingArtist, setIsLoadingArtist] = useState(true)
 
   // État pour contrôler l'ouverture du menu dropdown mobile
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -103,11 +113,58 @@ export default function NavbarMenu() {
     )
   }
 
+  // Récupérer l'artiste associé à l'utilisateur
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchAssociatedArtist = async () => {
+      const userEmail = user?.email
+
+      if (!isAdmin && userEmail && canAccessCollection) {
+        try {
+          const backofficeUser = await getBackofficeUserByEmail(userEmail)
+
+          if (!isMounted) return
+
+          if (!backofficeUser) {
+            setIsLoadingArtist(false)
+            return
+          }
+
+          // Récupérer l'artiste associé via l'artistId
+          if (backofficeUser.artistId) {
+            const artist = await getArtistById(backofficeUser.artistId)
+            if (!isMounted) return
+
+            if (artist) {
+              setAssociatedArtist(artist)
+            }
+          }
+
+          if (!isMounted) return
+          setIsLoadingArtist(false)
+        } catch (error) {
+          if (!isMounted) return
+          console.error('Erreur lors de la récupération de l\'artiste associé:', error)
+          setIsLoadingArtist(false)
+        }
+      } else {
+        setIsLoadingArtist(false)
+      }
+    }
+
+    fetchAssociatedArtist()
+
+    return () => {
+      isMounted = false
+    }
+  }, [isAdmin, user?.email, canAccessCollection])
+
   // Fermer le menu dropdown quand la page est chargée (pathname change)
   useEffect(() => {
     // Fermer le menu mobile
     setIsMobileMenuOpen(false)
-    
+
     // Fermer le dropdown mobile en retirant le focus
     if (mobileMenuRef.current) {
       const button = mobileMenuRef.current.querySelector('[tabIndex="0"]') as HTMLElement
@@ -115,7 +172,7 @@ export default function NavbarMenu() {
         button.blur()
       }
     }
-    
+
     // Fermer les sous-menus desktop en retirant l'attribut open des details
     if (desktopMenuRef.current) {
       const details = desktopMenuRef.current.querySelectorAll('details[open]')
@@ -131,6 +188,30 @@ export default function NavbarMenu() {
 
   // Fonction pour rendre les items de menu pour mobile
   const renderMobileMenuItems = () => {
+    // Si l'utilisateur n'a pas d'artiste associé, afficher uniquement "Créer mon profil artiste"
+    if (canAccessCollection && !isAdmin && !isLoadingArtist && !associatedArtist) {
+      return (
+        <>
+          <li>
+            <a onClick={() => handleMenuNavigation('/art/create-artist-profile', 'createArtistProfile')} className="flex items-center gap-2">
+              {isItemNavigating('createArtistProfile') ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  <UserCircle size={18} />
+                  <span>Créer mon profil artiste</span>
+                </>
+              ) : (
+                <>
+                  <UserCircle size={18} />
+                  <span>Créer mon profil artiste</span>
+                </>
+              )}
+            </a>
+          </li>
+        </>
+      )
+    }
+
     if (canAccessCollection && !isAdmin) {
       return (
         <>
@@ -530,7 +611,7 @@ export default function NavbarMenu() {
             </ul>
           </li>
           <li className="divider my-1"></li>
-          <li>
+          {/* <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
               <Link size={16} />
               BLOCKCHAIN
@@ -585,9 +666,9 @@ export default function NavbarMenu() {
                 </a>
               </li>
             </ul>
-          </li>
+          </li> */}
           <li className="divider my-1"></li>
-          <li>
+          {/* <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
               <Store size={16} />
               MARKETPLACE
@@ -706,7 +787,7 @@ export default function NavbarMenu() {
                 </a>
               </li>
             </ul>
-          </li>
+          </li> */}
           <li className="divider my-1"></li>
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
@@ -754,8 +835,23 @@ export default function NavbarMenu() {
 
       {/* Menus desktop - centre */}
       <div className="navbar-center hidden lg:flex" ref={desktopMenuRef}>
+        {/* Si l'utilisateur n'a pas d'artiste associé, afficher uniquement "Créer mon profil artiste" */}
+        {canAccessCollection && !isAdmin && !isLoadingArtist && !associatedArtist && (
+          <ul className="menu menu-horizontal px-1">
+            <li>
+              <a 
+                onClick={() => handleNavigation('/art/create-artist-profile', 'createArtistProfile')}
+                className={`flex items-center gap-2 ${activeItem === 'createArtistProfile' ? 'active' : ''}`}
+              >
+                <UserCircle size={18} />
+                Créer mon profil artiste
+              </a>
+            </li>
+          </ul>
+        )}
+
         {/* Menu utilisateur normal */}
-        {canAccessCollection && !isAdmin && (
+        {canAccessCollection && !isAdmin && !isLoadingArtist && associatedArtist && (
           <ul className="menu menu-horizontal px-1">
             <li>
               <a 

@@ -49,6 +49,26 @@ export function generateSlug(name: string): string {
 }
 
 /**
+ * Convertit une chaîne en camelCase
+ * @param str - La chaîne à convertir
+ * @returns La chaîne en camelCase
+ */
+export function toCamelCase(str: string): string {
+    return str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
+        .replace(/[^a-zA-Z0-9\s]/g, '') // Supprime les caractères spéciaux
+        .split(/\s+/)
+        .map((word, index) => {
+            if (index === 0) {
+                return word.toLowerCase()
+            }
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        })
+        .join('')
+}
+
+/**
  * Type pour un pays avec son code ISO et son nom
  */
 export interface Country {

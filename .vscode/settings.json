@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "*.tsx": "typescriptreact",
+        "*.ts": "typescript",
+        "*.js": "javascript",
+        "*.jsx": "javascriptreact"
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "files.watcherExclude": {
+        "**/node_modules/**": true,
+        "**/.git/**": true
+    },
+    "search.followSymlinks": false,
+    "workbench.colorTheme": "Default Dark Modern"
+}

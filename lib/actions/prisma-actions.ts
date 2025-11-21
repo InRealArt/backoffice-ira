@@ -120,16 +120,8 @@ export async function createMember(data: MemberFormData): Promise<CreateMemberRe
       }
     }
 
-    // Si le rôle est "artist", vérifier que l'artistId est fourni et existe
-    if (validatedData.role === 'artist') {
-      if (!validatedData.artistId) {
-        return {
-          success: false,
-          message: 'Un artiste doit être sélectionné pour un utilisateur avec le rôle "artist"'
-        }
-      }
-
-      // Vérifier que l'artiste existe
+    // Si le rôle est "artist" et qu'un artistId est fourni, vérifier que l'artiste existe
+    if (validatedData.role === 'artist' && validatedData.artistId) {
       const artist = await prisma.artist.findUnique({
         where: { id: validatedData.artistId }
       })
@@ -147,7 +139,7 @@ export async function createMember(data: MemberFormData): Promise<CreateMemberRe
       data: {
         email: validatedData.email,
         role: validatedData.role,
-        artistId: validatedData.role === 'artist' ? validatedData.artistId : null
+        artistId: (validatedData.role === 'artist' || validatedData.role === 'galleryManager') ? validatedData.artistId : null
       }
     })
 
@@ -348,6 +340,11 @@ export async function getBackofficeUserByEmail(email: string) {
       where: { email },
       include: { artist: true }
     })
+
+    console.log('🔍 DEBUG getBackofficeUserByEmail - email:', email);
+    console.log('🔍 DEBUG getBackofficeUserByEmail - user:', user);
+    console.log('🔍 DEBUG getBackofficeUserByEmail - user?.artistId:', user?.artistId);
+    console.log('🔍 DEBUG getBackofficeUserByEmail - user?.artist:', user?.artist);
 
     return user
   } catch (error) {

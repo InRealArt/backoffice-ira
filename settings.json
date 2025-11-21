@@ -1,8 +1,0 @@
-{
-    "files.watcherExclude": {
-      "**/node_modules/**": true,
-      "**/.git/**": true
-    },
-    "search.followSymlinks": false
-  }
-  

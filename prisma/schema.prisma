@@ -1041,7 +1041,7 @@ model WhiteListedUser {
   email    String               @unique
   role     BackofficeUserRoles?
   artistId Int?
-  artist   Artist?              @relation(fields: [artistId], references: [id])
+  artist   Artist?              @relation(fields: [artistId], references: [id], onDelete: SetNull)
 
   @@index([artistId])
   @@schema("backoffice")
