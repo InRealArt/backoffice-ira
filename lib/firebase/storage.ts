@@ -1,4 +1,4 @@
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
+import { ref, uploadBytes, getDownloadURL, deleteObject, listAll, getMetadata } from 'firebase/storage'
 import { storage } from './config'
 import { normalizeString } from '@/lib/utils'
 import { convertToWebPIfNeeded } from '@/lib/utils/webp-converter'
@@ -308,6 +308,121 @@ export async function uploadArtistImageWithWebP(
             options.onConversionStatus?.('error', errorMessage)
         } else {
             options.onUploadStatus?.('error', errorMessage)
+        }
+
+        throw error
+    }
+}
+
+/**
+ * Vérifie si un répertoire existe dans Firebase Storage
+ * En vérifiant l'existence d'un fichier qui devrait être présent (le fichier profile de l'artiste)
+ * 
+ * @param folderPath - Chemin du répertoire (ex: "artists/Jean Dupont")
+ * @param name - Prénom de l'artiste
+ * @param surname - Nom de l'artiste
+ * @returns Promise<boolean> - true si le répertoire existe, false sinon
+ */
+export async function checkFolderExists(folderPath: string, name: string, surname: string): Promise<boolean> {
+    try {
+        // Vérifier l'existence du répertoire en essayant d'accéder au fichier profile qui devrait exister
+        // Le fichier profile devrait être nommé : "{name} {surname}.webp"
+        const profileFileName = `${name} ${surname}.webp`
+        const profileFilePath = `${folderPath}/${profileFileName}`
+        const profileFileRef = ref(storage, profileFilePath)
+
+        try {
+            // Essayer d'accéder aux métadonnées du fichier profile
+            await getMetadata(profileFileRef)
+            return true
+        } catch (metadataError: any) {
+            // Si le fichier profile n'existe pas, essayer de lister le contenu du dossier
+            // pour voir s'il y a d'autres fichiers
+            try {
+                const folderRef = ref(storage, folderPath)
+                const result = await listAll(folderRef)
+                // Si on peut lister le dossier et qu'il contient au moins un fichier, le dossier existe
+                return result.items.length > 0
+            } catch (listError: any) {
+                // Si on ne peut pas lister le dossier, il n'existe probablement pas
+                console.error('Erreur lors de la vérification du répertoire:', listError)
+                return false
+            }
+        }
+    } catch (error: any) {
+        console.error('Erreur lors de la vérification du répertoire:', error)
+        return false
+    }
+}
+
+/**
+ * Upload une image secondaire ou studio dans un répertoire existant avec la casse exacte
+ * 
+ * @param imageFile - Le fichier image à uploader
+ * @param folderName - Nom du répertoire avec la casse exacte (ex: "Jean Dupont")
+ * @param fileName - Nom du fichier (ex: "Jean Dupont_2" ou "Jean Dupont_studio")
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns URL de l'image uploadée
+ */
+export async function uploadImageToExistingFolder(
+    imageFile: File,
+    folderName: string,
+    fileName: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        // Étape 1: Authentification Firebase côté client
+        const { getAuth, signInAnonymously } = await import('firebase/auth')
+        const { app } = await import('./config')
+
+        const auth = getAuth(app)
+        await signInAnonymously(auth)
+
+        // Note: La vérification du répertoire doit être faite avant d'appeler cette fonction
+        // Cette fonction assume que le répertoire existe déjà
+
+        // Étape 2: Conversion WebP
+        onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+
+        if (!conversionResult.success) {
+            const errorMessage =
+                conversionResult.error ||
+                "Erreur lors de la conversion de l'image en WebP"
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        // Étape 3: Upload vers Firebase dans le répertoire existant
+        onUploadStatus?.('in-progress')
+        const folderPath = `artists/${folderName}`
+        const fileExtension = 'webp'
+        const storagePath = `${folderPath}/${fileName}.${fileExtension}`
+        const storageRef = ref(storage, storagePath)
+
+        await uploadBytes(storageRef, conversionResult.file)
+        const imageUrl = await getDownloadURL(storageRef)
+
+        onUploadStatus?.('completed')
+
+        return imageUrl
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image:", error)
+        const errorMessage =
+            error instanceof Error
+                ? error.message
+                : "Erreur inconnue lors de l'upload"
+
+        // Notifier les callbacks en cas d'erreur
+        if (errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp')) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
         }
 
         throw error

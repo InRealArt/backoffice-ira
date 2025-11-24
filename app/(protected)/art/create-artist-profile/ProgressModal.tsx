@@ -12,9 +12,10 @@ interface ProgressModalProps {
   isOpen: boolean
   steps: ProgressStep[]
   currentError?: string
+  onClose?: () => void
 }
 
-export default function ProgressModal({ isOpen, steps, currentError }: ProgressModalProps) {
+export default function ProgressModal({ isOpen, steps, currentError, onClose }: ProgressModalProps) {
   if (!isOpen) return null
 
   return (
@@ -39,9 +40,38 @@ export default function ProgressModal({ isOpen, steps, currentError }: ProgressM
           padding: '2rem',
           maxWidth: '500px',
           width: '90%',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          position: 'relative'
         }}
       >
+        {currentError && onClose && (
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '4px',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f3f4f6'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent'
+            }}
+            aria-label="Fermer"
+          >
+            <X size={20} color="#6b7280" />
+          </button>
+        )}
         <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.5rem', fontWeight: 'bold' }}>
           Création du profil artiste
         </h2>
@@ -125,6 +155,32 @@ export default function ProgressModal({ isOpen, steps, currentError }: ProgressM
             }}
           >
             <strong>Erreur :</strong> {currentError}
+            {onClose && (
+              <button
+                onClick={onClose}
+                style={{
+                  marginTop: '1rem',
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  width: '100%',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#b91c1c'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#dc2626'
+                }}
+              >
+                Fermer
+              </button>
+            )}
           </div>
         )}
 

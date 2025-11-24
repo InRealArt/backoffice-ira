@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import Image from 'next/image'
 import { Camera } from 'lucide-react'
@@ -16,6 +16,14 @@ interface ArtistImageUploadProps {
 export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, error, allowDelete = false }: ArtistImageUploadProps) {
   const [localPreview, setLocalPreview] = useState<string | null>(previewUrl || null)
   const [localError, setLocalError] = useState<string | null>(null)
+  const [hasLocalFile, setHasLocalFile] = useState(false)
+
+  // Mettre à jour localPreview quand previewUrl change (seulement si aucun fichier local n'est sélectionné)
+  useEffect(() => {
+    if (!hasLocalFile) {
+      setLocalPreview(previewUrl || null)
+    }
+  }, [previewUrl, hasLocalFile])
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
@@ -36,6 +44,7 @@ export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, 
       }
 
       setLocalError(null)
+      setHasLocalFile(true)
       
       // Créer une preview locale
       const reader = new FileReader()
@@ -59,6 +68,7 @@ export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, 
 
   const handleRemove = () => {
     setLocalPreview(null)
+    setHasLocalFile(false)
     onFileSelect(null)
     if (onDelete && allowDelete) {
       onDelete()

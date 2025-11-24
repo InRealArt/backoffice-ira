@@ -3,6 +3,26 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 
+// Fonction de traduction avec Google Translate
+async function translateWithGoogle(
+    text: string,
+    targetLang: string = 'en'
+): Promise<string> {
+    if (!text || text.trim() === '') return text
+
+    try {
+        // Utilise l'API Google Translate gratuite
+        const response = await fetch(
+            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=fr&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
+        )
+        const data = await response.json()
+        return data[0][0][0] || text
+    } catch (error) {
+        console.error('Erreur Google Translate:', error)
+        return text // Retourner le texte original en cas d'erreur
+    }
+}
+
 // Type pour les données de traduction
 type TranslationData = {
     entityType: string
@@ -99,24 +119,38 @@ export async function handleEntityTranslations(
                 })
                 console.log('existingTranslationEN', existingTranslationEN)
 
+                // Traduire la valeur en anglais avec Google Translate
+                let translatedValue = value || ''
+                if (value && value.trim() !== '') {
+                    try {
+                        console.log(`🌍 Traduction du champ ${field} vers l'anglais...`)
+                        translatedValue = await translateWithGoogle(value, 'en')
+                        console.log(`✅ Traduction terminée: "${value}" -> "${translatedValue}"`)
+                    } catch (translationError) {
+                        console.error(`❌ Erreur lors de la traduction du champ ${field}:`, translationError)
+                        // En cas d'erreur, utiliser la valeur originale
+                        translatedValue = value || ''
+                    }
+                }
+
                 if (!existingTranslationEN) {
-                    // Si la traduction n'existe pas, la créer
+                    // Si la traduction n'existe pas, la créer avec la valeur traduite
                     console.log('Create new EN translation')
                     await prisma.translation.create({
                         data: {
                             entityType,
                             entityId,
                             field,
-                            value: value || '',
+                            value: translatedValue,
                             languageId: enLanguage.id
                         }
                     })
                 } else if (existingTranslationEN.value === '') {
-                    // Si la traduction existe mais que sa valeur est vide, la mettre à jour
+                    // Si la traduction existe mais que sa valeur est vide, la mettre à jour avec la valeur traduite
                     console.log('Update empty EN translation')
                     await prisma.translation.update({
                         where: { id: existingTranslationEN.id },
-                        data: { value: value || '' }
+                        data: { value: translatedValue }
                     })
                 }
             }

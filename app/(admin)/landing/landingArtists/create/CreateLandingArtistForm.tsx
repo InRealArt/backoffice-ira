@@ -1,177 +1,455 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useToast } from '@/app/components/Toast/ToastContext' 
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { X, Plus } from 'lucide-react'
-import { createLandingArtistAction } from '@/lib/actions/landing-artist-actions'
-import TranslationField from '@/app/components/TranslationField'
-import { handleEntityTranslations } from '@/lib/actions/translation-actions'
-import { generateSlug } from '@/lib/utils'
-import CountrySelect from '@/app/components/Common/CountrySelect'
-import MediumMultiSelect from '@/app/components/Common/MediumMultiSelect'
-import type { ArtistCategory } from '@prisma/client'
-import CategoryMultiSelect from '@/app/components/Common/CategoryMultiSelect'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/app/components/Toast/ToastContext";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { X, Plus } from "lucide-react";
+import { createLandingArtistAction } from "@/lib/actions/landing-artist-actions";
+import TranslationField from "@/app/components/TranslationField";
+import { handleEntityTranslations } from "@/lib/actions/translation-actions";
+import { generateSlug } from "@/lib/utils";
+import MediumMultiSelect from "@/app/components/Common/MediumMultiSelect";
+import type { ArtistCategory } from "@prisma/client";
+import CategoryMultiSelect from "@/app/components/Common/CategoryMultiSelect";
+import ArtistImageUpload from "@/app/(protected)/art/create-artist-profile/ArtistImageUpload";
+import OptionalImageUpload from "@/app/(protected)/art/create-artist-profile/OptionalImageUpload";
+import ProgressModal from "@/app/(protected)/art/create-artist-profile/ProgressModal";
 
 // Schéma de validation
 const formSchema = z.object({
-  artistId: z.string().min(1, 'Veuillez sélectionner un artiste'),
+  artistId: z.string().min(1, "Veuillez sélectionner un artiste"),
   intro: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   artworkStyle: z.string().nullable().optional(),
   artistsPage: z.boolean().default(false),
-  imageUrl: z.string().url('URL d\'image invalide'),
-  secondaryImageUrl: z.string().refine(
-    val => val === '' || /^https?:\/\//.test(val),
-    { message: 'URL d\'image secondaire invalide' }
-  ).optional().transform(val => val === '' ? null : val),
-  countryCode: z.string().optional().refine(
-    val => val === undefined || val === '' || /^[A-Za-z]{2}$/.test(val),
-    { message: 'Code pays (ISO 3166-1 alpha-2) invalide' }
-  ),
-  birthYear: z.string().optional()
-    .transform(v => (v || '').trim())
-    .refine(v => v === '' || /^\d{4}$/.test(v), { message: 'Année invalide (YYYY)' }),
-  websiteUrl: z.string().refine(
-    val => val === '' || /^https?:\/\//.test(val),
-    { message: 'URL invalide' }
-  ).optional().transform(val => val === '' ? null : val),
-  facebookUrl: z.string().refine(
-    val => val === '' || /^https?:\/\//.test(val),
-    { message: 'URL Facebook invalide' }
-  ).optional().transform(val => val === '' ? null : val),
-  instagramUrl: z.string().refine(
-    val => val === '' || /^https?:\/\//.test(val),
-    { message: 'URL Instagram invalide' }
-  ).optional().transform(val => val === '' ? null : val),
-  twitterUrl: z.string().refine(
-    val => val === '' || /^https?:\/\//.test(val),
-    { message: 'URL Twitter invalide' }
-  ).optional().transform(val => val === '' ? null : val),
-  linkedinUrl: z.string().refine(
-    val => val === '' || /^https?:\/\//.test(val),
-    { message: 'URL LinkedIn invalide' }
-  ).optional().transform(val => val === '' ? null : val),
+  imageUrl: z.string().optional(), // Sera rempli après l'upload
+  secondaryImageUrl: z.string().nullable().optional(),
+  websiteUrl: z
+    .string()
+    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+      message: "URL invalide",
+    })
+    .optional()
+    .transform((val) => (val === "" ? null : val)),
+  facebookUrl: z
+    .string()
+    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+      message: "URL Facebook invalide",
+    })
+    .optional()
+    .transform((val) => (val === "" ? null : val)),
+  instagramUrl: z
+    .string()
+    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+      message: "URL Instagram invalide",
+    })
+    .optional()
+    .transform((val) => (val === "" ? null : val)),
+  twitterUrl: z
+    .string()
+    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+      message: "URL Twitter invalide",
+    })
+    .optional()
+    .transform((val) => (val === "" ? null : val)),
+  linkedinUrl: z
+    .string()
+    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+      message: "URL LinkedIn invalide",
+    })
+    .optional()
+    .transform((val) => (val === "" ? null : val)),
   slug: z.string().optional(),
   categoryIds: z.array(z.string()).optional(),
-    quoteFromInRealArt: z.string().optional(),
-    biographyHeader1: z.string().optional(),
-    biographyText1: z.string().optional(),
-    biographyHeader2: z.string().optional(),
-    biographyText2: z.string().optional(),
-    biographyHeader3: z.string().optional(),
-    biographyText3: z.string().optional(),
-    biographyHeader4: z.string().optional(),
-    biographyText4: z.string().optional(),
-    mediumTags: z.array(z.string()).default([]),
-    imageArtistStudio: z.string().refine(
-      val => val === '' || /^https?:\/\//.test(val),
-      { message: 'URL d\'image d\'atelier invalide' }
-    ).optional().transform(val => val === '' ? null : val),
-})
+  quoteFromInRealArt: z.string().optional(),
+  biographyHeader1: z.string().optional(),
+  biographyText1: z.string().optional(),
+  biographyHeader2: z.string().optional(),
+  biographyText2: z.string().optional(),
+  biographyHeader3: z.string().optional(),
+  biographyText3: z.string().optional(),
+  biographyHeader4: z.string().optional(),
+  biographyText4: z.string().optional(),
+  mediumTags: z.array(z.string()).default([]),
+  imageArtistStudio: z.string().nullable().optional(),
+});
 
-type FormValues = z.infer<typeof formSchema>
+type FormValues = z.infer<typeof formSchema>;
 
 interface Artist {
-  id: number
-  name: string
-  surname: string
-  pseudo: string
-  imageUrl: string
+  id: number;
+  name: string;
+  surname: string;
+  pseudo: string;
+  imageUrl: string;
+  description: string;
 }
-
-interface CountryOption { code: string, name: string }
 
 interface CreateLandingArtistFormProps {
-  artists: Artist[]
-  countries: CountryOption[]
-  mediums: string[]
-  categories: ArtistCategory[]
+  artists: Artist[];
+  mediums: string[];
+  categories: ArtistCategory[];
 }
 
-export default function CreateLandingArtistForm({ artists, countries, mediums, categories }: CreateLandingArtistFormProps) {
-  const router = useRouter()
-  const { success, error } = useToast()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [artworkImages, setArtworkImages] = useState<{name: string, url: string}[]>([])
-  const [newImageUrl, setNewImageUrl] = useState('')
-  const [newImageName, setNewImageName] = useState('')
-  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
-  const [slug, setSlug] = useState('')
+export default function CreateLandingArtistForm({
+  artists,
+  mediums,
+  categories,
+}: CreateLandingArtistFormProps) {
+  const router = useRouter();
+  const { success, error } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [artworkImages, setArtworkImages] = useState<
+    { name: string; url: string }[]
+  >([]);
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [newImageName, setNewImageName] = useState("");
+  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+  const [slug, setSlug] = useState("");
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [secondaryImageFile, setSecondaryImageFile] = useState<File | null>(
+    null
+  );
+  const [studioImageFile, setStudioImageFile] = useState<File | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [progressSteps, setProgressSteps] = useState<
+    Array<{
+      id: string;
+      label: string;
+      status: "pending" | "in-progress" | "completed" | "error";
+    }>
+  >([
+    { id: "validation", label: "Validation des données", status: "pending" },
+    {
+      id: "conversion",
+      label: "Conversion de l'image en WebP",
+      status: "pending",
+    },
+    { id: "upload", label: "Upload vers Firebase", status: "pending" },
+    {
+      id: "creation",
+      label: "Création de l'artiste landing",
+      status: "pending",
+    },
+    { id: "finalization", label: "Finalisation", status: "pending" },
+  ]);
+  const [progressError, setProgressError] = useState<string | undefined>(
+    undefined
+  );
 
   const {
     register,
     handleSubmit,
     watch,
     setValue,
-    formState: { errors }
+    formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      artistId: '',
-      intro: '',
-      description: '',
-      artworkStyle: '',
+      artistId: "",
+      intro: "",
+      description: "",
+      artworkStyle: "",
       artistsPage: false,
-      imageUrl: '',
-      secondaryImageUrl: '',
-      countryCode: '',
-      birthYear: '',
-      websiteUrl: '',
-      facebookUrl: '',
-      instagramUrl: '',
-      twitterUrl: '',
-      linkedinUrl: '',
-      slug: '',
+      imageUrl: "",
+      secondaryImageUrl: "",
+      websiteUrl: "",
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      linkedinUrl: "",
+      slug: "",
       categoryIds: [],
-      quoteFromInRealArt: '',
-      biographyHeader1: '',
-      biographyText1: '',
-      biographyHeader2: '',
-      biographyText2: '',
-      biographyHeader3: '',
-      biographyText3: '',
-      biographyHeader4: '',
-      biographyText4: '',
-    }
-  })
+      quoteFromInRealArt: "",
+      biographyHeader1: "",
+      biographyText1: "",
+      biographyHeader2: "",
+      biographyText2: "",
+      biographyHeader3: "",
+      biographyText3: "",
+      biographyHeader4: "",
+      biographyText4: "",
+    },
+  });
 
-  const artistId = watch('artistId')
-  const imageUrl = watch('imageUrl')
-  const secondaryImageUrl = watch('secondaryImageUrl')
-  const artistsPage = watch('artistsPage')
-  const mediumTags = watch('mediumTags' as any) as string[] | undefined
-  const categoryIds = watch('categoryIds') || []
+  const artistId = watch("artistId");
+  const artistsPage = watch("artistsPage");
+  const mediumTags = watch("mediumTags" as any) as string[] | undefined;
+  const categoryIds = watch("categoryIds") || [];
 
   // Mettre à jour l'artiste sélectionné lorsque l'ID change
   const handleArtistChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const id = parseInt(e.target.value)
-    const artist = artists.find(a => a.id === id) || null
-    setSelectedArtist(artist)
-    
-    if (artist && !imageUrl) {
-      // Pré-remplir l'URL de l'image avec celle de l'artiste si aucune URL n'est encore définie
-      setValue('imageUrl', artist.imageUrl)
-    }
-    
+    const id = parseInt(e.target.value);
+    const artist = artists.find((a) => a.id === id) || null;
+    setSelectedArtist(artist);
+
     // Générer et mettre à jour le slug
     if (artist) {
-      const generatedSlug = generateSlug(artist.name + ' ' + artist.surname)
-      setSlug(generatedSlug)
-      setValue('slug', generatedSlug)
+      const generatedSlug = generateSlug(artist.name + " " + artist.surname);
+      setSlug(generatedSlug);
+      setValue("slug", generatedSlug);
+      // Pré-remplir la description avec celle de l'artiste
+      if (artist.description) {
+        setValue("description", artist.description);
+      }
     } else {
-      setSlug('')
-      setValue('slug', '')
+      setSlug("");
+      setValue("slug", "");
+      setValue("description", "");
     }
-  }
-  
-  const onSubmit = async (data: FormValues) => {
-    setIsSubmitting(true)
-    
+  };
+
+  const updateStepStatus = (
+    stepId: string,
+    status: "pending" | "in-progress" | "completed" | "error"
+  ) => {
+    setProgressSteps((prev) =>
+      prev.map((step) => (step.id === stepId ? { ...step, status } : step))
+    );
+  };
+
+  // Fonction d'upload côté client pour les images d'artiste
+  const handleUpload = async (
+    imageFile: File,
+    name: string,
+    surname: string,
+    imageType: "profile" | "secondary" | "studio" = "profile"
+  ): Promise<string> => {
+    const { uploadArtistImageWithWebP } = await import(
+      "@/lib/firebase/storage"
+    );
+
     try {
+      return await uploadArtistImageWithWebP(imageFile, {
+        name,
+        surname,
+        imageType,
+        normalizeFolderName: true,
+        onConversionStatus: (status, error) => {
+          updateStepStatus("conversion", status);
+        },
+        onUploadStatus: (status, error) => {
+          updateStepStatus("upload", status);
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const onSubmit = async (data: FormValues) => {
+    setFormError(null);
+    setIsSubmitting(true);
+    setShowProgressModal(true);
+    setProgressError(undefined);
+
+    // Réinitialiser les étapes
+    setProgressSteps([
+      { id: "validation", label: "Validation des données", status: "pending" },
+      {
+        id: "conversion",
+        label: "Conversion de l'image en WebP",
+        status: "pending",
+      },
+      { id: "upload", label: "Upload vers Firebase", status: "pending" },
+      {
+        id: "creation",
+        label: "Création de l'artiste landing",
+        status: "pending",
+      },
+      {
+        id: "translations",
+        label: "Création des traductions",
+        status: "pending",
+      },
+      { id: "finalization", label: "Finalisation", status: "pending" },
+    ]);
+
+    try {
+      // Étape 1: Validation
+      updateStepStatus("validation", "in-progress");
+
+      // Vérifier qu'un artiste est sélectionné
+      if (!selectedArtist) {
+        updateStepStatus("validation", "error");
+        setProgressError("Veuillez sélectionner un artiste");
+        setFormError("Veuillez sélectionner un artiste");
+        error("Veuillez sélectionner un artiste");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Vérifier qu'une image principale existe (soit un fichier sélectionné, soit l'image existante de l'artiste)
+      if (!selectedImageFile && !selectedArtist.imageUrl) {
+        updateStepStatus("validation", "error");
+        setProgressError("Veuillez sélectionner une image principale");
+        setFormError("Veuillez sélectionner une image principale");
+        error("Veuillez sélectionner une image principale");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Vérifier que le répertoire Firebase existe (doit être fait en premier)
+      const { checkFolderExists } = await import("@/lib/firebase/storage");
+      const folderName = `${selectedArtist.name} ${selectedArtist.surname}`;
+      const folderPath = `artists/${folderName}`;
+
+      try {
+        const folderExists = await checkFolderExists(
+          folderPath,
+          selectedArtist.name,
+          selectedArtist.surname
+        );
+
+        if (!folderExists) {
+          updateStepStatus("validation", "error");
+          const errorMessage = `Le répertoire "${folderPath}" n'existe pas dans Firebase Storage. Veuillez d'abord créer le profil artiste (public.artist) avec son image principale.`;
+          setProgressError(errorMessage);
+          setFormError(errorMessage);
+          error(errorMessage);
+          setIsSubmitting(false);
+          return;
+        }
+      } catch (checkError: any) {
+        updateStepStatus("validation", "error");
+        const errorMessage = `Erreur lors de la vérification du répertoire Firebase "${folderPath}": ${
+          checkError?.message || "Erreur inconnue"
+        }`;
+        setProgressError(errorMessage);
+        setFormError(errorMessage);
+        error(errorMessage);
+        setIsSubmitting(false);
+        return;
+      }
+
+      updateStepStatus("validation", "completed");
+
+      // Upload des images
+      let imageUrl: string;
+      let secondaryImageUrl: string | null = null;
+      let studioImageUrl: string | null = null;
+
+      try {
+        // Upload de l'image principale si un nouveau fichier a été sélectionné
+        if (selectedImageFile) {
+          imageUrl = await handleUpload(
+            selectedImageFile,
+            selectedArtist.name,
+            selectedArtist.surname,
+            "profile"
+          );
+        } else {
+          // Utiliser l'image existante de l'artiste
+          imageUrl = selectedArtist.imageUrl;
+          // Marquer les étapes de conversion et upload comme complétées puisqu'on utilise l'image existante
+          updateStepStatus("conversion", "completed");
+          updateStepStatus("upload", "completed");
+        }
+
+        // Upload de l'image secondaire si fournie (dans le répertoire existant avec casse exacte)
+        if (secondaryImageFile) {
+          try {
+            const { uploadImageToExistingFolder } = await import(
+              "@/lib/firebase/storage"
+            );
+            const folderName = `${selectedArtist.name} ${selectedArtist.surname}`;
+            const fileName = `${selectedArtist.name} ${selectedArtist.surname}_2`;
+            secondaryImageUrl = await uploadImageToExistingFolder(
+              secondaryImageFile,
+              folderName,
+              fileName,
+              (status, error) => {
+                if (status === "error") {
+                  updateStepStatus("conversion", status);
+                } else {
+                  updateStepStatus("conversion", status);
+                }
+              },
+              (status, error) => {
+                if (status === "error") {
+                  updateStepStatus("upload", status);
+                } else {
+                  updateStepStatus("upload", status);
+                }
+              }
+            );
+          } catch (err: any) {
+            console.error(
+              "Erreur lors de l'upload de l'image secondaire:",
+              err
+            );
+            const errorMessage =
+              err?.message || "Erreur lors de l'upload de l'image secondaire";
+            setProgressError(errorMessage);
+            error(errorMessage);
+            // Ne pas bloquer la soumission si l'image secondaire échoue, mais afficher l'erreur
+          }
+        }
+
+        // Upload de l'image du studio si fournie (dans le répertoire existant avec casse exacte)
+        if (studioImageFile) {
+          try {
+            const { uploadImageToExistingFolder } = await import(
+              "@/lib/firebase/storage"
+            );
+            const folderName = `${selectedArtist.name} ${selectedArtist.surname}`;
+            const fileName = `${selectedArtist.name} ${selectedArtist.surname}_studio`;
+            studioImageUrl = await uploadImageToExistingFolder(
+              studioImageFile,
+              folderName,
+              fileName,
+              (status, error) => {
+                if (status === "error") {
+                  updateStepStatus("conversion", status);
+                } else {
+                  updateStepStatus("conversion", status);
+                }
+              },
+              (status, error) => {
+                if (status === "error") {
+                  updateStepStatus("upload", status);
+                } else {
+                  updateStepStatus("upload", status);
+                }
+              }
+            );
+          } catch (err: any) {
+            console.error("Erreur lors de l'upload de l'image du studio:", err);
+            const errorMessage =
+              err?.message || "Erreur lors de l'upload de l'image du studio";
+            setProgressError(errorMessage);
+            error(errorMessage);
+            // Ne pas bloquer la soumission si l'image du studio échoue, mais afficher l'erreur
+          }
+        }
+      } catch (uploadError: any) {
+        // Détecter si c'est une erreur de conversion ou d'upload
+        const errorMessage =
+          uploadError?.message || "Erreur lors de l'upload de l'image";
+
+        if (
+          errorMessage.toLowerCase().includes("conversion") ||
+          errorMessage.toLowerCase().includes("webp")
+        ) {
+          updateStepStatus("conversion", "error");
+        } else {
+          updateStepStatus("upload", "error");
+        }
+
+        setProgressError(errorMessage);
+        setFormError(errorMessage);
+        error(errorMessage);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Étape 4: Création de l'artiste landing
+      updateStepStatus("creation", "in-progress");
+
       // Transformer undefined en null pour certains champs
       const formattedData = {
         artistId: parseInt(data.artistId),
@@ -179,111 +457,183 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
         description: data.description || null,
         artworkStyle: data.artworkStyle || null,
         artistsPage: data.artistsPage,
-        imageUrl: data.imageUrl,
-        secondaryImageUrl: data.secondaryImageUrl || null,
-        countryCode: data.countryCode ? data.countryCode.toUpperCase() : undefined,
-        birthYear: data.birthYear && data.birthYear !== '' ? parseInt(data.birthYear, 10) : undefined,
+        imageUrl: imageUrl,
+        secondaryImageUrl: secondaryImageUrl,
         websiteUrl: data.websiteUrl || null,
-        facebookUrl: data.facebookUrl || null, 
+        facebookUrl: data.facebookUrl || null,
         instagramUrl: data.instagramUrl || null,
         twitterUrl: data.twitterUrl || null,
         linkedinUrl: data.linkedinUrl || null,
         artworkImages: JSON.stringify(artworkImages),
         slug: data.slug,
-        categoryIds: Array.isArray(data.categoryIds) ? data.categoryIds.map(v => parseInt(v)) : undefined
-      }
+        categoryIds: Array.isArray(data.categoryIds)
+          ? data.categoryIds.map((v) => parseInt(v))
+          : undefined,
+      };
       // Ajouter les champs Artist si fournis
       const artistExtra = {
-        quoteFromInRealArt: (data.quoteFromInRealArt ?? '').trim() === '' ? null : (data.quoteFromInRealArt ?? '').trim(),
-        biographyHeader1: (data.biographyHeader1 ?? '').trim() === '' ? null : (data.biographyHeader1 ?? '').trim(),
-        biographyText1: (data.biographyText1 ?? '').trim() === '' ? null : (data.biographyText1 ?? '').trim(),
-        biographyHeader2: (data.biographyHeader2 ?? '').trim() === '' ? null : (data.biographyHeader2 ?? '').trim(),
-        biographyText2: (data.biographyText2 ?? '').trim() === '' ? null : (data.biographyText2 ?? '').trim(),
-        biographyHeader3: (data.biographyHeader3 ?? '').trim() === '' ? null : (data.biographyHeader3 ?? '').trim(),
-        biographyText3: (data.biographyText3 ?? '').trim() === '' ? null : (data.biographyText3 ?? '').trim(),
-        biographyHeader4: (data.biographyHeader4 ?? '').trim() === '' ? null : (data.biographyHeader4 ?? '').trim(),
-        biographyText4: (data.biographyText4 ?? '').trim() === '' ? null : (data.biographyText4 ?? '').trim(),
+        quoteFromInRealArt:
+          (data.quoteFromInRealArt ?? "").trim() === ""
+            ? null
+            : (data.quoteFromInRealArt ?? "").trim(),
+        biographyHeader1:
+          (data.biographyHeader1 ?? "").trim() === ""
+            ? null
+            : (data.biographyHeader1 ?? "").trim(),
+        biographyText1:
+          (data.biographyText1 ?? "").trim() === ""
+            ? null
+            : (data.biographyText1 ?? "").trim(),
+        biographyHeader2:
+          (data.biographyHeader2 ?? "").trim() === ""
+            ? null
+            : (data.biographyHeader2 ?? "").trim(),
+        biographyText2:
+          (data.biographyText2 ?? "").trim() === ""
+            ? null
+            : (data.biographyText2 ?? "").trim(),
+        biographyHeader3:
+          (data.biographyHeader3 ?? "").trim() === ""
+            ? null
+            : (data.biographyHeader3 ?? "").trim(),
+        biographyText3:
+          (data.biographyText3 ?? "").trim() === ""
+            ? null
+            : (data.biographyText3 ?? "").trim(),
+        biographyHeader4:
+          (data.biographyHeader4 ?? "").trim() === ""
+            ? null
+            : (data.biographyHeader4 ?? "").trim(),
+        biographyText4:
+          (data.biographyText4 ?? "").trim() === ""
+            ? null
+            : (data.biographyText4 ?? "").trim(),
         mediumTags: Array.isArray(data.mediumTags) ? data.mediumTags : [],
-        imageArtistStudio: (data.imageArtistStudio ?? '').trim() === '' ? null : (data.imageArtistStudio ?? '').trim(),
-      }
-      const payload = { ...formattedData, ...artistExtra }
-      
+        imageArtistStudio: studioImageUrl || null,
+      };
+      const payload = { ...formattedData, ...artistExtra };
+
       // Appel à la server action pour créer l'artiste
-      const result = await createLandingArtistAction(payload)
-      
+      const result = await createLandingArtistAction(payload);
+
+      updateStepStatus("creation", "completed");
+
       if (result.success) {
-        success('Artiste ajouté avec succès')
-        
+        // Étape 5: Création des traductions
+        updateStepStatus("translations", "in-progress");
+
         // Gestion des traductions pour intro, description et style artistique
         try {
           if (result.landingArtist?.id) {
-            await handleEntityTranslations('LandingArtist', result.landingArtist.id, {
-              intro: data.intro || null,
-              description: data.description || null,
-              artworkStyle: data.artworkStyle || null
-            })
+            await handleEntityTranslations(
+              "LandingArtist",
+              result.landingArtist.id,
+              {
+                intro: data.intro || null,
+                description: data.description || null,
+                artworkStyle: data.artworkStyle || null,
+              }
+            );
           }
         } catch (translationError) {
-          console.error('Erreur lors de la gestion des traductions LandingArtist:', translationError)
+          console.error(
+            "Erreur lors de la gestion des traductions LandingArtist:",
+            translationError
+          );
+          updateStepStatus("translations", "error");
+          setProgressError("Erreur lors de la création des traductions");
           // On ne bloque pas la création en cas d'erreur de traduction
         }
 
         // Gestion des traductions pour les champs de citations et biographies (LandingArtist)
         try {
           if (result.landingArtist?.id) {
-            await handleEntityTranslations('LandingArtist', result.landingArtist.id, {
-              quoteFromInRealArt: data.quoteFromInRealArt || null,
-              biographyHeader1: data.biographyHeader1 || null,
-              biographyText1: data.biographyText1 || null,
-              biographyHeader2: data.biographyHeader2 || null,
-              biographyText2: data.biographyText2 || null,
-              biographyHeader3: data.biographyHeader3 || null,
-              biographyText3: data.biographyText3 || null,
-              biographyHeader4: data.biographyHeader4 || null,
-              biographyText4: data.biographyText4 || null
-            })
+            await handleEntityTranslations(
+              "LandingArtist",
+              result.landingArtist.id,
+              {
+                quoteFromInRealArt: data.quoteFromInRealArt || null,
+                biographyHeader1: data.biographyHeader1 || null,
+                biographyText1: data.biographyText1 || null,
+                biographyHeader2: data.biographyHeader2 || null,
+                biographyText2: data.biographyText2 || null,
+                biographyHeader3: data.biographyHeader3 || null,
+                biographyText3: data.biographyText3 || null,
+                biographyHeader4: data.biographyHeader4 || null,
+                biographyText4: data.biographyText4 || null,
+              }
+            );
           }
         } catch (translationError) {
-          console.error('Erreur lors de la gestion des traductions LandingArtist:', translationError)
+          console.error(
+            "Erreur lors de la gestion des traductions LandingArtist:",
+            translationError
+          );
+          updateStepStatus("translations", "error");
+          setProgressError("Erreur lors de la création des traductions");
           // On ne bloque pas la création en cas d'erreur de traduction
         }
-        
-        // Rediriger après 1 seconde
+
+        updateStepStatus("translations", "completed");
+
+        // Étape 6: Finalisation
+        updateStepStatus("finalization", "in-progress");
+        await new Promise((resolve) => setTimeout(resolve, 500)); // Petit délai pour l'UX
+        updateStepStatus("finalization", "completed");
+
+        success("Artiste ajouté avec succès");
+
+        // Fermer le modal après un court délai
         setTimeout(() => {
-          router.push('/landing/landingArtists')
-          router.refresh()
-        }, 1000)
+          setShowProgressModal(false);
+          router.push("/landing/landingArtists");
+          router.refresh();
+        }, 1000);
       } else {
-        error(result.message || 'Une erreur est survenue')
+        updateStepStatus("creation", "error");
+        setProgressError(result.message || "Une erreur est survenue");
+        error(result.message || "Une erreur est survenue");
+        setIsSubmitting(false);
       }
     } catch (error: any) {
-      error('Une erreur est survenue lors de la création')
-      console.error(error)
-    } finally {
-      setIsSubmitting(false)
+      console.error("Erreur lors de la création de l'artiste landing:", error);
+      const errorMessage =
+        error?.message ||
+        "Une erreur est survenue lors de la création de l'artiste landing";
+
+      // Marquer l'étape de création comme erreur
+      updateStepStatus("creation", "error");
+
+      setProgressError(errorMessage);
+      error(errorMessage);
+      setFormError("Une erreur est survenue");
+      setIsSubmitting(false);
     }
-  }
-  
+  };
+
   const handleCancel = () => {
-    router.push('/landing/landingArtists')
-  }
-  
+    router.push("/landing/landingArtists");
+  };
+
   const handleAddImage = () => {
-    if (newImageUrl.trim() === '') return;
-    
+    if (newImageUrl.trim() === "") return;
+
     // Ajouter la nouvelle image à la liste
-    setArtworkImages([...artworkImages, { name: newImageName, url: newImageUrl }]);
-    
+    setArtworkImages([
+      ...artworkImages,
+      { name: newImageName, url: newImageUrl },
+    ]);
+
     // Réinitialiser les champs
-    setNewImageUrl('');
-    setNewImageName('');
-  }
-  
+    setNewImageUrl("");
+    setNewImageName("");
+  };
+
   const handleRemoveImage = (index: number) => {
     const updatedImages = [...artworkImages];
     updatedImages.splice(index, 1);
     setArtworkImages(updatedImages);
-  }
+  };
 
   return (
     <div className="page-container">
@@ -292,19 +642,30 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
           <h1 className="page-title">Ajouter un artiste à la page d'accueil</h1>
         </div>
         <p className="page-subtitle">
-          Sélectionnez un artiste et configurez son affichage sur la page d'accueil
+          Sélectionnez un artiste et configurez son affichage sur la page
+          d'accueil
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="form-container">
         <div className="form-card">
           <div className="card-content">
+            {formError && (
+              <div className="alert alert-danger mb-4">
+                <p>{formError}</p>
+              </div>
+            )}
+
             <div className="form-group">
-              <label htmlFor="artistId" className="form-label">Sélectionnez un artiste</label>
+              <label htmlFor="artistId" className="form-label">
+                Sélectionnez un artiste
+              </label>
               <select
                 id="artistId"
-                {...register('artistId')}
-                className={`form-select ${errors.artistId ? 'input-error' : ''}`}
+                {...register("artistId")}
+                className={`form-select ${
+                  errors.artistId ? "input-error" : ""
+                }`}
                 onChange={handleArtistChange}
               >
                 <option value="">-- Sélectionner un artiste --</option>
@@ -318,125 +679,53 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                 <p className="form-error">{errors.artistId.message}</p>
               )}
             </div>
-            
+
             {selectedArtist && (
               <>
-                <div className="form-section mt-md">
-                  <h2 className="section-title">Pays et année de naissance</h2>
-                  <div className="d-flex gap-md mt-sm">
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <label htmlFor="countryCode" className="form-label">Code pays (ISO)</label>
-                      <CountrySelect
-                        countries={countries}
-                        value={watch('countryCode') || ''}
-                        onChange={code => setValue('countryCode', code)}
-                        placeholder='FR'
-                      />
-                      {errors.countryCode && (
-                        <p className="form-error">{errors.countryCode.message}</p>
-                      )}
-                    </div>
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <label htmlFor="birthYear" className="form-label">Année de naissance</label>
-                      <input
-                        id="birthYear"
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={4}
-                        {...register('birthYear')}
-                        className={`form-input ${errors.birthYear ? 'input-error' : ''}`}
-                        placeholder="1980"
-                      />
-                      {errors.birthYear && (
-                        <p className="form-error">{errors.birthYear.message}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
                 <div className="form-section mt-lg">
-                  <h2 className="section-title">Catégorie, Images & description</h2>
+                  <h2 className="section-title">
+                    Catégorie, Images & description
+                  </h2>
                   <div className="form-group mb-lg">
-                    <label htmlFor="slug" className="form-label">Slug (Généré automatiquement à partir du nom de l'artiste)</label>
+                    <label htmlFor="slug" className="form-label">
+                      Slug (Généré automatiquement à partir du nom de l'artiste)
+                    </label>
                     <input
                       id="slug"
                       type="text"
                       value={slug}
                       readOnly
                       className="form-input"
-                      style={{ backgroundColor: '#f9f9f9' }}
+                      style={{ backgroundColor: "#f9f9f9" }}
                     />
                   </div>
-                  <div className="d-flex gap-lg">
-                    <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
-                      <div>
-                        <label className="form-label" style={{ marginBottom: '8px' }}>Image principale</label>
-                        {imageUrl ? (
-                          <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
-                            <img
-                              src={imageUrl}
-                              alt={selectedArtist ? `${selectedArtist.name} ${selectedArtist.surname}` : 'Artiste'}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          </div>
-                        ) : (
-                          <div style={{ width: '200px', height: '200px', borderRadius: '8px', backgroundColor: '#e0e0e0', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '1.5rem' }}>
-                            {selectedArtist ? selectedArtist.name.charAt(0) + selectedArtist.surname.charAt(0) : '??'}
-                          </div>
-                        )}
-                        <div className="form-group" style={{ marginTop: '8px' }}>
-                          <label htmlFor="imageUrl" className="form-label">URL de l'image</label>
-                          <input
-                            id="imageUrl"
-                            type="text"
-                            {...register('imageUrl')}
-                            className={`form-input ${errors.imageUrl ? 'input-error' : ''}`}
-                            placeholder="https://example.com/image.jpg"
-                          />
-                          {errors.imageUrl && (
-                            <p className="form-error">{errors.imageUrl.message}</p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="form-label" style={{ marginBottom: '8px' }}>Image secondaire</label>
-                        {secondaryImageUrl ? (
-                          <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
-                            <img
-                              src={secondaryImageUrl}
-                              alt={selectedArtist ? `${selectedArtist.name} ${selectedArtist.surname} - Image secondaire` : 'Artiste - Image secondaire'}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            />
-                          </div>
-                        ) : (
-                          <div style={{ width: '200px', height: '200px', borderRadius: '8px', backgroundColor: '#f5f5f5', color: '#999', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '500', fontSize: '0.9rem', border: '2px dashed #ddd' }}>
-                            Aucune image secondaire
-                          </div>
-                        )}
-                        <div className="form-group" style={{ marginTop: '8px' }}>
-                          <label htmlFor="secondaryImageUrl" className="form-label">URL de l'image secondaire (optionnel)</label>
-                          <input
-                            id="secondaryImageUrl"
-                            type="text"
-                            {...register('secondaryImageUrl')}
-                            className={`form-input ${errors.secondaryImageUrl ? 'input-error' : ''}`}
-                            placeholder="https://example.com/secondary-image.jpg"
-                          />
-                          {errors.secondaryImageUrl && (
-                            <p className="form-error">{errors.secondaryImageUrl.message}</p>
-                          )}
-                        </div>
-                      </div>
+                  <div className="d-flex gap-lg align-items-start">
+                    <div style={{ width: "200px", flexShrink: 0 }}>
+                      <ArtistImageUpload
+                        onFileSelect={setSelectedImageFile}
+                        previewUrl={selectedArtist?.imageUrl || null}
+                        error={
+                          formError && !selectedImageFile
+                            ? "Une image principale est requise"
+                            : undefined
+                        }
+                      />
                     </div>
-                    
+
                     <div style={{ flex: 1 }}>
                       <div className="form-group">
                         <label className="form-label">Catégories</label>
                         <CategoryMultiSelect
-                          options={categories.map(c => ({ id: c.id, name: c.name }))}
-                          selected={categoryIds.map(v => parseInt(v))}
-                          onChange={(values) => setValue('categoryIds' as any, values.map(String), { shouldValidate: true })}
+                          options={categories.map((c) => ({
+                            id: c.id,
+                            name: c.name,
+                          }))}
+                          selected={categoryIds.map((v) => parseInt(v))}
+                          onChange={(values) =>
+                            setValue("categoryIds" as any, values.map(String), {
+                              shouldValidate: true,
+                            })
+                          }
                         />
                       </div>
                       <div className="form-group">
@@ -444,26 +733,88 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                         <MediumMultiSelect
                           options={mediums}
                           selected={mediumTags || []}
-                          onChange={(values) => setValue('mediumTags' as any, values, { shouldValidate: true })}
+                          onChange={(values) =>
+                            setValue("mediumTags" as any, values, {
+                              shouldValidate: true,
+                            })
+                          }
                         />
                       </div>
                       <div className="form-group">
-                        <div className="d-flex align-items-center gap-md" style={{ marginBottom: '20px' }}>
-                          <span className={!artistsPage ? 'text-primary' : 'text-muted'} style={{ fontWeight: !artistsPage ? 'bold' : 'normal' }}>Non affiché</span>
-                          <label className="d-flex align-items-center" style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}>
+                        <div
+                          className="d-flex align-items-center gap-md"
+                          style={{ marginBottom: "20px" }}
+                        >
+                          <span
+                            className={
+                              !artistsPage ? "text-primary" : "text-muted"
+                            }
+                            style={{
+                              fontWeight: !artistsPage ? "bold" : "normal",
+                            }}
+                          >
+                            Non affiché
+                          </span>
+                          <label
+                            className="d-flex align-items-center"
+                            style={{
+                              position: "relative",
+                              display: "inline-block",
+                              width: "60px",
+                              height: "30px",
+                            }}
+                          >
                             <input
                               type="checkbox"
-                              {...register('artistsPage')}
+                              {...register("artistsPage")}
                               style={{ opacity: 0, width: 0, height: 0 }}
                             />
-                            <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: artistsPage ? '#4f46e5' : '#ccc', borderRadius: '34px', transition: '0.4s' }}>
-                              <span style={{ position: 'absolute', content: '""', height: '22px', width: '22px', left: '4px', bottom: '4px', backgroundColor: 'white', borderRadius: '50%', transition: '0.4s', transform: artistsPage ? 'translateX(30px)' : 'translateX(0)' }}></span>
+                            <span
+                              style={{
+                                position: "absolute",
+                                cursor: "pointer",
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: artistsPage
+                                  ? "#4f46e5"
+                                  : "#ccc",
+                                borderRadius: "34px",
+                                transition: "0.4s",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  position: "absolute",
+                                  content: '""',
+                                  height: "22px",
+                                  width: "22px",
+                                  left: "4px",
+                                  bottom: "4px",
+                                  backgroundColor: "white",
+                                  borderRadius: "50%",
+                                  transition: "0.4s",
+                                  transform: artistsPage
+                                    ? "translateX(30px)"
+                                    : "translateX(0)",
+                                }}
+                              ></span>
                             </span>
                           </label>
-                          <span className={artistsPage ? 'text-primary' : 'text-muted'} style={{ fontWeight: artistsPage ? 'bold' : 'normal' }}>Affiché</span>
+                          <span
+                            className={
+                              artistsPage ? "text-primary" : "text-muted"
+                            }
+                            style={{
+                              fontWeight: artistsPage ? "bold" : "normal",
+                            }}
+                          >
+                            Affiché
+                          </span>
                         </div>
                       </div>
-                      
+
                       <TranslationField
                         entityType="LandingArtist"
                         entityId={null}
@@ -473,13 +824,15 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                       >
                         <textarea
                           id="intro"
-                          {...register('intro')}
-                          className={`form-textarea ${errors.intro ? 'input-error' : ''}`}
+                          {...register("intro")}
+                          className={`form-textarea ${
+                            errors.intro ? "input-error" : ""
+                          }`}
                           rows={3}
                           placeholder="Courte introduction de l'artiste qui sera affichée sur la page d'accueil"
                         />
                       </TranslationField>
-                      
+
                       <TranslationField
                         entityType="LandingArtist"
                         entityId={null}
@@ -489,13 +842,15 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                       >
                         <textarea
                           id="description"
-                          {...register('description')}
-                          className={`form-textarea ${errors.description ? 'input-error' : ''}`}
+                          {...register("description")}
+                          className={`form-textarea ${
+                            errors.description ? "input-error" : ""
+                          }`}
                           rows={5}
                           placeholder="Description complète de l'artiste"
                         />
                       </TranslationField>
-                      
+
                       <TranslationField
                         entityType="LandingArtist"
                         entityId={null}
@@ -506,23 +861,30 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                         <input
                           id="artworkStyle"
                           type="text"
-                          {...register('artworkStyle')}
-                          className={`form-input ${errors.artworkStyle ? 'input-error' : ''}`}
+                          {...register("artworkStyle")}
+                          className={`form-input ${
+                            errors.artworkStyle ? "input-error" : ""
+                          }`}
                           placeholder="Style artistique (ex: Peinture contemporaine, Photographie, etc.)"
                         />
                       </TranslationField>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="form-section mt-lg">
                   <h2 className="section-title">Images des œuvres</h2>
-                  <p className="section-subtitle">Ajoutez les images des œuvres qui seront affichées sur la page d'accueil</p>
-                  
+                  <p className="section-subtitle">
+                    Ajoutez les images des œuvres qui seront affichées sur la
+                    page d'accueil
+                  </p>
+
                   <div className="form-group mt-md">
                     <div className="d-flex gap-md mb-md">
                       <div style={{ flex: 2 }}>
-                        <label htmlFor="newImageName" className="form-label">Nom de l'œuvre</label>
+                        <label htmlFor="newImageName" className="form-label">
+                          Nom de l'œuvre
+                        </label>
                         <input
                           id="newImageName"
                           type="text"
@@ -533,7 +895,9 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                         />
                       </div>
                       <div style={{ flex: 3 }}>
-                        <label htmlFor="newImageUrl" className="form-label">URL de l'image</label>
+                        <label htmlFor="newImageUrl" className="form-label">
+                          URL de l'image
+                        </label>
                         <div className="d-flex gap-sm">
                           <input
                             id="newImageUrl"
@@ -555,32 +919,62 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="image-list mt-md">
                       {artworkImages.length === 0 ? (
                         <p className="text-muted">Aucune image ajoutée</p>
                       ) : (
                         <div className="d-flex flex-wrap gap-md">
                           {artworkImages.map((image, index) => (
-                            <div key={index} className="image-item" style={{ position: 'relative', width: '150px' }}>
-                              <div style={{ position: 'relative', width: '150px', height: '150px', borderRadius: '8px', overflow: 'hidden' }}>
+                            <div
+                              key={index}
+                              className="image-item"
+                              style={{ position: "relative", width: "150px" }}
+                            >
+                              <div
+                                style={{
+                                  position: "relative",
+                                  width: "150px",
+                                  height: "150px",
+                                  borderRadius: "8px",
+                                  overflow: "hidden",
+                                }}
+                              >
                                 <img
                                   src={image.url}
                                   alt={image.name || `Image ${index + 1}`}
-                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                  }}
                                 />
                               </div>
                               <button
                                 type="button"
                                 onClick={() => handleRemoveImage(index)}
                                 className="btn btn-danger btn-small"
-                                style={{ position: 'absolute', top: '5px', right: '5px', padding: '4px', borderRadius: '50%' }}
+                                style={{
+                                  position: "absolute",
+                                  top: "5px",
+                                  right: "5px",
+                                  padding: "4px",
+                                  borderRadius: "50%",
+                                }}
                                 aria-label="Supprimer l'image"
                               >
                                 <X size={16} />
                               </button>
                               {image.name && (
-                                <p className="image-name mt-xs" style={{ fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <p
+                                  className="image-name mt-xs"
+                                  style={{
+                                    fontSize: "0.9rem",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
                                   {image.name}
                                 </p>
                               )}
@@ -588,6 +982,28 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                           ))}
                         </div>
                       )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-section mt-lg">
+                  <h2 className="section-title">
+                    Images supplémentaires (optionnel)
+                  </h2>
+                  <div className="d-flex gap-md" style={{ flexWrap: "wrap" }}>
+                    <div style={{ flex: "1 1 300px", minWidth: "250px" }}>
+                      <OptionalImageUpload
+                        onFileSelect={setSecondaryImageFile}
+                        label="Image secondaire de l'artiste"
+                        description="Une photo supplémentaire de l'artiste pour enrichir le profil"
+                      />
+                    </div>
+                    <div style={{ flex: "1 1 300px", minWidth: "250px" }}>
+                      <OptionalImageUpload
+                        onFileSelect={setStudioImageFile}
+                        label="Image de l'atelier"
+                        description="Une photo de l'espace de travail ou atelier de l'artiste"
+                      />
                     </div>
                   </div>
                 </div>
@@ -603,26 +1019,11 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                     <input
                       id="quoteFromInRealArt"
                       type="text"
-                      {...register('quoteFromInRealArt')}
+                      {...register("quoteFromInRealArt")}
                       className="form-input"
                       placeholder="Citation courte affichée sur la page"
                     />
                   </TranslationField>
-                  
-                  <div className="form-group mt-md">
-                    <label htmlFor="imageArtistStudio" className="form-label">Image d'atelier de l'artiste</label>
-                    <input
-                      id="imageArtistStudio"
-                      type="text"
-                      {...register('imageArtistStudio')}
-                      className={`form-input ${errors.imageArtistStudio ? 'input-error' : ''}`}
-                      placeholder="https://firebase-storage.googleapis.com/..."
-                    />
-                    {errors.imageArtistStudio && (
-                      <p className="form-error">{errors.imageArtistStudio.message}</p>
-                    )}
-                    <p className="form-help">URL Firebase de l'image de l'atelier de l'artiste (optionnel)</p>
-                  </div>
                   <div className="d-flex gap-md mt-md">
                     <div style={{ flex: 1 }}>
                       <TranslationField
@@ -634,7 +1035,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                         <input
                           id="biographyHeader1"
                           type="text"
-                          {...register('biographyHeader1')}
+                          {...register("biographyHeader1")}
                           className="form-input"
                           placeholder="Titre section 1"
                         />
@@ -649,7 +1050,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                       >
                         <textarea
                           id="biographyText1"
-                          {...register('biographyText1')}
+                          {...register("biographyText1")}
                           className="form-textarea"
                           rows={4}
                           placeholder="Texte section 1"
@@ -668,7 +1069,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                         <input
                           id="biographyHeader2"
                           type="text"
-                          {...register('biographyHeader2')}
+                          {...register("biographyHeader2")}
                           className="form-input"
                           placeholder="Titre section 2"
                         />
@@ -683,7 +1084,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                       >
                         <textarea
                           id="biographyText2"
-                          {...register('biographyText2')}
+                          {...register("biographyText2")}
                           className="form-textarea"
                           rows={4}
                           placeholder="Texte section 2"
@@ -702,7 +1103,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                         <input
                           id="biographyHeader3"
                           type="text"
-                          {...register('biographyHeader3')}
+                          {...register("biographyHeader3")}
                           className="form-input"
                           placeholder="Titre section 3"
                         />
@@ -717,7 +1118,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                       >
                         <textarea
                           id="biographyText3"
-                          {...register('biographyText3')}
+                          {...register("biographyText3")}
                           className="form-textarea"
                           rows={4}
                           placeholder="Texte section 3"
@@ -736,7 +1137,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                         <input
                           id="biographyHeader4"
                           type="text"
-                          {...register('biographyHeader4')}
+                          {...register("biographyHeader4")}
                           className="form-input"
                           placeholder="Titre section 4"
                         />
@@ -751,7 +1152,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                       >
                         <textarea
                           id="biographyText4"
-                          {...register('biographyText4')}
+                          {...register("biographyText4")}
                           className="form-textarea"
                           rows={4}
                           placeholder="Texte section 4"
@@ -762,78 +1163,109 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                 </div>
                 <div className="form-section mt-lg">
                   <h2 className="section-title">Liens de réseaux sociaux</h2>
-                  <p className="section-subtitle">Ajoutez les liens vers les réseaux sociaux et site web de l'artiste</p>
-                  
+                  <p className="section-subtitle">
+                    Ajoutez les liens vers les réseaux sociaux et site web de
+                    l'artiste
+                  </p>
+
                   <div className="form-group mt-md">
-                    <label htmlFor="websiteUrl" className="form-label">Site web</label>
+                    <label htmlFor="websiteUrl" className="form-label">
+                      Site web
+                    </label>
                     <input
                       id="websiteUrl"
                       type="text"
-                      {...register('websiteUrl')}
-                      className={`form-input ${errors.websiteUrl ? 'input-error' : ''}`}
+                      {...register("websiteUrl")}
+                      className={`form-input ${
+                        errors.websiteUrl ? "input-error" : ""
+                      }`}
                       placeholder="https://site-web-artiste.com"
                     />
                     {errors.websiteUrl && (
                       <p className="form-error">{errors.websiteUrl.message}</p>
                     )}
                   </div>
-                  
+
                   <div className="d-flex gap-md mt-md">
                     <div className="form-group" style={{ flex: 1 }}>
-                      <label htmlFor="facebookUrl" className="form-label">Facebook</label>
+                      <label htmlFor="facebookUrl" className="form-label">
+                        Facebook
+                      </label>
                       <input
                         id="facebookUrl"
                         type="text"
-                        {...register('facebookUrl')}
-                        className={`form-input ${errors.facebookUrl ? 'input-error' : ''}`}
+                        {...register("facebookUrl")}
+                        className={`form-input ${
+                          errors.facebookUrl ? "input-error" : ""
+                        }`}
                         placeholder="https://facebook.com/username"
                       />
                       {errors.facebookUrl && (
-                        <p className="form-error">{errors.facebookUrl.message}</p>
+                        <p className="form-error">
+                          {errors.facebookUrl.message}
+                        </p>
                       )}
                     </div>
-                    
+
                     <div className="form-group" style={{ flex: 1 }}>
-                      <label htmlFor="instagramUrl" className="form-label">Instagram</label>
+                      <label htmlFor="instagramUrl" className="form-label">
+                        Instagram
+                      </label>
                       <input
                         id="instagramUrl"
                         type="text"
-                        {...register('instagramUrl')}
-                        className={`form-input ${errors.instagramUrl ? 'input-error' : ''}`}
+                        {...register("instagramUrl")}
+                        className={`form-input ${
+                          errors.instagramUrl ? "input-error" : ""
+                        }`}
                         placeholder="https://instagram.com/username"
                       />
                       {errors.instagramUrl && (
-                        <p className="form-error">{errors.instagramUrl.message}</p>
+                        <p className="form-error">
+                          {errors.instagramUrl.message}
+                        </p>
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="d-flex gap-md mt-md">
                     <div className="form-group" style={{ flex: 1 }}>
-                      <label htmlFor="twitterUrl" className="form-label">Twitter</label>
+                      <label htmlFor="twitterUrl" className="form-label">
+                        Twitter
+                      </label>
                       <input
                         id="twitterUrl"
                         type="text"
-                        {...register('twitterUrl')}
-                        className={`form-input ${errors.twitterUrl ? 'input-error' : ''}`}
+                        {...register("twitterUrl")}
+                        className={`form-input ${
+                          errors.twitterUrl ? "input-error" : ""
+                        }`}
                         placeholder="https://twitter.com/username"
                       />
                       {errors.twitterUrl && (
-                        <p className="form-error">{errors.twitterUrl.message}</p>
+                        <p className="form-error">
+                          {errors.twitterUrl.message}
+                        </p>
                       )}
                     </div>
-                    
+
                     <div className="form-group" style={{ flex: 1 }}>
-                      <label htmlFor="linkedinUrl" className="form-label">LinkedIn</label>
+                      <label htmlFor="linkedinUrl" className="form-label">
+                        LinkedIn
+                      </label>
                       <input
                         id="linkedinUrl"
                         type="text"
-                        {...register('linkedinUrl')}
-                        className={`form-input ${errors.linkedinUrl ? 'input-error' : ''}`}
+                        {...register("linkedinUrl")}
+                        className={`form-input ${
+                          errors.linkedinUrl ? "input-error" : ""
+                        }`}
                         placeholder="https://linkedin.com/in/username"
                       />
                       {errors.linkedinUrl && (
-                        <p className="form-error">{errors.linkedinUrl.message}</p>
+                        <p className="form-error">
+                          {errors.linkedinUrl.message}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -841,7 +1273,7 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
               </>
             )}
           </div>
-          
+
           <div className="card-footer">
             <div className="d-flex justify-content-between">
               <button
@@ -857,12 +1289,27 @@ export default function CreateLandingArtistForm({ artists, countries, mediums, c
                 className="btn btn-primary btn-medium"
                 disabled={isSubmitting || !selectedArtist}
               >
-                {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
+                {isSubmitting ? "Enregistrement..." : "Enregistrer"}
               </button>
             </div>
           </div>
         </div>
       </form>
+
+      {/* Modal de progression */}
+      <ProgressModal
+        isOpen={showProgressModal}
+        steps={progressSteps}
+        currentError={progressError}
+        onClose={
+          progressError
+            ? () => {
+                setShowProgressModal(false);
+                setProgressError(undefined);
+              }
+            : undefined
+        }
+      />
     </div>
-  )
-} 
+  );
+}
