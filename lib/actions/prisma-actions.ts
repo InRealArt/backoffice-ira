@@ -1063,6 +1063,20 @@ export async function getPendingItemsCount() {
 }
 
 /**
+ * Compte le nombre d'artistes visibles de la table LandingArtist
+ * @returns Un objet contenant le nombre d'artistes visibles
+ */
+export async function getVisibleLandingArtistsCount() {
+  try {
+    const count = await prisma.landingArtist.count()
+    return { count }
+  } catch (error) {
+    console.error('Erreur lors du comptage des artistes visibles:', error)
+    return { count: 0 }
+  }
+}
+
+/**
  * Vérifie si un utilisateur est administrateur
  * @param email - L'email de l'utilisateur
  * @param walletAddress - L'adresse du portefeuille de l'utilisateur

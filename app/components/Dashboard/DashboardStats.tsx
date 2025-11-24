@@ -1,6 +1,6 @@
 'use client'
 
-import { Package, FileText } from 'lucide-react'
+import { Package, FileText, Users } from 'lucide-react'
 import { MetricCard } from './MetricCard'
 
 interface DashboardStatsProps {
@@ -11,10 +11,12 @@ interface DashboardStatsProps {
   isLoadingMintedCount?: boolean
   listedItemsCount?: number
   isLoadingListedCount?: boolean
-  
-  // Métriques pour les admins
   pendingItemsCount?: number
   isLoadingPendingCount?: boolean
+  
+  // Métriques pour les admins
+  visibleArtistsCount?: number
+  isLoadingArtistsCount?: boolean
   
   isAdmin?: boolean
 }
@@ -28,17 +30,19 @@ export function DashboardStats({
   isLoadingListedCount = false,
   pendingItemsCount = 0,
   isLoadingPendingCount = false,
+  visibleArtistsCount = 0,
+  isLoadingArtistsCount = false,
   isAdmin = false
 }: DashboardStatsProps) {
   if (isAdmin) {
     return (
       <div className="dashboard-stats">
         <MetricCard
-          title="Items en attente"
-          value={pendingItemsCount}
-          icon={FileText}
-          color="#f59e0b"
-          isLoading={isLoadingPendingCount}
+          title="Nb artistes"
+          value={visibleArtistsCount}
+          icon={Users}
+          color="#3b82f6"
+          isLoading={isLoadingArtistsCount}
         />
       </div>
     )
@@ -52,6 +56,13 @@ export function DashboardStats({
         icon={Package}
         color="#3b82f6"
         isLoading={isLoadingPresaleCount}
+      />
+      <MetricCard
+        title="Items en attente"
+        value={pendingItemsCount}
+        icon={FileText}
+        color="#f59e0b"
+        isLoading={isLoadingPendingCount}
       />
     </div>
   )

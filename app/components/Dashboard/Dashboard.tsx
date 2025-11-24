@@ -8,7 +8,7 @@ import { User, Settings, FolderOpen, PlusCircle } from 'lucide-react';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner';
 import Button from '../Button/Button';
 import { DashboardCard } from './DashboardCard/DashboardCard'
-import { getPendingItemsCount, getUserMintedItemsCount, getUserListedItemsCount, getBackofficeUserByEmail, getArtistById } from '@/lib/actions/prisma-actions'
+import { getPendingItemsCount, getUserMintedItemsCount, getUserListedItemsCount, getBackofficeUserByEmail, getArtistById, getVisibleLandingArtistsCount } from '@/lib/actions/prisma-actions'
 import { getPresaleArtworkCountByArtist } from '@/lib/actions/presale-artwork-actions'
 import { useIsAdmin } from '@/app/hooks/useIsAdmin'
 import { DashboardStats } from './DashboardStats'
@@ -21,9 +21,11 @@ export default function Dashboard() {
   const [isAdminNavigating, setIsAdminNavigating] = useState(false);
   const router = useRouter();
   const [pendingItemsCount, setPendingItemsCount] = useState(0)
+  const [visibleArtistsCount, setVisibleArtistsCount] = useState(0)
   const [mintedItemsCount, setMintedItemsCount] = useState(0)
   const [listedItemsCount, setListedItemsCount] = useState(0)
   const [isLoadingCount, setIsLoadingCount] = useState(true)
+  const [isLoadingArtistsCount, setIsLoadingArtistsCount] = useState(true)
   const [isLoadingUserCounts, setIsLoadingUserCounts] = useState(true)
   const [associatedArtist, setAssociatedArtist] = useState<any>(null)
   const [isLoadingArtist, setIsLoadingArtist] = useState(true)
@@ -39,8 +41,25 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    const fetchPendingItems = async () => {
+    const fetchAdminStats = async () => {
       if (isAdmin) {
+        try {
+          const { count } = await getVisibleLandingArtistsCount()
+          setVisibleArtistsCount(count)
+        } catch (error) {
+          console.error('Erreur lors de la récupération du nombre d\'artistes visibles:', error)
+        } finally {
+          setIsLoadingArtistsCount(false)
+        }
+      }
+    }
+
+    fetchAdminStats()
+  }, [isAdmin])
+
+  useEffect(() => {
+    const fetchPendingItems = async () => {
+      if (!isAdmin) {
         try {
           const { count } = await getPendingItemsCount()
           setPendingItemsCount(count)
@@ -148,6 +167,8 @@ export default function Dashboard() {
         isLoadingListedCount={isLoadingUserCounts}
         pendingItemsCount={pendingItemsCount}
         isLoadingPendingCount={isLoadingCount}
+        visibleArtistsCount={visibleArtistsCount}
+        isLoadingArtistsCount={isLoadingArtistsCount}
         isAdmin={isAdmin}
       />
       
