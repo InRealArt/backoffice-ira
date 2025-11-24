@@ -28,13 +28,17 @@ const formSchema = z.object({
   backgroundImage: z.string().optional().or(z.literal("")).nullable(),
   // Nouveaux champs biographie
   birthYear: z
-    .number()
-    .min(1900, "L'année de naissance doit être supérieure à 1900")
-    .max(
-      new Date().getFullYear(),
-      "L'année de naissance ne peut pas être dans le futur"
-    )
-    .nullable()
+    .union([
+      z
+        .number()
+        .min(1900, "L'année de naissance doit être supérieure à 1900")
+        .max(
+          new Date().getFullYear(),
+          "L'année de naissance ne peut pas être dans le futur"
+        ),
+      z.null(),
+      z.undefined(),
+    ])
     .optional(),
   countryCode: z
     .string()
@@ -137,6 +141,15 @@ export default function CreateArtistForm() {
   const countryCode = watch("countryCode");
   const name = watch("name");
   const surname = watch("surname");
+  const pseudo = watch("pseudo");
+
+  // Génération automatique du pseudo à partir du prénom et du nom en temps réel
+  useEffect(() => {
+    const generatedPseudo = `${name || ""} ${surname || ""}`.trim();
+    if (generatedPseudo !== pseudo) {
+      setValue("pseudo", generatedPseudo, { shouldValidate: true });
+    }
+  }, [name, surname, setValue, pseudo]);
 
   // Debug: Surveiller toutes les données du formulaire
   const allFormData = watch();
@@ -583,21 +596,37 @@ export default function CreateArtistForm() {
 
                   <div className={styles["form-group"]}>
                     <label htmlFor="pseudo" className={styles["form-label"]}>
-                      Pseudo
+                      Pseudo (généré automatiquement)
                     </label>
                     <input
                       id="pseudo"
                       type="text"
                       {...register("pseudo")}
+                      readOnly
                       className={`${styles["form-input"]} ${
-                        errors.pseudo ? styles["input-error"] : ""
-                      }`}
+                        styles["form-readonly"]
+                      } ${errors.pseudo ? styles["input-error"] : ""}`}
+                      style={{
+                        backgroundColor: "#f5f5f5",
+                        cursor: "not-allowed",
+                      }}
                     />
                     {errors.pseudo && (
                       <p className={styles["form-error"]}>
                         {errors.pseudo.message}
                       </p>
                     )}
+                    <p
+                      className={styles["form-help"]}
+                      style={{
+                        marginTop: "0.5rem",
+                        fontSize: "0.875rem",
+                        color: "#666",
+                      }}
+                    >
+                      Le pseudo est généré automatiquement à partir du prénom et
+                      du nom
+                    </p>
                   </div>
                 </div>
               </div>
@@ -654,12 +683,25 @@ export default function CreateArtistForm() {
             <div className={styles["d-flex"] + " " + styles["gap-md"]}>
               <div className={styles["form-group"]} style={{ flex: 1 }}>
                 <label htmlFor="birthYear" className={styles["form-label"]}>
-                  Année de naissance
+                  Année de naissance (optionnel)
                 </label>
                 <input
                   id="birthYear"
                   type="number"
-                  {...register("birthYear", { valueAsNumber: true })}
+                  {...register("birthYear", {
+                    valueAsNumber: true,
+                    setValueAs: (value) => {
+                      if (
+                        value === "" ||
+                        value === null ||
+                        value === undefined
+                      ) {
+                        return undefined;
+                      }
+                      const numValue = Number(value);
+                      return isNaN(numValue) ? undefined : numValue;
+                    },
+                  })}
                   className={`${styles["form-input"]} ${
                     errors.birthYear ? styles["input-error"] : ""
                   }`}
