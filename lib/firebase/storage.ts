@@ -459,4 +459,132 @@ export async function deleteImageFromFirebase(imageUrl: string): Promise<boolean
         console.error('Erreur lors de la suppression de l\'image:', error);
         return false;
     }
+}
+
+/**
+ * Vérifie si un répertoire existe dans Firebase Storage et le crée si nécessaire
+ * Dans Firebase Storage, les répertoires n'existent pas vraiment - ils sont créés automatiquement
+ * lors de l'upload d'un fichier. Cette fonction vérifie l'existence en listant le contenu.
+ * 
+ * @param folderPath - Chemin du répertoire (ex: "artists/Jean Dupont/landing")
+ * @param name - Prénom de l'artiste
+ * @param surname - Nom de l'artiste
+ * @returns Promise<boolean> - true si le répertoire existe ou a été créé, false en cas d'erreur
+ */
+export async function ensureFolderExists(
+    folderPath: string,
+    name: string,
+    surname: string
+): Promise<boolean> {
+    try {
+        // Authentification Firebase côté client
+        const { getAuth, signInAnonymously } = await import('firebase/auth')
+        const { app } = await import('./config')
+
+        const auth = getAuth(app)
+        await signInAnonymously(auth)
+
+        // Essayer de lister le contenu du répertoire
+        const folderRef = ref(storage, folderPath)
+        
+        try {
+            const result = await listAll(folderRef)
+            // Si on peut lister le dossier, il existe
+            console.log(`✓ Répertoire "${folderPath}" existe déjà (${result.items.length} fichier(s))`)
+            return true
+        } catch (listError: any) {
+            // Si le répertoire n'existe pas, on le "crée" en uploadant un fichier placeholder
+            // Note: Firebase Storage crée automatiquement les répertoires lors de l'upload
+            console.log(`📁 Création du répertoire "${folderPath}"...`)
+            
+            // Créer un fichier texte minimal pour créer le répertoire
+            const placeholderContent = new Blob([''], { type: 'text/plain' })
+            const placeholderFile = new File([placeholderContent], '.placeholder', { type: 'text/plain' })
+            const placeholderPath = `${folderPath}/.placeholder`
+            const placeholderRef = ref(storage, placeholderPath)
+            
+            try {
+                await uploadBytes(placeholderRef, placeholderFile)
+                console.log(`✓ Répertoire "${folderPath}" créé avec succès`)
+                return true
+            } catch (uploadError: any) {
+                console.error(`❌ Erreur lors de la création du répertoire "${folderPath}":`, uploadError)
+                return false
+            }
+        }
+    } catch (error: any) {
+        console.error('Erreur lors de la vérification/création du répertoire:', error)
+        return false
+    }
+}
+
+/**
+ * Upload une image vers Firebase Storage dans le répertoire landing d'un artiste
+ * 
+ * @param imageFile - Le fichier image à uploader
+ * @param folderName - Nom du répertoire avec la casse exacte (ex: "Jean Dupont")
+ * @param fileName - Nom du fichier (sans extension)
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns URL de l'image uploadée
+ */
+export async function uploadImageToLandingFolder(
+    imageFile: File,
+    folderName: string,
+    fileName: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        // Étape 1: Authentification Firebase côté client
+        const { getAuth, signInAnonymously } = await import('firebase/auth')
+        const { app } = await import('./config')
+
+        const auth = getAuth(app)
+        await signInAnonymously(auth)
+
+        // Étape 2: Conversion WebP
+        onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+
+        if (!conversionResult.success) {
+            const errorMessage =
+                conversionResult.error ||
+                "Erreur lors de la conversion de l'image en WebP"
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        // Étape 3: Upload vers Firebase dans le répertoire landing
+        onUploadStatus?.('in-progress')
+        const folderPath = `artists/${folderName}/landing`
+        const fileExtension = 'webp'
+        const storagePath = `${folderPath}/${fileName}.${fileExtension}`
+        const storageRef = ref(storage, storagePath)
+
+        await uploadBytes(storageRef, conversionResult.file)
+        const imageUrl = await getDownloadURL(storageRef)
+
+        onUploadStatus?.('completed')
+
+        return imageUrl
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image:", error)
+        const errorMessage =
+            error instanceof Error
+                ? error.message
+                : "Erreur inconnue lors de l'upload"
+
+        // Notifier les callbacks en cas d'erreur
+        if (errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp')) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+
+        throw error
+    }
 } 

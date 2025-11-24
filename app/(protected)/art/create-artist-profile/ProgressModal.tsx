@@ -13,9 +13,10 @@ interface ProgressModalProps {
   steps: ProgressStep[]
   currentError?: string
   onClose?: () => void
+  title?: string
 }
 
-export default function ProgressModal({ isOpen, steps, currentError, onClose }: ProgressModalProps) {
+export default function ProgressModal({ isOpen, steps, currentError, onClose, title = 'Création du profil artiste' }: ProgressModalProps) {
   if (!isOpen) return null
 
   return (
@@ -73,7 +74,7 @@ export default function ProgressModal({ isOpen, steps, currentError, onClose }: 
           </button>
         )}
         <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.5rem', fontWeight: 'bold' }}>
-          Création du profil artiste
+          {title}
         </h2>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
