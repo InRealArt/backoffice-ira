@@ -182,60 +182,26 @@ export default function CreateArtistProfileForm({
     surname: string,
     imageType: "profile" | "secondary" | "studio" = "profile"
   ): Promise<string> => {
+    const { uploadArtistImageWithWebP } = await import(
+      "@/lib/firebase/storage"
+    );
+
     try {
-      // Étape 1: Authentification Firebase côté client
-      const { getAuth, signInAnonymously } = await import("firebase/auth");
-      const { app } = await import("@/lib/firebase/config");
-      const { ref, uploadBytes, getDownloadURL } = await import(
-        "firebase/storage"
-      );
-      const { storage } = await import("@/lib/firebase/config");
-      const { convertToWebPIfNeeded } = await import(
-        "@/lib/utils/webp-converter"
-      );
-      const { normalizeString } = await import("@/lib/utils");
-
-      const auth = getAuth(app);
-      await signInAnonymously(auth);
-
-      // Étape 2: Conversion WebP
-      updateStepStatus("conversion", "in-progress");
-      const conversionResult = await convertToWebPIfNeeded(imageFile);
-
-      if (!conversionResult.success) {
-        updateStepStatus("conversion", "error");
-        throw new Error(
-          conversionResult.error ||
-            "Erreur lors de la conversion de l'image en WebP"
-        );
-      }
-
-      updateStepStatus("conversion", "completed");
-
-      // Étape 3: Upload vers Firebase (/artists)
-      updateStepStatus("upload", "in-progress");
-      const fileName = normalizeString(`${name} ${surname}`);
-      const fileExtension = "webp";
-
-      // Déterminer le nom du fichier selon le type
-      let filePrefix = `${name} ${surname}`;
-      if (imageType === "secondary") {
-        filePrefix = `${name} ${surname}_2`;
-      } else if (imageType === "studio") {
-        filePrefix = `${name} ${surname}_studio`;
-      }
-
-      const storagePath = `artists/${fileName}/${filePrefix}.${fileExtension}`;
-      const storageRef = ref(storage, storagePath);
-
-      await uploadBytes(storageRef, conversionResult.file);
-      const imageUrl = await getDownloadURL(storageRef);
-
-      updateStepStatus("upload", "completed");
-
-      return imageUrl;
+      return await uploadArtistImageWithWebP(imageFile, {
+        name,
+        surname,
+        imageType,
+        normalizeFolderName: true,
+        onConversionStatus: (status, error) => {
+          updateStepStatus("conversion", status);
+        },
+        onUploadStatus: (status, error) => {
+          updateStepStatus("upload", status);
+        },
+      });
     } catch (error) {
-      console.error("Erreur lors de l'upload:", error);
+      // Les erreurs sont déjà gérées dans uploadArtistImageWithWebP
+      // et les callbacks ont été appelés, on propage juste l'erreur
       throw error;
     }
   };

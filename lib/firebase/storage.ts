@@ -1,6 +1,7 @@
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { storage } from './config'
 import { normalizeString } from '@/lib/utils'
+import { convertToWebPIfNeeded } from '@/lib/utils/webp-converter'
 
 /**
  * Interface pour les options d'upload
@@ -190,6 +191,126 @@ export async function uploadArtistImageToFirebase(
     } catch (error) {
         console.error('Erreur lors de l\'upload de l\'image artiste vers Firebase:', error)
         throw new Error(`Échec de l'upload vers Firebase: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+    }
+}
+
+/**
+ * Options pour l'upload d'image d'artiste avec conversion WebP
+ */
+export interface UploadArtistImageOptions {
+    /** Prénom de l'artiste */
+    name: string
+    /** Nom de l'artiste */
+    surname: string
+    /** Type d'image (profile, secondary, studio) */
+    imageType?: 'profile' | 'secondary' | 'studio'
+    /** Callback appelé lors du changement de statut de conversion */
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+    /** Callback appelé lors du changement de statut d'upload */
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+    /** Si true, normalise le nom du répertoire (minuscules, tirets). Sinon, garde la casse originale */
+    normalizeFolderName?: boolean
+}
+
+/**
+ * Upload une image d'artiste vers Firebase Storage avec conversion WebP automatique
+ * 
+ * Cette fonction gère :
+ * - L'authentification Firebase anonyme
+ * - La conversion automatique en WebP
+ * - L'upload vers le répertoire /artists/{nom-artiste}/
+ * - Les callbacks de progression pour l'UI
+ * 
+ * @param imageFile - Le fichier image à uploader
+ * @param options - Options de configuration
+ * @returns URL de l'image uploadée
+ * 
+ * @example
+ * ```typescript
+ * const imageUrl = await uploadArtistImageWithWebP(file, {
+ *   name: 'Jean',
+ *   surname: 'Dupont',
+ *   imageType: 'profile',
+ *   onConversionStatus: (status) => console.log('Conversion:', status),
+ *   onUploadStatus: (status) => console.log('Upload:', status)
+ * })
+ * ```
+ */
+export async function uploadArtistImageWithWebP(
+    imageFile: File,
+    options: UploadArtistImageOptions
+): Promise<string> {
+    try {
+        // Étape 1: Authentification Firebase côté client
+        const { getAuth, signInAnonymously } = await import('firebase/auth')
+        const { app } = await import('./config')
+
+        const auth = getAuth(app)
+        await signInAnonymously(auth)
+
+        // Étape 2: Conversion WebP
+        options.onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+
+        if (!conversionResult.success) {
+            const errorMessage =
+                conversionResult.error ||
+                "Erreur lors de la conversion de l'image en WebP"
+            options.onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        options.onConversionStatus?.('completed')
+
+        // Étape 3: Préparation du chemin de stockage
+        const { name, surname, imageType = 'profile', normalizeFolderName = true } = options
+
+        // Créer le nom du répertoire
+        const folderName = normalizeFolderName
+            ? normalizeString(`${name} ${surname}`)
+            : `${name} ${surname}`
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
+                .replace(/[^a-zA-Z0-9\s]+/g, '') // Supprime les caractères spéciaux sauf espaces
+                .trim()
+
+        // Déterminer le nom du fichier selon le type
+        let filePrefix = `${name} ${surname}`
+        if (imageType === 'secondary') {
+            filePrefix = `${name} ${surname}_2`
+        } else if (imageType === 'studio') {
+            filePrefix = `${name} ${surname}_studio`
+        }
+
+        const fileExtension = 'webp'
+        const storagePath = `artists/${folderName}/${filePrefix}.${fileExtension}`
+
+        // Étape 4: Upload vers Firebase
+        options.onUploadStatus?.('in-progress')
+        const storageRef = ref(storage, storagePath)
+
+        await uploadBytes(storageRef, conversionResult.file)
+        const imageUrl = await getDownloadURL(storageRef)
+
+        options.onUploadStatus?.('completed')
+
+        return imageUrl
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image d'artiste:", error)
+        const errorMessage =
+            error instanceof Error
+                ? error.message
+                : "Erreur inconnue lors de l'upload"
+
+        // Notifier les callbacks en cas d'erreur
+        if (errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp')) {
+            options.onConversionStatus?.('error', errorMessage)
+        } else {
+            options.onUploadStatus?.('error', errorMessage)
+        }
+
+        throw error
     }
 }
 
