@@ -7,11 +7,13 @@ import { Camera } from 'lucide-react'
 
 interface ArtistImageUploadProps {
   onFileSelect: (file: File | null) => void
+  onDelete?: () => void
   previewUrl?: string | null
   error?: string
+  allowDelete?: boolean
 }
 
-export default function ArtistImageUpload({ onFileSelect, previewUrl, error }: ArtistImageUploadProps) {
+export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, error, allowDelete = false }: ArtistImageUploadProps) {
   const [localPreview, setLocalPreview] = useState<string | null>(previewUrl || null)
   const [localError, setLocalError] = useState<string | null>(null)
 
@@ -58,6 +60,9 @@ export default function ArtistImageUpload({ onFileSelect, previewUrl, error }: A
   const handleRemove = () => {
     setLocalPreview(null)
     onFileSelect(null)
+    if (onDelete && allowDelete) {
+      onDelete()
+    }
   }
 
   const displayPreview = localPreview || previewUrl

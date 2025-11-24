@@ -177,6 +177,18 @@ export async function createUserArtistProfile(
         const linkedinUrl = formData.get('linkedinUrl') as string | null
         const artistsPage = formData.get('artistsPage') === 'true'
 
+        // Nouveaux champs optionnels
+        const secondaryImageUrl = formData.get('secondaryImageUrl') as string | null
+        const imageArtistStudio = formData.get('imageArtistStudio') as string | null
+        const biographyHeader1 = formData.get('biographyHeader1') as string | null
+        const biographyText1 = formData.get('biographyText1') as string | null
+        const biographyHeader2 = formData.get('biographyHeader2') as string | null
+        const biographyText2 = formData.get('biographyText2') as string | null
+        const biographyHeader3 = formData.get('biographyHeader3') as string | null
+        const biographyText3 = formData.get('biographyText3') as string | null
+        const biographyHeader4 = formData.get('biographyHeader4') as string | null
+        const biographyText4 = formData.get('biographyText4') as string | null
+
         if (!imageUrl) {
             return {
                 success: false,
@@ -267,7 +279,18 @@ export async function createUserArtistProfile(
                 description: description,
                 imageUrl: imageUrl,
                 artistsPage: artistsPage,
-                artworkImages: '[]'
+                artworkImages: '[]',
+                // Nouveaux champs optionnels
+                secondaryImageUrl: secondaryImageUrl || null,
+                imageArtistStudio: imageArtistStudio || null,
+                biographyHeader1: biographyHeader1 || null,
+                biographyText1: biographyText1 || null,
+                biographyHeader2: biographyHeader2 || null,
+                biographyText2: biographyText2 || null,
+                biographyHeader3: biographyHeader3 || null,
+                biographyText3: biographyText3 || null,
+                biographyHeader4: biographyHeader4 || null,
+                biographyText4: biographyText4 || null
             }
         })
 
@@ -300,6 +323,234 @@ export async function createUserArtistProfile(
             message: error.code === 'P2002'
                 ? 'Un champ unique est déjà utilisé'
                 : 'Une erreur est survenue lors de la création du profil artiste'
+        }
+    }
+}
+
+/**
+ * Récupère le LandingArtist associé à un artistId
+ */
+export async function getLandingArtistByArtistId(artistId: number) {
+    try {
+        return await prisma.landingArtist.findFirst({
+            where: { artistId },
+            include: {
+                artist: true
+            }
+        })
+    } catch (error) {
+        console.error('Erreur lors de la récupération du LandingArtist:', error)
+        return null
+    }
+}
+
+/**
+ * Met à jour un profil artiste utilisateur (Artist + LandingArtist)
+ */
+export async function updateUserArtistProfile(
+    formData: FormData
+): Promise<{ success: boolean; message?: string; artist?: Artist }> {
+    try {
+        // Extraire les données du FormData
+        const artistId = formData.get('artistId') ? parseInt(formData.get('artistId') as string) : null
+        const imageUrl = formData.get('imageUrl') as string
+        const pseudo = formData.get('pseudo') as string
+        const description = formData.get('description') as string
+        const birthYearValue = formData.get('birthYear') as string
+        const birthYear = birthYearValue && birthYearValue.trim() !== '' ? parseInt(birthYearValue) : null
+        const countryCodeValue = formData.get('countryCode') as string
+        const countryCode = countryCodeValue && countryCodeValue.trim() !== '' ? countryCodeValue : null
+        const websiteUrl = formData.get('websiteUrl') as string | null
+        const facebookUrl = formData.get('facebookUrl') as string | null
+        const instagramUrl = formData.get('instagramUrl') as string | null
+        const twitterUrl = formData.get('twitterUrl') as string | null
+        const linkedinUrl = formData.get('linkedinUrl') as string | null
+        const artistsPage = formData.get('artistsPage') === 'true'
+        
+        // Flags de suppression d'images
+        const deleteMainImage = formData.get('deleteMainImage') === 'true'
+        const deleteSecondaryImage = formData.get('deleteSecondaryImage') === 'true'
+        const deleteStudioImage = formData.get('deleteStudioImage') === 'true'
+        
+        // Nouveaux champs optionnels
+        const secondaryImageUrl = formData.get('secondaryImageUrl') as string | null
+        const imageArtistStudio = formData.get('imageArtistStudio') as string | null
+        const biographyHeader1 = formData.get('biographyHeader1') as string | null
+        const biographyText1 = formData.get('biographyText1') as string | null
+        const biographyHeader2 = formData.get('biographyHeader2') as string | null
+        const biographyText2 = formData.get('biographyText2') as string | null
+        const biographyHeader3 = formData.get('biographyHeader3') as string | null
+        const biographyText3 = formData.get('biographyText3') as string | null
+        const biographyHeader4 = formData.get('biographyHeader4') as string | null
+        const biographyText4 = formData.get('biographyText4') as string | null
+
+        if (!artistId) {
+            return {
+                success: false,
+                message: 'ID artiste requis'
+            }
+        }
+
+        // Vérifier que l'artiste existe
+        const existingArtist = await prisma.artist.findUnique({
+            where: { id: artistId }
+        })
+
+        if (!existingArtist) {
+            return {
+                success: false,
+                message: 'Artiste non trouvé'
+            }
+        }
+
+        // Si l'image principale doit être supprimée, on ne peut pas continuer sans nouvelle image
+        if (deleteMainImage && !imageUrl) {
+            return {
+                success: false,
+                message: 'Vous devez fournir une nouvelle photo de profil si vous supprimez l\'actuelle'
+            }
+        }
+        
+        // Si pas de nouvelle image et pas de suppression, utiliser l'image existante
+        let finalImageUrl = imageUrl
+        if (!imageUrl && !deleteMainImage) {
+            finalImageUrl = existingArtist.imageUrl
+        }
+
+        // Vérifier si le pseudo est déjà utilisé par un autre artiste
+        if (pseudo !== existingArtist.pseudo) {
+            const pseudoExists = await prisma.artist.findFirst({
+                where: {
+                    pseudo: pseudo,
+                    id: { not: artistId }
+                }
+            })
+
+            if (pseudoExists) {
+                return {
+                    success: false,
+                    message: 'Ce pseudo est déjà utilisé'
+                }
+            }
+        }
+
+        // Supprimer l'image principale sur Firebase si demandé
+        if (deleteMainImage && existingArtist.imageUrl) {
+            try {
+                const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+                await deleteImageFromFirebase(existingArtist.imageUrl)
+            } catch (error) {
+                console.error('Erreur lors de la suppression de l\'image principale sur Firebase:', error)
+                // Continuer même en cas d'erreur de suppression Firebase
+            }
+        }
+
+        // Mettre à jour l'artiste dans la table Artist
+        const artist = await prisma.artist.update({
+            where: { id: artistId },
+            data: {
+                pseudo: pseudo,
+                description: description,
+                imageUrl: finalImageUrl,
+                birthYear: birthYear || null,
+                countryCode: countryCode || null,
+                websiteUrl: websiteUrl || null,
+                facebookUrl: facebookUrl || null,
+                instagramUrl: instagramUrl || null,
+                twitterUrl: twitterUrl || null,
+                linkedinUrl: linkedinUrl || null
+            }
+        })
+
+        // Récupérer le LandingArtist associé
+        const landingArtist = await prisma.landingArtist.findFirst({
+            where: { artistId: artist.id }
+        })
+
+        if (landingArtist) {
+            // Préparer les données de mise à jour
+            const landingArtistData: any = {
+                description: description,
+                imageUrl: finalImageUrl,
+                artistsPage: artistsPage,
+                biographyHeader1: biographyHeader1 || null,
+                biographyText1: biographyText1 || null,
+                biographyHeader2: biographyHeader2 || null,
+                biographyText2: biographyText2 || null,
+                biographyHeader3: biographyHeader3 || null,
+                biographyText3: biographyText3 || null,
+                biographyHeader4: biographyHeader4 || null,
+                biographyText4: biographyText4 || null
+            }
+
+            // Gérer les images secondaires et studio
+            if (deleteSecondaryImage) {
+                // Supprimer l'image sur Firebase si elle existe
+                if (landingArtist.secondaryImageUrl) {
+                    try {
+                        const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+                        await deleteImageFromFirebase(landingArtist.secondaryImageUrl)
+                    } catch (error) {
+                        console.error('Erreur lors de la suppression de l\'image secondaire sur Firebase:', error)
+                        // Continuer même en cas d'erreur de suppression Firebase
+                    }
+                }
+                landingArtistData.secondaryImageUrl = null
+            } else if (secondaryImageUrl) {
+                landingArtistData.secondaryImageUrl = secondaryImageUrl
+            }
+
+            if (deleteStudioImage) {
+                // Supprimer l'image sur Firebase si elle existe
+                if (landingArtist.imageArtistStudio) {
+                    try {
+                        const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+                        await deleteImageFromFirebase(landingArtist.imageArtistStudio)
+                    } catch (error) {
+                        console.error('Erreur lors de la suppression de l\'image studio sur Firebase:', error)
+                        // Continuer même en cas d'erreur de suppression Firebase
+                    }
+                }
+                landingArtistData.imageArtistStudio = null
+            } else if (imageArtistStudio) {
+                landingArtistData.imageArtistStudio = imageArtistStudio
+            }
+
+            // Mettre à jour le LandingArtist
+            await prisma.landingArtist.update({
+                where: { id: landingArtist.id },
+                data: landingArtistData
+            })
+        }
+
+        // Supprimer l'image principale sur Firebase si demandé
+        if (deleteMainImage && existingArtist.imageUrl) {
+            try {
+                const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+                await deleteImageFromFirebase(existingArtist.imageUrl)
+            } catch (error) {
+                console.error('Erreur lors de la suppression de l\'image principale sur Firebase:', error)
+                // Continuer même en cas d'erreur de suppression Firebase
+            }
+        }
+
+        // Revalider les chemins
+        revalidatePath('/dataAdministration/artists')
+        revalidatePath('/landing/landingArtists')
+        revalidatePath('/dashboard')
+        revalidatePath('/art/edit-artist-profile')
+
+        return {
+            success: true,
+            artist
+        }
+    } catch (error: any) {
+        console.error('Erreur lors de la mise à jour du profil artiste:', error)
+        return {
+            success: false,
+            message: error.code === 'P2002'
+                ? 'Un champ unique est déjà utilisé'
+                : 'Une erreur est survenue lors de la mise à jour du profil artiste'
         }
     }
 } 

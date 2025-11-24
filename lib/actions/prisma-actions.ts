@@ -341,11 +341,6 @@ export async function getBackofficeUserByEmail(email: string) {
       include: { artist: true }
     })
 
-    console.log('🔍 DEBUG getBackofficeUserByEmail - email:', email);
-    console.log('🔍 DEBUG getBackofficeUserByEmail - user:', user);
-    console.log('🔍 DEBUG getBackofficeUserByEmail - user?.artistId:', user?.artistId);
-    console.log('🔍 DEBUG getBackofficeUserByEmail - user?.artist:', user?.artist);
-
     return user
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'utilisateur Backoffice par email:', error)
@@ -1897,7 +1892,14 @@ export async function getArtistById(id: number) {
         publicKey: true,
         imageUrl: true,
         isGallery: true,
-        backgroundImage: true
+        backgroundImage: true,
+        birthYear: true,
+        countryCode: true,
+        websiteUrl: true,
+        facebookUrl: true,
+        instagramUrl: true,
+        twitterUrl: true,
+        linkedinUrl: true
       }
     })
 

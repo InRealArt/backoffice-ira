@@ -1,10 +1,13 @@
-'use client'
+"use client";
 
-import { useState, useRef, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
-import { useSideMenuLogic } from '../SideMenu/useSideMenuLogic'
-import { authClient } from '@/lib/auth-client'
-import { getBackofficeUserByEmail, getArtistById } from '@/lib/actions/prisma-actions'
+import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useSideMenuLogic } from "../SideMenu/useSideMenuLogic";
+import { authClient } from "@/lib/auth-client";
+import {
+  getBackofficeUserByEmail,
+  getArtistById,
+} from "@/lib/actions/prisma-actions";
 import {
   LayoutDashboard,
   Image,
@@ -33,11 +36,11 @@ import {
   Sparkles,
   ShoppingBag,
   Receipt,
-  UserCircle
-} from 'lucide-react'
+  UserCircle,
+} from "lucide-react";
 
 export default function NavbarMenu() {
-  const pathname = usePathname()
+  const pathname = usePathname();
   const {
     isLoggedIn,
     activeItem,
@@ -46,60 +49,67 @@ export default function NavbarMenu() {
     isLoading,
     isNavigating,
     navigatingItem,
-    handleNavigation
-  } = useSideMenuLogic()
+    handleNavigation,
+  } = useSideMenuLogic();
 
   // Récupérer la session utilisateur
-  const { data: session } = authClient.useSession()
-  const user = session?.user
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
 
   // État pour l'artiste associé
-  const [associatedArtist, setAssociatedArtist] = useState<any>(null)
-  const [isLoadingArtist, setIsLoadingArtist] = useState(true)
+  const [associatedArtist, setAssociatedArtist] = useState<any>(null);
+  const [isLoadingArtist, setIsLoadingArtist] = useState(true);
 
   // État pour contrôler l'ouverture du menu dropdown mobile
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const mobileMenuRef = useRef<HTMLDivElement>(null)
-  const desktopMenuRef = useRef<HTMLDivElement>(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const desktopMenuRef = useRef<HTMLDivElement>(null);
 
   const handleSignOut = async () => {
-    await authClient.signOut()
-  }
+    await authClient.signOut();
+  };
 
   // Fonction pour gérer la navigation avec fermeture du menu
   const handleMenuNavigation = async (path: string, item: string) => {
     // Fermer le menu mobile
-    setIsMobileMenuOpen(false)
+    setIsMobileMenuOpen(false);
     // Désactiver le focus du dropdown pour le fermer
     if (mobileMenuRef.current) {
-      const button = mobileMenuRef.current.querySelector('[tabIndex="0"]') as HTMLElement
+      const button = mobileMenuRef.current.querySelector(
+        '[tabIndex="0"]'
+      ) as HTMLElement;
       if (button) {
-        button.blur()
+        button.blur();
       }
     }
     // Appeler la navigation
-    await handleNavigation(path, item)
-  }
+    await handleNavigation(path, item);
+  };
 
   // Fonction pour vérifier si un item est en cours de navigation
   const isItemNavigating = (item: string) => {
-    return isNavigating && navigatingItem === item
-  }
+    return isNavigating && navigatingItem === item;
+  };
 
   // Fonction helper pour créer un élément de menu avec spinner
-  const createMenuLink = (path: string, item: string, label: string, isMobile = false) => {
+  const createMenuLink = (
+    path: string,
+    item: string,
+    label: string,
+    isMobile = false
+  ) => {
     const handleClick = () => {
       if (isMobile) {
-        handleMenuNavigation(path, item)
+        handleMenuNavigation(path, item);
       } else {
-        handleNavigation(path, item)
+        handleNavigation(path, item);
       }
-    }
+    };
 
     return (
-      <a 
-        onClick={handleClick} 
-        className={`flex items-center gap-2 ${isMobile ? '' : ''}`}
+      <a
+        onClick={handleClick}
+        className={`flex items-center gap-2 ${isMobile ? "" : ""}`}
       >
         {isItemNavigating(item) ? (
           <>
@@ -110,91 +120,123 @@ export default function NavbarMenu() {
           <span>{label}</span>
         )}
       </a>
-    )
-  }
+    );
+  };
 
   // Récupérer l'artiste associé à l'utilisateur
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
 
     const fetchAssociatedArtist = async () => {
-      const userEmail = user?.email
+      const userEmail = user?.email;
 
       if (!isAdmin && userEmail && canAccessCollection) {
+        setIsLoadingArtist(true);
         try {
-          const backofficeUser = await getBackofficeUserByEmail(userEmail)
+          const backofficeUser = await getBackofficeUserByEmail(userEmail);
 
-          if (!isMounted) return
+          if (!isMounted) return;
 
           if (!backofficeUser) {
-            setIsLoadingArtist(false)
-            return
+            setIsLoadingArtist(false);
+            setAssociatedArtist(null);
+            return;
           }
 
-          // Récupérer l'artiste associé via l'artistId
+          // Récupérer l'artiste associé - utiliser directement l'artiste inclus dans la requête si disponible
           if (backofficeUser.artistId) {
-            const artist = await getArtistById(backofficeUser.artistId)
-            if (!isMounted) return
+            // Si l'artiste est déjà inclus dans la requête, l'utiliser directement
+            if (backofficeUser.artist) {
+              if (!isMounted) return;
+              setAssociatedArtist(backofficeUser.artist);
+            } else {
+              // Sinon, faire un appel séparé
+              const artist = await getArtistById(backofficeUser.artistId);
+              if (!isMounted) return;
 
-            if (artist) {
-              setAssociatedArtist(artist)
+              if (artist) {
+                setAssociatedArtist(artist);
+              }
             }
+          } else {
+            // Pas d'artiste associé
+            setAssociatedArtist(null);
           }
 
-          if (!isMounted) return
-          setIsLoadingArtist(false)
+          if (!isMounted) return;
+          setIsLoadingArtist(false);
         } catch (error) {
-          if (!isMounted) return
-          console.error('Erreur lors de la récupération de l\'artiste associé:', error)
-          setIsLoadingArtist(false)
+          if (!isMounted) return;
+          console.error(
+            "Erreur lors de la récupération de l'artiste associé:",
+            error
+          );
+          setAssociatedArtist(null);
+          setIsLoadingArtist(false);
         }
       } else {
-        setIsLoadingArtist(false)
+        setAssociatedArtist(null);
+        setIsLoadingArtist(false);
       }
-    }
+    };
 
-    fetchAssociatedArtist()
+    fetchAssociatedArtist();
 
     return () => {
-      isMounted = false
-    }
-  }, [isAdmin, user?.email, canAccessCollection])
+      isMounted = false;
+    };
+  }, [isAdmin, user?.email, canAccessCollection, pathname]);
 
   // Fermer le menu dropdown quand la page est chargée (pathname change)
   useEffect(() => {
     // Fermer le menu mobile
-    setIsMobileMenuOpen(false)
+    setIsMobileMenuOpen(false);
 
     // Fermer le dropdown mobile en retirant le focus
     if (mobileMenuRef.current) {
-      const button = mobileMenuRef.current.querySelector('[tabIndex="0"]') as HTMLElement
+      const button = mobileMenuRef.current.querySelector(
+        '[tabIndex="0"]'
+      ) as HTMLElement;
       if (button) {
-        button.blur()
+        button.blur();
       }
     }
 
     // Fermer les sous-menus desktop en retirant l'attribut open des details
     if (desktopMenuRef.current) {
-      const details = desktopMenuRef.current.querySelectorAll('details[open]')
+      const details = desktopMenuRef.current.querySelectorAll("details[open]");
       details.forEach((detail) => {
-        ;(detail as HTMLDetailsElement).removeAttribute('open')
-      })
+        (detail as HTMLDetailsElement).removeAttribute("open");
+      });
     }
-  }, [pathname])
+  }, [pathname]);
 
   if (!isLoggedIn || isLoading) {
-    return null
+    return null;
   }
 
   // Fonction pour rendre les items de menu pour mobile
   const renderMobileMenuItems = () => {
     // Si l'utilisateur n'a pas d'artiste associé, afficher uniquement "Créer mon profil artiste"
-    if (canAccessCollection && !isAdmin && !isLoadingArtist && !associatedArtist) {
+    if (
+      canAccessCollection &&
+      !isAdmin &&
+      !isLoadingArtist &&
+      !associatedArtist
+    ) {
       return (
         <>
           <li>
-            <a onClick={() => handleMenuNavigation('/art/create-artist-profile', 'createArtistProfile')} className="flex items-center gap-2">
-              {isItemNavigating('createArtistProfile') ? (
+            <a
+              onClick={() =>
+                handleMenuNavigation(
+                  "/art/create-artist-profile",
+                  "createArtistProfile"
+                )
+              }
+              className="flex items-center gap-2"
+            >
+              {isItemNavigating("createArtistProfile") ? (
                 <>
                   <span className="loading loading-spinner loading-sm"></span>
                   <UserCircle size={18} />
@@ -209,15 +251,18 @@ export default function NavbarMenu() {
             </a>
           </li>
         </>
-      )
+      );
     }
 
     if (canAccessCollection && !isAdmin) {
       return (
         <>
           <li>
-            <a onClick={() => handleMenuNavigation('/dashboard', 'dashboard')} className="flex items-center gap-2">
-              {isItemNavigating('dashboard') ? (
+            <a
+              onClick={() => handleMenuNavigation("/dashboard", "dashboard")}
+              className="flex items-center gap-2"
+            >
+              {isItemNavigating("dashboard") ? (
                 <>
                   <span className="loading loading-spinner loading-sm"></span>
                   <LayoutDashboard size={18} />
@@ -239,40 +284,58 @@ export default function NavbarMenu() {
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
-                <a onClick={() => handleMenuNavigation('/art/myPhysicalArtwork', 'myPhysicalArtwork')} className="flex items-center gap-2">
-                  {isItemNavigating('myPhysicalArtwork') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/art/edit-artist-profile",
+                      "editArtistProfile"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("editArtistProfile") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
-                      <Image size={18} />
-                      <span>Mes œuvres physiques</span>
+                      <UserCircle size={18} />
+                      <span>Éditer mon profil</span>
                     </>
                   ) : (
                     <>
-                      <Image size={18} />
-                      <span>Mes œuvres physiques</span>
+                      <UserCircle size={18} />
+                      <span>Éditer mon profil</span>
                     </>
                   )}
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/art/addresses', 'addresses')} className="flex items-center gap-2">
-                  {isItemNavigating('addresses') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation("/art/collection", "collection")
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("collection") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
-                      <MapPin size={18} />
-                      <span>Adresses</span>
+                      <Image size={18} />
+                      <span>Voir ma collection</span>
                     </>
                   ) : (
                     <>
-                      <MapPin size={18} />
-                      <span>Adresses</span>
+                      <Image size={18} />
+                      <span>Voir ma collection</span>
                     </>
                   )}
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/art/createPhysicalArtwok', 'createPhysicalArtwok')} className="flex items-center gap-2">
-                  {isItemNavigating('createPhysicalArtwok') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation("/art/createArtwork", "createArtwork")
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("createArtwork") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <PlusCircle size={18} />
@@ -289,15 +352,18 @@ export default function NavbarMenu() {
             </ul>
           </li>
         </>
-      )
+      );
     }
-    
+
     if (isAdmin) {
       return (
         <>
           <li>
-            <a onClick={() => handleMenuNavigation('/dashboard', 'dashboard')} className="flex items-center gap-2">
-              {isItemNavigating('dashboard') ? (
+            <a
+              onClick={() => handleMenuNavigation("/dashboard", "dashboard")}
+              className="flex items-center gap-2"
+            >
+              {isItemNavigating("dashboard") ? (
                 <>
                   <span className="loading loading-spinner loading-sm"></span>
                   <LayoutDashboard size={18} />
@@ -319,8 +385,13 @@ export default function NavbarMenu() {
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
-                <a onClick={() => handleMenuNavigation('/landing/languages', 'languages')} className="flex items-center gap-2">
-                  {isItemNavigating('languages') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation("/landing/languages", "languages")
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("languages") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Languages size={18} />
@@ -335,8 +406,16 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/landing/translations', 'translations')} className="flex items-center gap-2">
-                  {isItemNavigating('translations') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/landing/translations",
+                      "translations"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("translations") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <FileText size={18} />
@@ -351,8 +430,11 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/landing/team', 'team')} className="flex items-center gap-2">
-                  {isItemNavigating('team') ? (
+                <a
+                  onClick={() => handleMenuNavigation("/landing/team", "team")}
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("team") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Users size={18} />
@@ -367,8 +449,11 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/landing/faq', 'faq')} className="flex items-center gap-2">
-                  {isItemNavigating('faq') ? (
+                <a
+                  onClick={() => handleMenuNavigation("/landing/faq", "faq")}
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("faq") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <HelpCircle size={18} />
@@ -383,8 +468,13 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/landing/detailedFaq', 'detailedFaq')} className="flex items-center gap-2">
-                  {isItemNavigating('detailedFaq') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation("/landing/detailedFaq", "detailedFaq")
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("detailedFaq") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <FileText size={18} />
@@ -399,8 +489,16 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/landing/detailedFaqPage', 'detailedFaqPage')} className="flex items-center gap-2">
-                  {isItemNavigating('detailedFaqPage') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/landing/detailedFaqPage",
+                      "detailedFaqPage"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("detailedFaqPage") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <BookOpen size={18} />
@@ -415,8 +513,16 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/landing/detailedGlossary', 'detailedGlossary')} className="flex items-center gap-2">
-                  {isItemNavigating('detailedGlossary') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/landing/detailedGlossary",
+                      "detailedGlossary"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("detailedGlossary") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <BookOpen size={18} />
@@ -431,8 +537,16 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/landing/landingArtists', 'landingArtists')} className="flex items-center gap-2">
-                  {isItemNavigating('landingArtists') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/landing/landingArtists",
+                      "landingArtists"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("landingArtists") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Users size={18} />
@@ -447,8 +561,16 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/landing/presaleArtworks', 'presaleArtworks')} className="flex items-center gap-2">
-                  {isItemNavigating('presaleArtworks') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/landing/presaleArtworks",
+                      "presaleArtworks"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("presaleArtworks") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <ShoppingCart size={18} />
@@ -463,8 +585,13 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/landing/seo-posts', 'seoPosts')} className="flex items-center gap-2">
-                  {isItemNavigating('seoPosts') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation("/landing/seo-posts", "seoPosts")
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("seoPosts") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <FileText size={18} />
@@ -488,8 +615,16 @@ export default function NavbarMenu() {
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
-                <a onClick={() => handleMenuNavigation('/dataAdministration/artists', 'artists')} className="flex items-center gap-2">
-                  {isItemNavigating('artists') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/dataAdministration/artists",
+                      "artists"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("artists") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Users size={18} />
@@ -504,8 +639,16 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/dataAdministration/artist-categories', 'artist-categories')} className="flex items-center gap-2">
-                  {isItemNavigating('artist-categories') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/dataAdministration/artist-categories",
+                      "artist-categories"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("artist-categories") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Tag size={18} />
@@ -520,8 +663,16 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/dataAdministration/artwork-mediums', 'artwork-mediums')} className="flex items-center gap-2">
-                  {isItemNavigating('artwork-mediums') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/dataAdministration/artwork-mediums",
+                      "artwork-mediums"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("artwork-mediums") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Palette size={18} />
@@ -536,8 +687,16 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/dataAdministration/artwork-styles', 'artwork-styles')} className="flex items-center gap-2">
-                  {isItemNavigating('artwork-styles') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/dataAdministration/artwork-styles",
+                      "artwork-styles"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("artwork-styles") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Brush size={18} />
@@ -552,8 +711,16 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/dataAdministration/artwork-techniques', 'artwork-techniques')} className="flex items-center gap-2">
-                  {isItemNavigating('artwork-techniques') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/dataAdministration/artwork-techniques",
+                      "artwork-techniques"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("artwork-techniques") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Wrench size={18} />
@@ -577,8 +744,13 @@ export default function NavbarMenu() {
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
-                <a onClick={() => handleMenuNavigation('/boAdmin/users', 'boUsers')} className="flex items-center gap-2">
-                  {isItemNavigating('boUsers') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation("/boAdmin/users", "boUsers")
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("boUsers") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Users size={18} />
@@ -593,8 +765,16 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/boAdmin/create-member', 'createMember')} className="flex items-center gap-2">
-                  {isItemNavigating('createMember') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/boAdmin/create-member",
+                      "createMember"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("createMember") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <UserPlus size={18} />
@@ -796,8 +976,16 @@ export default function NavbarMenu() {
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
-                <a onClick={() => handleMenuNavigation('/tools/webp-converter', 'toolsWebpConverter')} className="flex items-center gap-2">
-                  {isItemNavigating('toolsWebpConverter') ? (
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/tools/webp-converter",
+                      "toolsWebpConverter"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("toolsWebpConverter") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Image size={18} />
@@ -814,21 +1002,35 @@ export default function NavbarMenu() {
             </ul>
           </li>
         </>
-      )
+      );
     }
-    return null
-  }
+    return null;
+  };
 
   return (
     <>
       {/* Menu hamburger pour mobile */}
       <div className="dropdown" ref={mobileMenuRef}>
         <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 6h16M4 12h8m-8 6h16"
+            />
           </svg>
         </div>
-        <ul tabIndex={0} className="menu menu-sm dropdown-content bg-background-white dark:bg-background-white backdrop-blur-md rounded-box z-[1] mt-3 w-52 p-2 shadow-2xl border-2 border-border dark:border-border">
+        <ul
+          tabIndex={0}
+          className="menu menu-sm dropdown-content bg-background-white dark:bg-background-white backdrop-blur-md rounded-box z-[1] mt-3 w-52 p-2 shadow-2xl border-2 border-border dark:border-border"
+        >
           {renderMobileMenuItems()}
         </ul>
       </div>
@@ -836,70 +1038,108 @@ export default function NavbarMenu() {
       {/* Menus desktop - centre */}
       <div className="navbar-center hidden lg:flex" ref={desktopMenuRef}>
         {/* Si l'utilisateur n'a pas d'artiste associé, afficher uniquement "Créer mon profil artiste" */}
-        {canAccessCollection && !isAdmin && !isLoadingArtist && !associatedArtist && (
-          <ul className="menu menu-horizontal px-1">
-            <li>
-              <a 
-                onClick={() => handleNavigation('/art/create-artist-profile', 'createArtistProfile')}
-                className={`flex items-center gap-2 ${activeItem === 'createArtistProfile' ? 'active' : ''}`}
-              >
-                <UserCircle size={18} />
-                Créer mon profil artiste
-              </a>
-            </li>
-          </ul>
-        )}
+        {canAccessCollection &&
+          !isAdmin &&
+          !isLoadingArtist &&
+          !associatedArtist && (
+            <ul className="menu menu-horizontal px-1">
+              <li>
+                <a
+                  onClick={() =>
+                    handleNavigation(
+                      "/art/create-artist-profile",
+                      "createArtistProfile"
+                    )
+                  }
+                  className={`flex items-center gap-2 ${
+                    activeItem === "createArtistProfile" ? "active" : ""
+                  }`}
+                >
+                  <UserCircle size={18} />
+                  Créer mon profil artiste
+                </a>
+              </li>
+            </ul>
+          )}
 
         {/* Menu utilisateur normal */}
-        {canAccessCollection && !isAdmin && !isLoadingArtist && associatedArtist && (
-          <ul className="menu menu-horizontal px-1">
-            <li>
-              <a 
-                onClick={() => handleNavigation('/dashboard', 'dashboard')}
-                className={`flex items-center gap-2 ${activeItem === 'dashboard' ? 'active' : ''}`}
-              >
-                <LayoutDashboard size={18} />
-                Dashboard
-              </a>
-            </li>
-            <li>
-              <details>
-                <summary className="flex items-center gap-2">
-                  <Image size={18} />
-                  Ma Collection
-                </summary>
-                <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
-                  <li>
-                    <a onClick={() => handleNavigation('/art/myPhysicalArtwork', 'myPhysicalArtwork')} className="flex items-center gap-2">
-                      <Image size={18} />
-                      Mes œuvres physiques
-                    </a>
-                  </li>
-                  <li>
-                    <a onClick={() => handleNavigation('/art/addresses', 'addresses')} className="flex items-center gap-2">
-                      <MapPin size={18} />
-                      Adresses
-                    </a>
-                  </li>
-                  <li>
-                    <a onClick={() => handleNavigation('/art/createArtwork', 'createArtwork')} className="flex items-center gap-2">
-                      <PlusCircle size={18} />
-                      Créer une œuvre
-                    </a>
-                  </li>
-                </ul>
-              </details>
-            </li>
-          </ul>
-        )}
+        {canAccessCollection &&
+          !isAdmin &&
+          !isLoadingArtist &&
+          associatedArtist && (
+            <ul className="menu menu-horizontal px-1">
+              <li>
+                <a
+                  onClick={() => handleNavigation("/dashboard", "dashboard")}
+                  className={`flex items-center gap-2 ${
+                    activeItem === "dashboard" ? "active" : ""
+                  }`}
+                >
+                  <LayoutDashboard size={18} />
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <details>
+                  <summary className="flex items-center gap-2">
+                    <Image size={18} />
+                    Ma Collection
+                  </summary>
+                  <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
+                    <li>
+                      <a
+                        onClick={() =>
+                          handleNavigation(
+                            "/art/edit-artist-profile",
+                            "editArtistProfile"
+                          )
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        <UserCircle size={18} />
+                        Éditer mon profil
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        onClick={() =>
+                          handleNavigation("/art/collection", "collection")
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        <Image size={18} />
+                        Voir ma collection
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        onClick={() =>
+                          handleNavigation(
+                            "/art/createArtwork",
+                            "createArtwork"
+                          )
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        <PlusCircle size={18} />
+                        Créer une œuvre
+                      </a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+            </ul>
+          )}
 
         {/* Menu administrateur */}
         {isAdmin && (
           <ul className="menu menu-horizontal px-1">
             <li>
-              <a 
-                onClick={() => handleNavigation('/dashboard', 'dashboard')}
-                className={`flex items-center gap-2 ${activeItem === 'dashboard' ? 'active' : ''}`}
+              <a
+                onClick={() => handleNavigation("/dashboard", "dashboard")}
+                className={`flex items-center gap-2 ${
+                  activeItem === "dashboard" ? "active" : ""
+                }`}
               >
                 <LayoutDashboard size={18} />
                 Dashboard
@@ -912,16 +1152,125 @@ export default function NavbarMenu() {
                   Landing
                 </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60 max-h-80 overflow-y-auto">
-                  <li><a onClick={() => handleNavigation('/landing/languages', 'languages')} className="flex items-center gap-2"><Languages size={18} />Languages</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/translations', 'translations')} className="flex items-center gap-2"><FileText size={18} />Translations</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/team', 'team')} className="flex items-center gap-2"><Users size={18} />Team</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/faq', 'faq')} className="flex items-center gap-2"><HelpCircle size={18} />FAQ</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/detailedFaq', 'detailedFaq')} className="flex items-center gap-2"><FileText size={18} />FAQ détaillée</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/detailedFaqPage', 'detailedFaqPage')} className="flex items-center gap-2"><BookOpen size={18} />FAQ par page</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/detailedGlossary', 'detailedGlossary')} className="flex items-center gap-2"><BookOpen size={18} />Glossaire détaillé</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/landingArtists', 'landingArtists')} className="flex items-center gap-2"><Users size={18} />Page artistes</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/presaleArtworks', 'presaleArtworks')} className="flex items-center gap-2"><ShoppingCart size={18} />Œuvres en prévente</a></li>
-                  <li><a onClick={() => handleNavigation('/landing/blog', 'blog')} className="flex items-center gap-2"><FileText size={18} />Articles de blog</a></li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation("/landing/languages", "languages")
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Languages size={18} />
+                      Languages
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/landing/translations",
+                          "translations"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <FileText size={18} />
+                      Translations
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() => handleNavigation("/landing/team", "team")}
+                      className="flex items-center gap-2"
+                    >
+                      <Users size={18} />
+                      Team
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() => handleNavigation("/landing/faq", "faq")}
+                      className="flex items-center gap-2"
+                    >
+                      <HelpCircle size={18} />
+                      FAQ
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation("/landing/detailedFaq", "detailedFaq")
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <FileText size={18} />
+                      FAQ détaillée
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/landing/detailedFaqPage",
+                          "detailedFaqPage"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <BookOpen size={18} />
+                      FAQ par page
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/landing/detailedGlossary",
+                          "detailedGlossary"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <BookOpen size={18} />
+                      Glossaire détaillé
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/landing/landingArtists",
+                          "landingArtists"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Users size={18} />
+                      Page artistes
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/landing/presaleArtworks",
+                          "presaleArtworks"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <ShoppingCart size={18} />
+                      Œuvres en prévente
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() => handleNavigation("/landing/blog", "blog")}
+                      className="flex items-center gap-2"
+                    >
+                      <FileText size={18} />
+                      Articles de blog
+                    </a>
+                  </li>
                 </ul>
               </details>
             </li>
@@ -932,11 +1281,76 @@ export default function NavbarMenu() {
                   Data
                 </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60">
-                  <li><a onClick={() => handleNavigation('/dataAdministration/artists', 'artists')} className="flex items-center gap-2"><Users size={18} />Artistes</a></li>
-                  <li><a onClick={() => handleNavigation('/dataAdministration/artist-categories', 'artist-categories')} className="flex items-center gap-2"><Tag size={18} />Catégories d'artistes</a></li>
-                  <li><a onClick={() => handleNavigation('/dataAdministration/artwork-mediums', 'artwork-mediums')} className="flex items-center gap-2"><Palette size={18} />Mediums d'œuvres</a></li>
-                  <li><a onClick={() => handleNavigation('/dataAdministration/artwork-styles', 'artwork-styles')} className="flex items-center gap-2"><Brush size={18} />Styles d'œuvres</a></li>
-                  <li><a onClick={() => handleNavigation('/dataAdministration/artwork-techniques', 'artwork-techniques')} className="flex items-center gap-2"><Wrench size={18} />Techniques d'œuvres</a></li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/dataAdministration/artists",
+                          "artists"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Users size={18} />
+                      Artistes
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/dataAdministration/artist-categories",
+                          "artist-categories"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Tag size={18} />
+                      Catégories d'artistes
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/dataAdministration/artwork-mediums",
+                          "artwork-mediums"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Palette size={18} />
+                      Mediums d'œuvres
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/dataAdministration/artwork-styles",
+                          "artwork-styles"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Brush size={18} />
+                      Styles d'œuvres
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/dataAdministration/artwork-techniques",
+                          "artwork-techniques"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Wrench size={18} />
+                      Techniques d'œuvres
+                    </a>
+                  </li>
                 </ul>
               </details>
             </li>
@@ -947,8 +1361,31 @@ export default function NavbarMenu() {
                   Admin
                 </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
-                  <li><a onClick={() => handleNavigation('/boAdmin/users', 'boUsers')} className="flex items-center gap-2"><Users size={18} />Gestion des Membres</a></li>
-                  <li><a onClick={() => handleNavigation('/boAdmin/create-member', 'createMember')} className="flex items-center gap-2"><UserPlus size={18} />Créer un Membre</a></li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation("/boAdmin/users", "boUsers")
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Users size={18} />
+                      Gestion des Membres
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/boAdmin/create-member",
+                          "createMember"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <UserPlus size={18} />
+                      Créer un Membre
+                    </a>
+                  </li>
                 </ul>
               </details>
             </li>
@@ -959,9 +1396,48 @@ export default function NavbarMenu() {
                   Blockchain
                 </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
-                  <li><a onClick={() => handleNavigation('/blockchain/smartContracts', 'smartContracts')} className="flex items-center gap-2"><FileCode size={18} />Smart Contracts</a></li>
-                  <li><a onClick={() => handleNavigation('/blockchain/collections', 'collections')} className="flex items-center gap-2"><Folder size={18} />Collections</a></li>
-                  <li><a onClick={() => handleNavigation('/blockchain/royaltyBeneficiaries', 'royaltyBeneficiaries')} className="flex items-center gap-2"><Coins size={18} />Royalties</a></li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/blockchain/smartContracts",
+                          "smartContracts"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <FileCode size={18} />
+                      Smart Contracts
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/blockchain/collections",
+                          "collections"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Folder size={18} />
+                      Collections
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/blockchain/royaltyBeneficiaries",
+                          "royaltyBeneficiaries"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Coins size={18} />
+                      Royalties
+                    </a>
+                  </li>
                 </ul>
               </details>
             </li>
@@ -972,13 +1448,101 @@ export default function NavbarMenu() {
                   Marketplace
                 </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60">
-                  <li><a onClick={() => handleNavigation('/admin-art/createArtwork', 'adminCreateArtwork')} className="flex items-center gap-2"><PlusCircle size={18} />Créer une œuvre</a></li>
-                  <li><a onClick={() => handleNavigation('/admin-art/collection', 'adminArtCollection')} className="flex items-center gap-2"><Folder size={18} />Collection d'œuvres</a></li>
-                  <li><a onClick={() => handleNavigation('/marketplace/nftsToMint', 'nftsToMint')} className="flex items-center gap-2"><Sparkles size={18} />NFTs à minter</a></li>
-                  <li><a onClick={() => handleNavigation('/marketplace/royaltiesSettings', 'royaltiesSettings')} className="flex items-center gap-2"><Coins size={18} />Royalties</a></li>
-                  <li><a onClick={() => handleNavigation('/marketplace/marketplaceListing', 'marketplaceListing')} className="flex items-center gap-2"><ShoppingBag size={18} />Marketplace Listing</a></li>
-                  <li><a onClick={() => handleNavigation('/marketplace/transactions', 'transactions')} className="flex items-center gap-2"><Receipt size={18} />Transactions Marketplace</a></li>
-                  <li><a onClick={() => handleNavigation('/marketplace/invoices', 'invoices')} className="flex items-center gap-2"><FileText size={18} />Factures</a></li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/admin-art/createArtwork",
+                          "adminCreateArtwork"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <PlusCircle size={18} />
+                      Créer une œuvre
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/admin-art/collection",
+                          "adminArtCollection"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Folder size={18} />
+                      Collection d'œuvres
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/marketplace/nftsToMint",
+                          "nftsToMint"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Sparkles size={18} />
+                      NFTs à minter
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/marketplace/royaltiesSettings",
+                          "royaltiesSettings"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Coins size={18} />
+                      Royalties
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/marketplace/marketplaceListing",
+                          "marketplaceListing"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <ShoppingBag size={18} />
+                      Marketplace Listing
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/marketplace/transactions",
+                          "transactions"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Receipt size={18} />
+                      Transactions Marketplace
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation("/marketplace/invoices", "invoices")
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <FileText size={18} />
+                      Factures
+                    </a>
+                  </li>
                 </ul>
               </details>
             </li>
@@ -989,7 +1553,20 @@ export default function NavbarMenu() {
                   Tools
                 </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
-                  <li><a onClick={() => handleNavigation('/tools/webp-converter', 'toolsWebpConverter')} className="flex items-center gap-2"><Image size={18} />Convertisseur WebP</a></li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleNavigation(
+                          "/tools/webp-converter",
+                          "toolsWebpConverter"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Image size={18} />
+                      Convertisseur WebP
+                    </a>
+                  </li>
                 </ul>
               </details>
             </li>
@@ -997,5 +1574,5 @@ export default function NavbarMenu() {
         )}
       </div>
     </>
-  )
+  );
 }

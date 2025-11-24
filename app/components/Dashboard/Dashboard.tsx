@@ -176,6 +176,14 @@ export default function Dashboard() {
                       />
                     </div>
                   )}
+                  <div className="mt-3">
+                    <Button
+                      onClick={() => router.push('/art/edit-artist-profile')}
+                      variant="primary"
+                    >
+                      Éditer mon profil artiste
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <>

@@ -6,18 +6,16 @@ import { useToast } from "@/app/components/Toast/ToastContext";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createUserArtistProfile } from "@/lib/actions/artist-actions";
+import { updateUserArtistProfile, getLandingArtistByArtistId } from "@/lib/actions/artist-actions";
 import CountrySelect from "@/app/components/Common/CountrySelect";
 import { getCountries } from "@/lib/utils";
 import Button from "@/app/components/Button/Button";
-import ArtistImageUpload from "./ArtistImageUpload";
-import OptionalImageUpload from "./OptionalImageUpload";
-import ProgressModal from "./ProgressModal";
+import ArtistImageUpload from "../create-artist-profile/ArtistImageUpload";
+import OptionalImageUpload from "../create-artist-profile/OptionalImageUpload";
+import ProgressModal from "../create-artist-profile/ProgressModal";
 
-// Schéma de validation simplifié pour un utilisateur
+// Schéma de validation pour l'édition
 const formSchema = z.object({
-  name: z.string().min(1, "Le prénom est requis"),
-  surname: z.string().min(1, "Le nom est requis"),
   pseudo: z.string().min(1, "Le pseudo est requis"),
   description: z
     .string()
@@ -81,13 +79,42 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface CreateArtistProfileFormProps {
-  userEmail: string;
+interface EditArtistProfileFormProps {
+  artist: {
+    id: number;
+    name: string;
+    surname: string;
+    pseudo: string;
+    description: string;
+    imageUrl: string;
+    birthYear: number | null;
+    countryCode: string | null;
+    websiteUrl: string | null;
+    facebookUrl: string | null;
+    instagramUrl: string | null;
+    twitterUrl: string | null;
+    linkedinUrl: string | null;
+  };
+  landingArtist: {
+    id: number;
+    artistsPage: boolean | null;
+    secondaryImageUrl: string | null;
+    imageArtistStudio: string | null;
+    biographyHeader1: string | null;
+    biographyText1: string | null;
+    biographyHeader2: string | null;
+    biographyText2: string | null;
+    biographyHeader3: string | null;
+    biographyText3: string | null;
+    biographyHeader4: string | null;
+    biographyText4: string | null;
+  } | null;
 }
 
-export default function CreateArtistProfileForm({
-  userEmail,
-}: CreateArtistProfileFormProps) {
+export default function EditArtistProfileForm({
+  artist,
+  landingArtist,
+}: EditArtistProfileFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -96,6 +123,10 @@ export default function CreateArtistProfileForm({
     null
   );
   const [studioImageFile, setStudioImageFile] = useState<File | null>(null);
+  // États pour marquer les images à supprimer
+  const [shouldDeleteMainImage, setShouldDeleteMainImage] = useState(false);
+  const [shouldDeleteSecondaryImage, setShouldDeleteSecondaryImage] = useState(false);
+  const [shouldDeleteStudioImage, setShouldDeleteStudioImage] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [progressSteps, setProgressSteps] = useState<
     Array<{
@@ -111,7 +142,7 @@ export default function CreateArtistProfileForm({
       status: "pending",
     },
     { id: "upload", label: "Upload vers Firebase", status: "pending" },
-    { id: "creation", label: "Création du profil artiste", status: "pending" },
+    { id: "update", label: "Mise à jour du profil artiste", status: "pending" },
     { id: "finalization", label: "Finalisation", status: "pending" },
   ]);
   const [progressError, setProgressError] = useState<string | undefined>(
@@ -124,47 +155,58 @@ export default function CreateArtistProfileForm({
     handleSubmit,
     watch,
     setValue,
-    formState: { errors, dirtyFields },
+    reset,
+    formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      surname: "",
-      pseudo: "",
-      description: "",
-      artistsPage: false,
-      birthYear: null,
-      countryCode: null,
-      websiteUrl: "",
-      facebookUrl: "",
-      instagramUrl: "",
-      twitterUrl: "",
-      linkedinUrl: "",
-      biographyHeader1: "",
-      biographyText1: "",
-      biographyHeader2: "",
-      biographyText2: "",
-      biographyHeader3: "",
-      biographyText3: "",
-      biographyHeader4: "",
-      biographyText4: "",
+      pseudo: artist.pseudo,
+      description: artist.description,
+      artistsPage: landingArtist?.artistsPage || false,
+      birthYear: artist.birthYear ?? null,
+      countryCode: artist.countryCode ?? null,
+      websiteUrl: artist.websiteUrl || "",
+      facebookUrl: artist.facebookUrl || "",
+      instagramUrl: artist.instagramUrl || "",
+      twitterUrl: artist.twitterUrl || "",
+      linkedinUrl: artist.linkedinUrl || "",
+      biographyHeader1: landingArtist?.biographyHeader1 || "",
+      biographyText1: landingArtist?.biographyText1 || "",
+      biographyHeader2: landingArtist?.biographyHeader2 || "",
+      biographyText2: landingArtist?.biographyText2 || "",
+      biographyHeader3: landingArtist?.biographyHeader3 || "",
+      biographyText3: landingArtist?.biographyText3 || "",
+      biographyHeader4: landingArtist?.biographyHeader4 || "",
+      biographyText4: landingArtist?.biographyText4 || "",
     },
   });
 
   const countryCode = watch("countryCode");
   const artistsPage = watch("artistsPage");
-  const name = watch("name");
-  const surname = watch("surname");
 
-  // Auto-remplissage du pseudo
+  // Forcer la mise à jour des valeurs birthYear et countryCode après le montage
   useEffect(() => {
-    if (!dirtyFields.pseudo) {
-      const generatedPseudo = `${name} ${surname}`.trim();
-      if (generatedPseudo) {
-        setValue("pseudo", generatedPseudo);
-      }
-    }
-  }, [name, surname, setValue, dirtyFields.pseudo]);
+    reset({
+      pseudo: artist.pseudo,
+      description: artist.description,
+      artistsPage: landingArtist?.artistsPage || false,
+      birthYear: artist.birthYear ?? null,
+      countryCode: artist.countryCode ?? null,
+      websiteUrl: artist.websiteUrl || "",
+      facebookUrl: artist.facebookUrl || "",
+      instagramUrl: artist.instagramUrl || "",
+      twitterUrl: artist.twitterUrl || "",
+      linkedinUrl: artist.linkedinUrl || "",
+      biographyHeader1: landingArtist?.biographyHeader1 || "",
+      biographyText1: landingArtist?.biographyText1 || "",
+      biographyHeader2: landingArtist?.biographyHeader2 || "",
+      biographyText2: landingArtist?.biographyText2 || "",
+      biographyHeader3: landingArtist?.biographyHeader3 || "",
+      biographyText3: landingArtist?.biographyText3 || "",
+      biographyHeader4: landingArtist?.biographyHeader4 || "",
+      biographyText4: landingArtist?.biographyText4 || "",
+    });
+  }, [artist, landingArtist, reset]);
 
   const updateStepStatus = (
     stepId: string,
@@ -183,7 +225,6 @@ export default function CreateArtistProfileForm({
     imageType: "profile" | "secondary" | "studio" = "profile"
   ): Promise<string> => {
     try {
-      // Étape 1: Authentification Firebase côté client
       const { getAuth, signInAnonymously } = await import("firebase/auth");
       const { app } = await import("@/lib/firebase/config");
       const { ref, uploadBytes, getDownloadURL } = await import(
@@ -198,7 +239,6 @@ export default function CreateArtistProfileForm({
       const auth = getAuth(app);
       await signInAnonymously(auth);
 
-      // Étape 2: Conversion WebP
       updateStepStatus("conversion", "in-progress");
       const conversionResult = await convertToWebPIfNeeded(imageFile);
 
@@ -212,12 +252,10 @@ export default function CreateArtistProfileForm({
 
       updateStepStatus("conversion", "completed");
 
-      // Étape 3: Upload vers Firebase (/artists)
       updateStepStatus("upload", "in-progress");
       const fileName = normalizeString(`${name} ${surname}`);
       const fileExtension = "webp";
 
-      // Déterminer le nom du fichier selon le type
       let filePrefix = `${name} ${surname}`;
       if (imageType === "secondary") {
         filePrefix = `${name} ${surname}_2`;
@@ -246,7 +284,6 @@ export default function CreateArtistProfileForm({
     setShowProgressModal(true);
     setProgressError(undefined);
 
-    // Réinitialiser les étapes
     setProgressSteps([
       { id: "validation", label: "Validation des données", status: "pending" },
       {
@@ -256,117 +293,131 @@ export default function CreateArtistProfileForm({
       },
       { id: "upload", label: "Upload vers Firebase", status: "pending" },
       {
-        id: "creation",
-        label: "Création du profil artiste",
+        id: "update",
+        label: "Mise à jour du profil artiste",
         status: "pending",
       },
       { id: "finalization", label: "Finalisation", status: "pending" },
     ]);
 
     try {
-      // Étape 1: Validation
       updateStepStatus("validation", "in-progress");
 
-      // Vérifier qu'une image a été sélectionnée
-      if (!selectedImageFile) {
+      // Vérifier que si l'image principale est supprimée, une nouvelle est fournie
+      if (shouldDeleteMainImage && !selectedImageFile) {
         updateStepStatus("validation", "error");
-        setProgressError("Veuillez sélectionner une photo de profil");
-        setFormError("Veuillez sélectionner une photo de profil");
-        errorToast("Veuillez sélectionner une photo de profil");
+        setProgressError("Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle");
+        setFormError("Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle");
+        errorToast("Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle");
         setIsSubmitting(false);
         return;
+      }
+
+      // Gérer les images : nouvelle upload, suppression, ou conservation
+      let imageUrl: string = artist.imageUrl;
+      let secondaryImageUrl: string | null = landingArtist?.secondaryImageUrl || null;
+      let studioImageUrl: string | null = landingArtist?.imageArtistStudio || null;
+      
+      // Marquer les images à supprimer
+      const shouldDeleteMain = shouldDeleteMainImage && !selectedImageFile;
+      const shouldDeleteSecondary = shouldDeleteSecondaryImage && !secondaryImageFile;
+      const shouldDeleteStudio = shouldDeleteStudioImage && !studioImageFile;
+
+      // Upload de la nouvelle image principale si fournie
+      if (selectedImageFile) {
+        try {
+          imageUrl = await handleUpload(
+            selectedImageFile,
+            artist.name,
+            artist.surname,
+            "profile"
+          );
+        } catch (uploadError: any) {
+          const errorMessage =
+            uploadError?.message || "Erreur lors de l'upload";
+          if (
+            errorMessage.toLowerCase().includes("conversion") ||
+            errorMessage.toLowerCase().includes("webp")
+          ) {
+            updateStepStatus("conversion", "error");
+          } else {
+            updateStepStatus("upload", "error");
+          }
+          setProgressError(errorMessage);
+          errorToast(errorMessage);
+          setFormError("Une erreur est survenue");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Upload de l'image secondaire si fournie
+      if (secondaryImageFile) {
+        try {
+          secondaryImageUrl = await handleUpload(
+            secondaryImageFile,
+            artist.name,
+            artist.surname,
+            "secondary"
+          );
+        } catch (err) {
+          console.warn("Erreur lors de l'upload de l'image secondaire:", err);
+        }
+      }
+
+      // Upload de l'image du studio si fournie
+      if (studioImageFile) {
+        try {
+          studioImageUrl = await handleUpload(
+            studioImageFile,
+            artist.name,
+            artist.surname,
+            "studio"
+          );
+        } catch (err) {
+          console.warn("Erreur lors de l'upload de l'image du studio:", err);
+        }
       }
 
       updateStepStatus("validation", "completed");
 
-      // Étape 2-3: Upload côté client (conversion + upload Firebase)
-      let imageUrl: string;
-      let secondaryImageUrl: string | null = null;
-      let studioImageUrl: string | null = null;
+      // Mise à jour du profil
+      updateStepStatus("update", "in-progress");
 
-      try {
-        // Upload de l'image principale
-        imageUrl = await handleUpload(
-          selectedImageFile,
-          data.name,
-          data.surname,
-          "profile"
-        );
-
-        // Upload de l'image secondaire si fournie
-        if (secondaryImageFile) {
-          try {
-            secondaryImageUrl = await handleUpload(
-              secondaryImageFile,
-              data.name,
-              data.surname,
-              "secondary"
-            );
-          } catch (err) {
-            console.warn("Erreur lors de l'upload de l'image secondaire:", err);
-            // Ne pas bloquer la soumission si l'image secondaire échoue
-          }
-        }
-
-        // Upload de l'image du studio si fournie
-        if (studioImageFile) {
-          try {
-            studioImageUrl = await handleUpload(
-              studioImageFile,
-              data.name,
-              data.surname,
-              "studio"
-            );
-          } catch (err) {
-            console.warn("Erreur lors de l'upload de l'image du studio:", err);
-            // Ne pas bloquer la soumission si l'image du studio échoue
-          }
-        }
-      } catch (uploadError: any) {
-        // Détecter si c'est une erreur de conversion ou d'upload
-        const errorMessage = uploadError?.message || "Erreur lors de l'upload";
-
-        if (
-          errorMessage.toLowerCase().includes("conversion") ||
-          errorMessage.toLowerCase().includes("webp")
-        ) {
-          updateStepStatus("conversion", "error");
-        } else {
-          updateStepStatus("upload", "error");
-        }
-
-        setProgressError(errorMessage);
-        errorToast(errorMessage);
-        setFormError("Une erreur est survenue");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Étape 4: Création du profil (Server Action)
-      updateStepStatus("creation", "in-progress");
-
-      // Créer un FormData pour envoyer les données
       const formData = new FormData();
-      formData.append("imageUrl", imageUrl); // ← Envoyer l'URL au lieu du fichier
-      formData.append("name", data.name);
-      formData.append("surname", data.surname);
+      formData.append("artistId", artist.id.toString());
+      formData.append("imageUrl", imageUrl);
       formData.append("pseudo", data.pseudo);
       formData.append("description", data.description);
       formData.append("artistsPage", data.artistsPage.toString());
-      formData.append("userEmail", userEmail);
 
-      if (secondaryImageUrl) {
+      // Gérer les images secondaires et studio
+      if (shouldDeleteSecondary) {
+        formData.append("deleteSecondaryImage", "true");
+      } else if (secondaryImageUrl) {
         formData.append("secondaryImageUrl", secondaryImageUrl);
       }
-      if (studioImageUrl) {
+      
+      if (shouldDeleteStudio) {
+        formData.append("deleteStudioImage", "true");
+      } else if (studioImageUrl) {
         formData.append("imageArtistStudio", studioImageUrl);
       }
+      
+      if (shouldDeleteMain) {
+        formData.append("deleteMainImage", "true");
+      }
 
-      if (data.birthYear) {
+      // Gérer birthYear et countryCode (peuvent être null)
+      if (data.birthYear !== null && data.birthYear !== undefined) {
         formData.append("birthYear", data.birthYear.toString());
+      } else {
+        formData.append("birthYear", "");
       }
       if (data.countryCode) {
         formData.append("countryCode", data.countryCode);
+      } else {
+        formData.append("countryCode", "");
       }
       if (data.websiteUrl) {
         formData.append("websiteUrl", data.websiteUrl);
@@ -410,41 +461,38 @@ export default function CreateArtistProfileForm({
         formData.append("biographyText4", data.biographyText4);
       }
 
-      const result = await createUserArtistProfile(formData);
+      const result = await updateUserArtistProfile(formData);
 
-      updateStepStatus("creation", "completed");
+      updateStepStatus("update", "completed");
 
       if (result.success) {
-        // Étape 5: Finalisation
         updateStepStatus("finalization", "in-progress");
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Petit délai pour l'UX
+        await new Promise((resolve) => setTimeout(resolve, 500));
         updateStepStatus("finalization", "completed");
 
-        success("Profil artiste créé avec succès");
+        success("Profil artiste mis à jour avec succès");
 
-        // Fermer le modal après un court délai
         setTimeout(() => {
           setShowProgressModal(false);
           router.push("/dashboard");
           router.refresh();
         }, 1000);
       } else {
-        updateStepStatus("creation", "error");
+        updateStepStatus("update", "error");
         setProgressError(result.message || "Une erreur est survenue");
         errorToast(result.message || "Une erreur est survenue");
         setFormError(
-          result.message || "Échec de la création du profil artiste"
+          result.message || "Échec de la mise à jour du profil artiste"
         );
         setIsSubmitting(false);
       }
     } catch (error: any) {
-      console.error("Erreur lors de la création du profil artiste:", error);
+      console.error("Erreur lors de la mise à jour du profil artiste:", error);
       const errorMessage =
         error?.message ||
-        "Une erreur est survenue lors de la création du profil artiste";
+        "Une erreur est survenue lors de la mise à jour du profil artiste";
 
-      // Marquer l'étape de création comme erreur (les autres étapes sont déjà gérées)
-      updateStepStatus("creation", "error");
+      updateStepStatus("update", "error");
 
       setProgressError(errorMessage);
       errorToast(errorMessage);
@@ -476,12 +524,21 @@ export default function CreateArtistProfileForm({
           <div className="d-flex gap-lg align-items-start">
             <div style={{ width: "200px", flexShrink: 0 }}>
               <ArtistImageUpload
-                onFileSelect={setSelectedImageFile}
-                error={
-                  formError && !selectedImageFile
-                    ? "Une photo de profil est requise"
-                    : undefined
-                }
+                onFileSelect={(file) => {
+                  setSelectedImageFile(file);
+                  setShouldDeleteMainImage(false);
+                }}
+                onDelete={() => {
+                  setSelectedImageFile(null);
+                  // Si une image existante était affichée, la marquer pour suppression
+                  if (artist.imageUrl && !selectedImageFile) {
+                    setShouldDeleteMainImage(true);
+                  } else {
+                    setShouldDeleteMainImage(false);
+                  }
+                }}
+                previewUrl={shouldDeleteMainImage ? null : artist.imageUrl}
+                allowDelete={true}
               />
             </div>
 
@@ -489,33 +546,41 @@ export default function CreateArtistProfileForm({
               <div className="d-flex gap-md mb-3">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label htmlFor="name" className="form-label">
-                    Prénom *
+                    Prénom
                   </label>
                   <input
                     id="name"
                     type="text"
-                    {...register("name")}
-                    className={`form-input ${errors.name ? "input-error" : ""}`}
+                    value={artist.name}
+                    readOnly
+                    className="form-input"
+                    style={{
+                      backgroundColor: "#f5f5f5",
+                      cursor: "not-allowed",
+                    }}
                   />
-                  {errors.name && (
-                    <p className="form-error">{errors.name.message}</p>
-                  )}
+                  <p className="form-help text-muted mt-1" style={{ fontSize: "0.875rem" }}>
+                    Le prénom ne peut pas être modifié
+                  </p>
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label htmlFor="surname" className="form-label">
-                    Nom *
+                    Nom
                   </label>
                   <input
                     id="surname"
                     type="text"
-                    {...register("surname")}
-                    className={`form-input ${
-                      errors.surname ? "input-error" : ""
-                    }`}
+                    value={artist.surname}
+                    readOnly
+                    className="form-input"
+                    style={{
+                      backgroundColor: "#f5f5f5",
+                      cursor: "not-allowed",
+                    }}
                   />
-                  {errors.surname && (
-                    <p className="form-error">{errors.surname.message}</p>
-                  )}
+                  <p className="form-help text-muted mt-1" style={{ fontSize: "0.875rem" }}>
+                    Le nom ne peut pas être modifié
+                  </p>
                 </div>
               </div>
 
@@ -551,16 +616,44 @@ export default function CreateArtistProfileForm({
           <div className="d-flex gap-md" style={{ flexWrap: "wrap" }}>
             <div style={{ flex: "1 1 300px", minWidth: "250px" }}>
               <OptionalImageUpload
-                onFileSelect={setSecondaryImageFile}
+                onFileSelect={(file) => {
+                  setSecondaryImageFile(file);
+                  setShouldDeleteSecondaryImage(false);
+                }}
+                onDelete={() => {
+                  setSecondaryImageFile(null);
+                  // Si une image existante était affichée, la marquer pour suppression
+                  if (landingArtist?.secondaryImageUrl && !secondaryImageFile) {
+                    setShouldDeleteSecondaryImage(true);
+                  } else {
+                    setShouldDeleteSecondaryImage(false);
+                  }
+                }}
                 label="Image secondaire de l'artiste"
                 description="Une photo supplémentaire de vous pour enrichir votre profil"
+                previewUrl={shouldDeleteSecondaryImage ? null : (landingArtist?.secondaryImageUrl || null)}
+                allowDelete={true}
               />
             </div>
             <div style={{ flex: "1 1 300px", minWidth: "250px" }}>
               <OptionalImageUpload
-                onFileSelect={setStudioImageFile}
+                onFileSelect={(file) => {
+                  setStudioImageFile(file);
+                  setShouldDeleteStudioImage(false);
+                }}
+                onDelete={() => {
+                  setStudioImageFile(null);
+                  // Si une image existante était affichée, la marquer pour suppression
+                  if (landingArtist?.imageArtistStudio && !studioImageFile) {
+                    setShouldDeleteStudioImage(true);
+                  } else {
+                    setShouldDeleteStudioImage(false);
+                  }
+                }}
                 label="Image de votre studio"
                 description="Une photo de votre espace de travail ou atelier"
+                previewUrl={shouldDeleteStudioImage ? null : (landingArtist?.imageArtistStudio || null)}
+                allowDelete={true}
               />
             </div>
           </div>
@@ -660,9 +753,13 @@ export default function CreateArtistProfileForm({
               Année de naissance
             </label>
             <input
+              key={`birthYear-${artist.birthYear || 'empty'}`}
               id="birthYear"
               type="number"
-              {...register("birthYear", { valueAsNumber: true })}
+              {...register("birthYear", { 
+                valueAsNumber: true,
+                setValueAs: (value) => value === "" ? null : Number(value)
+              })}
               className={`form-input ${errors.birthYear ? "input-error" : ""}`}
               placeholder="1990"
               min="1900"
@@ -677,8 +774,9 @@ export default function CreateArtistProfileForm({
               Pays
             </label>
             <CountrySelect
+              key={`country-${artist.countryCode || 'empty'}`}
               countries={getCountries()}
-              value={countryCode || ""}
+              value={countryCode || artist.countryCode || ""}
               onChange={(code) => setValue("countryCode", code)}
               placeholder="Sélectionner un pays"
             />
@@ -703,8 +801,8 @@ export default function CreateArtistProfileForm({
             className="form-help text-muted mb-3"
             style={{ fontSize: "0.875rem" }}
           >
-            Vous pouvez ajouter jusqu'à 4 expositions ou événements marquants de
-            votre parcours artistique.
+            Vous pouvez ajouter jusqu'à 4 expositions ou événements marquants
+            de votre parcours artistique.
           </p>
 
           {[
@@ -888,9 +986,9 @@ export default function CreateArtistProfileForm({
             type="submit"
             disabled={isSubmitting}
             isLoading={isSubmitting}
-            loadingText="Création en cours..."
+            loadingText="Mise à jour en cours..."
           >
-            Créer mon profil artiste
+            Mettre à jour mon profil
           </Button>
         </div>
       </form>
@@ -904,3 +1002,4 @@ export default function CreateArtistProfileForm({
     </>
   );
 }
+
