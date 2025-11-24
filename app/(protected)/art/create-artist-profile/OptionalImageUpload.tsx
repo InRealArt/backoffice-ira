@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import { Camera, X } from "lucide-react";
@@ -28,6 +28,14 @@ export default function OptionalImageUpload({
     previewUrl || null
   );
   const [localError, setLocalError] = useState<string | null>(null);
+  const [hasLocalFile, setHasLocalFile] = useState(false);
+
+  // Mettre à jour localPreview quand previewUrl change (seulement si aucun fichier local n'est sélectionné)
+  useEffect(() => {
+    if (!hasLocalFile) {
+      setLocalPreview(previewUrl || null);
+    }
+  }, [previewUrl, hasLocalFile]);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -56,6 +64,7 @@ export default function OptionalImageUpload({
         }
 
         setLocalError(null);
+        setHasLocalFile(true);
 
         // Créer une preview locale
         const reader = new FileReader();
@@ -82,6 +91,7 @@ export default function OptionalImageUpload({
   const handleRemove = () => {
     setLocalPreview(null);
     setLocalError(null);
+    setHasLocalFile(false);
     onFileSelect(null);
     if (onDelete && allowDelete) {
       onDelete();
