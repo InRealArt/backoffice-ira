@@ -13,6 +13,7 @@ import { X, Plus } from 'lucide-react'
 import { generateSlug } from '@/lib/utils'
 import CountrySelect from '@/app/components/Common/CountrySelect'
 import { getCountries } from '@/lib/utils'
+import ArtistImageUpload from '@/app/(protected)/art/create-artist-profile/ArtistImageUpload'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -21,7 +22,12 @@ const formSchema = z.object({
   pseudo: z.string().min(1, 'Le pseudo est requis'),
   description: z.string().min(10, 'La description doit contenir au moins 10 caractères'),
   publicKey: z.string().min(1, 'La clé publique est requise'),
-  imageUrl: z.string().url('URL d\'image invalide'),
+  imageUrl: z.union([
+    z.string().url('URL d\'image invalide'),
+    z.string().length(0),
+    z.null(),
+    z.undefined()
+  ]).optional(),
   isGallery: z.boolean().default(false),
   backgroundImage: z.string().optional().or(z.literal('')).nullable(),
   slug: z.string().min(1, 'Le slug est requis'),
@@ -49,6 +55,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [newImageUrl, setNewImageUrl] = useState('')
   const [newImageName, setNewImageName] = useState('')
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
   const { success, error } = useToast()
   const {
     register,
@@ -105,6 +112,28 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
     console.log('🔍 Données du formulaire d\'édition à soumettre:', data)
     
     try {
+      let finalImageUrl = data.imageUrl || artist.imageUrl
+
+      // Si un nouveau fichier a été sélectionné, l'uploader vers Firebase
+      if (selectedImageFile) {
+        try {
+          const { uploadArtistImageWithWebP } = await import('@/lib/firebase/storage')
+          
+          finalImageUrl = await uploadArtistImageWithWebP(selectedImageFile, {
+            name: data.name,
+            surname: data.surname,
+            imageType: 'profile',
+            normalizeFolderName: true
+          })
+          
+          success('Image uploadée avec succès')
+        } catch (uploadError: any) {
+          error('Erreur lors de l\'upload de l\'image: ' + (uploadError.message || 'Erreur inconnue'))
+          setIsSubmitting(false)
+          return
+        }
+      }
+
       // Filtrer explicitement les champs autorisés pour éviter les champs fantômes
       const cleanedData = {
         name: data.name,
@@ -112,13 +141,13 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
         pseudo: data.pseudo,
         description: data.description,
         publicKey: data.publicKey,
-        imageUrl: data.imageUrl,
+        imageUrl: finalImageUrl,
         isGallery: data.isGallery,
         backgroundImage: data.backgroundImage,
         slug: data.slug,
         featuredArtwork: data.featuredArtwork,
         birthYear: data.birthYear,
-        // countryCode: data.countryCode, // TODO: Réactiver après npx prisma generate
+        countryCode: data.countryCode,
         websiteUrl: data.websiteUrl,
         facebookUrl: data.facebookUrl,
         instagramUrl: data.instagramUrl,
@@ -179,33 +208,24 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
           <div className="card-content">
             <div className="flex gap-xxl">
               <div className="flex flex-col gap-md" style={{ width: '200px' }}>
-                {imageUrl ? (
-                  <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
-                    <Image
-                      src={imageUrl}
-                      alt={`${artist.name} ${artist.surname}`}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                    />
-                  </div>
-                ) : (
-                  <div style={{ width: '200px', height: '200px', borderRadius: '8px', backgroundColor: '#e0e0e0', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '1.5rem' }}>
-                    {artist.name.charAt(0)}{artist.surname.charAt(0)}
-                  </div>
-                )}
-                <div className="form-group">
-                  <label htmlFor="imageUrl" className="form-label">URL de l'image</label>
-                  <input
-                    id="imageUrl"
-                    type="text"
-                    {...register('imageUrl')}
-                    className={`form-input ${errors.imageUrl ? 'input-error' : ''}`}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                  {errors.imageUrl && (
-                    <p className="form-error">{errors.imageUrl.message}</p>
-                  )}
-                </div>
+                <ArtistImageUpload
+                  onFileSelect={(file) => {
+                    setSelectedImageFile(file)
+                    if (file) {
+                      // Créer une preview locale
+                      const reader = new FileReader()
+                      reader.onloadend = () => {
+                        setValue('imageUrl', reader.result as string, { shouldValidate: false })
+                      }
+                      reader.readAsDataURL(file)
+                    } else {
+                      setValue('imageUrl', artist.imageUrl || '', { shouldValidate: false })
+                    }
+                  }}
+                  previewUrl={imageUrl || artist.imageUrl || null}
+                  error={errors.imageUrl?.message}
+                  allowDelete={false}
+                />
               </div>
               
               <div className="flex-1">
@@ -336,14 +356,16 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                   <p className="form-error">{errors.birthYear.message}</p>
                 )}
               </div>
-              <div className="form-group flex-1">
+              <div className="form-group flex-1" style={{ position: 'relative', zIndex: 1 }}>
                 <label htmlFor="countryCode" className="form-label">Code pays</label>
-                <CountrySelect
-                  countries={getCountries()}
-                  value={countryCode || ''}
-                  onChange={(code) => setValue('countryCode', code)}
-                  placeholder="Sélectionner un pays"
-                />
+                <div style={{ position: 'relative' }}>
+                  <CountrySelect
+                    countries={getCountries()}
+                    value={countryCode || ''}
+                    onChange={(code) => setValue('countryCode', code)}
+                    placeholder="Sélectionner un pays"
+                  />
+                </div>
                 {errors.countryCode && (
                   <p className="form-error">{errors.countryCode.message}</p>
                 )}

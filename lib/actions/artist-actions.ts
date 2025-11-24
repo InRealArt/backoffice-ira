@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { Artist, Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
-import { generateSlug, toCamelCase } from '@/lib/utils'
+import { generateSlug, toCamelCase, getCountries } from '@/lib/utils'
 
 export async function getArtistById(id: number): Promise<Artist | null> {
     try {
@@ -16,13 +16,48 @@ export async function getArtistById(id: number): Promise<Artist | null> {
     }
 }
 
+/**
+ * S'assure que le pays existe dans la base de données
+ * Le crée s'il n'existe pas
+ */
+async function ensureCountryExists(countryCode: string | null | undefined): Promise<void> {
+    if (!countryCode) return
+
+    // Vérifier si le pays existe déjà
+    const existingCountry = await prisma.country.findUnique({
+        where: { code: countryCode }
+    })
+
+    if (!existingCountry) {
+        // Trouver le nom du pays dans la liste statique
+        const countries = getCountries()
+        const country = countries.find(c => c.code === countryCode)
+
+        if (country) {
+            // Créer le pays dans la base de données
+            await prisma.country.create({
+                data: {
+                    code: country.code,
+                    name: country.name
+                }
+            })
+        } else {
+            throw new Error(`Code pays invalide: ${countryCode}`)
+        }
+    }
+}
+
 export async function updateArtist(
     id: number,
     data: Prisma.ArtistUpdateInput
 ): Promise<{ success: boolean; message?: string }> {
     try {
+        // S'assurer que le pays existe dans la base de données avant de sauvegarder
+        if (data.countryCode) {
+            await ensureCountryExists(data.countryCode as string)
+        }
+
         // Filtrer les champs autorisés pour éviter les erreurs Prisma
-        // Note: countryCode temporairement retiré car le client Prisma n'est pas synchronisé
         const allowedData: Prisma.ArtistUpdateInput = {
             name: data.name,
             surname: data.surname,
@@ -35,7 +70,7 @@ export async function updateArtist(
             slug: data.slug,
             featuredArtwork: data.featuredArtwork,
             birthYear: data.birthYear,
-            // countryCode: data.countryCode, // TODO: Réactiver après npx prisma generate
+            countryCode: data.countryCode,
             websiteUrl: data.websiteUrl,
             facebookUrl: data.facebookUrl,
             instagramUrl: data.instagramUrl,
@@ -64,9 +99,16 @@ export async function updateArtist(
             }
         }
 
+        if (error.code === 'P2003') {
+            return {
+                success: false,
+                message: 'Le code pays sélectionné n\'existe pas dans la base de données. Veuillez sélectionner un pays valide.'
+            }
+        }
+
         return {
             success: false,
-            message: 'Une erreur est survenue lors de la mise à jour.'
+            message: error.message || 'Une erreur est survenue lors de la mise à jour.'
         }
     }
 }
@@ -112,6 +154,11 @@ export async function createArtist(data: CreateArtistData): Promise<{ success: b
             }
         }
 
+        // S'assurer que le pays existe dans la base de données avant de créer
+        if (data.countryCode) {
+            await ensureCountryExists(data.countryCode)
+        }
+
         const { artistsPage, ...prismaDataPartial } = data
 
         // Préparer les données avec des valeurs par défaut pour les champs obligatoires
@@ -145,11 +192,24 @@ export async function createArtist(data: CreateArtistData): Promise<{ success: b
         }
     } catch (error: any) {
         console.error('Erreur lors de la création de l\'artiste:', error)
+        
+        if (error.code === 'P2002') {
+            return {
+                success: false,
+                message: 'Un champ unique est déjà utilisé'
+            }
+        }
+
+        if (error.code === 'P2003') {
+            return {
+                success: false,
+                message: 'Le code pays sélectionné n\'existe pas dans la base de données. Veuillez sélectionner un pays valide.'
+            }
+        }
+
         return {
             success: false,
-            message: error.code === 'P2002'
-                ? 'Un champ unique est déjà utilisé'
-                : 'Une erreur est survenue lors de la création de l\'artiste'
+            message: error.message || 'Une erreur est survenue lors de la création de l\'artiste'
         }
     }
 }

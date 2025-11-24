@@ -18,7 +18,9 @@ type Props = {
 export default function CountrySelect({ countries, value, onChange, placeholder = 'FR', disabled = false }: Props) {
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const dropdownRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     setQuery(value || '')
@@ -32,6 +34,49 @@ export default function CountrySelect({ countries, value, onChange, placeholder 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  useEffect(() => {
+    if (open && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      const viewportHeight = window.innerHeight
+      const spaceBelow = viewportHeight - rect.bottom
+      const spaceAbove = rect.top
+      const dropdownHeight = 200 // maxHeight
+      
+      // Si pas assez d'espace en dessous mais assez au-dessus, afficher au-dessus
+      if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
+        setDropdownStyle({
+          position: 'fixed',
+          bottom: `${viewportHeight - rect.top + 4}px`,
+          left: `${rect.left}px`,
+          width: `${rect.width}px`,
+          zIndex: 1000,
+          background: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: 6,
+          maxHeight: 200,
+          overflowY: 'auto',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        })
+      } else {
+        // Position normale en dessous
+        setDropdownStyle({
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          background: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: 6,
+          marginTop: 4,
+          maxHeight: 200,
+          overflowY: 'auto',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        })
+      }
+    }
+  }, [open])
 
   const filtered = useMemo(() => {
     const q = (query || '').toUpperCase()
@@ -62,21 +107,10 @@ export default function CountrySelect({ countries, value, onChange, placeholder 
       />
       {open && (
         <div
+          ref={dropdownRef}
           role="listbox"
           className="dropdown"
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            zIndex: 10,
-            background: 'white',
-            border: '1px solid #e5e7eb',
-            borderRadius: 6,
-            marginTop: 4,
-            maxHeight: 200,
-            overflowY: 'auto'
-          }}
+          style={dropdownStyle}
         >
           {filtered.length === 0 ? (
             <div style={{ padding: '8px 12px', color: '#6b7280' }}>Aucun pays</div>
