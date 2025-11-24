@@ -310,7 +310,10 @@ export default function NavbarMenu() {
               <li>
                 <a
                   onClick={() =>
-                    handleMenuNavigation("/art/collection", "collection")
+                    handleMenuNavigation(
+                      "/art/physicalCollection",
+                      "physicalCollection"
+                    )
                   }
                   className="flex items-center gap-2"
                 >
@@ -318,12 +321,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Image size={18} />
-                      <span>Voir ma collection</span>
+                      <span>Voir mes collections</span>
                     </>
                   ) : (
                     <>
                       <Image size={18} />
-                      <span>Voir ma collection</span>
+                      <span>Voir mes collections</span>
                     </>
                   )}
                 </a>
@@ -345,6 +348,30 @@ export default function NavbarMenu() {
                     <>
                       <PlusCircle size={18} />
                       <span>Créer une œuvre</span>
+                    </>
+                  )}
+                </a>
+              </li>
+              <li>
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/art/create-physical-collection",
+                      "createPhysicalCollection"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("createPhysicalCollection") ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      <Folder size={18} />
+                      <span>Créer une collection</span>
+                    </>
+                  ) : (
+                    <>
+                      <Folder size={18} />
+                      <span>Créer une collection</span>
                     </>
                   )}
                 </a>
@@ -1123,6 +1150,20 @@ export default function NavbarMenu() {
                       >
                         <PlusCircle size={18} />
                         Créer une œuvre
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        onClick={() =>
+                          handleNavigation(
+                            "/art/create-physical-collection",
+                            "createPhysicalCollection"
+                          )
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        <Folder size={18} />
+                        Créer une collection
                       </a>
                     </li>
                   </ul>

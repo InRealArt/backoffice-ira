@@ -287,6 +287,7 @@ model LandingArtist {
   imageArtistStudio  String?
   artistCategories   ArtistCategoryArtist[]
   artist             Artist                 @relation(fields: [artistId], references: [id])
+  physicalCollections PhysicalCollection[]
 
   @@index([artistId])
   @@schema("landing")
@@ -556,6 +557,8 @@ model PhysicalItem {
   authCertificate AuthCertificatePhysicalArtwork?
   ArtistAddress   ArtistAddress?                  @relation(fields: [artistAddressId], references: [id])
   artistAddressId Int?
+  physicalCollectionId    Int?
+  physicalCollection      PhysicalCollection?                     @relation(fields: [physicalCollectionId], references: [id])
 
   createdAt                DateTime                  @default(now())
   physicalArtworkViews     PhysicalArtworkView[]
@@ -566,6 +569,7 @@ model PhysicalItem {
   @@index([shippingAddressId])
   @@index([mediumId])
   @@index([isOnline])
+  @@index([physicalCollectionId])
   @@schema("backoffice")
 }
 
@@ -1034,6 +1038,18 @@ model Country {
   artists           Artist[]
 
   @@schema("public")
+}
+
+model PhysicalCollection {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String
+  landingArtistId Int
+  landingArtist LandingArtist @relation(fields: [landingArtistId], references: [id])
+  physicalItems PhysicalItem[]
+
+  @@index([landingArtistId])
+  @@schema("backoffice")
 }
 
 model WhiteListedUser {

@@ -1,0 +1,172 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { PhysicalCollectionWithItems } from "@/lib/actions/physical-collection-actions";
+
+interface PhysicalCollectionsListProps {
+  collections: PhysicalCollectionWithItems[];
+}
+
+export default function PhysicalCollectionsList({
+  collections,
+}: PhysicalCollectionsListProps) {
+  return (
+    <div className="grid grid-cols-1 gap-8 mt-6">
+      {collections.map((collection) => {
+        const onlineItems = collection.physicalItems.filter(
+          (item) => item.isOnline
+        );
+        const soldItems = collection.physicalItems.filter(
+          (item) => item.status === "sold"
+        );
+        const offlineItems = collection.physicalItems.filter(
+          (item) => !item.isOnline
+        );
+
+        return (
+          <div
+            key={collection.id}
+            className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.04),0_0_0_1px_rgba(0,0,0,0.02)] border border-gray-200/80 dark:border-gray-700/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_6px_rgba(0,0,0,0.07),0_10px_24px_rgba(0,0,0,0.08),0_0_0_1px_rgba(59,130,246,0.1)] hover:border-blue-200 dark:hover:border-blue-400/40 relative group"
+          >
+            {/* Bandeau de gradient en haut au hover */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+            {/* Header de la collection */}
+            <div className="flex items-center justify-between gap-4 p-7 px-8 border-b border-purple-200/50 dark:border-purple-700/40 collection-header-bg">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                {/* Icon avec gradient comme dans le dashboard */}
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white flex-shrink-0 shadow-[0_4px_12px_rgba(59,130,246,0.3)]">
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M3 9h18M9 3v18" />
+                  </svg>
+                </div>
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <h2 className="text-[1.375rem] font-bold m-0 text-gray-900 dark:text-gray-50 leading-tight tracking-tight truncate">
+                    {collection.name}
+                  </h2>
+                  <button
+                    className="bg-transparent border-none text-gray-500 dark:text-gray-400 cursor-pointer p-1.5 flex items-center justify-center rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300 flex-shrink-0"
+                    aria-label="Modifier le nom"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              {/* Bouton "Ajouter une œuvre" au même niveau que le nom */}
+              <div className="flex items-center flex-shrink-0">
+                <Link
+                  href={`/art/physicalCollection/${collection.id}/add-artwork`}
+                >
+                  <button
+                    className="flex items-center gap-2 bg-purple text-white border border-white px-4 py-2 rounded-md cursor-pointer text-sm font-medium transition-all duration-200 hover:bg-purple/90 [&_svg]:shrink-0"
+                    aria-label="Ajouter une œuvre"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Ajouter une œuvre
+                  </button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Contenu de la collection */}
+            <div className="p-6 px-7">
+              {/* Section œuvres online */}
+              {onlineItems.length > 0 && (
+                <div className="mb-8 last:mb-0">
+                  <h3 className="text-base font-semibold mb-4 text-gray-900 dark:text-gray-100">
+                    Œuvres présentées sur SINGULART actuellement (
+                    {soldItems.length} vendues)
+                  </h3>
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-4 md:grid-cols-[repeat(auto-fill,minmax(100px,1fr))] md:gap-3">
+                    {onlineItems.map((physicalItem) => (
+                      <div key={String(physicalItem.id)} className="relative">
+                        <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-200 cursor-pointer transition-transform hover:scale-105">
+                          <Image
+                            src={
+                              physicalItem.item.mainImageUrl ||
+                              "/images/no-image.jpg"
+                            }
+                            alt={physicalItem.item.name}
+                            width={120}
+                            height={120}
+                            className="w-full h-full object-cover"
+                          />
+                          {physicalItem.status === "sold" && (
+                            <div className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-md" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Section œuvres offline */}
+              {offlineItems.length > 0 && (
+                <div className="mb-8 last:mb-0">
+                  <h3 className="text-base font-semibold mb-4 text-gray-900 dark:text-gray-100">
+                    Œuvres offline actuellement ({offlineItems.length} œuvres)
+                  </h3>
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-4 md:grid-cols-[repeat(auto-fill,minmax(100px,1fr))] md:gap-3">
+                    {offlineItems.map((physicalItem) => (
+                      <div key={String(physicalItem.id)} className="relative">
+                        <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-200 cursor-pointer transition-transform hover:scale-105">
+                          <Image
+                            src={
+                              physicalItem.item.mainImageUrl ||
+                              "/images/no-image.jpg"
+                            }
+                            alt={physicalItem.item.name}
+                            width={120}
+                            height={120}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Message si aucune œuvre */}
+              {collection.physicalItems.length === 0 && (
+                <div className="text-center py-12 px-4 text-gray-500 dark:text-gray-400">
+                  <p>Aucune œuvre dans cette collection</p>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

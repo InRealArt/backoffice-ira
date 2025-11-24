@@ -64,6 +64,7 @@ const protectedRoutes: Record<string, AccessLevel> = {
     // Routes artiste
     "/art/createArtwork": "artist",
     "/art/createPhysicalArtwok": "artist",
+    "/art/create-physical-collection": "artist",
     "/art/myPhysicalArtwork": "artist",
     "/art/artworks": "artist",
     "/art/artworks/[id]/edit": "artist",
