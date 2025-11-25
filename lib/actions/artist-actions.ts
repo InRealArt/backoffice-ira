@@ -53,12 +53,22 @@ export async function updateArtist(
 ): Promise<{ success: boolean; message?: string }> {
     try {
         // S'assurer que le pays existe dans la base de données avant de sauvegarder
-        if (data.countryCode) {
-            await ensureCountryExists(data.countryCode as string)
+        // Extraire countryCode de manière sûre depuis Prisma.ArtistUpdateInput
+        const dataWithCountryCode = data as Prisma.ArtistUpdateInput & { countryCode?: string | null | { set?: string | null } }
+        const countryCodeValue = dataWithCountryCode.countryCode
+            ? (typeof dataWithCountryCode.countryCode === 'string'
+                ? dataWithCountryCode.countryCode
+                : typeof dataWithCountryCode.countryCode === 'object' && dataWithCountryCode.countryCode !== null && 'set' in dataWithCountryCode.countryCode
+                    ? dataWithCountryCode.countryCode.set ?? null
+                    : null)
+            : null
+
+        if (countryCodeValue) {
+            await ensureCountryExists(countryCodeValue)
         }
 
         // Filtrer les champs autorisés pour éviter les erreurs Prisma
-        const allowedData: Prisma.ArtistUpdateInput = {
+        const allowedData = {
             name: data.name,
             surname: data.surname,
             pseudo: data.pseudo,
@@ -70,13 +80,13 @@ export async function updateArtist(
             slug: data.slug,
             featuredArtwork: data.featuredArtwork,
             birthYear: data.birthYear,
-            countryCode: data.countryCode,
+            countryCode: dataWithCountryCode.countryCode,
             websiteUrl: data.websiteUrl,
             facebookUrl: data.facebookUrl,
             instagramUrl: data.instagramUrl,
             twitterUrl: data.twitterUrl,
             linkedinUrl: data.linkedinUrl,
-        }
+        } as Prisma.ArtistUpdateInput
 
         // Mise à jour de l'artiste
         await prisma.artist.update({
@@ -192,7 +202,7 @@ export async function createArtist(data: CreateArtistData): Promise<{ success: b
         }
     } catch (error: any) {
         console.error('Erreur lors de la création de l\'artiste:', error)
-        
+
         if (error.code === 'P2002') {
             return {
                 success: false,
@@ -426,12 +436,12 @@ export async function updateUserArtistProfile(
         const twitterUrl = formData.get('twitterUrl') as string | null
         const linkedinUrl = formData.get('linkedinUrl') as string | null
         const artistsPage = formData.get('artistsPage') === 'true'
-        
+
         // Flags de suppression d'images
         const deleteMainImage = formData.get('deleteMainImage') === 'true'
         const deleteSecondaryImage = formData.get('deleteSecondaryImage') === 'true'
         const deleteStudioImage = formData.get('deleteStudioImage') === 'true'
-        
+
         // Nouveaux champs optionnels
         const secondaryImageUrl = formData.get('secondaryImageUrl') as string | null
         const imageArtistStudio = formData.get('imageArtistStudio') as string | null
@@ -470,7 +480,7 @@ export async function updateUserArtistProfile(
                 message: 'Vous devez fournir une nouvelle photo de profil si vous supprimez l\'actuelle'
             }
         }
-        
+
         // Si pas de nouvelle image et pas de suppression, utiliser l'image existante
         let finalImageUrl = imageUrl
         if (!imageUrl && !deleteMainImage) {
