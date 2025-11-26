@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect, useCallback, RefObject } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { artworkSchema, artworkEditSchema, ArtworkFormData } from '../../createArtwork/schema'
-import { artworkSchema as physicalArtworkSchema, artworkEditSchema as physicalArtworkEditSchema } from '../../createPhysicalArtwork/schema'
+
+import { physicalArtworkSchema, physicalArtworkEditSchema, PhysicalArtworkFormData } from '../../createPhysicalArtwork/schema'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import { authClient } from '@/lib/auth-client'
 import { getBackofficeUserByEmail, createItemRecord, updateItemRecord, savePhysicalCertificate, saveNftCertificate } from '@/lib/actions/prisma-actions'
@@ -19,7 +19,8 @@ export function useArtworkForm({
     onSuccess,
     onTitleChange,
     onPricingOptionsChange,
-    isPhysicalOnly = false
+    isPhysicalOnly = false,
+    progressCallbacks
 }: ArtworkFormProps): UseArtworkFormReturn {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [previewImages, setPreviewImages] = useState<string[]>([])
@@ -64,7 +65,7 @@ export function useArtworkForm({
     // Choose validation schema based on mode and isPhysicalOnly
     const validationSchema = isPhysicalOnly
         ? (isEditMode ? physicalArtworkEditSchema : physicalArtworkSchema)
-        : (isEditMode ? artworkEditSchema : artworkSchema)
+        : (isEditMode ? physicalArtworkEditSchema : physicalArtworkSchema)
 
     // Form initialization
     const {
@@ -76,8 +77,10 @@ export function useArtworkForm({
         control,
         getValues,
         formState: { errors }
-    } = useForm<ArtworkFormData>({
+    } = useForm<PhysicalArtworkFormData>({
         resolver: zodResolver(validationSchema as any) as any, // Cast nécessaire due aux validations conditionnelles Zod complexes
+        mode: 'onSubmit', // Validation uniquement à la soumission
+        reValidateMode: 'onChange', // Re-validation après erreur
         defaultValues: {
             name: initialData?.title || '',
             title: initialData?.title || '',
@@ -86,9 +89,17 @@ export function useArtworkForm({
             metaDescription: initialData?.metaDescription || '',
             medium: initialData?.medium || '',
             mediumId: initialData?.physicalItem?.mediumId?.toString() || initialData?.mediumId?.toString() || '',
-            styleIds: initialData?.styleIds || initialData?.physicalItem?.itemStyles?.map(is => is.styleId) || [],
-            techniqueIds: initialData?.techniqueIds || initialData?.physicalItem?.itemTechniques?.map(it => it.techniqueId) || [],
-            themeIds: initialData?.themeIds || initialData?.physicalItem?.itemThemes?.map(ith => ith.themeId) || [],
+            styleIds: (initialData?.styleIds && initialData.styleIds.length > 0) 
+                ? initialData.styleIds 
+                : (initialData?.physicalItem?.itemStyles && initialData.physicalItem.itemStyles.length > 0)
+                    ? initialData.physicalItem.itemStyles.map(is => is.styleId)
+                    : [] as (string | number)[],
+            techniqueIds: (initialData?.techniqueIds && initialData.techniqueIds.length > 0)
+                ? initialData.techniqueIds
+                : (initialData?.physicalItem?.itemTechniques && initialData.physicalItem.itemTechniques.length > 0)
+                    ? initialData.physicalItem.itemTechniques.map(it => it.techniqueId)
+                    : [] as (string | number)[],
+            themeIds: initialData?.themeIds || initialData?.physicalItem?.itemThemes?.map(ith => ith.themeId) || [] as (string | number)[],
             width: initialData?.width || '',
             height: initialData?.height || '',
             weight: initialData?.weight || '',
@@ -97,26 +108,22 @@ export function useArtworkForm({
             intellectualPropertyEndDate: initialData?.intellectualPropertyEndDate || '',
             images: undefined,
             physicalCertificate: undefined,
-            nftCertificate: undefined,
-            hasPhysicalOnly: isPhysicalOnly || initialData?.hasPhysicalOnly || false,
-            hasNftOnly: isPhysicalOnly ? false : (initialData?.hasNftOnly || false),
+            hasPhysicalOnly: isPhysicalOnly || initialData?.hasPhysicalOnly || false,    // TODO: Check if this is correct
             pricePhysicalBeforeTax: initialData?.pricePhysicalBeforeTax || '',
-            priceNftBeforeTax: initialData?.priceNftBeforeTax || '',
             certificateUrl: initialData?.certificateUrl || '',
             physicalCertificateUrl: initialData?.physicalCertificateUrl || '',
-            nftCertificateUrl: initialData?.nftCertificateUrl || '',
-            initialQty: initialData?.initialQty?.toString() || '1',
             shippingAddressId: initialData?.shippingAddressId?.toString() || initialData?.physicalItem?.shippingAddressId?.toString() || '',
+            initialQty: initialData?.initialQty?.toString() || '1',
+            physicalCollectionId: (initialData?.physicalItem as any)?.physicalCollectionId?.toString() || '',
+            mainImageUrl: initialData?.imageUrl || '',
         }
     })
 
     // Watch form values
     const intellectualProperty = watch('intellectualProperty')
     const hasPhysicalOnly = watch('hasPhysicalOnly')
-    const hasNftOnly = watch('hasNftOnly')
     const name = watch('name')
     const physicalCertificateUrl = watch('physicalCertificateUrl')
-    const nftCertificateUrl = watch('nftCertificateUrl')
 
     // Callback for pricing option changes
     useEffect(() => {
@@ -125,12 +132,9 @@ export function useArtworkForm({
                 if (onPricingOptionsChange.setHasPhysicalOnly) {
                     onPricingOptionsChange.setHasPhysicalOnly(Boolean(hasPhysicalOnly))
                 }
-                if (onPricingOptionsChange.setHasNftOnly) {
-                    onPricingOptionsChange.setHasNftOnly(Boolean(hasNftOnly))
-                }
             }
         }
-    }, [hasPhysicalOnly, hasNftOnly, onPricingOptionsChange])
+    }, [hasPhysicalOnly, onPricingOptionsChange])
 
     // Callback for title changes
     useEffect(() => {
@@ -215,7 +219,7 @@ export function useArtworkForm({
 
         if (isEditMode && initialData?.nftCertificateUrl) {
             setPreviewNftCertificate(initialData.nftCertificateUrl)
-            setValue('nftCertificateUrl', initialData.nftCertificateUrl)
+            setValue('nftCertificateUrl' as any, initialData.nftCertificateUrl)
         }
     }, [isEditMode, initialData, setValue])
 
@@ -244,17 +248,16 @@ export function useArtworkForm({
                 name: 'Nom',
                 description: 'Description',
                 pricePhysicalBeforeTax: 'Prix - Oeuvre physique',
-                priceNftBeforeTax: 'Prix - NFT',
                 pricingOption: 'Option de tarification',
                 medium: 'Support/Medium',
                 images: 'Image Principale',
                 physicalCertificate: 'Certificat d\'authenticité physique',
-                nftCertificate: 'Certificat d\'authenticité NFT',
                 width: 'Largeur',
                 height: 'Hauteur',
                 weight: 'Poids',
                 root: 'Général',
-                physicalDimensions: 'Dimensions physiques (poids, largeur, hauteur)'
+                physicalDimensions: 'Dimensions physiques (poids, largeur, hauteur)',
+                physicalCollectionId: 'Collection'
             }
 
             const hasPricingOptionError = errors.root?.message &&
@@ -265,29 +268,8 @@ export function useArtworkForm({
                 typeof errors.root.message === 'string' &&
                 errors.root.message.includes("dimensions")
 
-            const hasPriceError = errors.pricePhysicalBeforeTax?.message ||
-                errors.priceNftBeforeTax?.message
-
-            if (hasPricingOptionError && errors.root?.message) {
-                errorToast(String(errors.root.message))
-            } else if (hasPriceError) {
-                if (errors.pricePhysicalBeforeTax?.message) {
-                    errorToast(String(errors.pricePhysicalBeforeTax.message))
-                } else if (errors.priceNftBeforeTax?.message) {
-                    errorToast(String(errors.priceNftBeforeTax.message))
-                }
-            } else if (hasPhysicalDimensionsError && errors.root?.message) {
-                errorToast(String(errors.root.message))
-            } else {
-                const missingFields = Object.keys(errors)
-                    .filter(key => key !== 'images' || !shouldIgnoreImageError)
-                    .map(key => fieldNames[key])
-                    .filter(Boolean)
-
-                if (missingFields.length > 0) {
-                    errorToast(`Champs obligatoires manquants : ${missingFields.join(', ')}`)
-                }
-            }
+            // Les erreurs de validation sont maintenant affichées dans la modale
+            // Plus besoin de toasts d'erreur ici
 
             const firstError = Object.keys(errors)[0]
             const element = document.getElementById(firstError)
@@ -298,7 +280,7 @@ export function useArtworkForm({
         } else {
             setFormErrors(null)
         }
-    }, [errors, isEditMode, initialData?.imageUrl, previewImages.length, errorToast])
+    }, [errors, isEditMode, initialData?.imageUrl, previewImages.length])
 
     // Handle main image change
     const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -426,7 +408,7 @@ export function useArtworkForm({
         const files = e.target.files
         if (!files || files.length === 0) {
             setPreviewNftCertificate(null)
-            setValue('nftCertificate', null as any, { shouldValidate: true })
+            setValue('nftCertificate' as any, null as any, { shouldValidate: true })
             return
         }
 
@@ -439,7 +421,7 @@ export function useArtworkForm({
                 nftCertificateInputRef.current.value = ''
             }
             setPreviewNftCertificate(null)
-            setValue('nftCertificate', null as any, { shouldValidate: true })
+            setValue('nftCertificate' as any, null as any, { shouldValidate: true })
             return
         }
 
@@ -449,14 +431,14 @@ export function useArtworkForm({
                 nftCertificateInputRef.current.value = ''
             }
             setPreviewNftCertificate(null)
-            setValue('nftCertificate', null as any, { shouldValidate: true })
+            setValue('nftCertificate' as any, null as any, { shouldValidate: true })
             return
         }
 
         const url = URL.createObjectURL(file)
         setPreviewNftCertificate(url)
 
-        setValue('nftCertificate', e.target.files as unknown as FileList, { shouldValidate: true })
+        setValue('nftCertificate' as any, e.target.files as unknown as FileList, { shouldValidate: true })
     }, [setValue, errorToast])
 
     // Remove secondary image
@@ -532,16 +514,18 @@ export function useArtworkForm({
     }, [reset])
 
     // Async function to handle uploads
-    const handleUpload = async (data: ArtworkFormData, backofficeUser: any, isRealNewImage: boolean) => {
+    const handleUpload = async (data: PhysicalArtworkFormData, backofficeUser: any, isRealNewImage: boolean) => {
         // S'assurer que les fonctions toast sont disponibles dans cette portée
         const { error: errorToastFn, success: successToastFn, info: infoToastFn } = toastContext
 
-        let mainImageUrl = initialData?.imageUrl || ''
+        // Si mainImageUrl est déjà défini (via FirebaseImageUpload), l'utiliser directement
+        let mainImageUrl = data.mainImageUrl || initialData?.imageUrl || ''
         let newSecondaryImageUrls: string[] = []
 
         const hasNewSecondaryImages = secondaryImagesFiles.length > 0
 
-        if (isRealNewImage || hasNewSecondaryImages) {
+        // Si mainImageUrl n'est pas défini et qu'on a un fichier à uploader, utiliser l'ancien système
+        if ((!mainImageUrl && isRealNewImage) || hasNewSecondaryImages) {
             try {
                 const artistName = backofficeUser.artist
                     ? `${backofficeUser.artist.name} ${backofficeUser.artist.surname}`.trim()
@@ -571,25 +555,40 @@ export function useArtworkForm({
                         }
                     }
 
-                    // Import de la fonction de conversion WebP
-                    const { convertToWebPIfNeeded } = await import('@/lib/utils/webp-converter')
+                    // Utiliser uploadImageToMarketplaceFolder au lieu de uploadImageToFirebase
+                    const { uploadImageToMarketplaceFolder } = await import('@/lib/firebase/storage')
+                    
+                    // Créer le nom du répertoire avec la casse exacte (Prenom Nom)
+                    const folderName = artistName
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
+                        .replace(/[^a-zA-Z0-9\s]+/g, '') // Supprime les caractères spéciaux sauf espaces
+                        .trim()
 
-                    // Convertir l'image principale en WebP si nécessaire
-                    infoToastFn('Traitement de l\'image principale...')
-                    const conversionResult = await convertToWebPIfNeeded(fileInputRef.current.files[0])
+                    // Normaliser le nom de l'œuvre pour le nom de fichier
+                    const fileName = normalizeString(data.name || `artwork-${Date.now()}`)
 
-                    if (!conversionResult.success) {
-                        console.warn('Échec de la conversion WebP, upload de l\'image originale:', conversionResult.error)
-                        infoToastFn('Conversion WebP échouée, upload de l\'image originale')
-                    } else if (conversionResult.wasConverted) {
-                        successToastFn(`Image convertie en WebP (compression: ${conversionResult.compressionRatio?.toFixed(1) || 0}%)`)
-                    }
-
-                    mainImageUrl = await uploadImageToFirebase(conversionResult.file, {
-                        artistFolder,
-                        itemSlug,
-                        isMain: true
-                    })
+                    // Upload vers Firebase avec les callbacks de progression
+                    progressCallbacks?.onProgressUpdate?.('upload', 'in-progress')
+                    mainImageUrl = await uploadImageToMarketplaceFolder(
+                        fileInputRef.current.files[0],
+                        folderName,
+                        fileName,
+                        (status, error) => {
+                            if (status === 'error') {
+                                progressCallbacks?.onProgressUpdate?.('upload', 'error', error)
+                            } else if (status === 'completed') {
+                                progressCallbacks?.onProgressUpdate?.('upload', 'completed')
+                            }
+                        },
+                        (status, error) => {
+                            if (status === 'error') {
+                                progressCallbacks?.onProgressUpdate?.('upload', 'error', error)
+                            } else if (status === 'completed') {
+                                progressCallbacks?.onProgressUpdate?.('upload', 'completed')
+                            }
+                        }
+                    )
 
                     successToastFn('Nouvelle image uploadée avec succès')
                 }
@@ -678,7 +677,9 @@ export function useArtworkForm({
     }
 
     // Form submit handler
-    const onSubmit = async (data: ArtworkFormData) => {
+    const onSubmit = async (data: PhysicalArtworkFormData) => {
+        console.log('onSubmit - data reçue:', data);
+        console.log('onSubmit - styleIds:', data.styleIds, 'techniqueIds:', data.techniqueIds);
         setIsSubmitting(true)
 
         try {
@@ -701,33 +702,20 @@ export function useArtworkForm({
             })
 
             if (isEditMode && initialData?.id) {
-                // En mode édition : validation côté serveur pour les certificats
+                // En mode édition : le certificat d'œuvre physique n'est plus obligatoire
+                // Vérifier si un nouveau certificat est fourni (même logique qu'en mode création)
                 const hasNewPhysicalCertificate = data.physicalCertificate && data.physicalCertificate instanceof FileList && data.physicalCertificate.length > 0
-                const hasNewNftCertificate = data.nftCertificate && data.nftCertificate instanceof FileList && data.nftCertificate.length > 0
-                const hasExistingPhysicalCertificate = !!initialData?.physicalCertificateUrl
-                const hasExistingNftCertificate = !!initialData?.nftCertificateUrl
-
-                // Validation côté serveur pour les certificats
-                if (data.hasPhysicalOnly && !hasNewPhysicalCertificate && !hasExistingPhysicalCertificate) {
-                    errorToast('Le certificat d\'œuvre physique est obligatoire')
-                    setIsSubmitting(false)
-                    return
-                }
-
-                if (data.hasNftOnly && !hasNewNftCertificate && !hasExistingNftCertificate) {
-                    errorToast('Le certificat NFT est obligatoire')
-                    setIsSubmitting(false)
-                    return
-                }
-
+                
                 try {
                     setIsSubmitting(true)
 
                     const loadingToast = infoToast('Mise à jour de l\'œuvre en cours...')
 
-                    const isRealNewImage = fileInputRef.current &&
+                    // Vérifier si on a une nouvelle image (soit via Firebase, soit via input file)
+                    const hasFirebaseImage = !!data.mainImageUrl && data.mainImageUrl !== initialData?.imageUrl
+                    const isRealNewImage = hasFirebaseImage || (fileInputRef.current &&
                         fileInputRef.current.files &&
-                        fileInputRef.current.files.length > 0
+                        fileInputRef.current.files.length > 0)
 
                     const { mainImageUrl } = await handleUpload(data, backofficeUser, isRealNewImage as boolean)
 
@@ -768,11 +756,6 @@ export function useArtworkForm({
                         }
                     }
 
-                    if (data.hasNftOnly) {
-                        updateData.nftItemData = {
-                            price: data.priceNftBeforeTax ? parseInt(data.priceNftBeforeTax, 10) : 0,
-                        }
-                    }
 
                     if (isRealNewImage && mainImageUrl && mainImageUrl !== initialData.imageUrl) {
                         updateData.mainImageUrl = mainImageUrl
@@ -792,13 +775,6 @@ export function useArtworkForm({
                             await savePhysicalCertificate(initialData.id, buffer)
                         }
 
-                        // Sauvegarder le certificat NFT seulement si un nouveau fichier est fourni
-                        if (data.hasNftOnly && hasNewNftCertificate) {
-                            const certificateFile = data.nftCertificate![0]
-                            const arrayBuffer = await certificateFile.arrayBuffer()
-                            const buffer = new Uint8Array(arrayBuffer)
-                            await saveNftCertificate(initialData.id, buffer)
-                        }
 
                         dismiss(loadingToast as any)
                         successToast(`L'œuvre "${data.name}" a été mise à jour avec succès!`)
@@ -816,21 +792,23 @@ export function useArtworkForm({
                 }
             } else {
                 // Mode création : utiliser la validation Zod côté client (comportement existant)
-                const validationResult = artworkSchema.safeParse(data)
+                const validationResult = physicalArtworkSchema.safeParse(data)
 
                 if (!validationResult.success) {
                     console.error('Erreurs de validation:', validationResult.error.errors)
-                    const firstError = validationResult.error.errors[0]
-                    errorToast(firstError.message)
+                    // Les erreurs de validation sont maintenant affichées dans la modale
+                    // Plus besoin de toast d'erreur ici
                     setIsSubmitting(false)
                     return
                 }
 
                 try {
                     // Upload des images vers Firebase Storage
-                    const isRealNewImage = fileInputRef.current &&
+                    // Vérifier si on a une nouvelle image (soit via Firebase, soit via input file)
+                    const hasFirebaseImage = !!data.mainImageUrl && data.mainImageUrl !== initialData?.imageUrl
+                    const isRealNewImage = hasFirebaseImage || (fileInputRef.current &&
                         fileInputRef.current.files &&
-                        fileInputRef.current.files.length > 0
+                        fileInputRef.current.files.length > 0)
 
                     const { mainImageUrl, allSecondaryImageUrls } = await handleUpload(data, backofficeUser, isRealNewImage as boolean)
 
@@ -865,6 +843,7 @@ export function useArtworkForm({
                         weight: data.weight ? parseFloat(data.weight) : undefined,
                         creationYear: data.creationYear ? parseInt(data.creationYear, 10) : null,
                         shippingAddressId: data.shippingAddressId ? parseInt(data.shippingAddressId, 10) : undefined,
+                        physicalCollectionId: data.physicalCollectionId ? parseInt(data.physicalCollectionId, 10) : undefined,
                         // Caractéristiques artistiques (maintenant dans PhysicalItem)
                         mediumId: data.mediumId ? parseInt(data.mediumId, 10) : undefined,
                         styleIds: data.styleIds ? data.styleIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
@@ -872,10 +851,9 @@ export function useArtworkForm({
                         themeIds: data.themeIds ? data.themeIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
                     } : null
 
-                    // Données pour NftItem, si applicable
-                    const nftItemData = data.hasNftOnly ? {
-                        price: data.priceNftBeforeTax ? parseInt(data.priceNftBeforeTax, 10) : 0,
-                    } : null
+                    // Mettre à jour la modale de progression
+                    progressCallbacks?.onProgressUpdate?.('upload', 'completed')
+                    progressCallbacks?.onProgressUpdate?.('save', 'in-progress')
 
                     // Créer l'enregistrement de l'œuvre avec les types appropriés
                     const newItem = await createItemRecord(
@@ -883,8 +861,7 @@ export function useArtworkForm({
                         'created',
                         tags,
                         itemBaseData,
-                        physicalItemData,
-                        nftItemData
+                        physicalItemData
                     )
 
                     if (newItem && newItem.item && newItem.item.id) {
@@ -896,19 +873,15 @@ export function useArtworkForm({
                             await savePhysicalCertificate(newItem.item.id, buffer)
                         }
 
-                        // Sauvegarder le certificat NFT
-                        if (data.hasNftOnly && data.nftCertificate && data.nftCertificate instanceof FileList && data.nftCertificate.length > 0) {
-                            const certificateFile = data.nftCertificate[0]
-                            const arrayBuffer = await certificateFile.arrayBuffer()
-                            const buffer = new Uint8Array(arrayBuffer)
-                            await saveNftCertificate(newItem.item.id, buffer)
-                        }
 
                         if (mainImageUrl || allSecondaryImageUrls.length > 0) {
                             const { saveItemImages } = await import('@/lib/actions/prisma-actions')
                             await saveItemImages(newItem.item.id, mainImageUrl, allSecondaryImageUrls)
                         }
                     }
+
+                    // Mettre à jour la modale de progression
+                    progressCallbacks?.onProgressUpdate?.('save', 'completed')
 
                     successToast(`L'œuvre "${data.name}" a été créée avec succès!`)
 

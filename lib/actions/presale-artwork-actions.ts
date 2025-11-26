@@ -242,9 +242,12 @@ export async function updatePresaleArtwork(id: number, data: {
  */
 export async function deletePresaleArtwork(id: number) {
     try {
-        // Récupérer l'œuvre pour connaître son ordre
+        // Récupérer l'œuvre avec l'artiste pour connaître son ordre et les infos de l'artiste
         const artwork = await prisma.presaleArtwork.findUnique({
-            where: { id }
+            where: { id },
+            include: {
+                artist: true
+            }
         })
 
         if (!artwork) {
@@ -256,6 +259,27 @@ export async function deletePresaleArtwork(id: number) {
 
         // Stocker l'ordre pour utilisation ultérieure
         const deletedOrder = artwork.order
+
+        // Supprimer les traductions associées avant de supprimer l'œuvre
+        await prisma.translation.deleteMany({
+            where: {
+                entityType: 'PresaleArtwork',
+                entityId: id
+            }
+        })
+
+        // Supprimer le fichier WebP depuis Firebase Storage
+        try {
+            const { deletePresaleArtworkImage } = await import('@/lib/firebase/storage')
+            await deletePresaleArtworkImage(
+                artwork.artist.name,
+                artwork.artist.surname,
+                artwork.name
+            )
+        } catch (firebaseError) {
+            // Ne pas bloquer la suppression si l'image n'existe pas ou ne peut pas être supprimée
+            console.error('Erreur lors de la suppression de l\'image Firebase (non bloquant):', firebaseError)
+        }
 
         // Supprimer l'œuvre
         await prisma.presaleArtwork.delete({
@@ -281,6 +305,7 @@ export async function deletePresaleArtwork(id: number) {
         }
 
         revalidatePath('/landing/presaleArtworks')
+        revalidatePath('/art/presale-artworks')
 
         return {
             success: true,

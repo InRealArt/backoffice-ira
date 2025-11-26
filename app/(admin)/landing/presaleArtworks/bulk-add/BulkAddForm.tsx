@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -58,9 +58,27 @@ interface Artist {
 
 interface BulkAddFormProps {
   artists: Artist[]
+  /**
+   * ID de l'artiste à pré-sélectionner (pour les artistes connectés)
+   * Si fourni, le champ artiste sera en lecture seule
+   */
+  defaultArtistId?: number
+  /**
+   * URL de redirection après annulation (par défaut: /landing/presaleArtworks)
+   */
+  cancelRedirectUrl?: string
+  /**
+   * URL de redirection après succès (par défaut: /landing/presaleArtworks)
+   */
+  successRedirectUrl?: string
 }
 
-export default function BulkAddForm({ artists }: BulkAddFormProps) {
+export default function BulkAddForm({ 
+  artists, 
+  defaultArtistId,
+  cancelRedirectUrl = '/landing/presaleArtworks',
+  successRedirectUrl = '/landing/presaleArtworks'
+}: BulkAddFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showTable, setShowTable] = useState(false)
@@ -82,10 +100,26 @@ export default function BulkAddForm({ artists }: BulkAddFormProps) {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors }
   } = useForm<BulkAddFormValues>({
-    resolver: zodResolver(bulkAddSchema)
+    resolver: zodResolver(bulkAddSchema),
+    defaultValues: {
+      artistId: defaultArtistId ? defaultArtistId.toString() : '',
+      numberOfArtworks: ''
+    }
   })
+
+  // Pré-sélectionner l'artiste si defaultArtistId est fourni
+  useEffect(() => {
+    if (defaultArtistId) {
+      setValue('artistId', defaultArtistId.toString())
+      const artist = artists.find(a => a.id === defaultArtistId)
+      if (artist) {
+        setSelectedArtist(artist)
+      }
+    }
+  }, [defaultArtistId, artists, setValue])
 
   const onSubmit = (data: BulkAddFormValues) => {
     const artist = artists.find(a => a.id.toString() === data.artistId)
@@ -114,7 +148,7 @@ export default function BulkAddForm({ artists }: BulkAddFormProps) {
   }
 
   const handleCancel = () => {
-    router.push('/landing/presaleArtworks')
+    router.push(cancelRedirectUrl)
   }
 
   const handleBackToForm = () => {
@@ -357,7 +391,7 @@ export default function BulkAddForm({ artists }: BulkAddFormProps) {
       // Fermer la modale après un court délai
       setTimeout(() => {
         setShowProgressModal(false)
-        router.push('/landing/presaleArtworks')
+        router.push(successRedirectUrl)
       }, 1000)
     } catch (err) {
         console.error('Erreur lors de l\'enregistrement:', err)
@@ -456,7 +490,7 @@ export default function BulkAddForm({ artists }: BulkAddFormProps) {
                 id="artistId"
                 {...register('artistId')}
                 className={`form-select ${errors.artistId ? 'input-error' : ''}`}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !!defaultArtistId}
               >
                 <option value="">Sélectionnez un artiste</option>
                 {artists.map((artist) => (

@@ -1,10 +1,10 @@
 // Types pour les formulaires et composants d'artwork
-import { ArtworkFormData } from '../../createArtwork/schema'
+import { PhysicalArtworkFormData } from '../../createPhysicalArtwork/schema'
 import { Control, FieldErrors, UseFormRegister, UseFormSetValue, UseFormGetValues } from 'react-hook-form'
 import { ArtworkMedium, ArtworkStyle, ArtworkTechnique, ArtworkTheme } from '@prisma/client'
 
-// Ré-export du type ArtworkFormData pour qu'il soit disponible
-export type { ArtworkFormData }
+// Alias pour maintenir la compatibilité avec le code existant
+export type ArtworkFormData = PhysicalArtworkFormData
 
 export interface Address {
     id: number
@@ -17,6 +17,17 @@ export interface Address {
     country: string
 }
 
+export interface PhysicalCollection {
+    id: number
+    name: string
+    description: string
+    landingArtistId: number
+}
+
+export interface ProgressCallbacks {
+    onProgressUpdate?: (stepId: string, status: 'pending' | 'in-progress' | 'completed' | 'error', error?: string) => void
+}
+
 export interface ArtworkFormProps {
     mode: 'create' | 'edit'
     addresses?: Address[]
@@ -24,6 +35,9 @@ export interface ArtworkFormProps {
     styles?: ArtworkStyle[]
     techniques?: ArtworkTechnique[]
     themes?: ArtworkTheme[]
+    collections?: PhysicalCollection[]
+    artistName?: string
+    artistSurname?: string
     isPhysicalOnly?: boolean
     initialData?: {
         id?: number
@@ -70,6 +84,7 @@ export interface ArtworkFormProps {
             creationYear?: number | string
             status?: string
             shippingAddressId?: number
+            physicalCollectionId?: number
             mediumId?: number
             itemStyles?: Array<{ styleId: number; style: { name: string } }>
             itemTechniques?: Array<{ techniqueId: number; technique: { name: string } }>
@@ -88,6 +103,7 @@ export interface ArtworkFormProps {
         setHasNftOnly?: (value: boolean) => void
         setHasNftPlusPhysical?: (value: boolean) => void
     } | ((value: string) => void)
+    progressCallbacks?: ProgressCallbacks
 }
 
 export interface InfoTooltipProps {
@@ -215,6 +231,10 @@ export interface MediaFilesSectionProps extends FormFields {
     handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     handleSecondaryImagesChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     isFormReadOnly?: boolean
+    artistName?: string
+    artistSurname?: string
+    artworkName?: string
+    onMainImageUploaded?: (imageUrl: string) => void
 }
 
 export interface PhysicalCertificateSectionProps extends FormFields {

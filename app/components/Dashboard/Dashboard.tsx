@@ -247,13 +247,13 @@ export default function Dashboard() {
             {!isLoadingArtist && associatedArtist && (
               <>
                 <DashboardCard 
-                  title="Ma Collection"
+                  title="Mes Collections"
                   icon={<FolderOpen />}
                   description="Explorez et gérez vos œuvres"
                 >
                   <p>Explorez et gérez votre collection d'œuvres d'art.</p>
-                  <Button onClick={() => router.push('/art/collection')}>
-                    Voir ma collection
+                  <Button onClick={() => router.push('/art/physicalCollection')}>
+                    Voir mes collections
                   </Button>
                 </DashboardCard>
                 

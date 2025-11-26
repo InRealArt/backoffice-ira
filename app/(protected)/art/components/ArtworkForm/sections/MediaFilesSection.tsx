@@ -2,6 +2,7 @@
 
 import { MediaFilesSectionProps } from '../types'
 import FormSection from '../FormSection'
+import FirebaseImageUpload from '../components/FirebaseImageUpload'
 
 function MediaFilesSection({
   register,
@@ -15,13 +16,25 @@ function MediaFilesSection({
   secondaryImagesInputRef,
   handleImageChange,
   handleSecondaryImagesChange,
-  isFormReadOnly
+  isFormReadOnly,
+  artistName = '',
+  artistSurname = '',
+  artworkName = '',
+  onMainImageUploaded
 }: MediaFilesSectionProps) {
+  const handleImageUploaded = (imageUrl: string) => {
+    // Mettre à jour le formulaire avec l'URL de l'image
+    setValue('mainImageUrl', imageUrl, { shouldValidate: true })
+    if (onMainImageUploaded) {
+      onMainImageUploaded(imageUrl)
+    }
+  }
+
   return (
     <FormSection title="Fichiers Media" bgVariant="subtle-2">
       {/* Image Principale */}
       <div className="mb-6">
-        <label htmlFor="images" className="flex items-center gap-1" data-required={!isEditMode || !initialImageUrl}>
+        <label htmlFor="mainImage" className="flex items-center gap-1" data-required={!isEditMode || !initialImageUrl}>
           Image Principale {isEditMode && initialImageUrl ? '(optionnelle)' : ''}
         </label>
         {isEditMode && initialImageUrl && (
@@ -29,23 +42,17 @@ function MediaFilesSection({
             Une image existe déjà. Vous pouvez la remplacer en sélectionnant un nouveau fichier.
           </p>
         )}
-        <input
-          id="images"
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={(e) => {
-            handleImageChange(e)
-            if (e.target.files) {
-              setValue('images', e.target.files as unknown as FileList, { shouldValidate: true })
-            }
-          }}
-          ref={fileInputRef}
+        <FirebaseImageUpload
+          onImageUploaded={handleImageUploaded}
+          previewUrl={initialImageUrl}
+          error={errors.mainImageUrl ? String(errors.mainImageUrl.message) : undefined}
           disabled={isFormReadOnly}
-          className={`form-input ${errors.images && (!isEditMode || !initialImageUrl) ? 'input-error' : ''}`}
+          artistName={artistName}
+          artistSurname={artistSurname}
+          artworkName={artworkName}
         />
-        {errors.images && (!isEditMode || !initialImageUrl) && (
-          <p className="form-error">{errors.images?.message ? String(errors.images.message) : 'L\'image principale est requise'}</p>
+        {errors.mainImageUrl && (!isEditMode || !initialImageUrl) && (
+          <p className="form-error mt-2">{errors.mainImageUrl?.message ? String(errors.mainImageUrl.message) : 'L\'image principale est requise'}</p>
         )}
       </div>
       

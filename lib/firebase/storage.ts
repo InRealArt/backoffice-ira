@@ -1,3 +1,5 @@
+"use client"
+
 import { ref, uploadBytes, getDownloadURL, deleteObject, listAll, getMetadata } from 'firebase/storage'
 import { storage } from './config'
 import { normalizeString } from '@/lib/utils'
@@ -263,7 +265,7 @@ export async function uploadArtistImageWithWebP(
         options.onConversionStatus?.('completed')
 
         // Étape 3: Préparation du chemin de stockage
-        const { name, surname, imageType = 'profile', normalizeFolderName = true } = options
+        const { name, surname, imageType = 'profile', normalizeFolderName = false } = options
 
         // Créer le nom du répertoire
         const folderName = normalizeFolderName
@@ -462,6 +464,60 @@ export async function deleteImageFromFirebase(imageUrl: string): Promise<boolean
 }
 
 /**
+ * Supprime le fichier WebP d'un presaleArtwork depuis Firebase Storage
+ * Le fichier est stocké dans artists/{Prenom Nom}/landing/{nomoeuvre}.webp
+ * 
+ * @param artistName - Prénom de l'artiste
+ * @param artistSurname - Nom de l'artiste
+ * @param artworkName - Nom de l'œuvre
+ * @returns Promise<boolean> - true si la suppression a réussi, false sinon
+ */
+export async function deletePresaleArtworkImage(
+    artistName: string,
+    artistSurname: string,
+    artworkName: string
+): Promise<boolean> {
+    try {
+        // Authentification Firebase côté serveur
+        const { getAuth, signInAnonymously } = await import('firebase/auth')
+        const { app } = await import('./config')
+
+        const auth = getAuth(app)
+        await signInAnonymously(auth)
+
+        // Construire le nom du répertoire avec la casse exacte (comme dans PresaleArtworkForm)
+        // Le folderName est construit comme `${name} ${surname}` sans normalisation
+        const folderName = `${artistName} ${artistSurname}`.trim()
+
+        // Normaliser le nom de l'œuvre (comme dans PresaleArtworkForm)
+        const normalizedArtworkName = normalizeString(artworkName)
+
+        // Construire le chemin complet
+        const storagePath = `artists/${folderName}/landing/${normalizedArtworkName}.webp`
+
+        console.log(`Tentative de suppression du fichier presaleArtwork: ${storagePath}`)
+
+        // Créer une référence au fichier
+        const fileRef = ref(storage, storagePath)
+
+        // Supprimer le fichier
+        await deleteObject(fileRef)
+
+        console.log(`Fichier presaleArtwork supprimé avec succès: ${storagePath}`)
+        return true
+    } catch (error: any) {
+        // Si le fichier n'existe pas (erreur 404), on considère que c'est OK
+        if (error?.code === 'storage/object-not-found') {
+            const storagePath = `artists/${artistName} ${artistSurname}/landing/${normalizeString(artworkName)}.webp`
+            console.log(`Le fichier n'existe pas (déjà supprimé ou jamais créé): ${storagePath}`)
+            return true
+        }
+        console.error('Erreur lors de la suppression du fichier presaleArtwork:', error)
+        return false
+    }
+}
+
+/**
  * Vérifie si un répertoire existe dans Firebase Storage et le crée si nécessaire
  * Dans Firebase Storage, les répertoires n'existent pas vraiment - ils sont créés automatiquement
  * lors de l'upload d'un fichier. Cette fonction vérifie l'existence en listant le contenu.
@@ -486,7 +542,7 @@ export async function ensureFolderExists(
 
         // Essayer de lister le contenu du répertoire
         const folderRef = ref(storage, folderPath)
-        
+
         try {
             const result = await listAll(folderRef)
             // Si on peut lister le dossier, il existe
@@ -496,13 +552,13 @@ export async function ensureFolderExists(
             // Si le répertoire n'existe pas, on le "crée" en uploadant un fichier placeholder
             // Note: Firebase Storage crée automatiquement les répertoires lors de l'upload
             console.log(`📁 Création du répertoire "${folderPath}"...`)
-            
+
             // Créer un fichier texte minimal pour créer le répertoire
             const placeholderContent = new Blob([''], { type: 'text/plain' })
             const placeholderFile = new File([placeholderContent], '.placeholder', { type: 'text/plain' })
             const placeholderPath = `${folderPath}/.placeholder`
             const placeholderRef = ref(storage, placeholderPath)
-            
+
             try {
                 await uploadBytes(placeholderRef, placeholderFile)
                 console.log(`✓ Répertoire "${folderPath}" créé avec succès`)
@@ -572,6 +628,160 @@ export async function uploadImageToLandingFolder(
         return imageUrl
     } catch (error) {
         console.error("Erreur lors de l'upload de l'image:", error)
+        const errorMessage =
+            error instanceof Error
+                ? error.message
+                : "Erreur inconnue lors de l'upload"
+
+        // Notifier les callbacks en cas d'erreur
+        if (errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp')) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+
+        throw error
+    }
+}
+
+/**
+ * Upload une image vers Firebase Storage dans le répertoire marketplace d'un artiste
+ * 
+ * @param imageFile - Le fichier image à uploader
+ * @param folderName - Nom du répertoire avec la casse exacte (ex: "Jean Dupont")
+ * @param fileName - Nom du fichier (sans extension)
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns URL de l'image uploadée
+ */
+export async function uploadImageToMarketplaceFolder(
+    imageFile: File,
+    folderName: string,
+    fileName: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        // Étape 1: Authentification Firebase côté client
+        const { getAuth, signInAnonymously } = await import('firebase/auth')
+        const { app } = await import('./config')
+
+        const auth = getAuth(app)
+        await signInAnonymously(auth)
+
+        // Étape 2: Conversion WebP
+        onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+
+        if (!conversionResult.success) {
+            const errorMessage =
+                conversionResult.error ||
+                "Erreur lors de la conversion de l'image en WebP"
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        // Étape 3: Upload vers Firebase dans le répertoire marketplace
+        onUploadStatus?.('in-progress')
+        const folderPath = `artists/${folderName}/marketplace`
+        const fileExtension = 'webp'
+        const storagePath = `${folderPath}/${fileName}.${fileExtension}`
+        const storageRef = ref(storage, storagePath)
+
+        await uploadBytes(storageRef, conversionResult.file)
+        const imageUrl = await getDownloadURL(storageRef)
+
+        onUploadStatus?.('completed')
+
+        return imageUrl
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image:", error)
+        const errorMessage =
+            error instanceof Error
+                ? error.message
+                : "Erreur inconnue lors de l'upload"
+
+        // Notifier les callbacks en cas d'erreur
+        if (errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp')) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+
+        throw error
+    }
+}
+
+/**
+ * Upload une image de mockup vers Firebase Storage dans le répertoire /artists/{Prenom Nom}/mockups
+ * 
+ * @param imageFile - Le fichier image à uploader
+ * @param name - Prénom de l'artiste
+ * @param surname - Nom de l'artiste
+ * @param fileName - Nom du fichier (sans extension, optionnel, par défaut timestamp)
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns URL de l'image uploadée
+ */
+export async function uploadMockupToFirebase(
+    imageFile: File,
+    name: string,
+    surname: string,
+    fileName?: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        // Étape 1: Authentification Firebase côté client
+        const { getAuth, signInAnonymously } = await import('firebase/auth')
+        const { app } = await import('./config')
+
+        const auth = getAuth(app)
+        await signInAnonymously(auth)
+
+        // Étape 2: Conversion WebP
+        onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+
+        if (!conversionResult.success) {
+            const errorMessage =
+                conversionResult.error ||
+                "Erreur lors de la conversion de l'image en WebP"
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        // Étape 3: Préparation du chemin de stockage
+        // Créer le nom du répertoire avec la casse exacte (Prenom Nom)
+        const folderName = `${name} ${surname}`
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
+            .replace(/[^a-zA-Z0-9\s]+/g, '') // Supprime les caractères spéciaux sauf espaces
+            .trim()
+
+        // Nom du fichier (avec timestamp si non fourni)
+        const finalFileName = fileName || `mockup-${Date.now()}`
+        const fileExtension = 'webp'
+        const storagePath = `artists/${folderName}/mockups/${finalFileName}.${fileExtension}`
+
+        // Étape 4: Upload vers Firebase
+        onUploadStatus?.('in-progress')
+        const storageRef = ref(storage, storagePath)
+
+        await uploadBytes(storageRef, conversionResult.file)
+        const imageUrl = await getDownloadURL(storageRef)
+
+        onUploadStatus?.('completed')
+
+        return imageUrl
+    } catch (error) {
+        console.error("Erreur lors de l'upload du mockup:", error)
         const errorMessage =
             error instanceof Error
                 ? error.message

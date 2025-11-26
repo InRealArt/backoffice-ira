@@ -48,8 +48,17 @@ function ArtworkCharacteristicsSection({
             }
           }
           .artwork-characteristics-col {
-            flex: 1 !important;
+            flex: 1 1 0% !important;
             min-width: 0 !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            position: relative !important;
+            overflow: visible !important;
+          }
+          .artwork-characteristics-row {
+            box-sizing: border-box !important;
+            width: 100% !important;
+            max-width: 100% !important;
           }
         `,
         }}

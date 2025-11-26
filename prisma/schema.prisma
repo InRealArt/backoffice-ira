@@ -286,7 +286,7 @@ model LandingArtist {
   biographyText4     String?
   imageArtistStudio  String?
   artistCategories   ArtistCategoryArtist[]
-  artist             Artist                 @relation(fields: [artistId], references: [id])
+  artist             Artist                 @relation(fields: [artistId], references: [id], onDelete: Cascade)
   physicalCollections PhysicalCollection[]
 
   @@index([artistId])
@@ -1045,7 +1045,7 @@ model PhysicalCollection {
   name        String
   description String
   landingArtistId Int
-  landingArtist LandingArtist @relation(fields: [landingArtistId], references: [id])
+  landingArtist LandingArtist @relation(fields: [landingArtistId], references: [id], onDelete: Cascade)
   physicalItems PhysicalItem[]
 
   @@index([landingArtistId])

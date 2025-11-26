@@ -123,7 +123,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
             name: data.name,
             surname: data.surname,
             imageType: 'profile',
-            normalizeFolderName: true
+            normalizeFolderName: false
           })
           
           success('Image uploadée avec succès')

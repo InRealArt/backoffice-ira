@@ -3,9 +3,63 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PhysicalCollectionWithItems } from "@/lib/actions/physical-collection-actions";
+import { useState } from "react";
 
 interface PhysicalCollectionsListProps {
   collections: PhysicalCollectionWithItems[];
+}
+
+// Composant pour afficher une miniature d'œuvre
+function ArtworkThumbnail({
+  imageUrl,
+  alt,
+  isSold = false,
+}: {
+  imageUrl: string | null;
+  alt: string;
+  isSold?: boolean;
+}) {
+  const [imageError, setImageError] = useState(false);
+  const hasValidImage = imageUrl && !imageError;
+
+  return (
+    <div className="relative w-[120px] h-[120px] md:w-[100px] md:h-[100px] rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 cursor-pointer transition-transform hover:scale-105 group flex-shrink-0">
+      {hasValidImage ? (
+        <Image
+          src={imageUrl}
+          alt={alt}
+          width={120}
+          height={120}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          onError={() => setImageError(true)}
+          quality={85}
+        />
+      ) : (
+        // Placeholder SVG si pas d'image ou erreur
+        <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+          <svg
+            className="w-12 h-12 text-gray-400 dark:text-gray-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+      )}
+      {isSold && (
+        <div className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-md z-10" />
+      )}
+      {/* Overlay au hover pour améliorer l'UX */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200" />
+    </div>
+  );
 }
 
 export default function PhysicalCollectionsList({
@@ -106,25 +160,14 @@ export default function PhysicalCollectionsList({
                     Œuvres présentées sur SINGULART actuellement (
                     {soldItems.length} vendues)
                   </h3>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-4 md:grid-cols-[repeat(auto-fill,minmax(100px,1fr))] md:gap-3">
+                  <div className="flex flex-wrap gap-4 md:gap-3">
                     {onlineItems.map((physicalItem) => (
-                      <div key={String(physicalItem.id)} className="relative">
-                        <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-200 cursor-pointer transition-transform hover:scale-105">
-                          <Image
-                            src={
-                              physicalItem.item.mainImageUrl ||
-                              "/images/no-image.jpg"
-                            }
-                            alt={physicalItem.item.name}
-                            width={120}
-                            height={120}
-                            className="w-full h-full object-cover"
-                          />
-                          {physicalItem.status === "sold" && (
-                            <div className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-md" />
-                          )}
-                        </div>
-                      </div>
+                      <ArtworkThumbnail
+                        key={String(physicalItem.id)}
+                        imageUrl={physicalItem.item.mainImageUrl}
+                        alt={physicalItem.item.name}
+                        isSold={physicalItem.status === "sold"}
+                      />
                     ))}
                   </div>
                 </div>
@@ -136,22 +179,13 @@ export default function PhysicalCollectionsList({
                   <h3 className="text-base font-semibold mb-4 text-gray-900 dark:text-gray-100">
                     Œuvres offline actuellement ({offlineItems.length} œuvres)
                   </h3>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-4 md:grid-cols-[repeat(auto-fill,minmax(100px,1fr))] md:gap-3">
+                  <div className="flex flex-wrap gap-4 md:gap-3">
                     {offlineItems.map((physicalItem) => (
-                      <div key={String(physicalItem.id)} className="relative">
-                        <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-200 cursor-pointer transition-transform hover:scale-105">
-                          <Image
-                            src={
-                              physicalItem.item.mainImageUrl ||
-                              "/images/no-image.jpg"
-                            }
-                            alt={physicalItem.item.name}
-                            width={120}
-                            height={120}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </div>
+                      <ArtworkThumbnail
+                        key={String(physicalItem.id)}
+                        imageUrl={physicalItem.item.mainImageUrl}
+                        alt={physicalItem.item.name}
+                      />
                     ))}
                   </div>
                 </div>

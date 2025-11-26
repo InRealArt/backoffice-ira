@@ -1,4 +1,4 @@
-import { getAllArtistsAndGalleries } from '@/lib/actions/prisma-actions'
+import { getAllArtistsAndGalleries } from '@/lib/actions/artist-actions'
 import ImportExcelForm from './ImportExcelForm'
 
 export const metadata = {

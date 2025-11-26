@@ -191,7 +191,7 @@ export default function CreateArtistProfileForm({
         name,
         surname,
         imageType,
-        normalizeFolderName: true,
+        normalizeFolderName: false,
         onConversionStatus: (status, error) => {
           updateStepStatus("conversion", status);
         },

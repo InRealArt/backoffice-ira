@@ -277,10 +277,11 @@ export default function NavbarMenu() {
             </a>
           </li>
           <li className="divider my-1"></li>
+          {/* Bloc Profil */}
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
-              <Image size={16} />
-              MA COLLECTION
+              <UserCircle size={16} />
+              PROFIL
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
@@ -307,6 +308,95 @@ export default function NavbarMenu() {
                   )}
                 </a>
               </li>
+            </ul>
+          </li>
+          <li className="divider my-1"></li>
+          {/* Bloc Site web InRealArt */}
+          <li>
+            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
+              <Globe size={16} />
+              SITE WEB INREALART
+            </a>
+            <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
+              <li>
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/art/create-presale-artwork",
+                      "createPresaleArtwork"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("createPresaleArtwork") ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      <PlusCircle size={18} />
+                      <span>Créer une œuvre</span>
+                    </>
+                  ) : (
+                    <>
+                      <PlusCircle size={18} />
+                      <span>Créer une œuvre</span>
+                    </>
+                  )}
+                </a>
+              </li>
+              <li>
+                <a
+                  onClick={() =>
+                    handleMenuNavigation("/art/my-artworks", "myArtworks")
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("myArtworks") ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      <Image size={18} />
+                      <span>Voir mes œuvres</span>
+                    </>
+                  ) : (
+                    <>
+                      <Image size={18} />
+                      <span>Voir mes œuvres</span>
+                    </>
+                  )}
+                </a>
+              </li>
+            </ul>
+          </li>
+          <li className="divider my-1"></li>
+          {/* Bloc Marketplace */}
+          <li>
+            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
+              <Store size={16} />
+              MARKETPLACE
+            </a>
+            <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
+              <li>
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/art/myPhysicalArtwork",
+                      "myPhysicalArtwork"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("myPhysicalArtwork") ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      <Image size={18} />
+                      <span>Voir mes œuvres</span>
+                    </>
+                  ) : (
+                    <>
+                      <Image size={18} />
+                      <span>Voir mes œuvres</span>
+                    </>
+                  )}
+                </a>
+              </li>
               <li>
                 <a
                   onClick={() =>
@@ -317,61 +407,16 @@ export default function NavbarMenu() {
                   }
                   className="flex items-center gap-2"
                 >
-                  {isItemNavigating("collection") ? (
+                  {isItemNavigating("physicalCollection") ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
-                      <Image size={18} />
+                      <Folder size={18} />
                       <span>Voir mes collections</span>
                     </>
                   ) : (
                     <>
-                      <Image size={18} />
+                      <Folder size={18} />
                       <span>Voir mes collections</span>
-                    </>
-                  )}
-                </a>
-              </li>
-              <li>
-                <a
-                  onClick={() =>
-                    handleMenuNavigation("/art/createArtwork", "createArtwork")
-                  }
-                  className="flex items-center gap-2"
-                >
-                  {isItemNavigating("createArtwork") ? (
-                    <>
-                      <span className="loading loading-spinner loading-sm"></span>
-                      <PlusCircle size={18} />
-                      <span>Créer une œuvre</span>
-                    </>
-                  ) : (
-                    <>
-                      <PlusCircle size={18} />
-                      <span>Créer une œuvre</span>
-                    </>
-                  )}
-                </a>
-              </li>
-              <li>
-                <a
-                  onClick={() =>
-                    handleMenuNavigation(
-                      "/art/create-physical-collection",
-                      "createPhysicalCollection"
-                    )
-                  }
-                  className="flex items-center gap-2"
-                >
-                  {isItemNavigating("createPhysicalCollection") ? (
-                    <>
-                      <span className="loading loading-spinner loading-sm"></span>
-                      <Folder size={18} />
-                      <span>Créer une collection</span>
-                    </>
-                  ) : (
-                    <>
-                      <Folder size={18} />
-                      <span>Créer une collection</span>
                     </>
                   )}
                 </a>
@@ -1106,11 +1151,12 @@ export default function NavbarMenu() {
                   Dashboard
                 </a>
               </li>
+              {/* Bloc Profil */}
               <li>
                 <details>
                   <summary className="flex items-center gap-2">
-                    <Image size={18} />
-                    Ma Collection
+                    <UserCircle size={18} />
+                    Profil
                   </summary>
                   <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                     <li>
@@ -1127,23 +1173,23 @@ export default function NavbarMenu() {
                         Éditer mon profil
                       </a>
                     </li>
-                    <li>
-                      <a
-                        onClick={() =>
-                          handleNavigation("/art/collection", "collection")
-                        }
-                        className="flex items-center gap-2"
-                      >
-                        <Image size={18} />
-                        Voir ma collection
-                      </a>
-                    </li>
+                  </ul>
+                </details>
+              </li>
+              {/* Bloc Site web InRealArt */}
+              <li>
+                <details>
+                  <summary className="flex items-center gap-2">
+                    <Globe size={18} />
+                    Site web InRealArt
+                  </summary>
+                  <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                     <li>
                       <a
                         onClick={() =>
                           handleNavigation(
-                            "/art/createArtwork",
-                            "createArtwork"
+                            "/art/create-presale-artwork",
+                            "createPresaleArtwork"
                           )
                         }
                         className="flex items-center gap-2"
@@ -1155,15 +1201,51 @@ export default function NavbarMenu() {
                     <li>
                       <a
                         onClick={() =>
+                          handleNavigation("/art/my-artworks", "myArtworks")
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        <Image size={18} />
+                        Voir mes œuvres
+                      </a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+              {/* Bloc Marketplace */}
+              <li>
+                <details>
+                  <summary className="flex items-center gap-2">
+                    <Store size={18} />
+                    Marketplace
+                  </summary>
+                  <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
+                    <li>
+                      <a
+                        onClick={() =>
                           handleNavigation(
-                            "/art/create-physical-collection",
-                            "createPhysicalCollection"
+                            "/art/myPhysicalArtwork",
+                            "myPhysicalArtwork"
+                          )
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        <Image size={18} />
+                        Voir mes œuvres
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        onClick={() =>
+                          handleNavigation(
+                            "/art/physicalCollection",
+                            "physicalCollection"
                           )
                         }
                         className="flex items-center gap-2"
                       >
                         <Folder size={18} />
-                        Créer une collection
+                        Voir mes collections
                       </a>
                     </li>
                   </ul>

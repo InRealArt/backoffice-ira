@@ -8,8 +8,9 @@ import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { BackofficeAuthUser } from '@prisma/client'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Eye, Heart, ExternalLink } from 'lucide-react'
+import { Eye, Heart, ExternalLink, PlusCircle } from 'lucide-react'
 import styles from './MyPhysicalArtwork.module.scss'
+import Button from '@/app/components/Button/Button'
 
 export default function MyPhysicalArtworkPage() {
   const { data: session, isPending: isSessionPending } = authClient.useSession()
@@ -94,7 +95,17 @@ export default function MyPhysicalArtworkPage() {
 
   return (
     <div className="page-container">
-      <h1 className={`page-title ${styles.bigTitle}`}>Mon portfolio</h1>
+      <div className="page-header">
+        <div className="header-top-section">
+          <h1 className={`page-title ${styles.bigTitle}`}>Mon portfolio</h1>
+          <Link href="/art/createPhysicalArtwork">
+            <Button variant="primary" className="px-6 py-2 flex items-center gap-2">
+              <PlusCircle size={18} />
+              Créer une œuvre physique
+            </Button>
+          </Link>
+        </div>
+      </div>
 
       {error ? (
         <div className="alert alert-error">
@@ -103,6 +114,12 @@ export default function MyPhysicalArtworkPage() {
       ) : !itemsData || itemsData.length === 0 ? (
         <div className="empty-state">
           <p>Aucune œuvre physique trouvée dans votre collection</p>
+          <Link href="/art/createPhysicalArtwork">
+            <Button variant="primary" className="mt-4 flex items-center gap-2">
+              <PlusCircle size={18} />
+              Créer votre première œuvre physique
+            </Button>
+          </Link>
         </div>
       ) : (
         <>
@@ -132,7 +149,7 @@ export default function MyPhysicalArtworkPage() {
                         <div className={styles.price}>{formatPrice(price)}</div>
                       )}
                       <div className={styles.actions}>
-                        <Link href={`/art/editArtwork/${item.id}`} className={`${styles.btn} ${styles.btnPrimary}`}>
+                        <Link href={`/art/editPhysicalArtwork/${item.id}`} className={`${styles.btn} ${styles.btnPrimary}`}>
                           Modifier
                         </Link>
                         <button type="button" className={styles.btn}>

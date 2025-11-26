@@ -34,6 +34,7 @@ export default function MultiSelect({
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom')
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
   const containerRef = useRef<HTMLDivElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -58,6 +59,7 @@ export default function MultiSelect({
     }
     
     // Calculer la position du dropdown pour éviter l'overflow
+    const updatePosition = () => {
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect()
       const spaceBelow = window.innerHeight - rect.bottom
@@ -65,10 +67,38 @@ export default function MultiSelect({
       const dropdownHeight = 256 // max-h-64 = 16rem = 256px
       
       // Si pas assez d'espace en dessous mais assez au-dessus, ouvrir vers le haut
-      if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
-        setDropdownPosition('top')
+        const newPosition = spaceBelow < dropdownHeight && spaceAbove > spaceBelow ? 'top' : 'bottom'
+        setDropdownPosition(newPosition)
+        
+        // Calculer le style du dropdown en fixed
+        if (newPosition === 'top') {
+          setDropdownStyle({
+            width: `${rect.width}px`,
+            left: `${rect.left}px`,
+            bottom: `${window.innerHeight - rect.top + 4}px`,
+            top: 'auto'
+          })
       } else {
-        setDropdownPosition('bottom')
+          setDropdownStyle({
+            width: `${rect.width}px`,
+            left: `${rect.left}px`,
+            top: `${rect.bottom + 4}px`,
+            bottom: 'auto'
+          })
+        }
+      }
+    }
+    
+    updatePosition()
+    
+    // Mettre à jour la position lors du scroll ou du resize
+    if (isOpen) {
+      window.addEventListener('scroll', updatePosition, true)
+      window.addEventListener('resize', updatePosition)
+      
+      return () => {
+        window.removeEventListener('scroll', updatePosition, true)
+        window.removeEventListener('resize', updatePosition)
       }
     }
   }, [isOpen])
@@ -100,7 +130,7 @@ export default function MultiSelect({
   }
 
   return (
-    <div className={`relative ${className}`} ref={containerRef} style={{ zIndex: isOpen ? 50 : 'auto' }}>
+    <div className={`relative ${className}`} ref={containerRef}>
       {/* Label */}
       {label && (
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -164,9 +194,8 @@ export default function MultiSelect({
       {isOpen && !disabled && (
         <div 
           ref={dropdownRef}
-          className={`absolute z-[100] w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden ${
-            dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
-          }`}
+          className={`fixed z-[9999] bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl max-h-64 overflow-hidden`}
+          style={dropdownStyle}
         >
           {/* Search input */}
           <div className="p-2 border-b border-gray-200 dark:border-gray-700">

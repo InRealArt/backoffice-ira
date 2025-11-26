@@ -112,7 +112,7 @@ export default function ProductCard({
         {isHovered && userId && (
           <div className={styles.productOverlay}>
             <Link 
-              href={`/art/editArtwork/${id}`} 
+              href={`/art/editPhysicalArtwork/${id}`} 
               className={styles.editButton}
             >
               Modifier

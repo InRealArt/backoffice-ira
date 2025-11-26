@@ -1,8 +1,10 @@
 'use client'
 
 import { Control, FieldErrors, UseFormRegister, UseFormSetValue, UseFormGetValues } from 'react-hook-form'
+import { useRouter } from 'next/navigation'
 import { ArtworkFormData, Address } from '../types'
 import FormSection from '../FormSection'
+import { Plus } from 'lucide-react'
 
 interface ShippingAddressSectionProps {
   register: UseFormRegister<ArtworkFormData>
@@ -23,6 +25,8 @@ export default function ShippingAddressSection({
   isFormReadOnly,
   addresses
 }: ShippingAddressSectionProps) {
+  const router = useRouter()
+  
   const formatAddressOption = (address: Address) => {
     return `${address.name} - ${address.firstName} ${address.lastName}, ${address.streetAddress}, ${address.postalCode} ${address.city}, ${address.country}`
   }
@@ -37,21 +41,34 @@ export default function ShippingAddressSection({
         <label htmlFor="shippingAddressId" className="flex items-center gap-1" data-required={true}>
           Adresse d'expédition
         </label>
-        <select
-          id="shippingAddressId"
-          {...register('shippingAddressId', {
-            required: 'L\'adresse d\'expédition est obligatoire'
-          })}
-          className={`form-select ${errors.shippingAddressId ? 'input-error' : ''}`}
-          disabled={isFormReadOnly}
-        >
-          <option value="">Sélectionnez une adresse</option>
-          {addresses.map((address) => (
-            <option key={address.id} value={address.id}>
-              {formatAddressOption(address)}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-start gap-3">
+          <div className="flex-1 max-w-md">
+            <select
+              id="shippingAddressId"
+              {...register('shippingAddressId', {
+                required: 'L\'adresse d\'expédition est obligatoire'
+              })}
+              className={`form-select w-full ${errors.shippingAddressId ? 'input-error' : ''}`}
+              disabled={isFormReadOnly}
+            >
+              <option value="">Sélectionnez une adresse</option>
+              {addresses.map((address) => (
+                <option key={address.id} value={address.id}>
+                  {formatAddressOption(address)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/art/addresses/create')}
+            disabled={isFormReadOnly}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus size={16} />
+            Créer une adresse
+          </button>
+        </div>
         {errors.shippingAddressId && (
           <p className="form-error">{errors.shippingAddressId.message as string}</p>
         )}

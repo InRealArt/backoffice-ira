@@ -63,7 +63,7 @@ function PricingSection({
     }
   }
 
-  const optionBase = 'flex-1 min-w-[250px] border border-border rounded-md p-6 bg-background-light shadow-sm transition-all duration-200 relative overflow-hidden';
+  const optionBase = 'flex-1 min-w-0 sm:min-w-[250px] border border-border rounded-md p-6 bg-background-light shadow-sm transition-all duration-200 relative overflow-hidden max-w-full';
   const optionHover = 'hover:border-gray-300 hover:shadow';
   const optionSelected = 'border-primary bg-[#f0f5ff] shadow-md before:content-[\'\'] before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-gradient-to-r before:from-[#4a6cf7] before:to-primary';
   const optionReadOnly = 'opacity-80 cursor-not-allowed';

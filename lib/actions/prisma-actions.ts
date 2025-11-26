@@ -452,6 +452,7 @@ export async function createItemRecord(
     weight?: number,
     creationYear?: number | null,
     shippingAddressId?: number,
+    physicalCollectionId?: number,
     mediumId?: number,
     styleIds?: number[],
     techniqueIds?: number[],
@@ -504,6 +505,7 @@ export async function createItemRecord(
             weight: physicalItemData.weight ? new Decimal(physicalItemData.weight) : null,
             creationYear: physicalItemData.creationYear || null,
             shippingAddressId: physicalItemData.shippingAddressId || null,
+            physicalCollectionId: physicalItemData.physicalCollectionId || null,
             mediumId: physicalItemData.mediumId || null,
             status: status as PhysicalItemStatus // Utiliser status comme enum pour PhysicalItem
           }
@@ -861,6 +863,7 @@ export async function getItemById(itemId: number) {
             shippingAddressId: true,
             realViewCount: true,
             fakeViewCount: true,
+            physicalCollectionId: true,
             // Caractéristiques artistiques (déplacées de Item vers PhysicalItem)
             mediumId: true,
             medium: {
@@ -1830,35 +1833,6 @@ export async function getAllArtists() {
 }
 
 /**
- * Récupère tous les artistes
- */
-export async function getAllArtistsAndGalleries() {
-  try {
-    const artists = await prisma.artist.findMany({
-      select: {
-        id: true,
-        name: true,
-        surname: true,
-        pseudo: true,
-        description: true,
-        publicKey: true,
-        imageUrl: true,
-        isGallery: true,
-        backgroundImage: true
-      },
-      orderBy: {
-        name: 'asc'
-      }
-    })
-
-    return artists
-  } catch (error) {
-    console.error('Erreur lors de la récupération des artistes:', error)
-    return []
-  }
-}
-
-/**
  * Récupère toutes les galleries
  */
 export async function getAllGalleries() {
@@ -2049,6 +2023,7 @@ export async function updateItemRecord(
       weight?: number,
       creationYear?: number | null,
       shippingAddressId?: number,
+      physicalCollectionId?: number,
       mediumId?: number,
       styleIds?: number[],
       techniqueIds?: number[],
@@ -2131,6 +2106,7 @@ export async function updateItemRecord(
         if (physicalData.weight !== undefined) physicalUpdateData.weight = new Decimal(physicalData.weight)
         if (physicalData.creationYear !== undefined) physicalUpdateData.creationYear = physicalData.creationYear
         if (physicalData.shippingAddressId !== undefined) physicalUpdateData.shippingAddressId = physicalData.shippingAddressId
+        if (physicalData.physicalCollectionId !== undefined) physicalUpdateData.physicalCollectionId = physicalData.physicalCollectionId
         if (physicalData.mediumId !== undefined) physicalUpdateData.mediumId = physicalData.mediumId
 
         if (existingPhysicalItem) {
@@ -2203,6 +2179,7 @@ export async function updateItemRecord(
               weight: physicalData.weight ? new Decimal(physicalData.weight) : null,
               creationYear: physicalData.creationYear || null,
               shippingAddressId: physicalData.shippingAddressId || null,
+              physicalCollectionId: physicalData.physicalCollectionId || null,
               mediumId: physicalData.mediumId || null,
               status: PhysicalItemStatus.created
             }

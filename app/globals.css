@@ -593,6 +593,7 @@ body.dark {
   .form-select,
   .form-textarea {
     @apply w-full px-md py-md text-sm border border-border-input rounded-sm bg-background-white text-text-primary transition-all duration-200;
+    box-sizing: border-box;
   }
 
   .form-input:focus,
@@ -903,5 +904,35 @@ body.dark {
   /* Info Badge */
   .info-badge {
     @apply inline-block px-sm py-xs rounded-sm text-xs font-medium bg-primary-light text-primary;
+  }
+
+  /* ========================================
+     TAB ANIMATIONS
+     ======================================== */
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.15s ease-out forwards;
+    display: block !important;
+    visibility: visible !important;
+    will-change: opacity;
+  }
+
+  /* Scrollbar hide utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

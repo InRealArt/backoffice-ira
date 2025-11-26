@@ -107,10 +107,25 @@ export function DataTable<T>({
                 ? (pagination.currentPage - 1) * pagination.itemsPerPage + index
                 : index
                 
+              const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
+                // Ne pas déclencher onRowClick si le clic vient d'un élément interactif
+                const target = e.target as HTMLElement
+                const isInteractiveElement = 
+                  target.tagName === 'BUTTON' ||
+                  target.tagName === 'A' ||
+                  target.closest('button') !== null ||
+                  target.closest('a') !== null ||
+                  target.closest('[role="button"]') !== null
+                
+                if (!isInteractiveElement && onRowClick && !isLoading) {
+                  onRowClick(item)
+                }
+              }
+
               return (
                 <tr 
                   key={key}
-                  onClick={() => onRowClick && !isLoading && onRowClick(item)}
+                  onClick={handleRowClick}
                   className={`
                     ${onRowClick ? 'clickable-row' : ''}
                     ${isRowLoading ? 'loading-row' : ''}
