@@ -1,24 +1,24 @@
-'use client'
+"use client";
 
-import { Package, FileText, Users } from 'lucide-react'
-import { MetricCard } from './MetricCard'
+import { Package, FileText, Users } from "lucide-react";
+import { MetricCard } from "./MetricCard";
 
 interface DashboardStatsProps {
   // Métriques pour les artistes
-  presaleArtworkCount?: number
-  isLoadingPresaleCount?: boolean
-  mintedItemsCount?: number
-  isLoadingMintedCount?: boolean
-  listedItemsCount?: number
-  isLoadingListedCount?: boolean
-  pendingItemsCount?: number
-  isLoadingPendingCount?: boolean
-  
+  presaleArtworkCount?: number;
+  isLoadingPresaleCount?: boolean;
+  mintedItemsCount?: number;
+  isLoadingMintedCount?: boolean;
+  listedItemsCount?: number;
+  isLoadingListedCount?: boolean;
+  pendingItemsCount?: number;
+  isLoadingPendingCount?: boolean;
+
   // Métriques pour les admins
-  visibleArtistsCount?: number
-  isLoadingArtistsCount?: boolean
-  
-  isAdmin?: boolean
+  visibleArtistsCount?: number;
+  isLoadingArtistsCount?: boolean;
+
+  isAdmin?: boolean;
 }
 
 export function DashboardStats({
@@ -32,7 +32,7 @@ export function DashboardStats({
   isLoadingPendingCount = false,
   visibleArtistsCount = 0,
   isLoadingArtistsCount = false,
-  isAdmin = false
+  isAdmin = false,
 }: DashboardStatsProps) {
   if (isAdmin) {
     return (
@@ -45,7 +45,7 @@ export function DashboardStats({
           isLoading={isLoadingArtistsCount}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -56,15 +56,16 @@ export function DashboardStats({
         icon={Package}
         color="#3b82f6"
         isLoading={isLoadingPresaleCount}
+        buttonTitle="Voir les œuvres"
+        buttonRoute="/art/presale-artworks"
       />
-      <MetricCard
+      {/* <MetricCard
         title="Items en attente"
         value={pendingItemsCount}
         icon={FileText}
         color="#f59e0b"
         isLoading={isLoadingPendingCount}
-      />
+      /> */}
     </div>
-  )
+  );
 }
-

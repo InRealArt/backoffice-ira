@@ -40,7 +40,12 @@ export default function SEOAssistantModal({ isOpen, onClose, formData }: SEOAssi
   ]
   
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="SEO Assistant - Prévisualisation de l'article">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      title="SEO Assistant - Prévisualisation de l'article"
+      maxWidth="max-w-4xl"
+    >
       <p className="text-gray-600 mb-4">
         Prévisualisation en temps réel de votre article basée sur les données du formulaire.
       </p>

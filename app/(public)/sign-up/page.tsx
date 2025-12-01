@@ -120,7 +120,7 @@ export default function SignUpPage () {
                 className='input w-full bg-base-200 border-2 border-base-300 rounded-lg px-4 py-3 text-base-content placeholder:text-base-content/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200 shadow-sm hover:border-base-content/30'
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder='Votre nom'
+                placeholder='Votre nom. Ex : John Doe'
               />
             </div>
             <div className='form-control'>
