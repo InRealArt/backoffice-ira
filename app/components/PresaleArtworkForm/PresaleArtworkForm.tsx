@@ -770,7 +770,7 @@ export default function PresaleArtworkForm({
 
           <div className="form-group">
             <label className="form-label">
-              URL de l'image <span className="text-danger">*</span>
+              Image principale <span className="text-danger">*</span>
             </label>
             {!imagePreview ? (
               <div className="mb-3">
