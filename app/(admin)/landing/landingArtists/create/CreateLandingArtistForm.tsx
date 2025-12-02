@@ -299,11 +299,7 @@ export default function CreateLandingArtistForm({
       const folderPath = `artists/${folderName}`;
 
       try {
-        const folderExists = await checkFolderExists(
-          folderPath,
-          selectedArtist.name,
-          selectedArtist.surname
-        );
+        const folderExists = await checkFolderExists(folderPath);
 
         if (!folderExists) {
           updateStepStatus("validation", "error");

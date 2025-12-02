@@ -318,41 +318,17 @@ export async function uploadArtistImageWithWebP(
 
 /**
  * Vérifie si un répertoire existe dans Firebase Storage
- * En vérifiant l'existence d'un fichier qui devrait être présent (le fichier profile de l'artiste)
  * 
  * @param folderPath - Chemin du répertoire (ex: "artists/Jean Dupont")
- * @param name - Prénom de l'artiste
- * @param surname - Nom de l'artiste
  * @returns Promise<boolean> - true si le répertoire existe, false sinon
  */
-export async function checkFolderExists(folderPath: string, name: string, surname: string): Promise<boolean> {
+export async function checkFolderExists(folderPath: string): Promise<boolean> {
     try {
-        // Vérifier l'existence du répertoire en essayant d'accéder au fichier profile qui devrait exister
-        // Le fichier profile devrait être nommé : "{name} {surname}.webp"
-        const profileFileName = `${name} ${surname}.webp`
-        const profileFilePath = `${folderPath}/${profileFileName}`
-        const profileFileRef = ref(storage, profileFilePath)
-
-        try {
-            // Essayer d'accéder aux métadonnées du fichier profile
-            await getMetadata(profileFileRef)
-            return true
-        } catch (metadataError: any) {
-            // Si le fichier profile n'existe pas, essayer de lister le contenu du dossier
-            // pour voir s'il y a d'autres fichiers
-            try {
-                const folderRef = ref(storage, folderPath)
-                const result = await listAll(folderRef)
-                // Si on peut lister le dossier et qu'il contient au moins un fichier, le dossier existe
-                return result.items.length > 0
-            } catch (listError: any) {
-                // Si on ne peut pas lister le dossier, il n'existe probablement pas
-                console.error('Erreur lors de la vérification du répertoire:', listError)
-                return false
-            }
-        }
+        const folderRef = ref(storage, folderPath)
+        await listAll(folderRef)
+        return true
     } catch (error: any) {
-        console.error('Erreur lors de la vérification du répertoire:', error)
+        // Si on ne peut pas lister le dossier, il n'existe pas
         return false
     }
 }
