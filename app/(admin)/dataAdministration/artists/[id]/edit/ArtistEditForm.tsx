@@ -56,6 +56,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const [newImageUrl, setNewImageUrl] = useState('')
   const [newImageName, setNewImageName] = useState('')
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
+  const [isImageDeleted, setIsImageDeleted] = useState(false)
   const { success, error } = useToast()
   const {
     register,
@@ -112,10 +113,14 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
     console.log('🔍 Données du formulaire d\'édition à soumettre:', data)
     
     try {
-      let finalImageUrl = data.imageUrl || artist.imageUrl
+      let finalImageUrl: string | null = null
 
+      // Si l'image a été supprimée intentionnellement
+      if (isImageDeleted) {
+        finalImageUrl = null
+      }
       // Si un nouveau fichier a été sélectionné, l'uploader vers Firebase
-      if (selectedImageFile) {
+      else if (selectedImageFile) {
         try {
           const { uploadArtistImageWithWebP } = await import('@/lib/firebase/storage')
           
@@ -132,6 +137,10 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
           setIsSubmitting(false)
           return
         }
+      }
+      // Sinon, conserver l'image existante
+      else {
+        finalImageUrl = data.imageUrl || artist.imageUrl || null
       }
 
       // Filtrer explicitement les champs autorisés pour éviter les champs fantômes
@@ -211,6 +220,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                 <ArtistImageUpload
                   onFileSelect={(file) => {
                     setSelectedImageFile(file)
+                    setIsImageDeleted(false)
                     if (file) {
                       // Créer une preview locale
                       const reader = new FileReader()
@@ -218,13 +228,19 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                         setValue('imageUrl', reader.result as string, { shouldValidate: false })
                       }
                       reader.readAsDataURL(file)
-                    } else {
+                    } else if (!isImageDeleted) {
+                      // Ne remettre l'image originale que si elle n'a pas été supprimée intentionnellement
                       setValue('imageUrl', artist.imageUrl || '', { shouldValidate: false })
                     }
                   }}
-                  previewUrl={imageUrl || artist.imageUrl || null}
+                  onDelete={() => {
+                    setSelectedImageFile(null)
+                    setIsImageDeleted(true)
+                    setValue('imageUrl', '', { shouldValidate: false })
+                  }}
+                  previewUrl={isImageDeleted ? null : (imageUrl || artist.imageUrl || null)}
                   error={errors.imageUrl?.message}
-                  allowDelete={false}
+                  allowDelete={true}
                 />
               </div>
               
