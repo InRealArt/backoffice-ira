@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { User, Settings, FolderOpen, PlusCircle } from "lucide-react";
 import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
-import Button from "../Button/Button";
+import NavigationButton from "../NavigationButton";
 import { DashboardCard } from "./DashboardCard/DashboardCard";
 import {
   getPendingItemsCount,
@@ -25,9 +24,6 @@ export default function Dashboard() {
   const user = session?.user;
   // Note: primaryWallet sera géré plus tard dans une migration séparée des wallets
   const primaryWallet = null as { address?: string } | null;
-  const [isAdminNavigating, setIsAdminNavigating] = useState(false);
-  const [isCreatingArtist, setIsCreatingArtist] = useState(false);
-  const router = useRouter();
   const [pendingItemsCount, setPendingItemsCount] = useState(0);
   const [visibleArtistsCount, setVisibleArtistsCount] = useState(0);
   const [mintedItemsCount, setMintedItemsCount] = useState(0);
@@ -172,11 +168,6 @@ export default function Dashboard() {
     };
   }, [isAdmin, user?.email]); // Utiliser user?.email au lieu de user pour stabiliser
 
-  const handleAdminShowUsers = () => {
-    setIsAdminNavigating(true);
-    router.push("/boAdmin/users");
-  };
-
   if (isLoading)
     return (
       <LoadingSpinner fullPage message="Chargement du tableau de bord..." />
@@ -238,12 +229,12 @@ export default function Dashboard() {
                     </div>
                   )}
                   <div className="mt-3">
-                    <Button
-                      onClick={() => router.push("/art/edit-artist-profile")}
+                    <NavigationButton
+                      href="/art/edit-artist-profile"
                       variant="primary"
                     >
                       Éditer mon profil artiste
-                    </Button>
+                    </NavigationButton>
                   </div>
                 </>
               ) : (
@@ -252,17 +243,12 @@ export default function Dashboard() {
                     <strong>Artiste associé:</strong> Aucun
                   </p>
                   <div className="mt-3">
-                    <Button
-                      onClick={() => {
-                        setIsCreatingArtist(true);
-                        router.push("/art/create-artist-profile");
-                      }}
+                    <NavigationButton
+                      href="/art/create-artist-profile"
                       variant="primary"
-                      isLoading={isCreatingArtist}
-                      loadingText="Chargement..."
                     >
                       Créer mon profil Artiste
-                    </Button>
+                    </NavigationButton>
                   </div>
                 </>
               )}
@@ -278,13 +264,9 @@ export default function Dashboard() {
               description="Gérez les utilisateurs et les paramètres"
             >
               <p>Voir les utilisateurs et leurs informations.</p>
-              <Button
-                onClick={handleAdminShowUsers}
-                isLoading={isAdminNavigating}
-                loadingText="Chargement..."
-              >
+              <NavigationButton href="/boAdmin/users">
                 Voir les utilisateurs
-              </Button>
+              </NavigationButton>
             </DashboardCard>
           </>
         ) : (
@@ -309,10 +291,13 @@ export default function Dashboard() {
                   icon={<PlusCircle />}
                   description="Créez de nouvelles œuvres d'art en prévente sur le site Web InRealArt"
                 >
-                  <p>Créez et publiez une nouvelle œuvre d'art en prévente sur le site Web InRealArt.</p>
-                  <Button onClick={() => router.push("/art/create-presale-artwork")}>
+                  <p>
+                    Créez et publiez une nouvelle œuvre d'art en prévente sur le
+                    site Web InRealArt.
+                  </p>
+                  <NavigationButton href="/art/create-presale-artwork">
                     Créer une œuvre
-                  </Button>
+                  </NavigationButton>
                 </DashboardCard>
               </>
             )}

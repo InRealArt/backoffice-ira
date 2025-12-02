@@ -3,7 +3,7 @@ import { getBackofficeUserByEmail } from "@/lib/actions/prisma-actions";
 import { redirect } from "next/navigation";
 import { getPhysicalCollectionsWithItems } from "@/lib/actions/physical-collection-actions";
 import PhysicalCollectionsList from "./PhysicalCollectionsList";
-import NavigationButton from "./NavigationButton";
+import NavigationButton from "@/app/components/NavigationButton";
 
 export default async function PhysicalCollectionsPage() {
   // Le proxy garantit que l'utilisateur est authentifié

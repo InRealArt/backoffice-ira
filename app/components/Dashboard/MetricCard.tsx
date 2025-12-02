@@ -1,8 +1,7 @@
 "use client";
 
 import { LucideIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import Button from "../Button/Button";
+import NavigationButton from "../NavigationButton";
 
 interface MetricCardProps {
   title: string;
@@ -12,7 +11,6 @@ interface MetricCardProps {
   isLoading?: boolean;
   buttonTitle?: string;
   buttonRoute?: string;
-  isLoadingButton?: boolean;
 }
 
 export function MetricCard({
@@ -23,16 +21,7 @@ export function MetricCard({
   isLoading,
   buttonTitle,
   buttonRoute,
-  isLoadingButton = false,
 }: MetricCardProps) {
-  const router = useRouter();
-
-  const handleButtonClick = () => {
-    if (buttonRoute) {
-      router.push(buttonRoute);
-    }
-  };
-
   return (
     <div className="metric-card">
       <div className="metric-card-header">
@@ -59,15 +48,9 @@ export function MetricCard({
       </div>
       {buttonTitle && buttonRoute && (
         <div className="metric-card-button">
-          <Button
-            onClick={handleButtonClick}
-            variant="primary"
-            size="small"
-            isLoading={isLoadingButton}
-            loadingText="Chargement..."
-          >
+          <NavigationButton href={buttonRoute} variant="primary">
             {buttonTitle}
-          </Button>
+          </NavigationButton>
         </div>
       )}
     </div>
