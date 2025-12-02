@@ -268,13 +268,10 @@ export async function uploadArtistImageWithWebP(
         const { name, surname, imageType = 'profile', normalizeFolderName = false } = options
 
         // Créer le nom du répertoire
+        // Si normalizeFolderName est false, on préserve la casse exacte et tous les caractères (y compris les cédilles comme "ç")
         const folderName = normalizeFolderName
             ? normalizeString(`${name} ${surname}`)
-            : `${name} ${surname}`
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
-                .replace(/[^a-zA-Z0-9\s]+/g, '') // Supprime les caractères spéciaux sauf espaces
-                .trim()
+            : `${name} ${surname}`.trim()
 
         // Déterminer le nom du fichier selon le type
         let filePrefix = `${name} ${surname}`
