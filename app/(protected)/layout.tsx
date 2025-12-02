@@ -1,26 +1,36 @@
-'use client'
+"use client";
 
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef } from 'react'
-import { authClient } from '@/lib/auth-client'
-import Navbar from '@/app/components/Navbar/Navbar'
-import AuthObserver from '@/app/components/Auth/AuthObserver'
+import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { authClient } from "@/lib/auth-client";
+import Navbar from "@/app/components/Navbar/Navbar";
+import AuthObserver from "@/app/components/Auth/AuthObserver";
 
-export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const { data: session, isPending } = authClient.useSession()
-  const router = useRouter()
-  const hasRedirected = useRef(false)
-  
+export default function ProtectedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { data: session, isPending } = authClient.useSession();
+  const router = useRouter();
+  const hasRedirected = useRef(false);
+  const routerRef = useRef(router);
+
+  // Mettre à jour la ref sans causer de re-render
+  useEffect(() => {
+    routerRef.current = router;
+  }, [router]);
+
   useEffect(() => {
     if (!isPending && !session && !hasRedirected.current) {
-      hasRedirected.current = true
-      router.push('/')
+      hasRedirected.current = true;
+      routerRef.current.push("/");
     }
-  }, [session, isPending, router])
-  
-  if (isPending) return null
-  if (!session) return null
-  
+  }, [session, isPending]);
+
+  if (isPending) return null;
+  if (!session) return null;
+
   return (
     <>
       <AuthObserver />
@@ -31,5 +41,5 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
         </div>
       </div>
     </>
-  )
-} 
+  );
+}

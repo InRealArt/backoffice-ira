@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
-import { checkAuthorizedUser, checkIsAdmin } from '@/lib/actions/auth-actions'
+import { checkIsAdmin } from '@/lib/actions/auth-actions'
+import { useAuthorization } from '@/app/hooks/useAuthorization'
 
 export function useSideMenuLogic() {
   // Récupérer le pathway pour déterminer l'élément actif
@@ -13,6 +14,11 @@ export function useSideMenuLogic() {
   // Utiliser Better Auth pour l'authentification
   const { data: session, isPending: isSessionPending } = authClient.useSession()
   const user = session?.user
+
+  // Utiliser le hook optimisé pour l'autorisation (avec cache et déduplication)
+  const { isAuthorized, isLoading: isAuthLoading } = useAuthorization({
+    disabled: false
+  })
 
   // État des sous-menus
   const [showBackofficeAdminSubmenu, setShowBackofficeAdminSubmenu] = useState(false)
@@ -28,15 +34,15 @@ export function useSideMenuLogic() {
   // État de l'élément actif
   const [activeItem, setActiveItem] = useState('')
 
-  // Si l'utilisateur est connecté - définir à true par défaut en développement
-  const [isLoggedIn, setIsLoggedIn] = useState(true)
+  // Si l'utilisateur est connecté
+  const isLoggedIn = !!session
 
-  // Si l'utilisateur est un admin ou a accès à une collection - définir par défaut à false
+  // Si l'utilisateur est un admin ou a accès à une collection
   const [isAdmin, setIsAdmin] = useState(false)
-  const [canAccessCollection, setCanAccessCollection] = useState(true)
+  const canAccessCollection = isAuthorized === true
 
   // État de chargement pour les vérifications d'authentification
-  const [isLoading, setIsLoading] = useState(true)
+  const isLoading = isAuthLoading || isSessionPending
 
   // État de navigation pour afficher le spinner
   const [isNavigating, setIsNavigating] = useState(false)
@@ -122,17 +128,17 @@ export function useSideMenuLogic() {
     // Activer l'état de navigation
     setIsNavigating(true)
     setNavigatingItem(item)
-    
+
     // Utiliser le router Next.js pour une navigation sans rechargement de page
     router.push(path)
     setActiveItem(item)
     closeAllSubmenusExcept(null)
-    
+
     // Si le menu est plié sur mobile, le replier après la navigation
     if (window.innerWidth <= 768 && !isMenuCollapsed) {
       toggleMenuCollapse()
     }
-    
+
     // Désactiver l'état de navigation après un court délai
     // pour permettre à l'utilisateur de voir le spinner
     setTimeout(() => {
@@ -188,60 +194,38 @@ export function useSideMenuLogic() {
     }
   }, [])
 
-  // Vérification de l'authentification et des rôles utilisateur
+  // Vérification du rôle admin uniquement (l'autorisation est gérée par useAuthorization)
   useEffect(() => {
     let isMounted = true
 
-    const checkUserRole = async () => {
-      setIsLoading(true)
-
+    const checkAdminRole = async () => {
       const userEmail = user?.email
 
-      if (userEmail && !isSessionPending) {
-        setIsLoggedIn(true);
-
+      // Vérifier le rôle admin seulement si l'utilisateur est autorisé
+      if (userEmail && isAuthorized === true && !isSessionPending) {
         try {
-          // Vérifier le rôle de l'utilisateur via Server Action
-          const result = await checkAuthorizedUser(userEmail);
+          // Vérifier si l'utilisateur a un rôle administrateur via Server Action
+          const isAdminResult = await checkIsAdmin(userEmail);
 
           if (!isMounted) return
 
-          if (result.authorized) {
-            // Vérifier si l'utilisateur a un rôle administrateur via Server Action
-            const isAdminResult = await checkIsAdmin(userEmail);
-
-            if (!isMounted) return
-
-            setIsAdmin(isAdminResult);
-            // Tous les utilisateurs autorisés peuvent accéder à leur collection
-            setCanAccessCollection(result.authorized);
-          } else {
-            setIsAdmin(false);
-            setCanAccessCollection(false);
-          }
+          setIsAdmin(isAdminResult);
         } catch (error) {
           if (!isMounted) return
-          console.error('Erreur lors de la vérification du rôle:', error);
+          console.error('Erreur lors de la vérification du rôle admin:', error);
           setIsAdmin(false);
-          setCanAccessCollection(false);
         }
-      } else if (!isSessionPending) {
-        setIsLoggedIn(false);
+      } else {
         setIsAdmin(false);
-        setCanAccessCollection(false);
-      }
-
-      if (isMounted) {
-        setIsLoading(false)
       }
     };
 
-    checkUserRole();
+    checkAdminRole();
 
     return () => {
       isMounted = false
     }
-  }, [user?.email, isSessionPending]); // Utiliser user?.email au lieu de user pour stabiliser
+  }, [user?.email, isAuthorized, isSessionPending]);
 
   // Effet pour fermer les sous-menus sur clic en dehors
   useEffect(() => {

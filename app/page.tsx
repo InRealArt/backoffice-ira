@@ -1,94 +1,57 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import Navbar from './components/Navbar/Navbar'
-import AuthObserver from './components/Auth/AuthObserver'
-import UnauthorizedMessage from './components/Auth/UnauthorizedMessage'
-import LoadingSpinner from './components/LoadingSpinner/LoadingSpinner'
-import { authClient } from '@/lib/auth-client'
-import { checkAuthorizedUser } from '@/lib/actions/auth-actions'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import Navbar from "./components/Navbar/Navbar";
+import AuthObserver from "./components/Auth/AuthObserver";
+import UnauthorizedMessage from "./components/Auth/UnauthorizedMessage";
+import LoadingSpinner from "./components/LoadingSpinner/LoadingSpinner";
+import { authClient } from "@/lib/auth-client";
+import { useAuthorization } from "./hooks/useAuthorization";
 
 const checkIsDarkSchemePreferred = () => {
-  if (typeof window !== 'undefined') {
-    return window.matchMedia?.('(prefers-color-scheme:dark)')?.matches ?? false
+  if (typeof window !== "undefined") {
+    return window.matchMedia?.("(prefers-color-scheme:dark)")?.matches ?? false;
   }
-  return false
-}
+  return false;
+};
 
 export default function Main() {
-  const [isDarkMode, setIsDarkMode] = useState(checkIsDarkSchemePreferred)
-  const { data: session, isPending } = authClient.useSession()
-  const user = session?.user
-  const userEmail = user?.email
-  const isLoggedIn = !!session
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [hasRedirected, setHasRedirected] = useState(false)
-  const router = useRouter()
+  const router = useRouter();
+  const [isDarkMode, setIsDarkMode] = useState(checkIsDarkSchemePreferred);
+  const { data: session, isPending: isSessionPending } =
+    authClient.useSession();
+  const isLoggedIn = !!session;
+
+  // Utiliser le hook optimisé avec redirection automatique
+  const { isAuthorized, isLoading: isAuthLoading } = useAuthorization({
+    redirectIfAuthorized: true,
+    redirectPath: "/dashboard",
+  });
+
+  // Calculer l'état de chargement global
+  const isLoading = useMemo(
+    () => isSessionPending || isAuthLoading,
+    [isSessionPending, isAuthLoading]
+  );
 
   useEffect(() => {
-    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handleChange = () => setIsDarkMode(checkIsDarkSchemePreferred())
-    
-    darkModeMediaQuery.addEventListener('change', handleChange)
-    return () => darkModeMediaQuery.removeEventListener('change', handleChange)
-  }, [])
+    const darkModeMediaQuery = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    );
+    const handleChange = () => setIsDarkMode(checkIsDarkSchemePreferred());
 
-  useEffect(() => {
-    let isMounted = true
+    darkModeMediaQuery.addEventListener("change", handleChange);
+    return () => darkModeMediaQuery.removeEventListener("change", handleChange);
+  }, []);
 
-    const checkAuthorization = async () => {
-      // Réinitialiser la redirection si l'état change
-      if (!isLoggedIn && !isPending) {
-        if (isMounted) {
-          setIsAuthorized(null)
-          setHasRedirected(false)
-        }
-        return
-      }
-
-      if (isLoggedIn && userEmail && !isPending && !hasRedirected) {
-        setIsLoading(true)
-        try {
-          // Utilisation de la Server Action au lieu de l'API Route
-          const result = await checkAuthorizedUser(userEmail)
-          
-          if (!isMounted) return
-          
-          setIsAuthorized(result.authorized)
-          
-          // Rediriger immédiatement si autorisé (évite un useEffect séparé)
-          if (result.authorized && !hasRedirected) {
-            setHasRedirected(true)
-            router.push('/dashboard')
-          }
-        } catch (error) {
-          if (!isMounted) return
-          console.error('Erreur lors de la vérification de l\'autorisation:', error)
-          setIsAuthorized(false)
-        } finally {
-          if (isMounted) {
-            setIsLoading(false)
-          }
-        }
-      }
-    }
-
-    checkAuthorization()
-
-    return () => {
-      isMounted = false
-    }
-  }, [isLoggedIn, userEmail, isPending, hasRedirected, router])
-
-  if (isPending || isLoading) {
+  if (isLoading) {
     return (
       <>
         <Navbar />
         <LoadingSpinner message="Vérification de vos accès..." />
       </>
-    )
+    );
   }
 
   if (isLoggedIn && isAuthorized === false) {
@@ -97,11 +60,15 @@ export default function Main() {
         <Navbar />
         <UnauthorizedMessage />
       </>
-    )
+    );
   }
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center bg-background-main text-text-primary transition-colors duration-300 ${isDarkMode ? 'dark' : ''}`}>
+    <div
+      className={`min-h-screen flex flex-col items-center justify-center bg-background-main text-text-primary transition-colors duration-300 ${
+        isDarkMode ? "dark" : ""
+      }`}
+    >
       <AuthObserver />
       <Navbar />
       <div className="absolute top-0 flex items-center justify-between w-full px-4 py-2.5 dark:border-b dark:border-border">
@@ -138,13 +105,13 @@ export default function Main() {
             </p>
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => router.push('/sign-in')}
+                onClick={() => router.push("/sign-in")}
                 className="px-6 py-2 bg-purple text-white border border-white rounded-lg hover:bg-purple/90 transition-colors font-medium"
               >
                 Se connecter
               </button>
               <button
-                onClick={() => router.push('/sign-up')}
+                onClick={() => router.push("/sign-up")}
                 className="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors font-medium"
               >
                 S'inscrire
@@ -153,6 +120,6 @@ export default function Main() {
           </div>
         )}
       </div>
-    </div> 
-  )
+    </div>
+  );
 }

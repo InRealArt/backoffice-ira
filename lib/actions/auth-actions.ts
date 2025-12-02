@@ -8,11 +8,11 @@ export interface CheckAuthorizedUserResult {
 }
 
 /**
- * Vérifie si un utilisateur est autorisé à accéder au backoffice
- * @param email - Email de l'utilisateur à vérifier
- * @returns Résultat de la vérification
+ * Fonction interne pour vérifier l'autorisation (utilisée côté serveur)
+ * Note: Le cache est géré côté client par le hook useAuthorization
+ * pour éviter les appels multiples et optimiser les performances
  */
-export async function checkAuthorizedUser(email: string): Promise<CheckAuthorizedUserResult> {
+async function getCachedAuthorization(email: string): Promise<CheckAuthorizedUserResult> {
     try {
         if (!email) {
             return {
@@ -37,6 +37,16 @@ export async function checkAuthorizedUser(email: string): Promise<CheckAuthorize
             message: 'Erreur serveur'
         }
     }
+}
+
+/**
+ * Vérifie si un utilisateur est autorisé à accéder au backoffice
+ * Server Action pour être appelée depuis le client
+ * @param email - Email de l'utilisateur à vérifier
+ * @returns Résultat de la vérification
+ */
+export async function checkAuthorizedUser(email: string): Promise<CheckAuthorizedUserResult> {
+    return getCachedAuthorization(email)
 }
 
 /**
