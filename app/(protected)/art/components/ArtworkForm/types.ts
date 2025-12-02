@@ -39,6 +39,7 @@ export interface ArtworkFormProps {
     artistName?: string
     artistSurname?: string
     isPhysicalOnly?: boolean
+    readOnlyCollectionId?: number
     initialData?: {
         id?: number
         title?: string

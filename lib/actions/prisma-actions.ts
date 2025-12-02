@@ -280,24 +280,55 @@ export async function updateWhiteListedUser(
       }
     }
 
-    // Si le rôle est "artist", vérifier que l'artistId est fourni
-    if (data.role === 'artist' && !data.artistId) {
-      return {
-        success: false,
-        message: 'Un artiste doit être sélectionné pour un utilisateur avec le rôle "artist"'
-      }
-    }
-
+    // Permettre artistId null même avec le rôle "artist" pour permettre la désassociation
     // Si le rôle n'est pas "artist", s'assurer que artistId est null
-    const artistId = data.role === 'artist' ? data.artistId : null
+    const artistId = data.role === 'artist' ? (data.artistId || null) : null
 
-    // Mettre à jour l'utilisateur dans WhiteListedUser
-    await prisma.whiteListedUser.update({
-      where: { id: parseInt(data.id) },
-      data: {
-        email: data.email,
-        role: data.role || null,
-        artistId: artistId
+    // Utiliser l'email existant pour trouver le BackofficeAuthUser
+    // car l'email peut changer dans la mise à jour
+    const emailToSearch = existingUser.email
+
+    // Utiliser une transaction pour mettre à jour les deux tables de manière atomique
+    await prisma.$transaction(async (tx) => {
+      // Mettre à jour l'utilisateur dans WhiteListedUser
+      await tx.whiteListedUser.update({
+        where: { id: parseInt(data.id) },
+        data: {
+          email: data.email,
+          role: data.role || null,
+          artistId: artistId
+        }
+      })
+
+      // Mettre à jour l'utilisateur dans BackofficeAuthUser (table user du schéma backoffice)
+      // Rechercher par l'ancien email d'abord, puis par le nouveau si l'email a changé
+      let backofficeAuthUser = await tx.backofficeAuthUser.findUnique({
+        where: { email: emailToSearch }
+      })
+
+      // Si l'email a changé et qu'on ne trouve pas avec l'ancien email, chercher avec le nouveau
+      if (!backofficeAuthUser && data.email !== emailToSearch) {
+        backofficeAuthUser = await tx.backofficeAuthUser.findUnique({
+          where: { email: data.email }
+        })
+      }
+
+      if (backofficeAuthUser) {
+        // Préparer les données de mise à jour
+        const updateData: any = {
+          artistId: artistId,
+          role: data.role || null
+        }
+
+        // Si l'email a changé, mettre à jour aussi l'email dans BackofficeAuthUser
+        if (data.email !== emailToSearch) {
+          updateData.email = data.email
+        }
+
+        await tx.backofficeAuthUser.update({
+          where: { id: backofficeAuthUser.id },
+          data: updateData
+        })
       }
     })
 
@@ -336,9 +367,26 @@ export async function updateBackofficeUser(
 // Ajouter cette fonction pour récupérer un utilisateur par son email
 export async function getBackofficeUserByEmail(email: string) {
   try {
+    // Optimisation : utiliser select au lieu de include pour ne charger que les champs nécessaires
     const user = await prisma.backofficeAuthUser.findUnique({
       where: { email },
-      include: { artist: true }
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        artistId: true,
+        artist: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+            pseudo: true,
+            imageUrl: true,
+            description: true
+          }
+        }
+      }
     })
 
     return user
@@ -1051,11 +1099,11 @@ export async function createNftResource(params: {
 
 export async function getPendingItemsCount() {
   try {
-    const count = await prisma.item.count({
+    // Optimisation : compter directement sur PhysicalItem au lieu de passer par Item
+    // Cela évite une jointure inutile et utilise l'index sur status
+    const count = await prisma.physicalItem.count({
       where: {
-        OR: [
-          { physicalItem: { status: PhysicalItemStatus.pending } }
-        ]
+        status: PhysicalItemStatus.pending
       }
     })
     return { count }
@@ -1189,12 +1237,14 @@ export async function getUserMintedItemsCount(userId: string) {
 
 export async function getUserListedItemsCount(userId: string) {
   try {
-    const count = await prisma.item.count({
+    // Optimisation : utiliser une jointure directe avec PhysicalItem
+    // au lieu d'un OR avec relation nested
+    const count = await prisma.physicalItem.count({
       where: {
-        idUser: userId,
-        OR: [
-          { physicalItem: { status: PhysicalItemStatus.listed } }
-        ]
+        status: PhysicalItemStatus.listed,
+        item: {
+          idUser: userId
+        }
       }
     })
     return { count }

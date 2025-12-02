@@ -128,7 +128,7 @@ export default function PhysicalCollectionsList({
               {/* Bouton "Ajouter une œuvre" au même niveau que le nom */}
               <div className="flex items-center flex-shrink-0">
                 <Link
-                  href={`/art/physicalCollection/${collection.id}/add-artwork`}
+                  href={`/art/createPhysicalArtwork?collectionId=${collection.id}`}
                 >
                   <button
                     className="flex items-center gap-2 bg-purple text-white border border-white px-4 py-2 rounded-md cursor-pointer text-sm font-medium transition-all duration-200 hover:bg-purple/90 [&_svg]:shrink-0"

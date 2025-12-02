@@ -43,6 +43,7 @@ export default function ArtworkForm({
   initialData = {},
   onSuccess,
   isPhysicalOnly = false,
+  readOnlyCollectionId,
 }: ArtworkFormProps) {
   // État local pour le slug et le titre/nom
   const [localTitle, setLocalTitle] = useState(initialData?.title || "");
@@ -490,8 +491,10 @@ export default function ArtworkForm({
       <CollectionSection
         register={register}
         errors={errors}
-        isFormReadOnly={isFormReadOnly}
+        isFormReadOnly={isFormReadOnly || !!readOnlyCollectionId}
         collections={collections}
+        readOnlyCollectionId={readOnlyCollectionId}
+        setValue={setValue}
       />
     </div>
   );

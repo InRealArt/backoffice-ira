@@ -1,11 +1,12 @@
 "use client";
 
-import { FieldErrors, UseFormRegister } from "react-hook-form";
+import { FieldErrors, UseFormRegister, UseFormSetValue } from "react-hook-form";
 import { PhysicalArtworkFormData } from "../../../createPhysicalArtwork/schema";
 import FormSection from "../FormSection";
 import { useRouter } from "next/navigation";
 import Button from "@/app/components/Button/Button";
 import { Plus } from "lucide-react";
+import { useEffect } from "react";
 
 export interface PhysicalCollection {
   id: number;
@@ -19,6 +20,8 @@ interface CollectionSectionProps {
   errors: FieldErrors<PhysicalArtworkFormData>;
   isFormReadOnly: boolean;
   collections: PhysicalCollection[];
+  readOnlyCollectionId?: number;
+  setValue?: UseFormSetValue<PhysicalArtworkFormData>;
 }
 
 export default function CollectionSection({
@@ -26,8 +29,19 @@ export default function CollectionSection({
   errors,
   isFormReadOnly,
   collections,
+  readOnlyCollectionId,
+  setValue,
 }: CollectionSectionProps) {
   const router = useRouter();
+
+  // Pré-sélectionner la collection si readOnlyCollectionId est défini
+  useEffect(() => {
+    if (readOnlyCollectionId && setValue) {
+      setValue("physicalCollectionId", readOnlyCollectionId.toString(), {
+        shouldValidate: true,
+      });
+    }
+  }, [readOnlyCollectionId, setValue]);
 
   return (
     <FormSection title="Collection" bgVariant="default">
@@ -67,7 +81,8 @@ export default function CollectionSection({
 
             {collections.length === 0 && (
               <div className="form-help text-red-600 mt-2">
-                Aucune collection disponible. Veuillez d'abord créer une collection.
+                Aucune collection disponible. Veuillez d'abord créer une
+                collection.
               </div>
             )}
           </div>
@@ -89,4 +104,3 @@ export default function CollectionSection({
     </FormSection>
   );
 }
-

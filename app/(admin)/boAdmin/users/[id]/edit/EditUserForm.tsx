@@ -16,16 +16,21 @@ const formSchema = z.object({
   id: z.string(),
   email: z.string().email('Format d\'email invalide'),
   role: z.string().nullable().optional(),
-  artistId: z.number().nullable().optional()
-}).refine((data) => {
-  // Si le rôle est 'artist', artistId est requis
-  if (data.role === 'artist') {
-    return data.artistId !== null && data.artistId !== undefined
-  }
-  return true
-}, {
-  message: 'Veuillez sélectionner un artiste',
-  path: ['artistId'] // Spécifie le champ concerné par l'erreur
+  artistId: z.preprocess((val) => {
+    // Transformer les chaînes vides, NaN ou undefined en null
+    if (val === '' || val === null || val === undefined) {
+      return null
+    }
+    if (typeof val === 'number' && isNaN(val)) {
+      return null
+    }
+    if (typeof val === 'string') {
+      if (val === '') return null
+      const num = parseInt(val, 10)
+      return isNaN(num) ? null : num
+    }
+    return val
+  }, z.number().nullable().optional())
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -110,12 +115,13 @@ export default function EditUserForm({ user }: EditUserFormProps) {
         throw new Error('Données de formulaire incomplètes')
       }
 
+      // Le schéma Zod a déjà transformé artistId en number | null
       // S'assurer que tous les champs requis sont présents
       const payload = {
         id: data.id,
         email: data.email || '',
         role: data.role || null,
-        artistId: data.artistId || null
+        artistId: data.artistId ?? null
       }
 
       console.log('Payload à envoyer:', payload)
@@ -200,13 +206,10 @@ export default function EditUserForm({ user }: EditUserFormProps) {
               <>
                 <select
                   id="artistId"
-                  {...register('artistId', {
-                    required: selectedRole === 'artist' ? 'Veuillez sélectionner un artiste' : false,
-                    valueAsNumber: true
-                  })}
+                  {...register('artistId')}
                   className={`${styles.formSelect} ${errors.artistId ? styles.formInputError : ''}`}
                 >
-                  <option value="">Sélectionnez un artiste</option>
+                  <option value="">Aucun artiste (désassocier)</option>
                   {artists.map((artist) => (
                     <option key={artist.id} value={artist.id}>
                       {artist.name} {artist.surname} ({artist.pseudo})

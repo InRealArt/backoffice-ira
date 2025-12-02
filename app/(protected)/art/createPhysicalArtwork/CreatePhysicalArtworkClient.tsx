@@ -9,7 +9,7 @@ import {
   getBackofficeUserAddresses,
 } from "@/lib/actions/prisma-actions";
 import { getPhysicalCollectionsWithItems } from "@/lib/actions/physical-collection-actions";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Address, PhysicalCollection } from "../components/ArtworkForm/types";
 import {
   ArtworkMedium,
@@ -40,20 +40,22 @@ export default function CreatePhysicalArtworkClient({
   const { data: session, isPending: isSessionPending } =
     authClient.useSession();
   const router = useRouter();
-  
+  const searchParams = useSearchParams();
+  const collectionIdFromUrl = searchParams.get("collectionId");
+
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkIfMobile();
     window.addEventListener("resize", checkIfMobile);
-    
+
     return () => {
       window.removeEventListener("resize", checkIfMobile);
     };
   }, []);
-  
+
   useEffect(() => {
     // Attendre que la session soit chargée
     if (isSessionPending) {
@@ -66,17 +68,17 @@ export default function CreatePhysicalArtworkClient({
           // Récupérer les informations utilisateur, les adresses et les collections en parallèle
           const [backofficeUser, userAddresses, userCollections] =
             await Promise.all([
-            getBackofficeUserByEmail(session.user.email),
+              getBackofficeUserByEmail(session.user.email),
               getBackofficeUserAddresses(session.user.email),
               getPhysicalCollectionsWithItems(),
             ]);
-          
+
           if (backofficeUser) {
             // Utiliser firstName et lastName pour composer le nom complet
             setArtistName(backofficeUser.artist?.name || "");
             setArtistSurname(backofficeUser.artist?.surname || "");
           }
-          
+
           setAddresses(userAddresses);
           setCollections(
             userCollections.map((col) => ({
@@ -93,14 +95,14 @@ export default function CreatePhysicalArtworkClient({
         }
       }
     };
-    
+
     fetchData();
   }, [session?.user?.email, isSessionPending]);
-  
+
   const handleSuccess = () => {
     router.push("/art/myPhysicalArtwork");
   };
-  
+
   return (
     <div className="w-full max-w-7xl mx-auto">
       <div className="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
@@ -116,10 +118,10 @@ export default function CreatePhysicalArtworkClient({
           </p>
         </div>
       </div>
-      
+
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 pt-6 sm:pt-8 md:pt-10 pr-6 sm:pr-8 md:pr-10 pb-6 sm:pb-8 md:pb-10 overflow-hidden">
-        <ArtworkForm 
-          mode="create" 
+        <ArtworkForm
+          mode="create"
           addresses={addresses}
           mediums={mediums}
           styles={artStyles}
@@ -130,6 +132,18 @@ export default function CreatePhysicalArtworkClient({
           artistSurname={artistSurname}
           onSuccess={handleSuccess}
           isPhysicalOnly={true}
+          initialData={
+            collectionIdFromUrl
+              ? {
+                  physicalItem: {
+                    physicalCollectionId: parseInt(collectionIdFromUrl, 10),
+                  },
+                }
+              : {}
+          }
+          readOnlyCollectionId={
+            collectionIdFromUrl ? parseInt(collectionIdFromUrl, 10) : undefined
+          }
         />
       </div>
     </div>

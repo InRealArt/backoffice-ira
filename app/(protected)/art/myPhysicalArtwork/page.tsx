@@ -5,11 +5,14 @@ import { authClient } from "@/lib/auth-client";
 import LoadingSpinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 import { fetchItemsData, ItemData } from "@/app/utils/items/itemsData";
 import { getBackofficeUserByEmail } from "@/lib/actions/prisma-actions";
-import { BackofficeAuthUser } from "@prisma/client";
 import Image from "next/image";
 import { Eye, Heart, ExternalLink, PlusCircle } from "lucide-react";
 import styles from "./MyPhysicalArtwork.module.scss";
 import NavigationButton from "@/app/components/NavigationButton";
+
+type BackofficeUserResult = Awaited<
+  ReturnType<typeof getBackofficeUserByEmail>
+>;
 
 export default function MyPhysicalArtworkPage() {
   const { data: session, isPending: isSessionPending } =
@@ -17,7 +20,7 @@ export default function MyPhysicalArtworkPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [itemsData, setItemsData] = useState<ItemData[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [userDB, setUserDB] = useState<BackofficeAuthUser | null>(null);
+  const [userDB, setUserDB] = useState<BackofficeUserResult>(null);
 
   useEffect(() => {
     // Attendre que la session soit chargée

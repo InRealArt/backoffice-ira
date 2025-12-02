@@ -1,87 +1,97 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { authClient } from '@/lib/auth-client'
-import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { ArtistAddress, BackofficeAuthUser } from '@prisma/client'
-import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
-import { getAddresses } from '@/lib/actions/address-actions'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from "react";
+import { authClient } from "@/lib/auth-client";
+import LoadingSpinner from "@/app/components/LoadingSpinner/LoadingSpinner";
+import { ArtistAddress } from "@prisma/client";
+import { getBackofficeUserByEmail } from "@/lib/actions/prisma-actions";
+import { getAddresses } from "@/lib/actions/address-actions";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+type BackofficeUserResult = Awaited<
+  ReturnType<typeof getBackofficeUserByEmail>
+>;
 
 export default function AddressesPage() {
-  const router = useRouter()
-  const { data: session, isPending: isSessionPending } = authClient.useSession()
-  const [isLoading, setIsLoading] = useState(true)
-  const [addresses, setAddresses] = useState<ArtistAddress[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [userDB, setUserDB] = useState<BackofficeAuthUser | null>(null)
-  const [isAddingAddress, setIsAddingAddress] = useState(false)
-  const [navigatingToAddressId, setNavigatingToAddressId] = useState<number | null>(null)
-  
+  const router = useRouter();
+  const { data: session, isPending: isSessionPending } =
+    authClient.useSession();
+  const [isLoading, setIsLoading] = useState(true);
+  const [addresses, setAddresses] = useState<ArtistAddress[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [userDB, setUserDB] = useState<BackofficeUserResult>(null);
+  const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [navigatingToAddressId, setNavigatingToAddressId] = useState<
+    number | null
+  >(null);
+
   useEffect(() => {
     // Attendre que la session soit chargée
     if (isSessionPending) {
-      return
+      return;
     }
 
     if (!session?.user?.email) {
-      setIsLoading(false)
-      setError('Vous devez être connecté pour voir vos adresses')
-      return
+      setIsLoading(false);
+      setError("Vous devez être connecté pour voir vos adresses");
+      return;
     }
 
-    let isMounted = true
+    let isMounted = true;
 
     const loadData = async () => {
-      const email = session.user.email as string
-      const userDBResult = await getBackofficeUserByEmail(email)
-      
+      const email = session.user.email as string;
+      const userDBResult = await getBackofficeUserByEmail(email);
+
       if (!userDBResult) {
-        setError('Votre profil utilisateur n\'a pas été trouvé')
-        setIsLoading(false)
-        return
+        setError("Votre profil utilisateur n'a pas été trouvé");
+        setIsLoading(false);
+        return;
       }
-      
-      setUserDB(userDBResult)
-      
+
+      setUserDB(userDBResult);
+
       // Récupérer les adresses de l'utilisateur connecté
-      const addressesResult = await getAddresses(userDBResult.id as string)
-      
+      const addressesResult = await getAddresses(userDBResult.id as string);
+
       if (isMounted) {
         if (!addressesResult.success) {
-          setError(addressesResult.error || 'Une erreur est survenue lors de la récupération de vos adresses')
+          setError(
+            addressesResult.error ||
+              "Une erreur est survenue lors de la récupération de vos adresses"
+          );
         } else {
-          setAddresses(addressesResult.data || [])
+          setAddresses(addressesResult.data || []);
         }
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    loadData()
+    loadData();
 
     return () => {
-      isMounted = false
-    }
-  }, [session?.user?.email, isSessionPending])
+      isMounted = false;
+    };
+  }, [session?.user?.email, isSessionPending]);
 
   const handleAddAddressClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsAddingAddress(true)
+    e.preventDefault();
+    setIsAddingAddress(true);
     setTimeout(() => {
-      router.push('/art/addresses/create')
-    }, 500)
-  }
+      router.push("/art/addresses/create");
+    }, 500);
+  };
 
   const handleEditAddressClick = (addressId: number) => {
-    setNavigatingToAddressId(addressId)
+    setNavigatingToAddressId(addressId);
     setTimeout(() => {
-      router.push(`/art/addresses/${addressId}/edit`)
-    }, 500)
-  }
+      router.push(`/art/addresses/${addressId}/edit`);
+    }, 500);
+  };
 
   if (isLoading) {
-    return <LoadingSpinner message="Chargement de vos adresses..." />
+    return <LoadingSpinner message="Chargement de vos adresses..." />;
   }
 
   return (
@@ -89,33 +99,36 @@ export default function AddressesPage() {
       <div className="page-header">
         <div className="header-top-section">
           <h1 className="page-title">Mes Adresses</h1>
-          <button 
+          <button
             onClick={handleAddAddressClick}
             disabled={isAddingAddress}
             className="btn btn-primary btn-small"
           >
-            {isAddingAddress ? 'Redirection en cours...' : 'Ajouter une adresse'}
+            {isAddingAddress
+              ? "Redirection en cours..."
+              : "Ajouter une adresse"}
           </button>
         </div>
         <p className="page-subtitle">
-          Liste des adresses associées à votre compte {userDB?.name || session?.user?.email}
+          Liste des adresses associées à votre compte{" "}
+          {userDB?.name || session?.user?.email}
         </p>
       </div>
 
       <div className="page-content">
         {error ? (
-          <div className="alert alert-error">
-            {error}
-          </div>
+          <div className="alert alert-error">{error}</div>
         ) : !addresses || addresses.length === 0 ? (
           <div className="empty-state">
             <p>Aucune adresse trouvée</p>
-            <button 
+            <button
               onClick={handleAddAddressClick}
               disabled={isAddingAddress}
               className="btn btn-primary btn-medium mt-4"
             >
-              {isAddingAddress ? 'Redirection en cours...' : 'Ajouter une adresse'}
+              {isAddingAddress
+                ? "Redirection en cours..."
+                : "Ajouter une adresse"}
             </button>
           </div>
         ) : (
@@ -133,19 +146,24 @@ export default function AddressesPage() {
               </thead>
               <tbody>
                 {addresses.map((address) => {
-                  const isNavigating = navigatingToAddressId === address.id
-                  const isDisabled = isAddingAddress || navigatingToAddressId !== null
-                  
+                  const isNavigating = navigatingToAddressId === address.id;
+                  const isDisabled =
+                    isAddingAddress || navigatingToAddressId !== null;
+
                   return (
-                    <tr 
+                    <tr
                       key={address.id}
-                      className={`clickable-row ${isNavigating ? 'loading-row' : ''} ${isDisabled && !isNavigating ? 'disabled-row' : ''}`}
+                      className={`clickable-row ${
+                        isNavigating ? "loading-row" : ""
+                      } ${isDisabled && !isNavigating ? "disabled-row" : ""}`}
                     >
                       <td>{address.lastName}</td>
                       <td>{address.streetAddress}</td>
-                      <td>{address.postalCode} {address.city}</td>
+                      <td>
+                        {address.postalCode} {address.city}
+                      </td>
                       <td>{address.country}</td>
-                      <td>{address.name || '-'}</td>
+                      <td>{address.name || "-"}</td>
                       <td className="text-right">
                         <button
                           onClick={() => handleEditAddressClick(address.id)}
@@ -155,12 +173,12 @@ export default function AddressesPage() {
                           {isNavigating ? (
                             <LoadingSpinner size="small" message="" inline />
                           ) : (
-                            'Modifier'
+                            "Modifier"
                           )}
                         </button>
                       </td>
                     </tr>
-                  )
+                  );
                 })}
               </tbody>
             </table>
@@ -168,5 +186,5 @@ export default function AddressesPage() {
         )}
       </div>
     </div>
-  )
-} 
+  );
+}

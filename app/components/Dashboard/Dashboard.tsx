@@ -12,7 +12,6 @@ import {
   getUserMintedItemsCount,
   getUserListedItemsCount,
   getBackofficeUserByEmail,
-  getArtistById,
   getVisibleLandingArtistsCount,
 } from "@/lib/actions/prisma-actions";
 import { getPresaleArtworkCountByArtist } from "@/lib/actions/presale-artwork-actions";
@@ -55,6 +54,8 @@ export default function Dashboard() {
             "Erreur lors de la récupération du nombre d'artistes visibles:",
             error
           );
+          // En cas d'erreur (timeout ou autre), définir une valeur par défaut
+          setVisibleArtistsCount(0);
         } finally {
           setIsLoadingArtistsCount(false);
         }
@@ -75,6 +76,8 @@ export default function Dashboard() {
             "Erreur lors de la récupération du nombre d'items:",
             error
           );
+          // En cas d'erreur (timeout ou autre), définir une valeur par défaut
+          setPendingItemsCount(0);
         } finally {
           setIsLoadingCount(false);
         }
@@ -100,44 +103,29 @@ export default function Dashboard() {
             console.error("Utilisateur Backoffice non trouvé pour cet email");
             setIsLoadingUserCounts(false);
             setIsLoadingArtist(false);
+            setIsLoadingPresaleCount(false);
             return;
           }
 
-          console.log("🔍 DEBUG - backofficeUser:", backofficeUser);
-          console.log(
-            "🔍 DEBUG - backofficeUser.artistId:",
-            backofficeUser.artistId
-          );
-          console.log(
-            "🔍 DEBUG - backofficeUser.artist:",
-            backofficeUser.artist
-          );
+          // Utiliser directement l'artiste déjà inclus dans backofficeUser
+          if (backofficeUser.artist) {
+            setAssociatedArtist(backofficeUser.artist);
 
-          // Récupérer l'artiste associé via l'artistId
-          if (backofficeUser.artistId) {
-            const artist = await getArtistById(backofficeUser.artistId);
+            // Récupérer le nombre d'œuvres en prévente pour cet artiste
+            const presaleCountResult = await getPresaleArtworkCountByArtist(
+              backofficeUser.artist.id
+            );
             if (!isMounted) return;
-
-            console.log("🔍 DEBUG - artist from getArtistById:", artist);
-
-            if (artist) {
-              setAssociatedArtist(artist);
-
-              // Récupérer le nombre d'œuvres en prévente pour cet artiste
-              const presaleCountResult = await getPresaleArtworkCountByArtist(
-                artist.id
-              );
-              if (!isMounted) return;
-              setPresaleArtworkCount(presaleCountResult.count);
-            }
+            setPresaleArtworkCount(presaleCountResult.count);
+            setIsLoadingPresaleCount(false);
           } else {
-            console.log("⚠️ DEBUG - Pas d'artistId sur backofficeUser");
+            // Pas d'artiste, donc pas d'œuvres en prévente
+            setIsLoadingPresaleCount(false);
           }
 
           if (!isMounted) return;
 
           setIsLoadingArtist(false);
-          setIsLoadingPresaleCount(false);
 
           const mintedResult = await getUserMintedItemsCount(backofficeUser.id);
           const listedResult = await getUserListedItemsCount(backofficeUser.id);
@@ -152,10 +140,15 @@ export default function Dashboard() {
             "Erreur lors de la récupération des statistiques d'items:",
             error
           );
+          // En cas d'erreur (timeout ou autre), définir des valeurs par défaut
+          setMintedItemsCount(0);
+          setListedItemsCount(0);
+          setPresaleArtworkCount(0);
         } finally {
           if (isMounted) {
             setIsLoadingUserCounts(false);
             setIsLoadingArtist(false);
+            setIsLoadingPresaleCount(false);
           }
         }
       }
