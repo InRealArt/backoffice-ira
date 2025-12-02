@@ -699,7 +699,8 @@ export default function PresaleArtworkForm({
   }
 
   // Déterminer si le champ artiste doit être en lecture seule
-  const isArtistReadOnly = !!defaultArtistId && mode === "create";
+  // En mode "edit" avec defaultArtistId, le champ est en lecture seule (page art/presale-artworks/[id]/edit)
+  const isArtistReadOnly = !!defaultArtistId && mode === "edit";
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="form-container">
