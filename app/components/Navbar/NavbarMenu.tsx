@@ -52,6 +52,9 @@ export default function NavbarMenu() {
     handleNavigation,
   } = useSideMenuLogic();
 
+  // Masquer le bloc MARKETPLACE en production (Vercel)
+  const isProduction = process.env.NODE_ENV === "production";
+
   // Récupérer la session utilisateur
   const { data: session } = authClient.useSession();
   const user = session?.user;
@@ -365,64 +368,68 @@ export default function NavbarMenu() {
               </li>
             </ul>
           </li>
-          <li className="divider my-1"></li>
-          {/* Bloc Marketplace */}
-          <li>
-            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
-              <Store size={16} />
-              MARKETPLACE
-            </a>
-            <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
+          {!isProduction && (
+            <>
+              <li className="divider my-1"></li>
+              {/* Bloc Marketplace */}
               <li>
-                <a
-                  onClick={() =>
-                    handleMenuNavigation(
-                      "/art/myPhysicalArtwork",
-                      "myPhysicalArtwork"
-                    )
-                  }
-                  className="flex items-center gap-2"
-                >
-                  {isItemNavigating("myPhysicalArtwork") ? (
-                    <>
-                      <span className="loading loading-spinner loading-sm"></span>
-                      <Image size={18} />
-                      <span>Voir mes œuvres</span>
-                    </>
-                  ) : (
-                    <>
-                      <Image size={18} />
-                      <span>Voir mes œuvres</span>
-                    </>
-                  )}
+                <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
+                  <Store size={16} />
+                  MARKETPLACE
                 </a>
+                <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleMenuNavigation(
+                          "/art/myPhysicalArtwork",
+                          "myPhysicalArtwork"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      {isItemNavigating("myPhysicalArtwork") ? (
+                        <>
+                          <span className="loading loading-spinner loading-sm"></span>
+                          <Image size={18} />
+                          <span>Voir mes œuvres</span>
+                        </>
+                      ) : (
+                        <>
+                          <Image size={18} />
+                          <span>Voir mes œuvres</span>
+                        </>
+                      )}
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleMenuNavigation(
+                          "/art/physicalCollection",
+                          "physicalCollection"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      {isItemNavigating("physicalCollection") ? (
+                        <>
+                          <span className="loading loading-spinner loading-sm"></span>
+                          <Folder size={18} />
+                          <span>Voir mes collections</span>
+                        </>
+                      ) : (
+                        <>
+                          <Folder size={18} />
+                          <span>Voir mes collections</span>
+                        </>
+                      )}
+                    </a>
+                  </li>
+                </ul>
               </li>
-              <li>
-                <a
-                  onClick={() =>
-                    handleMenuNavigation(
-                      "/art/physicalCollection",
-                      "physicalCollection"
-                    )
-                  }
-                  className="flex items-center gap-2"
-                >
-                  {isItemNavigating("physicalCollection") ? (
-                    <>
-                      <span className="loading loading-spinner loading-sm"></span>
-                      <Folder size={18} />
-                      <span>Voir mes collections</span>
-                    </>
-                  ) : (
-                    <>
-                      <Folder size={18} />
-                      <span>Voir mes collections</span>
-                    </>
-                  )}
-                </a>
-              </li>
-            </ul>
-          </li>
+            </>
+          )}
         </>
       );
     }
@@ -1213,44 +1220,46 @@ export default function NavbarMenu() {
                 </details>
               </li>
               {/* Bloc Marketplace */}
-              <li>
-                <details>
-                  <summary className="flex items-center gap-2">
-                    <Store size={18} />
-                    Marketplace
-                  </summary>
-                  <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
-                    <li>
-                      <a
-                        onClick={() =>
-                          handleNavigation(
-                            "/art/myPhysicalArtwork",
-                            "myPhysicalArtwork"
-                          )
-                        }
-                        className="flex items-center gap-2"
-                      >
-                        <Image size={18} />
-                        Voir mes œuvres
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        onClick={() =>
-                          handleNavigation(
-                            "/art/physicalCollection",
-                            "physicalCollection"
-                          )
-                        }
-                        className="flex items-center gap-2"
-                      >
-                        <Folder size={18} />
-                        Voir mes collections
-                      </a>
-                    </li>
-                  </ul>
-                </details>
-              </li>
+              {!isProduction && (
+                <li>
+                  <details>
+                    <summary className="flex items-center gap-2">
+                      <Store size={18} />
+                      Marketplace
+                    </summary>
+                    <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
+                      <li>
+                        <a
+                          onClick={() =>
+                            handleNavigation(
+                              "/art/myPhysicalArtwork",
+                              "myPhysicalArtwork"
+                            )
+                          }
+                          className="flex items-center gap-2"
+                        >
+                          <Image size={18} />
+                          Voir mes œuvres
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          onClick={() =>
+                            handleNavigation(
+                              "/art/physicalCollection",
+                              "physicalCollection"
+                            )
+                          }
+                          className="flex items-center gap-2"
+                        >
+                          <Folder size={18} />
+                          Voir mes collections
+                        </a>
+                      </li>
+                    </ul>
+                  </details>
+                </li>
+              )}
             </ul>
           )}
 
