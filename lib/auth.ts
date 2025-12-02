@@ -6,6 +6,11 @@ export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: 'postgresql'
     }),
+    // Origines de confiance pour CORS et sécurité
+    trustedOrigins: [
+        'https://backoffice-shopify.vercel.app',
+        'https://backoffice-inrealart.vercel.app'
+    ],
     // on cible explicitement les modèles Prisma mappés au schéma backoffice
     user: {
         modelName: 'BackofficeAuthUser',
