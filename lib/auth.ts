@@ -48,7 +48,7 @@ export const auth = betterAuth({
         sendResetPassword: async ({ user, url, token }, request) => {
             const isVercel = !!process.env.VERCEL
             const isProduction = process.env.NODE_ENV === 'production'
-            
+
             console.log('[Auth] Demande de réinitialisation de mot de passe:', {
                 userId: user.id,
                 userEmail: user.email,
@@ -89,22 +89,32 @@ export const auth = betterAuth({
                     return { success: false, message: error.message }
                 })
 
-            // Sur Vercel, attendre l'envoi pour éviter que la fonction serverless se termine trop tôt
-            // Mais avec un timeout pour ne pas bloquer indéfiniment
+            // Sur Vercel, il est CRUCIAL d'attendre l'envoi de l'email
+            // Sinon la fonction serverless se termine avant que le fetch ne soit complété
             if (isVercel || isProduction) {
-                // Attendre l'envoi avec un timeout de 8 secondes
-                // Cela garantit que l'email est envoyé avant que la fonction ne se termine
-                Promise.race([
-                    emailPromise,
-                    new Promise<{ success: false; message: string }>((resolve) => 
-                        setTimeout(() => {
-                            console.warn('[Auth] ⚠️ Timeout lors de l\'envoi de l\'email (8s)')
-                            resolve({ success: false, message: 'Timeout après 8 secondes' })
-                        }, 8000)
-                    )
-                ]).catch((error) => {
-                    console.error('[Auth] ❌ Erreur dans Promise.race:', error)
-                })
+                try {
+                    // Attendre réellement l'envoi avec un timeout de 8 secondes
+                    const result = await Promise.race([
+                        emailPromise,
+                        new Promise<{ success: false; message: string }>((resolve) =>
+                            setTimeout(() => {
+                                console.warn('[Auth] ⚠️ Timeout lors de l\'envoi de l\'email (8s)')
+                                resolve({ success: false, message: 'Timeout après 8 secondes' })
+                            }, 8000)
+                        )
+                    ])
+
+                    if (result.success) {
+                        console.log('[Auth] ✅ Email envoyé et confirmé avant la fin de la fonction')
+                    } else {
+                        console.error('[Auth] ❌ Échec confirmé de l\'envoi:', result.message)
+                    }
+                } catch (error: any) {
+                    console.error('[Auth] ❌ Erreur lors de l\'attente de l\'envoi:', {
+                        error: error.message,
+                        stack: error.stack
+                    })
+                }
             } else {
                 // En développement local, on peut utiliser void pour éviter les timing attacks
                 void emailPromise
