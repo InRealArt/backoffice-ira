@@ -13,7 +13,15 @@ const nextConfig: NextConfig = {
 
   // SOLUTION FINALE : Inclure les moteurs Prisma dans le file tracing
   // Cette configuration garantit que tous les binaires Prisma sont inclus dans le build
+  // Inclure pour toutes les routes (y compris le middleware)
   outputFileTracingIncludes: {
+    '/api/**': [
+      './node_modules/.prisma/client/**/*',
+      './node_modules/@prisma/client/**/*',
+      './node_modules/@prisma/engines/**/*',
+      './node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
+      './node_modules/.prisma/client/query-engine-rhel-openssl-3.0.x',
+    ],
     '/*': [
       './node_modules/.prisma/client/**/*',
       './node_modules/@prisma/client/**/*',

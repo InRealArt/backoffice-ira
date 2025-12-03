@@ -35,6 +35,18 @@ if ! cp -r node_modules/@prisma/client .next/standalone/node_modules/@prisma/ 2>
   exit 1
 fi
 
+# Copier aussi dans .next/server pour le middleware et les routes API
+if [ -d ".next/server" ]; then
+  echo "🔧 Copie des moteurs Prisma dans .next/server..."
+  mkdir -p .next/server/node_modules/.prisma/client
+  cp -r node_modules/.prisma/client/* .next/server/node_modules/.prisma/client/ 2>/dev/null || true
+  
+  mkdir -p .next/server/node_modules/@prisma
+  cp -r node_modules/@prisma/client .next/server/node_modules/@prisma/ 2>/dev/null || true
+  
+  echo "✅ Moteurs Prisma copiés dans .next/server"
+fi
+
 # Vérifier que le binaire rhel-openssl-3.0.x est présent
 if [ ! -f ".next/standalone/node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node" ]; then
   echo "⚠️  Attention: libquery_engine-rhel-openssl-3.0.x.so.node n'a pas été copié"
