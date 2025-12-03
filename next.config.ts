@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { PrismaPlugin } from "@prisma/nextjs-monorepo-workaround-plugin";
 
 const nextConfig: NextConfig = {
   // Désactiver les Cache Components pour la compatibilité avec les configurations de route existantes
@@ -11,8 +12,24 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@prisma/client', '@prisma/engines', 'exceljs', 'rimraf', 'fstream'],
 
   // SOLUTION FINALE : Inclure les moteurs Prisma dans le file tracing
+  // Cette configuration garantit que tous les binaires Prisma sont inclus dans le build
   outputFileTracingIncludes: {
-    '/*': ['./node_modules/.prisma/client/**/*', './node_modules/@prisma/client/**/*'],
+    '/*': [
+      './node_modules/.prisma/client/**/*',
+      './node_modules/@prisma/client/**/*',
+      './node_modules/@prisma/engines/**/*',
+      // Inclure explicitement les binaires rhel-openssl-3.0.x
+      './node_modules/.prisma/client/libquery_engine-rhel-openssl-3.0.x.so.node',
+      './node_modules/.prisma/client/query-engine-rhel-openssl-3.0.x',
+    ],
+  },
+
+  // Plugin webpack pour copier les moteurs Prisma dans .next/server
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.plugins = [...(config.plugins || []), new PrismaPlugin()];
+    }
+    return config;
   },
 
   // Configuration expérimentale pour le cache du système de fichiers Turbopack
