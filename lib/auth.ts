@@ -46,14 +46,38 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         sendResetPassword: async ({ user, url, token }, request) => {
+            console.log('[Auth] Demande de réinitialisation de mot de passe:', {
+                userId: user.id,
+                userEmail: user.email,
+                hasToken: !!token,
+                urlLength: url.length,
+                origin: request?.headers?.get('origin') || 'unknown'
+            })
+
             // Ne pas attendre l'envoi de l'email pour éviter les timing attacks
-            void sendEmailViaBrevo({
+            // Mais on log le résultat pour le débogage
+            sendEmailViaBrevo({
                 to: user.email,
                 subject: 'Réinitialisation de votre mot de passe - InRealArt',
                 html: getResetPasswordEmailTemplate(url, user.name || undefined)
-            }).catch((error) => {
-                console.error('Erreur lors de l\'envoi de l\'email de reset password:', error)
             })
+                .then((result) => {
+                    if (result.success) {
+                        console.log('[Auth] Email de réinitialisation envoyé avec succès à:', user.email)
+                    } else {
+                        console.error('[Auth] Échec de l\'envoi de l\'email de réinitialisation:', {
+                            email: user.email,
+                            error: result.message
+                        })
+                    }
+                })
+                .catch((error) => {
+                    console.error('[Auth] Erreur lors de l\'envoi de l\'email de reset password:', {
+                        email: user.email,
+                        error: error.message,
+                        stack: error.stack
+                    })
+                })
         }
     }
 })

@@ -18,14 +18,47 @@ export async function sendEmailViaBrevo({
 }: SendEmailParams): Promise<{ success: boolean; message?: string }> {
     try {
         const apiKey = process.env.BREVO_API_KEY
+        const senderEmail = process.env.BREVO_SENDER_EMAIL || 'teaminrealart@gmail.com'
+
+        // Log pour déboguer (sans exposer la clé API complète)
+        console.log('[Brevo] Tentative d\'envoi d\'email:', {
+            to,
+            subject,
+            senderEmail,
+            hasApiKey: !!apiKey,
+            apiKeyPrefix: apiKey ? `${apiKey.substring(0, 8)}...` : 'missing',
+            environment: process.env.NODE_ENV
+        })
 
         if (!apiKey) {
-            console.error('BREVO_API_KEY n\'est pas configurée')
+            const errorMsg = 'BREVO_API_KEY n\'est pas configurée dans les variables d\'environnement'
+            console.error('[Brevo]', errorMsg)
             return {
                 success: false,
-                message: 'Configuration email manquante'
+                message: errorMsg
             }
         }
+
+        const emailPayload = {
+            sender: {
+                name: 'InRealArt',
+                email: senderEmail
+            },
+            to: [
+                {
+                    email: to
+                }
+            ],
+            subject,
+            htmlContent: html,
+            textContent: text || subject
+        }
+
+        console.log('[Brevo] Payload email (sans contenu HTML):', {
+            ...emailPayload,
+            htmlContent: `[${html.length} caractères]`,
+            textContent: emailPayload.textContent
+        })
 
         const response = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
@@ -34,40 +67,58 @@ export async function sendEmailViaBrevo({
                 'api-key': apiKey,
                 'content-type': 'application/json'
             },
-            body: JSON.stringify({
-                sender: {
-                    name: 'InRealArt',
-                    email: process.env.BREVO_SENDER_EMAIL || 'teaminrealart@gmail.com'
-                },
-                to: [
-                    {
-                        email: to
-                    }
-                ],
-                subject,
-                htmlContent: html,
-                textContent: text || subject
-            })
+            body: JSON.stringify(emailPayload)
+        })
+
+        const responseText = await response.text()
+        console.log('[Brevo] Réponse HTTP:', {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries())
         })
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}))
-            console.error('Erreur Brevo:', errorData)
+            let errorData: any = {}
+            try {
+                errorData = JSON.parse(responseText)
+            } catch (e) {
+                errorData = { rawResponse: responseText }
+            }
+
+            console.error('[Brevo] Erreur API:', {
+                status: response.status,
+                errorData,
+                responseText
+            })
+
             return {
                 success: false,
-                message: errorData.message || 'Erreur lors de l\'envoi de l\'email'
+                message: errorData.message || errorData.error || `Erreur HTTP ${response.status}: ${response.statusText}`
             }
         }
 
+        let successData: any = {}
+        try {
+            successData = JSON.parse(responseText)
+        } catch (e) {
+            // La réponse peut être vide en cas de succès
+        }
+
+        console.log('[Brevo] Email envoyé avec succès:', successData)
         return {
             success: true
         }
     } catch (error: any) {
-        console.error('Erreur lors de l\'envoi de l\'email via Brevo:', error)
+        console.error('[Brevo] Erreur lors de l\'envoi de l\'email:', {
+            error: error.message,
+            stack: error.stack,
+            name: error.name
+        })
         return {
             success: false,
             message: error.message || 'Erreur lors de l\'envoi de l\'email'
         }
     }
 }
+
 
