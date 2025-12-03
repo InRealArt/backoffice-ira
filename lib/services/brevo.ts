@@ -60,53 +60,76 @@ export async function sendEmailViaBrevo({
             textContent: emailPayload.textContent
         })
 
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-            method: 'POST',
-            headers: {
-                'accept': 'application/json',
-                'api-key': apiKey,
-                'content-type': 'application/json'
-            },
-            body: JSON.stringify(emailPayload)
-        })
+        // Configuration du fetch avec timeout pour Vercel
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 secondes max
 
-        const responseText = await response.text()
-        console.log('[Brevo] Réponse HTTP:', {
-            status: response.status,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries())
-        })
+        try {
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': apiKey,
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify(emailPayload),
+                signal: controller.signal
+            })
+            
+            clearTimeout(timeoutId)
 
-        if (!response.ok) {
-            let errorData: any = {}
-            try {
-                errorData = JSON.parse(responseText)
-            } catch (e) {
-                errorData = { rawResponse: responseText }
-            }
-
-            console.error('[Brevo] Erreur API:', {
+            const responseText = await response.text()
+            console.log('[Brevo] Réponse HTTP:', {
                 status: response.status,
-                errorData,
-                responseText
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries()),
+                responseLength: responseText.length
             })
 
-            return {
-                success: false,
-                message: errorData.message || errorData.error || `Erreur HTTP ${response.status}: ${response.statusText}`
+            if (!response.ok) {
+                let errorData: any = {}
+                try {
+                    errorData = JSON.parse(responseText)
+                } catch (e) {
+                    errorData = { rawResponse: responseText }
+                }
+
+                console.error('[Brevo] ❌ Erreur API:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    errorData,
+                    responseText: responseText.substring(0, 500) // Limiter la taille du log
+                })
+
+                return {
+                    success: false,
+                    message: errorData.message || errorData.error || `Erreur HTTP ${response.status}: ${response.statusText}`
+                }
             }
-        }
 
-        let successData: any = {}
-        try {
-            successData = JSON.parse(responseText)
-        } catch (e) {
-            // La réponse peut être vide en cas de succès
-        }
+            let successData: any = {}
+            try {
+                successData = JSON.parse(responseText)
+            } catch (e) {
+                // La réponse peut être vide en cas de succès
+            }
 
-        console.log('[Brevo] Email envoyé avec succès:', successData)
-        return {
-            success: true
+            console.log('[Brevo] ✅ Email envoyé avec succès:', successData)
+            return {
+                success: true
+            }
+        } catch (fetchError: any) {
+            clearTimeout(timeoutId)
+            
+            if (fetchError.name === 'AbortError') {
+                console.error('[Brevo] ❌ Timeout lors de l\'appel à l\'API Brevo (10s)')
+                return {
+                    success: false,
+                    message: 'Timeout lors de l\'envoi de l\'email (10 secondes)'
+                }
+            }
+            
+            throw fetchError // Re-lancer les autres erreurs
         }
     } catch (error: any) {
         console.error('[Brevo] Erreur lors de l\'envoi de l\'email:', {

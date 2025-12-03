@@ -39,8 +39,18 @@ export default function ForgotPasswordPage() {
       const data = await response.json()
 
       if (!response.ok || data.error) {
-        const errorMessage = data.error?.message || data.message || 'Erreur lors de l\'envoi de l\'email'
-        errorToast(errorMessage)
+        // Détecter l'erreur spécifique "User not found"
+        const errorMessage = data.error?.message || data.message || ''
+        const isUserNotFound = 
+          errorMessage.includes('User not found') || 
+          errorMessage.includes('Reset Password: User not found') ||
+          errorMessage.toLowerCase().includes('user not found')
+        
+        if (isUserNotFound) {
+          errorToast('Cette adresse email n\'est pas reconnue dans notre système')
+        } else {
+          errorToast(errorMessage || 'Erreur lors de l\'envoi de l\'email')
+        }
         setIsLoading(false)
         return
       }
