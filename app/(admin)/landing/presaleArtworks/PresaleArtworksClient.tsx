@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Artist } from "@prisma/client";
+import { ArrowLeft, ArrowUpDown } from "lucide-react";
 
 // Type pour les artistes du filtre (retourné par getAllArtists)
 type FilterArtist = {
@@ -293,6 +294,15 @@ export default function PresaleArtworksClient({
         }
         actions={
           <div className="d-flex gap-sm">
+            {isArtistMode && (
+              <ActionButton
+                label="Ordre d'affichage"
+                onClick={() => router.push("/art/my-artworks/display-order")}
+                size="small"
+                variant="secondary"
+                icon={<ArrowUpDown size={16} />}
+              />
+            )}
             {!isArtistMode && (
               <ActionButton
                 label="Ajout par import"

@@ -1,0 +1,29 @@
+.sortableList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.emptyState {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px dashed #e5e7eb;
+}
+
+.dragOverlay {
+  opacity: 0.9;
+  transform: rotate(2deg);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .sortableList {
+    gap: 8px;
+  }
+}
+

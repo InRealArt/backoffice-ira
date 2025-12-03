@@ -263,30 +263,30 @@ model Artist {
 
 // Modèle LandingArtist : données affichées sur la landing
 model LandingArtist {
-  id                 Int                    @id @default(autoincrement())
-  slug               String                 @unique
-  intro              String?
-  description        String?
-  artworkImages      Json                   @default("[]")
-  artworkStyle       String?
-  artistsPage        Boolean?               @default(false)
-  imageUrl           String                 @unique
-  secondaryImageUrl  String?
-  artistId           Int
+  id                  Int                    @id @default(autoincrement())
+  slug                String                 @unique
+  intro               String?
+  description         String?
+  artworkImages       Json                   @default("[]")
+  artworkStyle        String?
+  artistsPage         Boolean?               @default(false)
+  imageUrl            String                 @unique
+  secondaryImageUrl   String?
+  artistId            Int
   //Champs pour le descriptif détaillé de l'artiste sur la landing
-  mediumTags         String[]               @default([])
-  quoteFromInRealArt String?
-  biographyHeader1   String?
-  biographyText1     String?
-  biographyHeader2   String?
-  biographyText2     String?
-  biographyHeader3   String?
-  biographyText3     String?
-  biographyHeader4   String?
-  biographyText4     String?
-  imageArtistStudio  String?
-  artistCategories   ArtistCategoryArtist[]
-  artist             Artist                 @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  mediumTags          String[]               @default([])
+  quoteFromInRealArt  String?
+  biographyHeader1    String?
+  biographyText1      String?
+  biographyHeader2    String?
+  biographyText2      String?
+  biographyHeader3    String?
+  biographyText3      String?
+  biographyHeader4    String?
+  biographyText4      String?
+  imageArtistStudio   String?
+  artistCategories    ArtistCategoryArtist[]
+  artist              Artist                 @relation(fields: [artistId], references: [id], onDelete: Cascade)
   physicalCollections PhysicalCollection[]
 
   @@index([artistId])
@@ -554,11 +554,11 @@ model PhysicalItem {
   itemThemes     ItemTheme[]
 
   // Relations
-  authCertificate AuthCertificatePhysicalArtwork?
-  ArtistAddress   ArtistAddress?                  @relation(fields: [artistAddressId], references: [id])
-  artistAddressId Int?
-  physicalCollectionId    Int?
-  physicalCollection      PhysicalCollection?                     @relation(fields: [physicalCollectionId], references: [id])
+  authCertificate      AuthCertificatePhysicalArtwork?
+  ArtistAddress        ArtistAddress?                  @relation(fields: [artistAddressId], references: [id])
+  artistAddressId      Int?
+  physicalCollectionId Int?
+  physicalCollection   PhysicalCollection?             @relation(fields: [physicalCollectionId], references: [id])
 
   createdAt                DateTime                  @default(now())
   physicalArtworkViews     PhysicalArtworkView[]
@@ -825,19 +825,21 @@ model DetailedGlossaryItem {
 }
 
 model PresaleArtwork {
-  id          Int     @id @default(autoincrement())
-  name        String
-  description String?
-  order       Int?
-  artistId    Int
-  width       Int? //In centimeters
-  height      Int? //In centimeters
-  price       Int?
-  imageUrl    String  @unique
-  mockupUrls  Json    @default("[]")
-  artist      Artist  @relation(fields: [artistId], references: [id])
+  id           Int     @id @default(autoincrement())
+  name         String
+  description  String?
+  order        Int?
+  displayOrder Int? // Ordre d'affichage pour une autre application (différent de order)
+  artistId     Int
+  width        Int? //In centimeters
+  height       Int? //In centimeters
+  price        Int?
+  imageUrl     String  @unique
+  mockupUrls   Json    @default("[]")
+  artist       Artist  @relation(fields: [artistId], references: [id])
 
   @@index([artistId])
+  @@index([displayOrder])
   @@schema("landing")
 }
 
@@ -1041,12 +1043,12 @@ model Country {
 }
 
 model PhysicalCollection {
-  id          Int           @id @default(autoincrement())
-  name        String
-  description String
+  id              Int            @id @default(autoincrement())
+  name            String
+  description     String
   landingArtistId Int
-  landingArtist LandingArtist @relation(fields: [landingArtistId], references: [id], onDelete: Cascade)
-  physicalItems PhysicalItem[]
+  landingArtist   LandingArtist  @relation(fields: [landingArtistId], references: [id], onDelete: Cascade)
+  physicalItems   PhysicalItem[]
 
   @@index([landingArtistId])
   @@schema("backoffice")

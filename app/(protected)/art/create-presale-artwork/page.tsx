@@ -32,7 +32,7 @@ export default async function CreatePresaleArtworkPage() {
         <PresaleArtworkForm 
           mode="create" 
           defaultArtistId={backofficeUser.artistId}
-          redirectUrl="/art/presale-artworks"
+          redirectUrl="/art/my-artworks"
         />
       </div>
     </div>
