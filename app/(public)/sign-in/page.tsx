@@ -95,10 +95,17 @@ export default function SignInPage () {
               </Button>
             </div>
           </form>
-          <p className='text-sm mt-2'>
-            Pas de compte ?{' '}
-            <Link href='/sign-up' className='link link-primary'>S’inscrire</Link>
-          </p>
+          <div className='flex flex-col gap-2 mt-4'>
+            <p className='text-sm'>
+              Pas de compte ?{' '}
+              <Link href='/sign-up' className='link link-primary'>S'inscrire</Link>
+            </p>
+            <p className='text-sm'>
+              <Link href='/forgot-password' className='link link-primary'>
+                Mot de passe oublié ?
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

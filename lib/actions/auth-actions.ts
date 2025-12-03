@@ -1,6 +1,8 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/lib/auth'
+import { headers } from 'next/headers'
 
 export interface CheckAuthorizedUserResult {
     authorized: boolean
@@ -406,6 +408,47 @@ export async function deleteUserAfterFailedSignup(email: string): Promise<void> 
     } catch (error) {
         // Ignorer les erreurs si l'utilisateur n'existe pas déjà
         console.error('Erreur lors de la suppression de l\'utilisateur:', error)
+    }
+}
+
+/**
+ * Change le mot de passe d'un utilisateur authentifié
+ * Ne nécessite pas l'ancien mot de passe, seulement une session valide
+ * @param newPassword - Le nouveau mot de passe
+ * @returns Résultat de l'opération
+ */
+export async function setUserPassword(
+    newPassword: string
+): Promise<{ success: boolean; message: string }> {
+    try {
+        if (!newPassword || newPassword.length < 8) {
+            return {
+                success: false,
+                message: 'Le mot de passe doit contenir au moins 8 caractères'
+            }
+        }
+
+        // Récupérer les headers de la session
+        const headersList = await headers()
+
+        // Utiliser auth.api.setPassword pour changer le mot de passe
+        await auth.api.setPassword({
+            headers: headersList,
+            body: {
+                newPassword: newPassword
+            }
+        })
+
+        return {
+            success: true,
+            message: 'Mot de passe modifié avec succès'
+        }
+    } catch (error: any) {
+        console.error('Erreur lors du changement de mot de passe:', error)
+        return {
+            success: false,
+            message: error.message || 'Erreur lors du changement de mot de passe'
+        }
     }
 }
 

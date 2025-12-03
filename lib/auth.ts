@@ -1,6 +1,8 @@
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { prisma } from './prisma'
+import { sendEmailViaBrevo } from './services/brevo'
+import { getResetPasswordEmailTemplate } from './templates/reset-password-email'
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -42,7 +44,17 @@ export const auth = betterAuth({
         modelName: 'BackofficeAuthVerification'
     },
     emailAndPassword: {
-        enabled: true
+        enabled: true,
+        sendResetPassword: async ({ user, url, token }, request) => {
+            // Ne pas attendre l'envoi de l'email pour éviter les timing attacks
+            void sendEmailViaBrevo({
+                to: user.email,
+                subject: 'Réinitialisation de votre mot de passe - InRealArt',
+                html: getResetPasswordEmailTemplate(url, user.name || undefined)
+            }).catch((error) => {
+                console.error('Erreur lors de l\'envoi de l\'email de reset password:', error)
+            })
+        }
     }
 })
 
