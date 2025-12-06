@@ -14,16 +14,21 @@ function ArtworkThumbnail({
   imageUrl,
   alt,
   isSold = false,
+  artworkId,
 }: {
   imageUrl: string | null;
   alt: string;
   isSold?: boolean;
+  artworkId: number;
 }) {
   const [imageError, setImageError] = useState(false);
   const hasValidImage = imageUrl && !imageError;
 
   return (
-    <div className="relative w-[120px] h-[120px] md:w-[100px] md:h-[100px] rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 cursor-pointer transition-transform hover:scale-105 group flex-shrink-0">
+    <Link
+      href={`/art/editPhysicalArtwork/${artworkId}`}
+      className="relative w-[120px] h-[120px] md:w-[100px] md:h-[100px] rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 cursor-pointer transition-transform hover:scale-105 group flex-shrink-0 block"
+    >
       {hasValidImage ? (
         <Image
           src={imageUrl}
@@ -58,7 +63,7 @@ function ArtworkThumbnail({
       )}
       {/* Overlay au hover pour améliorer l'UX */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200" />
-    </div>
+    </Link>
   );
 }
 
@@ -167,6 +172,7 @@ export default function PhysicalCollectionsList({
                         imageUrl={physicalItem.item.mainImageUrl}
                         alt={physicalItem.item.name}
                         isSold={physicalItem.status === "sold"}
+                        artworkId={physicalItem.item.id}
                       />
                     ))}
                   </div>
@@ -185,6 +191,7 @@ export default function PhysicalCollectionsList({
                         key={String(physicalItem.id)}
                         imageUrl={physicalItem.item.mainImageUrl}
                         alt={physicalItem.item.name}
+                        artworkId={physicalItem.item.id}
                       />
                     ))}
                   </div>

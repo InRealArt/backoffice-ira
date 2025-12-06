@@ -54,18 +54,39 @@ function ArtworkCharacteristicsSection({
             box-sizing: border-box !important;
             position: relative !important;
             overflow: visible !important;
+            z-index: 1 !important;
+          }
+          .artwork-characteristics-col-styles {
+            z-index: 100 !important;
+          }
+          .artwork-characteristics-col-techniques {
+            z-index: 10 !important;
+          }
+          .artwork-characteristics-col-themes {
+            z-index: 10 !important;
           }
           .artwork-characteristics-row {
             box-sizing: border-box !important;
             width: 100% !important;
             max-width: 100% !important;
+            position: relative !important;
+            overflow: visible !important;
+          }
+          .artwork-characteristics-row:first-of-type {
+            z-index: 50 !important;
+            position: relative !important;
+          }
+          .artwork-characteristics-section-wrapper > div {
+            position: relative !important;
+            z-index: 30 !important;
           }
         `,
         }}
       />
-      <FormSection title="Caractéristiques artistiques" bgVariant="subtle-4">
-        {/* Première ligne : Supports et Styles */}
-        <div className="artwork-characteristics-row mb-6">
+      <div className="artwork-characteristics-section-wrapper" style={{ position: 'relative', zIndex: 30 }}>
+        <FormSection title="Caractéristiques artistiques" bgVariant="subtle-4">
+          {/* Première ligne : Supports et Styles */}
+          <div className="artwork-characteristics-row mb-6">
           {/* Support/Medium - Sélection simple */}
           <div className="artwork-characteristics-col">
             <label
@@ -107,7 +128,7 @@ function ArtworkCharacteristicsSection({
           </div>
 
           {/* Styles - Sélection multiple */}
-          <div className="artwork-characteristics-col">
+          <div className="artwork-characteristics-col artwork-characteristics-col-styles">
             <Controller
               name="styleIds"
               control={control}
@@ -138,7 +159,7 @@ function ArtworkCharacteristicsSection({
         {/* Deuxième ligne : Techniques et Thèmes */}
         <div className="artwork-characteristics-row">
           {/* Techniques - Sélection multiple */}
-          <div className="artwork-characteristics-col">
+          <div className="artwork-characteristics-col artwork-characteristics-col-techniques">
             <Controller
               name="techniqueIds"
               control={control}
@@ -166,7 +187,7 @@ function ArtworkCharacteristicsSection({
           </div>
 
           {/* Thèmes - Sélection multiple */}
-          <div className="artwork-characteristics-col">
+          <div className="artwork-characteristics-col artwork-characteristics-col-themes">
             <Controller
               name="themeIds"
               control={control}
@@ -191,7 +212,8 @@ function ArtworkCharacteristicsSection({
             />
           </div>
         </div>
-      </FormSection>
+        </FormSection>
+      </div>
     </>
   );
 }
