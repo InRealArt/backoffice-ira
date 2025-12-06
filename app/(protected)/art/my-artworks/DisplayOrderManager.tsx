@@ -11,6 +11,7 @@ import { useToast } from "@/app/components/Toast/ToastContext";
 import { RotateCcw, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { resetDisplayOrderForArtist } from "@/lib/actions/display-order-actions";
+import Modal from "@/app/components/Common/Modal";
 import styles from "./DisplayOrderManager.module.scss";
 
 interface PresaleArtwork {
@@ -41,6 +42,7 @@ export default function DisplayOrderManager({
   const [artworks, setArtworks] = useState<PresaleArtwork[]>(initialArtworks);
   const [isSaving, setIsSaving] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const { success, error } = useToast();
 
   // Trier les œuvres par displayOrder, puis par id
@@ -91,15 +93,12 @@ export default function DisplayOrderManager({
     }
   };
 
-  const handleReset = async () => {
-    if (
-      !confirm(
-        "Êtes-vous sûr de vouloir réinitialiser l'ordre d'affichage ? L'ordre actuel sera perdu."
-      )
-    ) {
-      return;
-    }
+  const handleResetClick = () => {
+    setIsResetModalOpen(true);
+  };
 
+  const handleResetConfirm = async () => {
+    setIsResetModalOpen(false);
     setIsResetting(true);
 
     try {
@@ -122,6 +121,10 @@ export default function DisplayOrderManager({
     } finally {
       setIsResetting(false);
     }
+  };
+
+  const handleResetCancel = () => {
+    setIsResetModalOpen(false);
   };
 
   return (
@@ -147,7 +150,7 @@ export default function DisplayOrderManager({
         <div className={styles.actions}>
           <button
             type="button"
-            onClick={handleReset}
+            onClick={handleResetClick}
             disabled={isResetting || isSaving}
             className={styles.resetButton}
           >
@@ -184,6 +187,36 @@ export default function DisplayOrderManager({
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={isResetModalOpen}
+        onClose={handleResetCancel}
+        title="Réinitialiser l'ordre d'affichage"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-base leading-relaxed">
+            Êtes-vous sûr de vouloir réinitialiser l'ordre d'affichage ? L'ordre
+            actuel sera perdu.
+          </p>
+
+          <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-gray-200">
+            <button
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              onClick={handleResetCancel}
+              disabled={isResetting}
+            >
+              Annuler
+            </button>
+            <button
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              onClick={handleResetConfirm}
+              disabled={isResetting}
+            >
+              {isResetting ? "Réinitialisation..." : "Confirmer"}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
