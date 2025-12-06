@@ -37,6 +37,7 @@ export default function ArtworkForm({
   styles: artStyles = [],
   techniques = [],
   themes = [],
+  supports = [],
   collections = [],
   artistName = "",
   artistSurname = "",
@@ -286,6 +287,9 @@ export default function ArtworkForm({
         // Initialiser les caractéristiques artistiques depuis PhysicalItem
         if (initialData.physicalItem.mediumId) {
           setValue("mediumId", initialData.physicalItem.mediumId.toString());
+        }
+        if (initialData.physicalItem.supportId) {
+          setValue("supportId", initialData.physicalItem.supportId.toString());
         }
         if (
           initialData.physicalItem.itemStyles &&
@@ -570,6 +574,7 @@ export default function ArtworkForm({
             control={control}
             getValues={getValues}
             isFormReadOnly={isFormReadOnly}
+            supports={supports}
           />
 
           <ShippingAddressSection

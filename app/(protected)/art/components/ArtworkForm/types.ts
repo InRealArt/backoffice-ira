@@ -1,7 +1,7 @@
 // Types pour les formulaires et composants d'artwork
 import { PhysicalArtworkFormData } from '../../createPhysicalArtwork/schema'
 import { Control, FieldErrors, UseFormRegister, UseFormSetValue, UseFormGetValues } from 'react-hook-form'
-import { ArtworkMedium, ArtworkStyle, ArtworkTechnique, ArtworkTheme } from '@prisma/client'
+import { ArtworkMedium, ArtworkStyle, ArtworkTechnique, ArtworkTheme, ArtworkSupport } from '@prisma/client'
 
 // Alias pour maintenir la compatibilité avec le code existant
 export type ArtworkFormData = PhysicalArtworkFormData
@@ -35,6 +35,7 @@ export interface ArtworkFormProps {
     styles?: ArtworkStyle[]
     techniques?: ArtworkTechnique[]
     themes?: ArtworkTheme[]
+    supports?: ArtworkSupport[]
     collections?: PhysicalCollection[]
     artistName?: string
     artistSurname?: string
@@ -73,6 +74,7 @@ export interface ArtworkFormProps {
         styleIds?: number[]
         techniqueIds?: number[]
         themeIds?: number[]
+        supportId?: number
         // Nouvelles propriétés pour les entités liées
         physicalItem?: {
             id?: number
@@ -87,6 +89,7 @@ export interface ArtworkFormProps {
             shippingAddressId?: number
             physicalCollectionId?: number
             mediumId?: number
+            supportId?: number
             itemStyles?: Array<{ styleId: number; style: { name: string } }>
             itemTechniques?: Array<{ techniqueId: number; technique: { name: string } }>
             itemThemes?: Array<{ themeId: number; theme: { name: string } }>

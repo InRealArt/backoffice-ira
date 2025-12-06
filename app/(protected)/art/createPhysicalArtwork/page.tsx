@@ -3,15 +3,17 @@ import { getAllArtworkMediums } from "@/lib/actions/artwork-medium-actions";
 import { getAllArtworkStyles } from "@/lib/actions/artwork-style-actions";
 import { getAllArtworkTechniques } from "@/lib/actions/artwork-technique-actions";
 import { getAllArtworkThemes } from "@/lib/actions/artwork-theme-actions";
+import { getAllArtworkSupports } from "@/lib/actions/artwork-support-actions";
 import CreatePhysicalArtworkClient from "./CreatePhysicalArtworkClient";
 
 export default async function CreatePhysicalArtworkPage() {
   // Récupérer les données de référence en parallèle
-  const [mediums, styles, techniques, themes] = await Promise.all([
+  const [mediums, styles, techniques, themes, supports] = await Promise.all([
     getAllArtworkMediums(),
     getAllArtworkStyles(),
     getAllArtworkTechniques(),
     getAllArtworkThemes(),
+    getAllArtworkSupports(),
   ]);
 
   return (
@@ -27,6 +29,7 @@ export default async function CreatePhysicalArtworkPage() {
         styles={styles}
         techniques={techniques}
         themes={themes}
+        supports={supports}
       />
     </Suspense>
   );

@@ -16,6 +16,7 @@ import {
   ArtworkStyle,
   ArtworkTechnique,
   ArtworkTheme,
+  ArtworkSupport,
 } from "@prisma/client";
 
 interface CreatePhysicalArtworkClientProps {
@@ -23,6 +24,7 @@ interface CreatePhysicalArtworkClientProps {
   styles: ArtworkStyle[];
   techniques: ArtworkTechnique[];
   themes: ArtworkTheme[];
+  supports: ArtworkSupport[];
 }
 
 export default function CreatePhysicalArtworkClient({
@@ -30,6 +32,7 @@ export default function CreatePhysicalArtworkClient({
   styles: artStyles,
   techniques,
   themes,
+  supports,
 }: CreatePhysicalArtworkClientProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [artistName, setArtistName] = useState("");
@@ -127,6 +130,7 @@ export default function CreatePhysicalArtworkClient({
           styles={artStyles}
           techniques={techniques}
           themes={themes}
+          supports={supports}
           collections={collections}
           artistName={artistName}
           artistSurname={artistSurname}

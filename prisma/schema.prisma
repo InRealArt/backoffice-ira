@@ -548,6 +548,9 @@ model PhysicalItem {
   // Caractéristiques artistiques
   mediumId       Int?
   medium         ArtworkMedium?  @relation(fields: [mediumId], references: [id])
+  supportId Int?
+  support ArtworkSupport? @relation(fields: [supportId], references: [id])
+  
   // Relations many-to-many via tables de jointure
   itemStyles     ItemStyle[]
   itemTechniques ItemTechnique[]
@@ -1021,6 +1024,7 @@ model ArtworkSupport {
   id   Int    @id @default(autoincrement())
   name String
 
+  physicalItems PhysicalItem[]
   @@schema("backoffice")
 }
 

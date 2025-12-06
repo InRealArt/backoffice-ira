@@ -23,6 +23,7 @@ import {
   ArtworkStyle,
   ArtworkTechnique,
   ArtworkTheme,
+  ArtworkSupport,
 } from "@prisma/client";
 
 interface EditPhysicalArtworkClientProps {
@@ -31,6 +32,7 @@ interface EditPhysicalArtworkClientProps {
   styles: ArtworkStyle[];
   techniques: ArtworkTechnique[];
   themes: ArtworkTheme[];
+  supports: ArtworkSupport[];
 }
 
 export default function EditPhysicalArtworkClient({
@@ -39,6 +41,7 @@ export default function EditPhysicalArtworkClient({
   styles: artStyles,
   techniques,
   themes,
+  supports,
 }: EditPhysicalArtworkClientProps) {
   // Utiliser React.use pour extraire les paramètres de la promesse
   const resolvedParams = use(params);
@@ -225,6 +228,7 @@ export default function EditPhysicalArtworkClient({
             styles={artStyles}
             techniques={techniques}
             themes={themes}
+            supports={supports}
             collections={collections}
             artistName={artistName}
             artistSurname={artistSurname}
@@ -240,6 +244,7 @@ export default function EditPhysicalArtworkClient({
               secondaryImagesUrl: item.secondaryImagesUrl || [],
               // Caractéristiques artistiques depuis PhysicalItem
               mediumId: item.physicalItem?.mediumId,
+              supportId: item.physicalItem?.supportId,
               styleIds:
                 item.physicalItem?.itemStyles?.map((is: any) => is.styleId) ||
                 [],
@@ -266,6 +271,7 @@ export default function EditPhysicalArtworkClient({
                     physicalCollectionId:
                       item.physicalItem.physicalCollectionId,
                     mediumId: item.physicalItem.mediumId,
+                    supportId: item.physicalItem.supportId,
                     itemStyles: item.physicalItem.itemStyles || [],
                     itemTechniques: item.physicalItem.itemTechniques || [],
                     itemThemes: item.physicalItem.itemThemes || [],

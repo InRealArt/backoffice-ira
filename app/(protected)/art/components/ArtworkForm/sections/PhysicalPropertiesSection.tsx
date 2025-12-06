@@ -1,8 +1,10 @@
 import { FormFields } from "../types";
 import FormSection from "../FormSection";
+import { ArtworkSupport } from "@prisma/client";
 
 interface PhysicalPropertiesSectionProps extends FormFields {
   isFormReadOnly?: boolean;
+  supports?: ArtworkSupport[];
 }
 
 function PhysicalPropertiesSection({
@@ -12,41 +14,79 @@ function PhysicalPropertiesSection({
   setValue,
   getValues,
   isFormReadOnly = false,
+  supports = [],
 }: PhysicalPropertiesSectionProps) {
   return (
     <FormSection title="Caractéristiques physiques" bgVariant="subtle-3">
-      {/* Prix de l'œuvre physique */}
-      <div className="mb-6">
-        <label
-          htmlFor="pricePhysicalBeforeTax"
-          className="flex items-center gap-1"
-          data-required={true}
-        >
-          Prix de l'œuvre physique (HT)
-        </label>
-        <input
-          id="pricePhysicalBeforeTax"
-          type="number"
-          {...register("pricePhysicalBeforeTax", {
-            required: true,
-            min: {
-              value: 0,
-              message: "Le prix doit être supérieur ou égal à 0",
-            },
-          })}
-          className={`form-input ${
-            errors.pricePhysicalBeforeTax ? "input-error" : ""
-          }`}
-          placeholder="Prix HT en euros"
-          disabled={isFormReadOnly}
-        />
-        {errors.pricePhysicalBeforeTax && (
-          <p className="form-error">
-            {String(
-              errors.pricePhysicalBeforeTax?.message || "Le prix est requis"
-            )}
-          </p>
-        )}
+      {/* Prix de l'œuvre physique et Support */}
+      <div className="flex flex-wrap gap-4 md:gap-6 mb-6 w-full max-w-full">
+        {/* Prix de l'œuvre physique */}
+        <div className="flex-1 min-w-[200px] max-w-full">
+          <label
+            htmlFor="pricePhysicalBeforeTax"
+            className="flex items-center gap-1 mb-2"
+            data-required={true}
+          >
+            Prix de l'œuvre physique (HT)
+          </label>
+          <input
+            id="pricePhysicalBeforeTax"
+            type="number"
+            {...register("pricePhysicalBeforeTax", {
+              required: true,
+              min: {
+                value: 0,
+                message: "Le prix doit être supérieur ou égal à 0",
+              },
+            })}
+            className={`form-input ${
+              errors.pricePhysicalBeforeTax ? "input-error" : ""
+            }`}
+            placeholder="Prix HT en euros"
+            disabled={isFormReadOnly}
+          />
+          {errors.pricePhysicalBeforeTax && (
+            <p className="form-error mt-1">
+              {String(
+                errors.pricePhysicalBeforeTax?.message || "Le prix est requis"
+              )}
+            </p>
+          )}
+        </div>
+
+        {/* Support */}
+        <div className="flex-1 min-w-[200px] max-w-full">
+          <label
+            htmlFor="supportId"
+            className="flex items-center gap-1 mb-2"
+          >
+            Support
+          </label>
+          <select
+            id="supportId"
+            {...register("supportId")}
+            className={`
+              form-input ${
+                errors.supportId
+                  ? "input-error"
+                  : ""
+              }
+            `}
+            disabled={isFormReadOnly}
+          >
+            <option value="">Sélectionnez un support</option>
+            {supports.map((support) => (
+              <option key={support.id} value={support.id}>
+                {support.name}
+              </option>
+            ))}
+          </select>
+          {errors.supportId && (
+            <p className="form-error mt-1">
+              {String(errors.supportId?.message)}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Ligne 1: Année de création, Quantité disponible, Poids */}

@@ -750,6 +750,7 @@ export function useArtworkForm({
                             shippingAddressId: data.shippingAddressId ? parseInt(data.shippingAddressId, 10) : undefined,
                             // Caractéristiques artistiques (maintenant dans PhysicalItem)
                             mediumId: data.mediumId ? parseInt(data.mediumId, 10) : undefined,
+                            supportId: data.supportId ? parseInt(data.supportId, 10) : undefined,
                             styleIds: data.styleIds ? data.styleIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
                             techniqueIds: data.techniqueIds ? data.techniqueIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
                             themeIds: data.themeIds ? data.themeIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
@@ -846,6 +847,7 @@ export function useArtworkForm({
                         physicalCollectionId: data.physicalCollectionId ? parseInt(data.physicalCollectionId, 10) : undefined,
                         // Caractéristiques artistiques (maintenant dans PhysicalItem)
                         mediumId: data.mediumId ? parseInt(data.mediumId, 10) : undefined,
+                        supportId: data.supportId ? parseInt(data.supportId, 10) : undefined,
                         styleIds: data.styleIds ? data.styleIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
                         techniqueIds: data.techniqueIds ? data.techniqueIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
                         themeIds: data.themeIds ? data.themeIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,

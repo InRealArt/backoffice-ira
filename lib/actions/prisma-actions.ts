@@ -502,6 +502,7 @@ export async function createItemRecord(
     shippingAddressId?: number,
     physicalCollectionId?: number,
     mediumId?: number,
+    supportId?: number,
     styleIds?: number[],
     techniqueIds?: number[],
     themeIds?: number[]
@@ -555,6 +556,7 @@ export async function createItemRecord(
             shippingAddressId: physicalItemData.shippingAddressId || null,
             physicalCollectionId: physicalItemData.physicalCollectionId || null,
             mediumId: physicalItemData.mediumId || null,
+            supportId: physicalItemData.supportId || null,
             status: status as PhysicalItemStatus // Utiliser status comme enum pour PhysicalItem
           }
         })
@@ -914,6 +916,7 @@ export async function getItemById(itemId: number) {
             physicalCollectionId: true,
             // Caractéristiques artistiques (déplacées de Item vers PhysicalItem)
             mediumId: true,
+            supportId: true,
             medium: {
               select: {
                 id: true,
@@ -2075,6 +2078,7 @@ export async function updateItemRecord(
       shippingAddressId?: number,
       physicalCollectionId?: number,
       mediumId?: number,
+      supportId?: number,
       styleIds?: number[],
       techniqueIds?: number[],
       themeIds?: number[]
@@ -2158,6 +2162,7 @@ export async function updateItemRecord(
         if (physicalData.shippingAddressId !== undefined) physicalUpdateData.shippingAddressId = physicalData.shippingAddressId
         if (physicalData.physicalCollectionId !== undefined) physicalUpdateData.physicalCollectionId = physicalData.physicalCollectionId
         if (physicalData.mediumId !== undefined) physicalUpdateData.mediumId = physicalData.mediumId
+        if (physicalData.supportId !== undefined) physicalUpdateData.supportId = physicalData.supportId
 
         if (existingPhysicalItem) {
           // Mettre à jour le PhysicalItem existant
@@ -2231,6 +2236,7 @@ export async function updateItemRecord(
               shippingAddressId: physicalData.shippingAddressId || null,
               physicalCollectionId: physicalData.physicalCollectionId || null,
               mediumId: physicalData.mediumId || null,
+              supportId: physicalData.supportId || null,
               status: PhysicalItemStatus.created
             }
           })

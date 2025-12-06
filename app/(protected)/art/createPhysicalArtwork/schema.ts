@@ -69,6 +69,7 @@ export const physicalArtworkSchema = z.object({
         z.null()
     ]).optional(),
     artworkSupport: z.string().optional(),
+    supportId: z.string().optional(),
     shippingAddressId: z.string()
         .min(1, "L'adresse d'expédition est obligatoire")
         .refine(val => val !== '', "L'adresse d'expédition doit être sélectionnée"),
@@ -143,6 +144,7 @@ export const physicalArtworkEditSchema = z.object({
         z.null()
     ]).optional(),
     artworkSupport: z.string().optional(),
+    supportId: z.string().optional(),
     shippingAddressId: z.string()
         .min(1, "L'adresse d'expédition est obligatoire")
         .refine(val => val !== '', "L'adresse d'expédition doit être sélectionnée"),
@@ -178,6 +180,7 @@ export type PhysicalArtworkFormData = {
     physicalCertificate?: FileList | null;
     nftCertificate?: FileList | null;
     artworkSupport?: string;
+    supportId?: string;
     certificateUrl?: string;
     physicalCertificateUrl?: string;
     nftCertificateUrl?: string;
