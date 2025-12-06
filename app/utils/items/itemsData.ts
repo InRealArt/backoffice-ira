@@ -18,6 +18,10 @@ export type ItemData = {
         price: number
         realViewCount?: number
         fakeViewCount?: number
+        physicalCollection?: {
+            id: number
+            name: string
+        } | null
     } | null
     nftItem?: {
         id: number
@@ -64,7 +68,13 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
                         status: true,
                         price: true,
                         realViewCount: true,
-                        fakeViewCount: true
+                        fakeViewCount: true,
+                        physicalCollection: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        }
                     }
                 }
             },
@@ -82,11 +92,24 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
 
         return {
             success: true,
-            data: items.map((it) => ({
-                ...it,
-                // Normaliser createdAt en string pour la sérialisation côté client
-                createdAt: (it as any).createdAt instanceof Date ? (it as any).createdAt.toISOString() : (it as any).createdAt
-            })) as ItemData[]
+            data: items.map((it) => {
+                const item = {
+                    ...it,
+                    // Normaliser createdAt en string pour la sérialisation côté client
+                    createdAt: (it as any).createdAt instanceof Date ? (it as any).createdAt.toISOString() : (it as any).createdAt,
+                    // S'assurer que physicalItem est correctement sérialisé
+                    physicalItem: it.physicalItem ? {
+                        ...it.physicalItem,
+                        id: Number(it.physicalItem.id), // Convertir BigInt en number
+                        // S'assurer que physicalCollection est inclus et correctement sérialisé
+                        physicalCollection: it.physicalItem.physicalCollection ? {
+                            id: it.physicalItem.physicalCollection.id,
+                            name: it.physicalItem.physicalCollection.name
+                        } : null
+                    } : null
+                }
+                return item
+            }) as ItemData[]
         }
     } catch (error) {
         console.error('Erreur lors de la récupération des items:', error)
