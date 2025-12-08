@@ -1,144 +1,66 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
-import LoadingSpinner from "@/app/components/LoadingSpinner/LoadingSpinner";
-import { fetchItemsData, ItemData } from "@/app/utils/items/itemsData";
+import { getAuthenticatedUserEmail } from "@/lib/auth-helpers";
 import { getBackofficeUserByEmail } from "@/lib/actions/prisma-actions";
-import { PlusCircle } from "lucide-react";
-import styles from "./MyPhysicalArtwork.module.scss";
-import NavigationButton from "@/app/components/NavigationButton";
-import { PhysicalArtworkListItem } from "@/app/components/PhysicalArtwork";
+import { fetchItemsData } from "@/app/utils/items/itemsData";
+import { getPhysicalCollectionsByArtistId } from "@/lib/actions/physical-collection-actions";
+import MyPhysicalArtworkClient from "./MyPhysicalArtworkClient";
 
-type BackofficeUserResult = Awaited<
-  ReturnType<typeof getBackofficeUserByEmail>
->;
+export default async function MyPhysicalArtworkPage() {
+  // Récupérer l'email de l'utilisateur authentifié
+  const userEmail = await getAuthenticatedUserEmail();
 
-export default function MyPhysicalArtworkPage() {
-  const { data: session, isPending: isSessionPending } =
-    authClient.useSession();
-  const [isLoading, setIsLoading] = useState(true);
-  const [itemsData, setItemsData] = useState<ItemData[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [userDB, setUserDB] = useState<BackofficeUserResult>(null);
+  // Récupérer l'utilisateur backoffice
+  const userDB = await getBackofficeUserByEmail(userEmail);
 
-  useEffect(() => {
-    // Attendre que la session soit chargée
-    if (isSessionPending) {
-      return;
-    }
+  if (!userDB) {
+    return (
+      <div className="page-container">
+        <div className="alert alert-error">
+          Votre profil utilisateur n'a pas été trouvé
+        </div>
+      </div>
+    );
+  }
 
-    // Ne rien faire si l'utilisateur n'est pas connecté
-    if (!session?.user?.email) {
-      setIsLoading(false);
-      setError("Vous devez être connecté pour voir vos œuvres physiques");
-      return;
-    }
+  // Récupérer les données des items
+  const result = await fetchItemsData(userEmail);
 
-    let isMounted = true;
+  if (!result.success) {
+    return (
+      <div className="page-container">
+        <div className="alert alert-error">
+          {result.error || "Erreur lors du chargement de vos œuvres"}
+        </div>
+      </div>
+    );
+  }
 
-    // Récupérer les données des items
-    const loadData = async () => {
-      // Garantir que email n'est jamais undefined
-      const email = session.user.email as string;
-      const userDB = await getBackofficeUserByEmail(email);
+  // Filtrer uniquement les items qui ont un physicalItem
+  const physicalItems = (result.data || []).filter(
+    (item) => item.physicalItem !== null && item.physicalItem !== undefined
+  );
 
-      if (!userDB) {
-        setError("Votre profil utilisateur n'a pas été trouvé");
-        setIsLoading(false);
-        return;
-      }
+  // Récupérer les collections de l'artiste si l'utilisateur a un artistId
+  let allCollections: Array<{
+    id: number;
+    name: string;
+    description: string;
+    landingArtistId: number;
+  }> = [];
 
-      setUserDB(userDB);
-
-      const result = await fetchItemsData(email);
-
-      if (isMounted) {
-        if (!result.success) {
-          setError(result.error || null);
-        } else {
-          // Filtrer uniquement les items qui ont un physicalItem
-          const physicalItems = (result.data || []).filter(
-            (item) =>
-              item.physicalItem !== null && item.physicalItem !== undefined
-          );
-          setItemsData(physicalItems);
-        }
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [session?.user?.email, isSessionPending]);
-
-  if (isLoading) {
-    return <LoadingSpinner message="Chargement de vos œuvres physiques..." />;
+  if (userDB.artistId) {
+    allCollections = await getPhysicalCollectionsByArtistId(userDB.artistId);
   }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <div className="header-top-section">
-          <h1 className={`page-title ${styles.bigTitle}`}>Mon portfolio</h1>
-          <NavigationButton
-            href="/art/createPhysicalArtwork"
-            variant="primary"
-            className="px-6 py-2 flex items-center gap-2"
-          >
-            <PlusCircle size={18} />
-            Créer une œuvre physique
-          </NavigationButton>
-        </div>
-      </div>
-
-      {error ? (
-        <div className="alert alert-error">{error}</div>
-      ) : !itemsData || itemsData.length === 0 ? (
-        <div className="empty-state">
-          <p>Aucune œuvre physique trouvée dans votre collection</p>
-          <NavigationButton
-            href="/art/createPhysicalArtwork"
-            variant="primary"
-            className="mt-4 flex items-center gap-2"
-          >
-            <PlusCircle size={18} />
-            Créer votre première œuvre physique
-          </NavigationButton>
-        </div>
-      ) : (
-        <>
-          <div className="section">
-            <div className={styles.listContainer}>
-              {itemsData.map((item) => {
-                const views =
-                  (item.physicalItem?.realViewCount || 0) +
-                  (item.physicalItem?.fakeViewCount || 0);
-                const wishlist = 47; // Fallback hardcodé
-                const collection = item.physicalItem?.physicalCollection || null;
-                
-                return (
-                  <PhysicalArtworkListItem
-                    key={item.id}
-                    id={item.id}
-                    name={item.name}
-                    mainImageUrl={item.mainImageUrl}
-                    createdAt={item.createdAt}
-                    price={item.physicalItem?.price}
-                    views={views}
-                    wishlistCount={wishlist}
-                    collection={collection}
-                    editHref={`/art/editPhysicalArtwork/${item.id}`}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+    <MyPhysicalArtworkClient
+      itemsData={physicalItems}
+      userDB={{
+        id: userDB.id,
+        name: userDB.name,
+        email: userDB.email,
+        artistId: userDB.artistId,
+      }}
+      allCollections={allCollections}
+    />
   );
 }
