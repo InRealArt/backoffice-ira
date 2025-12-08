@@ -11,6 +11,7 @@ import {
   getPendingItemsCount,
   getUserMintedItemsCount,
   getUserListedItemsCount,
+  getUserPhysicalItemsCount,
   getBackofficeUserByEmail,
   getVisibleLandingArtistsCount,
 } from "@/lib/actions/prisma-actions";
@@ -34,6 +35,8 @@ export default function Dashboard() {
   const [isLoadingArtist, setIsLoadingArtist] = useState(true);
   const [presaleArtworkCount, setPresaleArtworkCount] = useState(0);
   const [isLoadingPresaleCount, setIsLoadingPresaleCount] = useState(true);
+  const [physicalItemsCount, setPhysicalItemsCount] = useState(0);
+  const [isLoadingPhysicalItemsCount, setIsLoadingPhysicalItemsCount] = useState(true);
   const { isAdmin, isLoading } = useIsAdmin();
 
   const truncateAddress = (address: string | undefined) => {
@@ -104,6 +107,7 @@ export default function Dashboard() {
             setIsLoadingUserCounts(false);
             setIsLoadingArtist(false);
             setIsLoadingPresaleCount(false);
+            setIsLoadingPhysicalItemsCount(false);
             return;
           }
 
@@ -129,11 +133,14 @@ export default function Dashboard() {
 
           const mintedResult = await getUserMintedItemsCount(backofficeUser.id);
           const listedResult = await getUserListedItemsCount(backofficeUser.id);
+          const physicalItemsResult = await getUserPhysicalItemsCount(backofficeUser.id);
 
           if (!isMounted) return;
 
           setMintedItemsCount(mintedResult.count);
           setListedItemsCount(listedResult.count);
+          setPhysicalItemsCount(physicalItemsResult.count);
+          setIsLoadingPhysicalItemsCount(false);
         } catch (error) {
           if (!isMounted) return;
           console.error(
@@ -144,6 +151,8 @@ export default function Dashboard() {
           setMintedItemsCount(0);
           setListedItemsCount(0);
           setPresaleArtworkCount(0);
+          setPhysicalItemsCount(0);
+          setIsLoadingPhysicalItemsCount(false);
         } finally {
           if (isMounted) {
             setIsLoadingUserCounts(false);
@@ -179,6 +188,8 @@ export default function Dashboard() {
         isLoadingListedCount={isLoadingUserCounts}
         pendingItemsCount={pendingItemsCount}
         isLoadingPendingCount={isLoadingCount}
+        physicalItemsCount={physicalItemsCount}
+        isLoadingPhysicalItemsCount={isLoadingPhysicalItemsCount}
         visibleArtistsCount={visibleArtistsCount}
         isLoadingArtistsCount={isLoadingArtistsCount}
         isAdmin={isAdmin}

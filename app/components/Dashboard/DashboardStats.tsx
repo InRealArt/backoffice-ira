@@ -1,6 +1,6 @@
 "use client";
 
-import { Package, FileText, Users } from "lucide-react";
+import { Package, FileText, Users, Box } from "lucide-react";
 import { MetricCard } from "./MetricCard";
 
 interface DashboardStatsProps {
@@ -13,6 +13,8 @@ interface DashboardStatsProps {
   isLoadingListedCount?: boolean;
   pendingItemsCount?: number;
   isLoadingPendingCount?: boolean;
+  physicalItemsCount?: number;
+  isLoadingPhysicalItemsCount?: boolean;
 
   // Métriques pour les admins
   visibleArtistsCount?: number;
@@ -30,6 +32,8 @@ export function DashboardStats({
   isLoadingListedCount = false,
   pendingItemsCount = 0,
   isLoadingPendingCount = false,
+  physicalItemsCount = 0,
+  isLoadingPhysicalItemsCount = false,
   visibleArtistsCount = 0,
   isLoadingArtistsCount = false,
   isAdmin = false,
@@ -51,13 +55,22 @@ export function DashboardStats({
   return (
     <div className="dashboard-stats">
       <MetricCard
-        title="Œuvres en prévente"
+        title="Œuvres en prévente sur le site web InRealArt"
         value={presaleArtworkCount}
         icon={Package}
         color="#3b82f6"
         isLoading={isLoadingPresaleCount}
         buttonTitle="Voir les œuvres"
         buttonRoute="/art/presale-artworks"
+      />
+      <MetricCard
+        title="Œuvres physiques sur la Marketplace"
+        value={physicalItemsCount}
+        icon={Box}
+        color="#10b981"
+        isLoading={isLoadingPhysicalItemsCount}
+        buttonTitle="Voir les œuvres"
+        buttonRoute="/art/myPhysicalArtwork"
       />
       {/* <MetricCard
         title="Items en attente"
