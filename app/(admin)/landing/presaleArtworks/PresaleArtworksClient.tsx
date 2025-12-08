@@ -57,6 +57,7 @@ interface PresaleArtwork {
   id: number;
   name: string;
   order: number;
+  displayOrder: number | null;
   price: number | null;
   width: number | null;
   height: number | null;
@@ -237,6 +238,13 @@ export default function PresaleArtworksClient({
       sortable: true,
     },
     {
+      key: "displayOrder",
+      header: "Ordre affichage site web",
+      width: "120px",
+      sortable: !!searchParams.artistId,
+      render: (artwork) => artwork.displayOrder ?? "-",
+    },
+    {
       key: "name",
       header: "Nom",
       sortable: true,
@@ -298,6 +306,15 @@ export default function PresaleArtworksClient({
               <ActionButton
                 label="Ordre d'affichage"
                 onClick={() => router.push("/art/my-artworks/display-order")}
+                size="small"
+                variant="secondary"
+                icon={<ArrowUpDown size={16} />}
+              />
+            )}
+            {!isArtistMode && searchParams.artistId && (
+              <ActionButton
+                label="Ordre affichage sur site web"
+                onClick={() => router.push(`/landing/presaleArtworks/display-order?artistId=${searchParams.artistId}`)}
                 size="small"
                 variant="secondary"
                 icon={<ArrowUpDown size={16} />}

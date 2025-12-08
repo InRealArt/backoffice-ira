@@ -32,11 +32,15 @@ interface PresaleArtwork {
 interface DisplayOrderManagerProps {
   artworks: PresaleArtwork[];
   artistId: number;
+  backUrl?: string;
+  revalidatePaths?: string[];
 }
 
 export default function DisplayOrderManager({
   artworks: initialArtworks,
   artistId,
+  backUrl = "/art/my-artworks",
+  revalidatePaths,
 }: DisplayOrderManagerProps) {
   const router = useRouter();
   const [artworks, setArtworks] = useState<PresaleArtwork[]>(initialArtworks);
@@ -70,12 +74,14 @@ export default function DisplayOrderManager({
 
     setIsSaving(true);
 
+    const pathsToRevalidate = revalidatePaths || [
+      "/art/my-artworks",
+      "/art/my-artworks/display-order",
+      "/art/presale-artworks",
+    ];
+
     try {
-      const result = await updateDisplayOrder("presaleArtwork", updates, [
-        "/art/my-artworks",
-        "/art/my-artworks/display-order",
-        "/art/presale-artworks",
-      ]);
+      const result = await updateDisplayOrder("presaleArtwork", updates, pathsToRevalidate);
 
       if (result.success) {
         success("Ordre d'affichage mis à jour avec succès");
@@ -101,12 +107,14 @@ export default function DisplayOrderManager({
     setIsResetModalOpen(false);
     setIsResetting(true);
 
+    const pathsToRevalidate = revalidatePaths || [
+      "/art/my-artworks",
+      "/art/my-artworks/display-order",
+      "/art/presale-artworks",
+    ];
+
     try {
-      const result = await resetDisplayOrderForArtist(artistId, [
-        "/art/my-artworks",
-        "/art/my-artworks/display-order",
-        "/art/presale-artworks",
-      ]);
+      const result = await resetDisplayOrderForArtist(artistId, pathsToRevalidate);
 
       if (result.success) {
         success("Ordre d'affichage réinitialisé avec succès");
@@ -134,7 +142,7 @@ export default function DisplayOrderManager({
           <div className={styles.titleRow}>
             <button
               type="button"
-              onClick={() => router.push("/art/my-artworks")}
+              onClick={() => router.push(backUrl)}
               className={styles.backButton}
               aria-label="Retour à la liste des œuvres"
             >
