@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PhysicalCollectionWithItems } from "@/lib/actions/physical-collection-actions";
 import { useState } from "react";
 import NavigationButton from "@/app/components/NavigationButton";
+import { Pencil } from "lucide-react";
 
 interface PhysicalCollectionsListProps {
   collections: PhysicalCollectionWithItems[];
@@ -23,24 +24,31 @@ function ArtworkThumbnail({
   artworkId: number;
 }) {
   const [imageError, setImageError] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const hasValidImage = imageUrl && !imageError;
 
   return (
     <Link
       href={`/art/editPhysicalArtwork/${artworkId}`}
-      className="relative w-[120px] h-[120px] md:w-[100px] md:h-[100px] rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 cursor-pointer transition-transform hover:scale-105 group flex-shrink-0 block"
+      className="relative w-[90px] h-[90px] md:w-[80px] md:h-[80px] rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 cursor-pointer transition-transform hover:scale-105 flex-shrink-0 block"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {hasValidImage ? (
-        <Image
-          src={imageUrl}
-          alt={alt}
-          width={120}
-          height={120}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          onError={() => setImageError(true)}
-          quality={85}
-        />
+        <>
+          <Image
+            src={imageUrl}
+            alt={alt}
+            width={90}
+            height={90}
+            className={`w-full h-full object-cover transition-all duration-200 ${
+              isHovered ? "grayscale brightness-75" : ""
+            }`}
+            loading="lazy"
+            onError={() => setImageError(true)}
+            quality={85}
+          />
+        </>
       ) : (
         // Placeholder SVG si pas d'image ou erreur
         <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700">
@@ -60,10 +68,28 @@ function ArtworkThumbnail({
         </div>
       )}
       {isSold && (
-        <div className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-md z-10" />
+        <div className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-md z-20" />
       )}
       {/* Overlay au hover pour améliorer l'UX */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-200" />
+      <div
+        className={`absolute inset-0 bg-black/0 transition-colors duration-200 pointer-events-none z-[1] ${
+          isHovered ? "bg-black/40" : ""
+        }`}
+      />
+      {/* Icône d'édition au survol */}
+      <div
+        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 pointer-events-none z-[2] ${
+          isHovered ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <div className="bg-white dark:bg-gray-800 rounded-full p-2.5 shadow-2xl border-2 border-white/50 dark:border-gray-700/50 ring-2 ring-purple-500/30 dark:ring-purple-400/30">
+          <Pencil
+            size={20}
+            className="text-purple-600 dark:text-purple-400"
+            strokeWidth={3}
+          />
+        </div>
+      </div>
     </Link>
   );
 }
