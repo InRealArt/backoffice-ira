@@ -271,3 +271,98 @@ export async function getPhysicalCollectionsWithItems(): Promise<PhysicalCollect
     }
 }
 
+export interface UpdatePhysicalCollectionData {
+    name: string
+    description: string
+}
+
+/**
+ * Met à jour une collection physique pour l'artiste authentifié
+ */
+export async function updatePhysicalCollection(
+    id: number,
+    data: UpdatePhysicalCollectionData
+): Promise<{ success: boolean; message?: string; collection?: PhysicalCollection }> {
+    try {
+        // Récupérer l'email de l'utilisateur authentifié
+        const userEmail = await getAuthenticatedUserEmail()
+
+        // Récupérer l'utilisateur backoffice
+        const backofficeUser = await getBackofficeUserByEmail(userEmail)
+
+        if (!backofficeUser) {
+            return {
+                success: false,
+                message: 'Utilisateur non trouvé'
+            }
+        }
+
+        // Vérifier que l'utilisateur a un artistId
+        if (!backofficeUser.artistId) {
+            return {
+                success: false,
+                message: 'Vous devez avoir un profil artiste pour modifier une collection'
+            }
+        }
+
+        // Récupérer le LandingArtist associé à l'artiste
+        const landingArtist = await getLandingArtistByArtistId(backofficeUser.artistId)
+
+        if (!landingArtist) {
+            return {
+                success: false,
+                message: 'Profil artiste landing non trouvé'
+            }
+        }
+
+        // Vérifier que la collection existe et appartient à l'artiste
+        const existingCollection = await prisma.physicalCollection.findUnique({
+            where: { id }
+        })
+
+        if (!existingCollection) {
+            return {
+                success: false,
+                message: 'Collection non trouvée'
+            }
+        }
+
+        if (existingCollection.landingArtistId !== landingArtist.id) {
+            return {
+                success: false,
+                message: 'Vous n\'avez pas la permission de modifier cette collection'
+            }
+        }
+
+        // Mettre à jour la collection
+        const collection = await prisma.physicalCollection.update({
+            where: { id },
+            data: {
+                name: data.name,
+                description: data.description
+            }
+        })
+
+        // Revalider les chemins concernés
+        revalidatePath('/art/physicalCollection')
+        revalidatePath(`/art/edit-physical-collection/${id}`)
+
+        return {
+            success: true,
+            message: 'Collection mise à jour avec succès',
+            collection: {
+                id: collection.id,
+                name: collection.name,
+                description: collection.description,
+                landingArtistId: collection.landingArtistId,
+            }
+        }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour de la collection:', error)
+        return {
+            success: false,
+            message: 'Une erreur est survenue lors de la mise à jour de la collection'
+        }
+    }
+}
+

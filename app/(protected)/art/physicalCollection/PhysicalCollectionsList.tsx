@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { PhysicalCollectionWithItems } from "@/lib/actions/physical-collection-actions";
 import { useState } from "react";
+import NavigationButton from "@/app/components/NavigationButton";
 
 interface PhysicalCollectionsListProps {
   collections: PhysicalCollectionWithItems[];
@@ -112,9 +113,10 @@ export default function PhysicalCollectionsList({
                   <h2 className="text-[1.375rem] font-bold m-0 text-gray-900 dark:text-gray-50 leading-tight tracking-tight truncate">
                     {collection.name}
                   </h2>
-                  <button
+                  <Link
+                    href={`/art/edit-physical-collection/${collection.id}`}
                     className="bg-transparent border-none text-gray-500 dark:text-gray-400 cursor-pointer p-1.5 flex items-center justify-center rounded-md transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300 flex-shrink-0"
-                    aria-label="Modifier le nom"
+                    aria-label="Modifier la collection"
                   >
                     <svg
                       width="16"
@@ -127,32 +129,29 @@ export default function PhysicalCollectionsList({
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                     </svg>
-                  </button>
+                  </Link>
                 </div>
               </div>
               {/* Bouton "Ajouter une œuvre" au même niveau que le nom */}
               <div className="flex items-center flex-shrink-0">
-                <Link
+                <NavigationButton
                   href={`/art/createPhysicalArtwork?collectionId=${collection.id}`}
+                  className="flex items-center gap-2 bg-purple text-white border border-white px-4 py-2 rounded-md cursor-pointer text-sm font-medium transition-all duration-200 hover:bg-purple/90 [&_svg]:shrink-0"
+                  aria-label="Ajouter une œuvre"
                 >
-                  <button
-                    className="flex items-center gap-2 bg-purple text-white border border-white px-4 py-2 rounded-md cursor-pointer text-sm font-medium transition-all duration-200 hover:bg-purple/90 [&_svg]:shrink-0"
-                    aria-label="Ajouter une œuvre"
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
                   >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <line x1="12" y1="5" x2="12" y2="19" />
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Ajouter une œuvre
-                  </button>
-                </Link>
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Ajouter une œuvre
+                </NavigationButton>
               </div>
             </div>
 
