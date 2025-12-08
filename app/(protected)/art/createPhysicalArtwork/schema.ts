@@ -38,7 +38,8 @@ export const physicalArtworkSchema = z.object({
         .min(1, "Au moins une technique est requise")
         .default([]),
     themeIds: z.array(z.union([z.string(), z.number()]))
-        .optional(),
+        .min(1, "Au moins un thème est requis")
+        .default([]),
     width: z.string()
         .min(1, "La largeur est obligatoire")
         .refine((val) => !isNaN(parseFloat(val)), "La largeur doit être un nombre valide"),
@@ -69,7 +70,8 @@ export const physicalArtworkSchema = z.object({
         z.null()
     ]).optional(),
     artworkSupport: z.string().optional(),
-    supportId: z.string().optional(),
+    supportId: z.string()
+        .min(1, "Le support est requis"),
     shippingAddressId: z.string()
         .min(1, "L'adresse d'expédition est obligatoire")
         .refine(val => val !== '', "L'adresse d'expédition doit être sélectionnée"),
@@ -113,7 +115,8 @@ export const physicalArtworkEditSchema = z.object({
         .min(1, "Au moins une technique est requise")
         .default([]),
     themeIds: z.array(z.union([z.string(), z.number()]))
-        .optional(),
+        .min(1, "Au moins un thème est requis")
+        .default([]),
     width: z.string()
         .min(1, "La largeur est obligatoire")
         .refine((val) => !isNaN(parseFloat(val)), "La largeur doit être un nombre valide"),
@@ -144,7 +147,8 @@ export const physicalArtworkEditSchema = z.object({
         z.null()
     ]).optional(),
     artworkSupport: z.string().optional(),
-    supportId: z.string().optional(),
+    supportId: z.string()
+        .min(1, "Le support est requis"),
     shippingAddressId: z.string()
         .min(1, "L'adresse d'expédition est obligatoire")
         .refine(val => val !== '', "L'adresse d'expédition doit être sélectionnée"),

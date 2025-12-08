@@ -200,7 +200,8 @@ function ArtworkCharacteristicsSection({
                   }))}
                   value={field.value || []}
                   onChange={field.onChange}
-                  placeholder="Sélectionnez un ou plusieurs thèmes (optionnel)"
+                  placeholder="Sélectionnez un ou plusieurs thèmes"
+                  required
                   disabled={isFormReadOnly}
                   error={
                     errors.themeIds

@@ -1,6 +1,11 @@
 "use client";
 
-import { FieldErrors, UseFormRegister, UseFormSetValue } from "react-hook-form";
+import {
+  FieldErrors,
+  UseFormGetValues,
+  UseFormRegister,
+  UseFormSetValue,
+} from "react-hook-form";
 import { PhysicalArtworkFormData } from "../../../createPhysicalArtwork/schema";
 import FormSection from "../FormSection";
 import { useRouter } from "next/navigation";
@@ -22,6 +27,7 @@ interface CollectionSectionProps {
   collections: PhysicalCollection[];
   readOnlyCollectionId?: number;
   setValue?: UseFormSetValue<PhysicalArtworkFormData>;
+  getValues?: UseFormGetValues<PhysicalArtworkFormData>;
 }
 
 export default function CollectionSection({
@@ -31,17 +37,45 @@ export default function CollectionSection({
   collections,
   readOnlyCollectionId,
   setValue,
+  getValues,
 }: CollectionSectionProps) {
   const router = useRouter();
 
   // Pré-sélectionner la collection si readOnlyCollectionId est défini
+  // Attendre que les collections soient chargées avant de définir la valeur
   useEffect(() => {
-    if (readOnlyCollectionId && setValue) {
-      setValue("physicalCollectionId", readOnlyCollectionId.toString(), {
-        shouldValidate: true,
-      });
+    if (collections.length === 0 || !setValue) return;
+
+    // Priorité 1: Utiliser readOnlyCollectionId si défini
+    if (readOnlyCollectionId) {
+      const collectionExists = collections.some(
+        (col) => col.id === readOnlyCollectionId
+      );
+      if (collectionExists) {
+        setValue("physicalCollectionId", readOnlyCollectionId.toString(), {
+          shouldValidate: true,
+        });
+        return;
+      }
     }
-  }, [readOnlyCollectionId, setValue]);
+
+    // Priorité 2: Vérifier si une valeur existe déjà dans le formulaire (depuis initialData)
+    if (getValues) {
+      const currentValue = getValues("physicalCollectionId");
+      if (currentValue && currentValue !== "") {
+        const collectionId = parseInt(currentValue, 10);
+        const collectionExists = collections.some(
+          (col) => col.id === collectionId
+        );
+        if (collectionExists) {
+          // S'assurer que la valeur est bien définie
+          setValue("physicalCollectionId", currentValue, {
+            shouldValidate: true,
+          });
+        }
+      }
+    }
+  }, [readOnlyCollectionId, setValue, collections, getValues]);
 
   return (
     <FormSection title="Collection" bgVariant="default">

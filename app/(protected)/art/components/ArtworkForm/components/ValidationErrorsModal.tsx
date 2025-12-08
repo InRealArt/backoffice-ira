@@ -88,6 +88,11 @@ const fieldMapping: Record<
     label: "Thèmes",
     fieldId: "themeIds",
   },
+  supportId: {
+    tab: "characteristics",
+    label: "Support",
+    fieldId: "supportId",
+  },
   shippingAddressId: {
     tab: "characteristics",
     label: "Adresse d'expédition",

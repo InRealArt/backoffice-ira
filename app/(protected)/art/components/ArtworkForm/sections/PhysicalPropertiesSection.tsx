@@ -59,6 +59,7 @@ function PhysicalPropertiesSection({
           <label
             htmlFor="supportId"
             className="flex items-center gap-1 mb-2"
+            data-required={true}
           >
             Support
           </label>

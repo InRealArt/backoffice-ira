@@ -501,6 +501,7 @@ export default function ArtworkForm({
         collections={collections}
         readOnlyCollectionId={readOnlyCollectionId}
         setValue={setValue}
+        getValues={getValues}
       />
     </div>
   );
