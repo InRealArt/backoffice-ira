@@ -81,6 +81,13 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
+    // Optimiser la compilation TypeScript
+    optimizePackageImports: [
+      '@radix-ui/react-icons',
+      'lucide-react',
+      '@tanstack/react-query',
+      'date-fns',
+    ],
   },
 
   images: {
