@@ -143,19 +143,56 @@ export async function uploadArtworkImages(
  */
 export function extractFirebaseStoragePath(url: string): string | null {
     try {
+        console.log('🔍 [extractFirebaseStoragePath] Extraction du chemin depuis:', url);
+
         // Les URLs Firebase Storage contiennent généralement un paramètre token
         // Format: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?alt=media&token=TOKEN
-        const regex = /firebasestorage\.googleapis\.com\/v0\/b\/[^\/]+\/o\/([^?]+)/;
-        const match = url.match(regex);
+        // Le PATH peut être encodé (ex: artists%2FJean%20Dupont%2Fmarketplace%2Fclose_up%2F...)
 
-        if (match && match[1]) {
-            // Décoder l'URL (Firebase encode les '/' en '%2F')
-            return decodeURIComponent(match[1]);
+        // Essayer plusieurs patterns pour être plus robuste
+        let match = url.match(/firebasestorage\.googleapis\.com\/v0\/b\/[^\/]+\/o\/([^?]+)/);
+
+        if (!match) {
+            // Essayer un autre format possible
+            match = url.match(/\/o\/([^?]+)/);
         }
 
+        if (!match) {
+            // Essayer avec le format gs://
+            if (url.startsWith('gs://')) {
+                const gsMatch = url.match(/gs:\/\/[^\/]+\/(.+)/);
+                if (gsMatch && gsMatch[1]) {
+                    const decodedPath = decodeURIComponent(gsMatch[1]);
+                    console.log('✅ [extractFirebaseStoragePath] Chemin extrait (gs://):', decodedPath);
+                    return decodedPath;
+                }
+            }
+        }
+
+        if (match && match[1]) {
+            // Décoder l'URL (Firebase encode les '/' en '%2F' et les espaces en '%20')
+            // Essayer de décoder plusieurs fois au cas où il y aurait un double encodage
+            let decodedPath = match[1];
+            try {
+                decodedPath = decodeURIComponent(decodedPath);
+                // Si le décodage a fonctionné mais qu'il y a encore des %2F, essayer une deuxième fois
+                if (decodedPath.includes('%2F') || decodedPath.includes('%20')) {
+                    decodedPath = decodeURIComponent(decodedPath);
+                }
+            } catch (decodeError) {
+                // Si le décodage échoue, utiliser le chemin tel quel
+                console.warn('⚠️ [extractFirebaseStoragePath] Erreur lors du décodage, utilisation du chemin brut:', decodeError);
+            }
+
+            console.log('✅ [extractFirebaseStoragePath] Chemin extrait:', decodedPath);
+            return decodedPath;
+        }
+
+        console.error('❌ [extractFirebaseStoragePath] Aucun match trouvé dans l\'URL');
+        console.error('❌ [extractFirebaseStoragePath] Format d\'URL attendu: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?alt=media&token=TOKEN');
         return null;
     } catch (error) {
-        console.error('Erreur lors de l\'extraction du chemin Firebase:', error);
+        console.error('❌ [extractFirebaseStoragePath] Erreur lors de l\'extraction du chemin Firebase:', error);
         return null;
     }
 }
@@ -412,26 +449,51 @@ export async function uploadImageToExistingFolder(
  */
 export async function deleteImageFromFirebase(imageUrl: string): Promise<boolean> {
     try {
-        // Extraire le chemin de stockage à partir de l'URL
+        console.log('🗑️ [deleteImageFromFirebase] Début de la suppression pour:', imageUrl);
+
+        // Étape 1: Authentification Firebase côté client
+        const { getAuth, signInAnonymously } = await import('firebase/auth')
+        const { app } = await import('./config')
+
+        const auth = getAuth(app)
+        console.log('🔐 [deleteImageFromFirebase] Authentification Firebase...');
+        await signInAnonymously(auth)
+        console.log('✅ [deleteImageFromFirebase] Authentification réussie');
+
+        // Étape 2: Extraire le chemin de stockage à partir de l'URL
         const storagePath = extractFirebaseStoragePath(imageUrl);
 
         if (!storagePath) {
-            console.error('Impossible d\'extraire le chemin de stockage:', imageUrl);
+            console.error('❌ [deleteImageFromFirebase] Impossible d\'extraire le chemin de stockage depuis:', imageUrl);
+            console.error('❌ [deleteImageFromFirebase] Format d\'URL attendu: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?alt=media&token=TOKEN');
             return false;
         }
 
-        console.log(`Tentative de suppression de l'image: ${storagePath}`);
+        console.log(`📁 [deleteImageFromFirebase] Chemin de stockage extrait: ${storagePath}`);
 
-        // Créer une référence à l'image
+        // Étape 3: Créer une référence à l'image
         const imageRef = ref(storage, storagePath);
+        console.log('📎 [deleteImageFromFirebase] Référence créée');
 
-        // Supprimer l'image
+        // Étape 4: Supprimer l'image
+        console.log('🗑️ [deleteImageFromFirebase] Tentative de suppression...');
         await deleteObject(imageRef);
 
-        console.log(`Image supprimée avec succès: ${storagePath}`);
+        console.log(`✅ [deleteImageFromFirebase] Image supprimée avec succès: ${storagePath}`);
         return true;
-    } catch (error) {
-        console.error('Erreur lors de la suppression de l\'image:', error);
+    } catch (error: any) {
+        // Si le fichier n'existe pas (erreur 404), on considère que c'est OK
+        if (error?.code === 'storage/object-not-found') {
+            console.log(`ℹ️ [deleteImageFromFirebase] Le fichier n'existe pas (déjà supprimé ou jamais créé): ${imageUrl}`)
+            return true
+        }
+
+        // Log détaillé de l'erreur
+        console.error('❌ [deleteImageFromFirebase] Erreur lors de la suppression de l\'image:', error);
+        console.error('❌ [deleteImageFromFirebase] Code d\'erreur:', error?.code);
+        console.error('❌ [deleteImageFromFirebase] Message d\'erreur:', error?.message);
+        console.error('❌ [deleteImageFromFirebase] Stack:', error?.stack);
+
         return false;
     }
 }
@@ -672,6 +734,90 @@ export async function uploadImageToMarketplaceFolder(
         return imageUrl
     } catch (error) {
         console.error("Erreur lors de l'upload de l'image:", error)
+        const errorMessage =
+            error instanceof Error
+                ? error.message
+                : "Erreur inconnue lors de l'upload"
+
+        // Notifier les callbacks en cas d'erreur
+        if (errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp')) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+
+        throw error
+    }
+}
+
+/**
+ * Upload une image vers Firebase Storage dans le répertoire marketplace d'un artiste selon le type d'image
+ * Crée le répertoire si nécessaire : /artists/{Prenom Nom}/marketplace/{type}/
+ * 
+ * @param imageFile - Le fichier image à uploader
+ * @param folderName - Nom du répertoire avec la casse exacte (ex: "Jean Dupont")
+ * @param imageType - Type d'image (CLOSE_UP, SIGNATURE, SIDE_VIEW, BACK_VIEW, IN_SITU, OTHER)
+ * @param fileName - Nom du fichier (sans extension)
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns URL de l'image uploadée
+ */
+export async function uploadImageToMarketplaceFolderByType(
+    imageFile: File,
+    folderName: string,
+    imageType: string,
+    fileName: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        // Étape 1: Authentification Firebase côté client
+        const { getAuth, signInAnonymously } = await import('firebase/auth')
+        const { app } = await import('./config')
+
+        const auth = getAuth(app)
+        await signInAnonymously(auth)
+
+        // Étape 2: Conversion WebP
+        onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+
+        if (!conversionResult.success) {
+            const errorMessage =
+                conversionResult.error ||
+                "Erreur lors de la conversion de l'image en WebP"
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        // Étape 3: Convertir le type d'image en nom de répertoire (CLOSE_UP -> close_up)
+        const typeFolderName = imageType.toLowerCase()
+
+        // Étape 4: Vérifier/créer le répertoire si nécessaire
+        const folderPath = `artists/${folderName}/marketplace/${typeFolderName}`
+        const nameParts = folderName.split(' ')
+        const firstName = nameParts[0] || ''
+        const lastName = nameParts.slice(1).join(' ') || ''
+        await ensureFolderExists(folderPath, firstName, lastName)
+
+        // Étape 5: Upload vers Firebase dans le répertoire spécifique au type
+        onUploadStatus?.('in-progress')
+        const fileExtension = 'webp'
+        const timestamp = Date.now()
+        const storagePath = `${folderPath}/${fileName}-${timestamp}.${fileExtension}`
+        const storageRef = ref(storage, storagePath)
+
+        await uploadBytes(storageRef, conversionResult.file)
+        const imageUrl = await getDownloadURL(storageRef)
+
+        onUploadStatus?.('completed')
+
+        return imageUrl
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image par type:", error)
         const errorMessage =
             error instanceof Error
                 ? error.message

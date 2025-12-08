@@ -99,6 +99,7 @@ export interface ArtworkFormProps {
             price?: number
             status?: string
         } | null
+        imagesByType?: Record<string, string[]>
     }
     onSuccess?: () => void
     onTitleChange?: (title: string) => void
@@ -191,6 +192,8 @@ export type UseArtworkFormReturn = {
     physicalCertificateInputRef: React.RefObject<HTMLInputElement>
     nftCertificateInputRef: React.RefObject<HTMLInputElement>
     secondaryImagesInputRef: React.RefObject<HTMLInputElement>
+    pendingImagesByTypeRef: React.MutableRefObject<Record<string, File[]>>
+    removedImagesByTypeRef: React.MutableRefObject<Record<string, string[]>>
     handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     handleSecondaryImagesChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     removeSecondaryImage: (index: number) => Promise<void>
@@ -239,6 +242,10 @@ export interface MediaFilesSectionProps extends FormFields {
     artistSurname?: string
     artworkName?: string
     onMainImageUploaded?: (imageUrl: string) => void
+    physicalItemId?: number | bigint
+    initialImagesByType?: Record<string, string[]>
+    pendingImagesByTypeRef?: React.MutableRefObject<Record<string, File[]>>
+    removedImagesByTypeRef?: React.MutableRefObject<Record<string, string[]>>
 }
 
 export interface PhysicalCertificateSectionProps extends FormFields {

@@ -958,6 +958,19 @@ export async function getItemById(itemId: number) {
                   }
                 }
               }
+            },
+            images: {
+              select: {
+                id: true,
+                imageUrl: true,
+                imageType: true,
+                order: true,
+                alt: true,
+                createdAt: true
+              },
+              orderBy: {
+                imageType: 'asc'
+              }
             }
           }
         },
@@ -2342,6 +2355,162 @@ export async function saveItemImages(
   } catch (error) {
     console.error('Erreur lors de la sauvegarde des images:', error);
     throw new Error(`Échec de la sauvegarde des images: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+  }
+}
+
+/**
+ * Sauvegarde une image PhysicalItemImage dans la base de données
+ * 
+ * @param physicalItemId - ID du PhysicalItem
+ * @param imageUrl - URL de l'image uploadée
+ * @param imageType - Type d'image (PhysicalItemImageType)
+ * @param alt - Texte alternatif (optionnel)
+ * @param order - Ordre d'affichage (optionnel, par défaut 0)
+ * @returns L'image créée
+ */
+export async function savePhysicalItemImage(
+  physicalItemId: bigint,
+  imageUrl: string,
+  imageType: string,
+  alt?: string | null,
+  order?: number | null
+) {
+  try {
+    const image = await prisma.physicalItemImage.create({
+      data: {
+        physicalItemId,
+        imageUrl,
+        imageType: imageType as any, // Cast vers PhysicalItemImageType
+        alt: alt || null,
+        order: order || 0
+      }
+    })
+
+    return {
+      success: true,
+      image: serializeData(image)
+    }
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde de l\'image PhysicalItemImage:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
+    }
+  }
+}
+
+/**
+ * Supprime une image PhysicalItemImage
+ * 
+ * @param imageId - ID de l'image à supprimer
+ * @returns Résultat de la suppression
+ */
+export async function deletePhysicalItemImage(imageId: bigint) {
+  try {
+    await prisma.physicalItemImage.delete({
+      where: { id: imageId }
+    })
+
+    return {
+      success: true,
+      message: 'Image supprimée avec succès'
+    }
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'image PhysicalItemImage:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
+    }
+  }
+}
+
+/**
+ * Supprime une image PhysicalItemImage par URL et type
+ * 
+ * @param physicalItemId - ID du PhysicalItem
+ * @param imageUrl - URL de l'image à supprimer
+ * @param imageType - Type de l'image
+ * @returns Résultat de la suppression
+ */
+export async function deletePhysicalItemImageByUrl(
+  physicalItemId: bigint,
+  imageUrl: string,
+  imageType: string
+) {
+  try {
+    // Trouver l'image par URL et type
+    const image = await prisma.physicalItemImage.findFirst({
+      where: {
+        physicalItemId: physicalItemId,
+        imageUrl: imageUrl,
+        imageType: imageType as any // Cast nécessaire car Prisma attend un enum
+      }
+    })
+
+    if (!image) {
+      return {
+        success: false,
+        error: 'Image introuvable'
+      }
+    }
+
+    // Supprimer l'image
+    await prisma.physicalItemImage.delete({
+      where: { id: image.id }
+    })
+
+    return {
+      success: true,
+      message: 'Image supprimée avec succès'
+    }
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'image PhysicalItemImage:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
+    }
+  }
+}
+
+/**
+ * Récupère toutes les images d'un PhysicalItem groupées par type
+ * 
+ * @param physicalItemId - ID du PhysicalItem
+ * @returns Images groupées par type
+ */
+export async function getPhysicalItemImagesByType(physicalItemId: bigint) {
+  try {
+    const images = await prisma.physicalItemImage.findMany({
+      where: { physicalItemId },
+      orderBy: [
+        { imageType: 'asc' },
+        { order: 'asc' }
+      ]
+    })
+
+    // Grouper les images par type
+    const imagesByType: Record<string, any[]> = {}
+    images.forEach(image => {
+      const type = image.imageType
+      if (!imagesByType[type]) {
+        imagesByType[type] = []
+      }
+      imagesByType[type].push(serializeData(image))
+    })
+
+    return {
+      success: true,
+      images: serializeData(images),
+      imagesByType
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération des images PhysicalItemImage:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erreur inconnue',
+      images: [],
+      imagesByType: {}
+    }
   }
 }
 

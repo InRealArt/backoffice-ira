@@ -38,6 +38,10 @@ export function useArtworkForm({
     const secondaryImagesInputRef = useRef<HTMLInputElement>(null)
     const [secondaryImages, setSecondaryImages] = useState<string[]>([])
     const [secondaryImagesFiles, setSecondaryImagesFiles] = useState<File[]>([])
+    // Ref pour stocker les fichiers en attente d'upload par type (non sérialisables dans le formulaire)
+    const pendingImagesByTypeRef = useRef<Record<string, File[]>>({})
+    // Ref pour stocker les URLs d'images existantes à supprimer (par type)
+    const removedImagesByTypeRef = useRef<Record<string, string[]>>({})
     const { data: session } = authClient.useSession()
     const [formErrors, setFormErrors] = useState<any>(null)
     const isEditMode = mode === 'edit'
@@ -89,8 +93,8 @@ export function useArtworkForm({
             metaDescription: initialData?.metaDescription || '',
             medium: initialData?.medium || '',
             mediumId: initialData?.physicalItem?.mediumId?.toString() || initialData?.mediumId?.toString() || '',
-            styleIds: (initialData?.styleIds && initialData.styleIds.length > 0) 
-                ? initialData.styleIds 
+            styleIds: (initialData?.styleIds && initialData.styleIds.length > 0)
+                ? initialData.styleIds
                 : (initialData?.physicalItem?.itemStyles && initialData.physicalItem.itemStyles.length > 0)
                     ? initialData.physicalItem.itemStyles.map(is => is.styleId)
                     : [] as (string | number)[],
@@ -557,7 +561,7 @@ export function useArtworkForm({
 
                     // Utiliser uploadImageToMarketplaceFolder au lieu de uploadImageToFirebase
                     const { uploadImageToMarketplaceFolder } = await import('@/lib/firebase/storage')
-                    
+
                     // Créer le nom du répertoire avec la casse exacte (Prenom Nom)
                     const folderName = artistName
                         .normalize('NFD')
@@ -705,7 +709,7 @@ export function useArtworkForm({
                 // En mode édition : le certificat d'œuvre physique n'est plus obligatoire
                 // Vérifier si un nouveau certificat est fourni (même logique qu'en mode création)
                 const hasNewPhysicalCertificate = data.physicalCertificate && data.physicalCertificate instanceof FileList && data.physicalCertificate.length > 0
-                
+
                 try {
                     setIsSubmitting(true)
 
@@ -776,6 +780,141 @@ export function useArtworkForm({
                             await savePhysicalCertificate(initialData.id, buffer)
                         }
 
+                        // Uploader les images par type si des fichiers sont en attente
+                        // Récupérer depuis la ref car les File ne sont pas sérialisables dans le formulaire
+                        const pendingImagesByType = pendingImagesByTypeRef.current
+                        console.log('📸 Fichiers en attente d\'upload par type:', pendingImagesByType)
+
+                        if (pendingImagesByType && Object.keys(pendingImagesByType).length > 0 && result.item?.physicalItem?.id) {
+                            const physicalItemId = BigInt(result.item.physicalItem.id)
+                            const artistName = backofficeUser.artist?.name || ''
+                            const artistSurname = backofficeUser.artist?.surname || ''
+                            const folderName = `${artistName} ${artistSurname}`
+                                .normalize('NFD')
+                                .replace(/[\u0300-\u036f]/g, '')
+                                .replace(/[^a-zA-Z0-9\s]+/g, '')
+                                .trim()
+
+                            console.log(`📤 Début de l'upload des images par type pour physicalItemId: ${physicalItemId}`)
+
+                            const { uploadImageToMarketplaceFolderByType } = await import('@/lib/firebase/storage')
+                            const { savePhysicalItemImage, getPhysicalItemImagesByType } = await import('@/lib/actions/prisma-actions')
+                            const { normalizeString } = await import('@/lib/utils')
+
+                            const baseFileName = normalizeString(data.name || `artwork-${Date.now()}`)
+
+                            // Uploader les images pour chaque type
+                            for (const [imageType, files] of Object.entries(pendingImagesByType)) {
+                                if (files && Array.isArray(files) && files.length > 0) {
+                                    console.log(`📷 Upload de ${files.length} image(s) pour le type ${imageType}`)
+
+                                    // Récupérer le nombre d'images existantes pour ce type
+                                    const existingImagesResult = await getPhysicalItemImagesByType(physicalItemId)
+                                    const imagesByType = existingImagesResult.imagesByType as Record<string, any[]> | undefined
+                                    const existingCount = imagesByType?.[imageType]?.length || 0
+
+                                    for (let index = 0; index < files.length; index++) {
+                                        const file = files[index]
+
+                                        // Vérifier que c'est bien un File
+                                        if (!(file instanceof File)) {
+                                            console.error(`❌ Le fichier à l'index ${index} pour le type ${imageType} n'est pas un File:`, file)
+                                            continue
+                                        }
+
+                                        const fileName = `${baseFileName}-${imageType}-${index + 1}`
+
+                                        try {
+                                            console.log(`⬆️ Upload de l'image ${index + 1}/${files.length} pour ${imageType}...`)
+                                            const imageUrl = await uploadImageToMarketplaceFolderByType(
+                                                file,
+                                                folderName,
+                                                imageType,
+                                                fileName,
+                                                undefined,
+                                                undefined
+                                            )
+
+                                            console.log(`✅ Image uploadée avec succès: ${imageUrl}`)
+
+                                            // Sauvegarder dans PhysicalItemImage avec l'ordre correct
+                                            const saveResult = await savePhysicalItemImage(
+                                                physicalItemId,
+                                                imageUrl,
+                                                imageType,
+                                                null,
+                                                existingCount + index
+                                            )
+
+                                            if (saveResult.success) {
+                                                console.log(`💾 Image sauvegardée dans PhysicalItemImage pour le type ${imageType}`)
+                                            } else {
+                                                console.error(`❌ Erreur lors de la sauvegarde: ${saveResult.error}`)
+                                            }
+                                        } catch (error) {
+                                            console.error(`❌ Erreur lors de l'upload de l'image ${imageType} (index ${index}):`, error)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            console.log('ℹ️ Aucun fichier en attente d\'upload ou physicalItemId manquant')
+                        }
+
+                        // Supprimer les images marquées pour suppression
+                        const removedImagesByType = removedImagesByTypeRef.current
+                        console.log('🗑️ Images à supprimer par type:', removedImagesByType)
+
+                        if (removedImagesByType && Object.keys(removedImagesByType).length > 0 && result.item?.physicalItem?.id) {
+                            const physicalItemId = BigInt(result.item.physicalItem.id)
+
+                            console.log(`🗑️ Début de la suppression des images pour physicalItemId: ${physicalItemId}`)
+
+                            const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+                            const { deletePhysicalItemImageByUrl } = await import('@/lib/actions/prisma-actions')
+
+                            // Supprimer les images pour chaque type
+                            for (const [imageType, imageUrls] of Object.entries(removedImagesByType)) {
+                                if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0) {
+                                    console.log(`🗑️ Suppression de ${imageUrls.length} image(s) pour le type ${imageType}`)
+
+                                    for (const imageUrl of imageUrls) {
+                                        try {
+                                            console.log(`🗑️ [onSubmit-EDIT] Suppression de l'image: ${imageUrl} (type: ${imageType})`)
+
+                                            // Supprimer de Firebase Storage EN PREMIER
+                                            console.log(`🔥 [onSubmit-EDIT] Étape 1: Suppression Firebase pour ${imageUrl}`)
+                                            const firebaseDeleted = await deleteImageFromFirebase(imageUrl)
+                                            if (!firebaseDeleted) {
+                                                console.warn(`⚠️ [onSubmit-EDIT] Échec de la suppression Firebase pour: ${imageUrl}`)
+                                                // On continue quand même pour supprimer de la DB
+                                            } else {
+                                                console.log(`✅ [onSubmit-EDIT] Image supprimée de Firebase: ${imageUrl}`)
+                                            }
+
+                                            // Supprimer de la base de données ENSUITE
+                                            console.log(`💾 [onSubmit-EDIT] Étape 2: Suppression DB pour ${imageUrl}`)
+                                            const dbResult = await deletePhysicalItemImageByUrl(
+                                                physicalItemId,
+                                                imageUrl,
+                                                imageType
+                                            )
+
+                                            if (dbResult.success) {
+                                                console.log(`✅ [onSubmit-EDIT] Image supprimée de la DB pour le type ${imageType}`)
+                                            } else {
+                                                console.error(`❌ [onSubmit-EDIT] Erreur lors de la suppression DB: ${dbResult.error}`)
+                                            }
+                                        } catch (error) {
+                                            console.error(`❌ [onSubmit-EDIT] Erreur lors de la suppression de l'image ${imageUrl} (type ${imageType}):`, error)
+                                            console.error(`❌ [onSubmit-EDIT] Détails de l'erreur:`, error instanceof Error ? error.message : String(error))
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            console.log('ℹ️ Aucune image à supprimer ou physicalItemId manquant')
+                        }
 
                         dismiss(loadingToast as any)
                         successToast(`L'œuvre "${data.name}" a été mise à jour avec succès!`)
@@ -875,10 +1014,140 @@ export function useArtworkForm({
                             await savePhysicalCertificate(newItem.item.id, buffer)
                         }
 
-
                         if (mainImageUrl || allSecondaryImageUrls.length > 0) {
                             const { saveItemImages } = await import('@/lib/actions/prisma-actions')
                             await saveItemImages(newItem.item.id, mainImageUrl, allSecondaryImageUrls)
+                        }
+
+                        // Uploader les images par type si des fichiers sont en attente
+                        // Récupérer depuis la ref car les File ne sont pas sérialisables dans le formulaire
+                        const pendingImagesByType = pendingImagesByTypeRef.current
+                        console.log('📸 Fichiers en attente d\'upload par type (création):', pendingImagesByType)
+
+                        if (pendingImagesByType && Object.keys(pendingImagesByType).length > 0 && newItem.item.physicalItem?.id) {
+                            const physicalItemId = BigInt(newItem.item.physicalItem.id)
+                            const artistName = backofficeUser.artist?.name || ''
+                            const artistSurname = backofficeUser.artist?.surname || ''
+                            const folderName = `${artistName} ${artistSurname}`
+                                .normalize('NFD')
+                                .replace(/[\u0300-\u036f]/g, '')
+                                .replace(/[^a-zA-Z0-9\s]+/g, '')
+                                .trim()
+
+                            console.log(`📤 Début de l'upload des images par type pour physicalItemId: ${physicalItemId}`)
+
+                            const { uploadImageToMarketplaceFolderByType } = await import('@/lib/firebase/storage')
+                            const { savePhysicalItemImage } = await import('@/lib/actions/prisma-actions')
+                            const { normalizeString } = await import('@/lib/utils')
+
+                            const baseFileName = normalizeString(data.name || `artwork-${Date.now()}`)
+
+                            // Uploader les images pour chaque type
+                            for (const [imageType, files] of Object.entries(pendingImagesByType)) {
+                                if (files && Array.isArray(files) && files.length > 0) {
+                                    console.log(`📷 Upload de ${files.length} image(s) pour le type ${imageType}`)
+
+                                    for (let index = 0; index < files.length; index++) {
+                                        const file = files[index]
+
+                                        // Vérifier que c'est bien un File
+                                        if (!(file instanceof File)) {
+                                            console.error(`❌ Le fichier à l'index ${index} pour le type ${imageType} n'est pas un File:`, file)
+                                            continue
+                                        }
+
+                                        const fileName = `${baseFileName}-${imageType}-${index + 1}`
+
+                                        try {
+                                            console.log(`⬆️ Upload de l'image ${index + 1}/${files.length} pour ${imageType}...`)
+                                            const imageUrl = await uploadImageToMarketplaceFolderByType(
+                                                file,
+                                                folderName,
+                                                imageType,
+                                                fileName,
+                                                undefined,
+                                                undefined
+                                            )
+
+                                            console.log(`✅ Image uploadée avec succès: ${imageUrl}`)
+
+                                            // Sauvegarder dans PhysicalItemImage
+                                            const saveResult = await savePhysicalItemImage(
+                                                physicalItemId,
+                                                imageUrl,
+                                                imageType,
+                                                null,
+                                                index
+                                            )
+
+                                            if (saveResult.success) {
+                                                console.log(`💾 Image sauvegardée dans PhysicalItemImage pour le type ${imageType}`)
+                                            } else {
+                                                console.error(`❌ Erreur lors de la sauvegarde: ${saveResult.error}`)
+                                            }
+                                        } catch (error) {
+                                            console.error(`❌ Erreur lors de l'upload de l'image ${imageType} (index ${index}):`, error)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            console.log('ℹ️ Aucun fichier en attente d\'upload ou physicalItemId manquant')
+                        }
+
+                        // Supprimer les images marquées pour suppression (mode création)
+                        const removedImagesByType = removedImagesByTypeRef.current
+                        console.log('🗑️ Images à supprimer par type (création):', removedImagesByType)
+
+                        if (removedImagesByType && Object.keys(removedImagesByType).length > 0 && newItem.item.physicalItem?.id) {
+                            const physicalItemId = BigInt(newItem.item.physicalItem.id)
+
+                            console.log(`🗑️ Début de la suppression des images pour physicalItemId: ${physicalItemId}`)
+
+                            const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+                            const { deletePhysicalItemImageByUrl } = await import('@/lib/actions/prisma-actions')
+
+                            // Supprimer les images pour chaque type
+                            for (const [imageType, imageUrls] of Object.entries(removedImagesByType)) {
+                                if (imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0) {
+                                    console.log(`🗑️ Suppression de ${imageUrls.length} image(s) pour le type ${imageType}`)
+
+                                    for (const imageUrl of imageUrls) {
+                                        try {
+                                            console.log(`🗑️ [onSubmit-CREATE] Suppression de l'image: ${imageUrl} (type: ${imageType})`)
+
+                                            // Supprimer de Firebase Storage EN PREMIER
+                                            console.log(`🔥 [onSubmit-CREATE] Étape 1: Suppression Firebase pour ${imageUrl}`)
+                                            const firebaseDeleted = await deleteImageFromFirebase(imageUrl)
+                                            if (!firebaseDeleted) {
+                                                console.warn(`⚠️ [onSubmit-CREATE] Échec de la suppression Firebase pour: ${imageUrl}`)
+                                                // On continue quand même pour supprimer de la DB
+                                            } else {
+                                                console.log(`✅ [onSubmit-CREATE] Image supprimée de Firebase: ${imageUrl}`)
+                                            }
+
+                                            // Supprimer de la base de données ENSUITE
+                                            console.log(`💾 [onSubmit-CREATE] Étape 2: Suppression DB pour ${imageUrl}`)
+                                            const dbResult = await deletePhysicalItemImageByUrl(
+                                                physicalItemId,
+                                                imageUrl,
+                                                imageType
+                                            )
+
+                                            if (dbResult.success) {
+                                                console.log(`✅ [onSubmit-CREATE] Image supprimée de la DB pour le type ${imageType}`)
+                                            } else {
+                                                console.error(`❌ [onSubmit-CREATE] Erreur lors de la suppression DB: ${dbResult.error}`)
+                                            }
+                                        } catch (error) {
+                                            console.error(`❌ [onSubmit-CREATE] Erreur lors de la suppression de l'image ${imageUrl} (type ${imageType}):`, error)
+                                            console.error(`❌ [onSubmit-CREATE] Détails de l'erreur:`, error instanceof Error ? error.message : String(error))
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            console.log('ℹ️ Aucune image à supprimer ou physicalItemId manquant')
                         }
                     }
 
@@ -925,6 +1194,8 @@ export function useArtworkForm({
         physicalCertificateInputRef: physicalCertificateInputRef as RefObject<HTMLInputElement>,
         nftCertificateInputRef: nftCertificateInputRef as RefObject<HTMLInputElement>,
         secondaryImagesInputRef: secondaryImagesInputRef as RefObject<HTMLInputElement>,
+        pendingImagesByTypeRef,
+        removedImagesByTypeRef,
         handleImageChange,
         handleSecondaryImagesChange,
         removeSecondaryImage,

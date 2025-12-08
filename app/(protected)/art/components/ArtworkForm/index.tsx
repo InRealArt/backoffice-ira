@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useArtworkForm } from "./useArtworkForm";
 import { ArtworkFormProps } from "./types";
 import ImagePreview from "./ImagePreview";
@@ -154,6 +154,8 @@ export default function ArtworkForm({
     physicalCertificateInputRef,
     nftCertificateInputRef,
     secondaryImagesInputRef,
+    pendingImagesByTypeRef,
+    removedImagesByTypeRef,
     handleImageChange,
     handleSecondaryImagesChange,
     removeSecondaryImage,
@@ -637,6 +639,10 @@ export default function ArtworkForm({
         onMainImageUploaded={(imageUrl) => {
           setValue("mainImageUrl", imageUrl, { shouldValidate: true });
         }}
+        physicalItemId={initialData?.physicalItem?.id}
+        initialImagesByType={initialData?.imagesByType}
+        pendingImagesByTypeRef={pendingImagesByTypeRef}
+        removedImagesByTypeRef={removedImagesByTypeRef}
       />
 
       {/* Section certificat pour œuvre physique - masquée */}

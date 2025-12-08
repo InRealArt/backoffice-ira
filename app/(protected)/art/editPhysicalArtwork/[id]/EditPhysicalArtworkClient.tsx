@@ -290,6 +290,20 @@ export default function EditPhysicalArtworkClient({
               // Transmettre les nouveaux certificats
               physicalCertificateUrl: physicalCertificate?.fileUrl || null,
               nftCertificateUrl: nftCertificate?.fileUrl || null,
+              // Grouper les images par type
+              imagesByType: item.physicalItem?.images
+                ? item.physicalItem.images.reduce(
+                    (acc: Record<string, string[]>, img: any) => {
+                      const type = img.imageType
+                      if (!acc[type]) {
+                        acc[type] = []
+                      }
+                      acc[type].push(img.imageUrl)
+                      return acc
+                    },
+                    {}
+                  )
+                : {},
             }}
             onSuccess={handleSuccess}
           />

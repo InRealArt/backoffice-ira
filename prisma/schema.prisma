@@ -566,6 +566,7 @@ model PhysicalItem {
   createdAt                DateTime                  @default(now())
   physicalArtworkViews     PhysicalArtworkView[]
   physicalArtworkViewStats PhysicalArtworkViewStat[]
+  images                   PhysicalItemImage[]
 
   @@index([itemId])
   @@index([artistAddressId])
@@ -595,6 +596,17 @@ enum PhysicalItemStatus {
   @@schema("backoffice")
 }
 
+enum PhysicalItemImageType {
+  CLOSE_UP        // Gros plan
+  SIGNATURE       // Signature
+  SIDE_VIEW       // Vue latérale
+  BACK_VIEW      // Vue de derrière
+  IN_SITU        // In situ
+  OTHER          // Autres
+
+  @@schema("backoffice")
+}
+
 enum ItemStatus {
   created
   pending
@@ -611,6 +623,22 @@ model AuthCertificatePhysicalArtwork {
   file           Bytes
 
   @@index([physicalItemId])
+  @@schema("backoffice")
+}
+
+model PhysicalItemImage {
+  id             BigInt                @id @default(autoincrement())
+  physicalItemId BigInt
+  physicalItem   PhysicalItem          @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+  imageUrl       String                // URL de l'image uploadée
+  imageType      PhysicalItemImageType  // Type d'image
+  order          Int?                  @default(0) // Ordre d'affichage pour un même type
+  alt            String?               // Texte alternatif pour l'accessibilité
+  createdAt      DateTime              @default(now())
+
+  @@index([physicalItemId])
+  @@index([physicalItemId, imageType])
+  @@index([physicalItemId, imageType, order])
   @@schema("backoffice")
 }
 
