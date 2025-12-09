@@ -8,7 +8,7 @@ import { PhysicalArtworkListItem } from "@/app/components/PhysicalArtwork";
 import { Filters, FilterItem } from "@/app/components/Common";
 import { useQueryStates } from "nuqs";
 import { myPhysicalArtworkSearchParams } from "./searchParams";
-import { ItemData } from "@/app/utils/items/itemsData";
+import { ItemData } from "@/lib/actions/items-actions";
 import { PhysicalCollection } from "@/lib/actions/physical-collection-actions";
 
 type BackofficeUserResult = {
@@ -172,9 +172,8 @@ export default function MyPhysicalArtworkClient({
           <div className="section">
             <div className={styles.listContainer}>
               {filteredItems.map((item) => {
-                const views =
-                  (item.physicalItem?.realViewCount || 0) +
-                  (item.physicalItem?.fakeViewCount || 0);
+                // Utiliser uniquement realViewCount qui contient maintenant le nombre réel depuis PhysicalArtworkView
+                const views = item.physicalItem?.realViewCount || 0;
                 const wishlist = 47; // Fallback hardcodé
                 const collection =
                   item.physicalItem?.physicalCollection || null;

@@ -1,6 +1,6 @@
 import { getAuthenticatedUserEmail } from "@/lib/auth-helpers";
 import { getBackofficeUserByEmail } from "@/lib/actions/prisma-actions";
-import { fetchItemsData } from "@/app/utils/items/itemsData";
+import { fetchItemsData } from "@/lib/actions/items-actions";
 import { getPhysicalCollectionsByArtistId } from "@/lib/actions/physical-collection-actions";
 import MyPhysicalArtworkClient from "./MyPhysicalArtworkClient";
 

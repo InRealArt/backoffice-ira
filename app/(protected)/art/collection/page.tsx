@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import LoadingSpinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 import ProductCard from "@/app/components/ProductCard/ProductCard";
-import { fetchItemsData, ItemData } from "@/app/utils/items/itemsData";
+import { fetchItemsData, ItemData } from "@/lib/actions/items-actions";
 import { getBackofficeUserByEmail } from "@/lib/actions/prisma-actions";
 
 type BackofficeUserResult = Awaited<
