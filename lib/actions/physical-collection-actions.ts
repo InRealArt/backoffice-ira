@@ -156,6 +156,7 @@ export interface PhysicalCollectionWithItems extends PhysicalCollection {
         itemId: number
         status: 'created' | 'pending' | 'listed' | 'sold'
         isOnline: boolean
+        commercialStatus: 'AVAILABLE' | 'UNAVAILABLE'
         item: {
             id: number
             name: string
@@ -257,6 +258,7 @@ export async function getPhysicalCollectionsWithItems(): Promise<PhysicalCollect
                 itemId: pi.itemId,
                 status: pi.status,
                 isOnline: pi.isOnline,
+                commercialStatus: pi.commercialStatus,
                 item: {
                     id: pi.item.id,
                     name: pi.item.name,
