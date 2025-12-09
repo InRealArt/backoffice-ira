@@ -294,7 +294,7 @@ export default function PresaleArtworksClient({
   return (
     <PageContainer>
       <PageHeader
-        title={isArtistMode ? "Mes œuvres en prévente" : "Œuvres en prévente"}
+        title={isArtistMode ? "Mes œuvres en prévente sur le site web InRealArt" : "Œuvres en prévente sur la Marketplace InRealArt"}
         subtitle={
           isArtistMode
             ? "Gérez vos œuvres sur le site web InRealArt"

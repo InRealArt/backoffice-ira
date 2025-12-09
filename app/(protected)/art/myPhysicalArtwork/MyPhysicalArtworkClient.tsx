@@ -60,7 +60,7 @@ export default function MyPhysicalArtworkClient({
     <div className="page-container">
       <div className="page-header">
         <div className="header-top-section">
-          <h1 className={`page-title ${styles.bigTitle}`}>Mon portfolio</h1>
+          <h1 className={`page-title ${styles.bigTitle}`}>Mon portfolio sur la Marketplace InRealArt</h1>
           <NavigationButton
             href="/art/createPhysicalArtwork"
             variant="primary"

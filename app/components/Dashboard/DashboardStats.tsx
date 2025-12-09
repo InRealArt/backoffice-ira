@@ -15,6 +15,10 @@ interface DashboardStatsProps {
   isLoadingPendingCount?: boolean;
   physicalItemsCount?: number;
   isLoadingPhysicalItemsCount?: boolean;
+  availablePhysicalItemsCount?: number;
+  unavailablePhysicalItemsCount?: number;
+  isLoadingAvailablePhysicalItemsCount?: boolean;
+  isLoadingUnavailablePhysicalItemsCount?: boolean;
 
   // Métriques pour les admins
   visibleArtistsCount?: number;
@@ -34,6 +38,10 @@ export function DashboardStats({
   isLoadingPendingCount = false,
   physicalItemsCount = 0,
   isLoadingPhysicalItemsCount = false,
+  availablePhysicalItemsCount = 0,
+  unavailablePhysicalItemsCount = 0,
+  isLoadingAvailablePhysicalItemsCount = false,
+  isLoadingUnavailablePhysicalItemsCount = false,
   visibleArtistsCount = 0,
   isLoadingArtistsCount = false,
   isAdmin = false,
@@ -64,11 +72,20 @@ export function DashboardStats({
         buttonRoute="/art/presale-artworks"
       />
       <MetricCard
-        title="Œuvres physiques sur la Marketplace"
-        value={physicalItemsCount}
+        title="Œuvres physiques disponibles sur la Marketplace"
+        value={availablePhysicalItemsCount}
         icon={Box}
         color="#10b981"
-        isLoading={isLoadingPhysicalItemsCount}
+        isLoading={isLoadingAvailablePhysicalItemsCount}
+        buttonTitle="Voir les œuvres"
+        buttonRoute="/art/myPhysicalArtwork"
+      />
+      <MetricCard
+        title="Œuvres physiques indisponibles sur la Marketplace"
+        value={unavailablePhysicalItemsCount}
+        icon={Box}
+        color="#f59e0b"
+        isLoading={isLoadingUnavailablePhysicalItemsCount}
         buttonTitle="Voir les œuvres"
         buttonRoute="/art/myPhysicalArtwork"
       />

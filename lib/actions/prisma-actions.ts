@@ -1275,18 +1275,34 @@ export async function getUserListedItemsCount(userId: string) {
 
 export async function getUserPhysicalItemsCount(userId: string) {
   try {
-    // Compter tous les physicalItems d'un utilisateur
-    const count = await prisma.physicalItem.count({
+    // Compter les physicalItems disponibles d'un utilisateur
+    const availableCount = await prisma.physicalItem.count({
       where: {
         item: {
           idUser: userId
-        }
+        },
+        commercialStatus: 'AVAILABLE'
       }
     })
-    return { count }
+    
+    // Compter les physicalItems indisponibles d'un utilisateur
+    const unavailableCount = await prisma.physicalItem.count({
+      where: {
+        item: {
+          idUser: userId
+        },
+        commercialStatus: 'UNAVAILABLE'
+      }
+    })
+    
+    return { 
+      count: availableCount + unavailableCount, // Pour compatibilité avec l'ancien code
+      availableCount,
+      unavailableCount
+    }
   } catch (error) {
     console.error('Erreur lors du comptage des physicalItems:', error)
-    return { count: 0 }
+    return { count: 0, availableCount: 0, unavailableCount: 0 }
   }
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useSideMenuLogic } from "../SideMenu/useSideMenuLogic";
 import { authClient } from "@/lib/auth-client";
@@ -72,11 +72,23 @@ export default function NavbarMenu() {
     await authClient.signOut();
   };
 
-  // Fonction pour gérer la navigation avec fermeture du menu
-  const handleMenuNavigation = async (path: string, item: string) => {
-    // Fermer le menu mobile
+  // Fonction pour fermer tous les menus desktop (details)
+  const closeDesktopMenus = useCallback(() => {
+    if (desktopMenuRef.current) {
+      const details = desktopMenuRef.current.querySelectorAll("details[open]");
+      details.forEach((detail) => {
+        (detail as HTMLDetailsElement).removeAttribute("open");
+        const summary = detail.querySelector("summary");
+        if (summary) {
+          summary.blur();
+        }
+      });
+    }
+  }, []);
+
+  // Fonction pour fermer le menu mobile
+  const closeMobileMenu = useCallback(() => {
     setIsMobileMenuOpen(false);
-    // Désactiver le focus du dropdown pour le fermer
     if (mobileMenuRef.current) {
       const button = mobileMenuRef.current.querySelector(
         '[tabIndex="0"]'
@@ -84,7 +96,26 @@ export default function NavbarMenu() {
       if (button) {
         button.blur();
       }
+      // Fermer aussi le dropdown en retirant le focus de l'ul
+      const ul = mobileMenuRef.current.querySelector("ul[tabIndex]");
+      if (ul) {
+        (ul as HTMLElement).blur();
+      }
     }
+  }, []);
+
+  // Fonction pour gérer la navigation avec fermeture du menu
+  const handleMenuNavigation = async (path: string, item: string) => {
+    // Fermer immédiatement le menu mobile
+    closeMobileMenu();
+    // Appeler la navigation
+    await handleNavigation(path, item);
+  };
+
+  // Fonction pour gérer la navigation desktop avec fermeture des menus
+  const handleDesktopNavigation = async (path: string, item: string) => {
+    // Fermer immédiatement tous les menus desktop
+    closeDesktopMenus();
     // Appeler la navigation
     await handleNavigation(path, item);
   };
@@ -193,26 +224,10 @@ export default function NavbarMenu() {
   // Fermer le menu dropdown quand la page est chargée (pathname change)
   useEffect(() => {
     // Fermer le menu mobile
-    setIsMobileMenuOpen(false);
-
-    // Fermer le dropdown mobile en retirant le focus
-    if (mobileMenuRef.current) {
-      const button = mobileMenuRef.current.querySelector(
-        '[tabIndex="0"]'
-      ) as HTMLElement;
-      if (button) {
-        button.blur();
-      }
-    }
-
-    // Fermer les sous-menus desktop en retirant l'attribut open des details
-    if (desktopMenuRef.current) {
-      const details = desktopMenuRef.current.querySelectorAll("details[open]");
-      details.forEach((detail) => {
-        (detail as HTMLDetailsElement).removeAttribute("open");
-      });
-    }
-  }, [pathname]);
+    closeMobileMenu();
+    // Fermer les menus desktop
+    closeDesktopMenus();
+  }, [pathname, closeMobileMenu, closeDesktopMenus]);
 
   if (!isLoggedIn || isLoading) {
     return null;
@@ -1125,7 +1140,7 @@ export default function NavbarMenu() {
               <li>
                 <a
                   onClick={() =>
-                    handleNavigation(
+                    handleDesktopNavigation(
                       "/art/create-artist-profile",
                       "createArtistProfile"
                     )
@@ -1149,7 +1164,9 @@ export default function NavbarMenu() {
             <ul className="menu menu-horizontal px-1">
               <li>
                 <a
-                  onClick={() => handleNavigation("/dashboard", "dashboard")}
+                  onClick={() =>
+                    handleDesktopNavigation("/dashboard", "dashboard")
+                  }
                   className={`flex items-center gap-2 ${
                     activeItem === "dashboard" ? "active" : ""
                   }`}
@@ -1169,7 +1186,7 @@ export default function NavbarMenu() {
                     <li>
                       <a
                         onClick={() =>
-                          handleNavigation(
+                          handleDesktopNavigation(
                             "/art/edit-artist-profile",
                             "editArtistProfile"
                           )
@@ -1194,7 +1211,7 @@ export default function NavbarMenu() {
                     <li>
                       <a
                         onClick={() =>
-                          handleNavigation(
+                          handleDesktopNavigation(
                             "/art/create-presale-artwork",
                             "createPresaleArtwork"
                           )
@@ -1208,7 +1225,10 @@ export default function NavbarMenu() {
                     <li>
                       <a
                         onClick={() =>
-                          handleNavigation("/art/my-artworks", "myArtworks")
+                          handleDesktopNavigation(
+                            "/art/my-artworks",
+                            "myArtworks"
+                          )
                         }
                         className="flex items-center gap-2"
                       >
@@ -1231,7 +1251,7 @@ export default function NavbarMenu() {
                       <li>
                         <a
                           onClick={() =>
-                            handleNavigation(
+                            handleDesktopNavigation(
                               "/art/myPhysicalArtwork",
                               "myPhysicalArtwork"
                             )
@@ -1245,7 +1265,7 @@ export default function NavbarMenu() {
                       <li>
                         <a
                           onClick={() =>
-                            handleNavigation(
+                            handleDesktopNavigation(
                               "/art/physicalCollection",
                               "physicalCollection"
                             )
@@ -1268,7 +1288,9 @@ export default function NavbarMenu() {
           <ul className="menu menu-horizontal px-1">
             <li>
               <a
-                onClick={() => handleNavigation("/dashboard", "dashboard")}
+                onClick={() =>
+                  handleDesktopNavigation("/dashboard", "dashboard")
+                }
                 className={`flex items-center gap-2 ${
                   activeItem === "dashboard" ? "active" : ""
                 }`}
@@ -1287,7 +1309,10 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation("/landing/languages", "languages")
+                        handleDesktopNavigation(
+                          "/landing/languages",
+                          "languages"
+                        )
                       }
                       className="flex items-center gap-2"
                     >
@@ -1298,7 +1323,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/landing/translations",
                           "translations"
                         )
@@ -1311,7 +1336,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
-                      onClick={() => handleNavigation("/landing/team", "team")}
+                      onClick={() =>
+                        handleDesktopNavigation("/landing/team", "team")
+                      }
                       className="flex items-center gap-2"
                     >
                       <Users size={18} />
@@ -1320,7 +1347,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
-                      onClick={() => handleNavigation("/landing/faq", "faq")}
+                      onClick={() =>
+                        handleDesktopNavigation("/landing/faq", "faq")
+                      }
                       className="flex items-center gap-2"
                     >
                       <HelpCircle size={18} />
@@ -1330,7 +1359,10 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation("/landing/detailedFaq", "detailedFaq")
+                        handleDesktopNavigation(
+                          "/landing/detailedFaq",
+                          "detailedFaq"
+                        )
                       }
                       className="flex items-center gap-2"
                     >
@@ -1341,7 +1373,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/landing/detailedFaqPage",
                           "detailedFaqPage"
                         )
@@ -1355,7 +1387,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/landing/detailedGlossary",
                           "detailedGlossary"
                         )
@@ -1369,7 +1401,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/landing/landingArtists",
                           "landingArtists"
                         )
@@ -1383,7 +1415,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/landing/presaleArtworks",
                           "presaleArtworks"
                         )
@@ -1396,7 +1428,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
-                      onClick={() => handleNavigation("/landing/blog", "blog")}
+                      onClick={() =>
+                        handleDesktopNavigation("/landing/blog", "blog")
+                      }
                       className="flex items-center gap-2"
                     >
                       <FileText size={18} />
@@ -1416,7 +1450,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/dataAdministration/artists",
                           "artists"
                         )
@@ -1430,7 +1464,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/dataAdministration/artist-categories",
                           "artist-categories"
                         )
@@ -1444,7 +1478,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/dataAdministration/artwork-mediums",
                           "artwork-mediums"
                         )
@@ -1458,7 +1492,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/dataAdministration/artwork-styles",
                           "artwork-styles"
                         )
@@ -1472,7 +1506,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/dataAdministration/artwork-techniques",
                           "artwork-techniques"
                         )
@@ -1496,7 +1530,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation("/boAdmin/users", "boUsers")
+                        handleDesktopNavigation("/boAdmin/users", "boUsers")
                       }
                       className="flex items-center gap-2"
                     >
@@ -1507,7 +1541,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/boAdmin/create-member",
                           "createMember"
                         )
@@ -1531,7 +1565,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/blockchain/smartContracts",
                           "smartContracts"
                         )
@@ -1545,7 +1579,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/blockchain/collections",
                           "collections"
                         )
@@ -1559,7 +1593,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/blockchain/royaltyBeneficiaries",
                           "royaltyBeneficiaries"
                         )
@@ -1583,7 +1617,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/admin-art/createArtwork",
                           "adminCreateArtwork"
                         )
@@ -1597,7 +1631,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/admin-art/collection",
                           "adminArtCollection"
                         )
@@ -1611,7 +1645,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/marketplace/nftsToMint",
                           "nftsToMint"
                         )
@@ -1625,7 +1659,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/marketplace/royaltiesSettings",
                           "royaltiesSettings"
                         )
@@ -1639,7 +1673,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/marketplace/marketplaceListing",
                           "marketplaceListing"
                         )
@@ -1653,7 +1687,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/marketplace/transactions",
                           "transactions"
                         )
@@ -1667,7 +1701,10 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation("/marketplace/invoices", "invoices")
+                        handleDesktopNavigation(
+                          "/marketplace/invoices",
+                          "invoices"
+                        )
                       }
                       className="flex items-center gap-2"
                     >
@@ -1688,7 +1725,7 @@ export default function NavbarMenu() {
                   <li>
                     <a
                       onClick={() =>
-                        handleNavigation(
+                        handleDesktopNavigation(
                           "/tools/webp-converter",
                           "toolsWebpConverter"
                         )
