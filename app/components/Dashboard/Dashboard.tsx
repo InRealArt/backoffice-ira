@@ -12,6 +12,7 @@ import {
   getUserMintedItemsCount,
   getUserListedItemsCount,
   getUserPhysicalItemsCount,
+  getUserPhysicalCollectionsCount,
   getBackofficeUserByEmail,
   getVisibleLandingArtistsCount,
 } from "@/lib/actions/prisma-actions";
@@ -36,11 +37,25 @@ export default function Dashboard() {
   const [presaleArtworkCount, setPresaleArtworkCount] = useState(0);
   const [isLoadingPresaleCount, setIsLoadingPresaleCount] = useState(true);
   const [physicalItemsCount, setPhysicalItemsCount] = useState(0);
-  const [isLoadingPhysicalItemsCount, setIsLoadingPhysicalItemsCount] = useState(true);
-  const [availablePhysicalItemsCount, setAvailablePhysicalItemsCount] = useState(0);
-  const [unavailablePhysicalItemsCount, setUnavailablePhysicalItemsCount] = useState(0);
-  const [isLoadingAvailablePhysicalItemsCount, setIsLoadingAvailablePhysicalItemsCount] = useState(true);
-  const [isLoadingUnavailablePhysicalItemsCount, setIsLoadingUnavailablePhysicalItemsCount] = useState(true);
+  const [isLoadingPhysicalItemsCount, setIsLoadingPhysicalItemsCount] =
+    useState(true);
+  const [availablePhysicalItemsCount, setAvailablePhysicalItemsCount] =
+    useState(0);
+  const [unavailablePhysicalItemsCount, setUnavailablePhysicalItemsCount] =
+    useState(0);
+  const [
+    isLoadingAvailablePhysicalItemsCount,
+    setIsLoadingAvailablePhysicalItemsCount,
+  ] = useState(true);
+  const [
+    isLoadingUnavailablePhysicalItemsCount,
+    setIsLoadingUnavailablePhysicalItemsCount,
+  ] = useState(true);
+  const [physicalCollectionsCount, setPhysicalCollectionsCount] = useState(0);
+  const [
+    isLoadingPhysicalCollectionsCount,
+    setIsLoadingPhysicalCollectionsCount,
+  ] = useState(true);
   const { isAdmin, isLoading } = useIsAdmin();
 
   const truncateAddress = (address: string | undefined) => {
@@ -114,6 +129,7 @@ export default function Dashboard() {
             setIsLoadingPhysicalItemsCount(false);
             setIsLoadingAvailablePhysicalItemsCount(false);
             setIsLoadingUnavailablePhysicalItemsCount(false);
+            setIsLoadingPhysicalCollectionsCount(false);
             return;
           }
 
@@ -139,7 +155,11 @@ export default function Dashboard() {
 
           const mintedResult = await getUserMintedItemsCount(backofficeUser.id);
           const listedResult = await getUserListedItemsCount(backofficeUser.id);
-          const physicalItemsResult = await getUserPhysicalItemsCount(backofficeUser.id);
+          const physicalItemsResult = await getUserPhysicalItemsCount(
+            backofficeUser.id
+          );
+          const physicalCollectionsResult =
+            await getUserPhysicalCollectionsCount();
 
           if (!isMounted) return;
 
@@ -147,10 +167,14 @@ export default function Dashboard() {
           setListedItemsCount(listedResult.count);
           setPhysicalItemsCount(physicalItemsResult.count);
           setAvailablePhysicalItemsCount(physicalItemsResult.availableCount);
-          setUnavailablePhysicalItemsCount(physicalItemsResult.unavailableCount);
+          setUnavailablePhysicalItemsCount(
+            physicalItemsResult.unavailableCount
+          );
+          setPhysicalCollectionsCount(physicalCollectionsResult.count);
           setIsLoadingPhysicalItemsCount(false);
           setIsLoadingAvailablePhysicalItemsCount(false);
           setIsLoadingUnavailablePhysicalItemsCount(false);
+          setIsLoadingPhysicalCollectionsCount(false);
         } catch (error) {
           if (!isMounted) return;
           console.error(
@@ -164,9 +188,11 @@ export default function Dashboard() {
           setPhysicalItemsCount(0);
           setAvailablePhysicalItemsCount(0);
           setUnavailablePhysicalItemsCount(0);
+          setPhysicalCollectionsCount(0);
           setIsLoadingPhysicalItemsCount(false);
           setIsLoadingAvailablePhysicalItemsCount(false);
           setIsLoadingUnavailablePhysicalItemsCount(false);
+          setIsLoadingPhysicalCollectionsCount(false);
         } finally {
           if (isMounted) {
             setIsLoadingUserCounts(false);
@@ -206,8 +232,14 @@ export default function Dashboard() {
         isLoadingPhysicalItemsCount={isLoadingPhysicalItemsCount}
         availablePhysicalItemsCount={availablePhysicalItemsCount}
         unavailablePhysicalItemsCount={unavailablePhysicalItemsCount}
-        isLoadingAvailablePhysicalItemsCount={isLoadingAvailablePhysicalItemsCount}
-        isLoadingUnavailablePhysicalItemsCount={isLoadingUnavailablePhysicalItemsCount}
+        isLoadingAvailablePhysicalItemsCount={
+          isLoadingAvailablePhysicalItemsCount
+        }
+        isLoadingUnavailablePhysicalItemsCount={
+          isLoadingUnavailablePhysicalItemsCount
+        }
+        physicalCollectionsCount={physicalCollectionsCount}
+        isLoadingPhysicalCollectionsCount={isLoadingPhysicalCollectionsCount}
         visibleArtistsCount={visibleArtistsCount}
         isLoadingArtistsCount={isLoadingArtistsCount}
         isAdmin={isAdmin}

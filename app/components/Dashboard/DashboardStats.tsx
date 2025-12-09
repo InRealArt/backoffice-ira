@@ -1,6 +1,6 @@
 "use client";
 
-import { Package, FileText, Users, Box } from "lucide-react";
+import { Package, FileText, Users, Box, FolderOpen } from "lucide-react";
 import { MetricCard } from "./MetricCard";
 
 interface DashboardStatsProps {
@@ -19,6 +19,8 @@ interface DashboardStatsProps {
   unavailablePhysicalItemsCount?: number;
   isLoadingAvailablePhysicalItemsCount?: boolean;
   isLoadingUnavailablePhysicalItemsCount?: boolean;
+  physicalCollectionsCount?: number;
+  isLoadingPhysicalCollectionsCount?: boolean;
 
   // Métriques pour les admins
   visibleArtistsCount?: number;
@@ -42,6 +44,8 @@ export function DashboardStats({
   unavailablePhysicalItemsCount = 0,
   isLoadingAvailablePhysicalItemsCount = false,
   isLoadingUnavailablePhysicalItemsCount = false,
+  physicalCollectionsCount = 0,
+  isLoadingPhysicalCollectionsCount = false,
   visibleArtistsCount = 0,
   isLoadingArtistsCount = false,
   isAdmin = false,
@@ -88,6 +92,15 @@ export function DashboardStats({
         isLoading={isLoadingUnavailablePhysicalItemsCount}
         buttonTitle="Voir les œuvres"
         buttonRoute="/art/myPhysicalArtwork?commercialStatus=UNAVAILABLE"
+      />
+      <MetricCard
+        title="Collections sur la Marketplace"
+        value={physicalCollectionsCount}
+        icon={FolderOpen}
+        color="#8b5cf6"
+        isLoading={isLoadingPhysicalCollectionsCount}
+        buttonTitle="Voir les collections"
+        buttonRoute="/art/physicalCollection"
       />
       {/* <MetricCard
         title="Items en attente"

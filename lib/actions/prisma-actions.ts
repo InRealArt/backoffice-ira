@@ -10,6 +10,8 @@ import { Decimal } from '@prisma/client/runtime/library'
 import { artistNftCollectionAbi } from "@/lib/contracts/ArtistNftCollectionAbi";
 import { decodeEventLog } from "viem";
 import { serverPublicClient } from "@/lib/server-providers";
+import { getLandingArtistByArtistId } from "./artist-actions";
+import { getAuthenticatedUserEmail } from "@/lib/auth-helpers";
 
 type CreateMemberResult = {
   success: boolean
@@ -1284,7 +1286,7 @@ export async function getUserPhysicalItemsCount(userId: string) {
         commercialStatus: 'AVAILABLE'
       }
     })
-    
+
     // Compter les physicalItems indisponibles d'un utilisateur
     const unavailableCount = await prisma.physicalItem.count({
       where: {
@@ -1294,8 +1296,8 @@ export async function getUserPhysicalItemsCount(userId: string) {
         commercialStatus: 'UNAVAILABLE'
       }
     })
-    
-    return { 
+
+    return {
       count: availableCount + unavailableCount, // Pour compatibilité avec l'ancien code
       availableCount,
       unavailableCount
@@ -1303,6 +1305,39 @@ export async function getUserPhysicalItemsCount(userId: string) {
   } catch (error) {
     console.error('Erreur lors du comptage des physicalItems:', error)
     return { count: 0, availableCount: 0, unavailableCount: 0 }
+  }
+}
+
+export async function getUserPhysicalCollectionsCount() {
+  try {
+    // Récupérer l'email de l'utilisateur authentifié (même logique que getPhysicalCollectionsWithItems)
+    const userEmail = await getAuthenticatedUserEmail()
+
+    // Récupérer l'utilisateur backoffice
+    const backofficeUser = await getBackofficeUserByEmail(userEmail)
+
+    if (!backofficeUser || !backofficeUser.artistId) {
+      return { count: 0 }
+    }
+
+    // Récupérer le LandingArtist associé à l'artiste
+    const landingArtist = await getLandingArtistByArtistId(backofficeUser.artistId)
+
+    if (!landingArtist) {
+      return { count: 0 }
+    }
+
+    // Compter les collections physiques de l'artiste (même logique que getPhysicalCollectionsWithItems)
+    const count = await prisma.physicalCollection.count({
+      where: {
+        landingArtistId: landingArtist.id
+      }
+    })
+
+    return { count }
+  } catch (error) {
+    console.error('Erreur lors du comptage des collections physiques:', error)
+    return { count: 0 }
   }
 }
 
