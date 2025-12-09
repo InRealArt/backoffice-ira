@@ -78,7 +78,7 @@ export function DashboardStats({
         color="#10b981"
         isLoading={isLoadingAvailablePhysicalItemsCount}
         buttonTitle="Voir les œuvres"
-        buttonRoute="/art/myPhysicalArtwork"
+        buttonRoute="/art/myPhysicalArtwork?commercialStatus=AVAILABLE"
       />
       <MetricCard
         title="Œuvres physiques indisponibles sur la Marketplace"
@@ -87,7 +87,7 @@ export function DashboardStats({
         color="#f59e0b"
         isLoading={isLoadingUnavailablePhysicalItemsCount}
         buttonTitle="Voir les œuvres"
-        buttonRoute="/art/myPhysicalArtwork"
+        buttonRoute="/art/myPhysicalArtwork?commercialStatus=UNAVAILABLE"
       />
       {/* <MetricCard
         title="Items en attente"

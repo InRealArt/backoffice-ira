@@ -18,6 +18,7 @@ export type ItemData = {
         price: number
         realViewCount?: number
         fakeViewCount?: number
+        commercialStatus?: string
         physicalCollection?: {
             id: number
             name: string
@@ -69,6 +70,7 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
                         price: true,
                         realViewCount: true,
                         fakeViewCount: true,
+                        commercialStatus: true,
                         physicalCollection: {
                             select: {
                                 id: true,
@@ -101,6 +103,7 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
                     physicalItem: it.physicalItem ? {
                         ...it.physicalItem,
                         id: Number(it.physicalItem.id), // Convertir BigInt en number
+                        commercialStatus: it.physicalItem.commercialStatus || 'AVAILABLE',
                         // S'assurer que physicalCollection est inclus et correctement sérialisé
                         physicalCollection: it.physicalItem.physicalCollection ? {
                             id: it.physicalItem.physicalCollection.id,
