@@ -211,3 +211,70 @@ export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
     }
 }
 
+/**
+ * Récupère les statistiques mensuelles de vues pour un PhysicalItem
+ * @param physicalItemId - ID du PhysicalItem (BigInt)
+ * @returns Tableau des stats mensuelles triées par année et mois
+ */
+export async function getMonthlyViewStats(physicalItemId: bigint): Promise<Array<{
+    year: number
+    month: number
+    viewCount: number
+    monthLabel: string
+}>> {
+    try {
+        const stats = await prisma.$queryRawUnsafe<Array<{
+            year: number
+            month: number
+            viewCount: bigint
+        }>>(`
+            SELECT 
+                "year",
+                "month",
+                "viewCount"::BIGINT as "viewCount"
+            FROM statistics."PhysicalArtworkViewStat"
+            WHERE "artworkId" = ${physicalItemId.toString()}
+            ORDER BY "year" DESC, "month" DESC
+        `)
+
+        // Formater les données avec un label de mois
+        const monthNames = [
+            'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+            'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+        ]
+
+        return stats.map((stat) => ({
+            year: stat.year,
+            month: stat.month,
+            viewCount: Number(stat.viewCount),
+            monthLabel: `${monthNames[stat.month - 1]} ${stat.year}`
+        }))
+    } catch (error) {
+        console.error('[getMonthlyViewStats] Erreur lors de la récupération des stats:', error)
+        return []
+    }
+}
+
+/**
+ * Récupère l'ID du PhysicalItem depuis l'itemId
+ * @param itemId - ID de l'Item
+ * @returns ID du PhysicalItem (BigInt) ou null
+ */
+export async function getPhysicalItemIdByItemId(itemId: number): Promise<bigint | null> {
+    try {
+        const physicalItem = await prisma.physicalItem.findUnique({
+            where: { itemId },
+            select: { id: true }
+        })
+
+        if (!physicalItem) {
+            return null
+        }
+
+        return typeof physicalItem.id === 'bigint' ? physicalItem.id : BigInt(physicalItem.id)
+    } catch (error) {
+        console.error('[getPhysicalItemIdByItemId] Erreur:', error)
+        return null
+    }
+}
+

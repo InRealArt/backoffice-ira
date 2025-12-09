@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import { Eye, Heart, ExternalLink, FolderOpen } from "lucide-react";
+import { Eye, Heart, ExternalLink, FolderOpen, BarChart3 } from "lucide-react";
 import NavigationButton from "@/app/components/NavigationButton";
 import Badge from "@/app/components/PageLayout/Badge";
+import ArtworkStatsModal from "./ArtworkStatsModal";
 
 export interface PhysicalArtworkListItemProps {
   id: number;
@@ -64,6 +66,8 @@ export default function PhysicalArtworkListItem({
     }
   };
 
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+
   const displayName = name || "Sans titre";
   const imageUrl = mainImageUrl || "/images/no-image.jpg";
   const formattedPrice = formatPrice(price);
@@ -93,10 +97,10 @@ export default function PhysicalArtworkListItem({
           <div className="text-lg font-bold text-gray-900">{displayName}</div>
           {commercialStatus && (
             <Badge
-              variant={
-                commercialStatus === "AVAILABLE" ? "success" : "danger"
+              variant={commercialStatus === "AVAILABLE" ? "success" : "danger"}
+              text={
+                commercialStatus === "AVAILABLE" ? "Disponible" : "Indisponible"
               }
-              text={commercialStatus === "AVAILABLE" ? "Disponible" : "Indisponible"}
               size="small"
             />
           )}
@@ -149,6 +153,17 @@ export default function PhysicalArtworkListItem({
       </div>
 
       <div className="flex-shrink-0 grid grid-flow-row gap-2.5 min-w-[180px]">
+        {/* Bouton de statistiques */}
+        <button
+          type="button"
+          onClick={() => setIsStatsModalOpen(true)}
+          className="flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-indigo-600 transition-colors p-1.5 rounded hover:bg-gray-50 mb-1"
+          title="Voir les statistiques détaillées"
+        >
+          <BarChart3 size={14} />
+          <span>Statistiques</span>
+        </button>
+
         <div className="flex items-center justify-between gap-2.5 text-sm pl-2">
           <span className="flex items-center gap-2">
             <Eye size={16} /> Vues
@@ -162,6 +177,14 @@ export default function PhysicalArtworkListItem({
           <span className="text-gray-700 font-semibold">{displayWishlist}</span>
         </div>
       </div>
+
+      {/* Modale de statistiques */}
+      <ArtworkStatsModal
+        isOpen={isStatsModalOpen}
+        onClose={() => setIsStatsModalOpen(false)}
+        itemId={id}
+        artworkName={displayName}
+      />
     </div>
   );
 }
