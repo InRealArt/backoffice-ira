@@ -26,6 +26,7 @@ export interface LandingArtistData {
     biographyText4?: string | null
     mediumTags?: string[]
     imageArtistStudio?: string | null
+    onboardingBo?: Date | null
 }
 
 /**
@@ -145,6 +146,7 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 biographyHeader4: data.biographyHeader4,
                 biographyText4: data.biographyText4,
                 imageArtistStudio: data.imageArtistStudio,
+                onboardingBo: data.onboardingBo,
             },
         })
 
@@ -359,6 +361,36 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
         return {
             success: false,
             message: 'Une erreur est survenue lors de la mise à jour de l\'artiste'
+        }
+    }
+}
+
+/**
+ * Met à jour uniquement le champ onboardingBo d'un LandingArtist
+ */
+export async function updateLandingArtistOnboardingBo(
+    landingArtistId: number,
+    onboardingBo: Date | null
+): Promise<{ success: boolean; message?: string }> {
+    try {
+        await prisma.landingArtist.update({
+            where: {
+                id: landingArtistId,
+            },
+            data: {
+                onboardingBo: onboardingBo,
+            },
+        })
+
+        revalidatePath('/boAdmin/inventoryLanding')
+        return {
+            success: true,
+        }
+    } catch (error: any) {
+        console.error('Erreur lors de la mise à jour de onboardingBo:', error)
+        return {
+            success: false,
+            message: 'Une erreur est survenue lors de la mise à jour de la date d\'onboarding',
         }
     }
 } 

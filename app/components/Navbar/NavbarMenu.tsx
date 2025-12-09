@@ -37,6 +37,7 @@ import {
   ShoppingBag,
   Receipt,
   UserCircle,
+  Package,
 } from "lucide-react";
 
 export default function NavbarMenu() {
@@ -882,6 +883,30 @@ export default function NavbarMenu() {
                   )}
                 </a>
               </li>
+              <li>
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/boAdmin/inventoryLanding",
+                      "inventoryLanding"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("inventoryLanding") ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      <Package size={18} />
+                      <span>Inventaire site web</span>
+                    </>
+                  ) : (
+                    <>
+                      <Package size={18} />
+                      <span>Inventaire site web</span>
+                    </>
+                  )}
+                </a>
+              </li>
             </ul>
           </li>
           <li className="divider my-1"></li>
@@ -1550,6 +1575,20 @@ export default function NavbarMenu() {
                     >
                       <UserPlus size={18} />
                       Créer un Membre
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleDesktopNavigation(
+                          "/boAdmin/inventoryLanding",
+                          "inventoryLanding"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Package size={18} />
+                      Inventaire site web
                     </a>
                   </li>
                 </ul>

@@ -285,6 +285,7 @@ model LandingArtist {
   biographyHeader4    String?
   biographyText4      String?
   imageArtistStudio   String?
+  onboardingBo        DateTime?
   artistCategories    ArtistCategoryArtist[]
   artist              Artist                 @relation(fields: [artistId], references: [id], onDelete: Cascade)
   physicalCollections PhysicalCollection[]
@@ -864,7 +865,7 @@ model DetailedGlossaryItem {
 }
 
 model PresaleArtwork {
-  id           Int     @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   name         String
   description  String?
   order        Int?
@@ -873,9 +874,10 @@ model PresaleArtwork {
   width        Int? //In centimeters
   height       Int? //In centimeters
   price        Int?
-  imageUrl     String  @unique
-  mockupUrls   Json    @default("[]")
-  artist       Artist  @relation(fields: [artistId], references: [id])
+  imageUrl     String   @unique
+  mockupUrls   Json     @default("[]")
+  createdAt    DateTime @default(now())
+  artist       Artist   @relation(fields: [artistId], references: [id])
 
   @@index([artistId])
   @@index([displayOrder])

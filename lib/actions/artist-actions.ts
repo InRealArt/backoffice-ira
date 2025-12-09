@@ -629,27 +629,111 @@ export async function updateUserArtistProfile(
  * Récupère tous les artistes et galeries
  */
 export async function getAllArtistsAndGalleries() {
-  try {
-    const artists = await prisma.artist.findMany({
-      select: {
-        id: true,
-        name: true,
-        surname: true,
-        pseudo: true,
-        description: true,
-        publicKey: true,
-        imageUrl: true,
-        isGallery: true,
-        backgroundImage: true
-      },
-      orderBy: {
-        name: 'asc'
-      }
-    })
+    try {
+        const artists = await prisma.artist.findMany({
+            select: {
+                id: true,
+                name: true,
+                surname: true,
+                pseudo: true,
+                description: true,
+                publicKey: true,
+                imageUrl: true,
+                isGallery: true,
+                backgroundImage: true
+            },
+            orderBy: {
+                name: 'asc'
+            }
+        })
 
-    return artists
-  } catch (error) {
-    console.error('Erreur lors de la récupération des artistes:', error)
-    return []
-  }
-} 
+        return artists
+    } catch (error) {
+        console.error('Erreur lors de la récupération des artistes:', error)
+        return []
+    }
+}
+
+/**
+ * Récupère tous les artistes avec le nombre de presaleArtwork correspondants et la date d'onboarding
+ * @param nameFilter - Filtre optionnel pour rechercher par nom ou prénom
+ */
+export async function getArtistsWithPresaleArtworkCount(nameFilter?: string) {
+    try {
+        // Construire la condition de filtrage
+        const where: any = {
+            isGallery: false
+        }
+
+        // Ajouter le filtre par nom/prénom si fourni
+        if (nameFilter && nameFilter.trim()) {
+            where.OR = [
+                { name: { contains: nameFilter.trim(), mode: 'insensitive' as const } },
+                { surname: { contains: nameFilter.trim(), mode: 'insensitive' as const } }
+            ]
+        }
+
+        // Récupérer tous les artistes
+        const artists = await prisma.artist.findMany({
+            where,
+            select: {
+                id: true,
+                name: true,
+                surname: true,
+                pseudo: true,
+                imageUrl: true,
+                LandingArtist: {
+                    select: {
+                        id: true,
+                        onboardingBo: true
+                    },
+                    take: 1
+                }
+            },
+            orderBy: {
+                name: 'asc'
+            }
+        })
+
+        // Récupérer les counts de PresaleArtworks pour tous les artistes en une seule requête
+        const artistIds = artists.map(a => a.id)
+        const presaleCounts = await prisma.presaleArtwork.groupBy({
+            by: ['artistId'],
+            where: {
+                artistId: {
+                    in: artistIds
+                }
+            },
+            _count: {
+                id: true
+            }
+        })
+
+        // Créer une map pour un accès rapide
+        const countMap = new Map<number, number>()
+        presaleCounts.forEach(item => {
+            countMap.set(item.artistId, item._count.id)
+        })
+
+        // Mapper les résultats
+        return artists.map(artist => {
+            const landingArtist = Array.isArray(artist.LandingArtist)
+                ? artist.LandingArtist[0]
+                : null
+
+            return {
+                id: artist.id,
+                name: artist.name,
+                surname: artist.surname,
+                pseudo: artist.pseudo,
+                imageUrl: artist.imageUrl,
+                presaleArtworkCount: countMap.get(artist.id) || 0,
+                landingArtistId: landingArtist?.id || null,
+                onboardingBo: landingArtist?.onboardingBo || null
+            }
+        })
+    } catch (error) {
+        console.error('Erreur lors de la récupération des artistes avec le nombre de presaleArtwork:', error)
+        return []
+    }
+}
