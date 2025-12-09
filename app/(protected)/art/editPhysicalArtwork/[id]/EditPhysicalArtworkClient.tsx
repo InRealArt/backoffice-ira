@@ -204,7 +204,12 @@ export default function EditPhysicalArtworkClient({
       <div className="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-            Modifier une œuvre physique
+            Modifier l'œuvre physique{" "}
+            {item?.name && (
+              <span className="font-semibold text-primary dark:text-primary">
+                "{item.name}"
+              </span>
+            )}{" "}
           </h1>
           <p className="text-base text-gray-600 dark:text-gray-400">
             Modifiez les informations de l'œuvre de{" "}
@@ -267,6 +272,7 @@ export default function EditPhysicalArtworkClient({
                     weight: item.physicalItem.weight,
                     creationYear: item.physicalItem.creationYear,
                     status: item.physicalItem.status,
+                    commercialStatus: item.physicalItem.commercialStatus,
                     shippingAddressId: item.physicalItem.shippingAddressId,
                     physicalCollectionId:
                       item.physicalItem.physicalCollectionId,
@@ -290,20 +296,6 @@ export default function EditPhysicalArtworkClient({
               // Transmettre les nouveaux certificats
               physicalCertificateUrl: physicalCertificate?.fileUrl || null,
               nftCertificateUrl: nftCertificate?.fileUrl || null,
-              // Grouper les images par type
-              imagesByType: item.physicalItem?.images
-                ? item.physicalItem.images.reduce(
-                    (acc: Record<string, string[]>, img: any) => {
-                      const type = img.imageType
-                      if (!acc[type]) {
-                        acc[type] = []
-                      }
-                      acc[type].push(img.imageUrl)
-                      return acc
-                    },
-                    {}
-                  )
-                : {},
             }}
             onSuccess={handleSuccess}
           />

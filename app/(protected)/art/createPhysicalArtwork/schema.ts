@@ -77,7 +77,10 @@ export const physicalArtworkSchema = z.object({
         .refine(val => val !== '', "L'adresse d'expédition doit être sélectionnée"),
     physicalCollectionId: z.string()
         .min(1, "La collection est obligatoire")
-        .refine(val => val !== '', "La collection doit être sélectionnée")
+        .refine(val => val !== '', "La collection doit être sélectionnée"),
+    commercialStatus: z.enum(["AVAILABLE", "UNAVAILABLE"], {
+        required_error: "Le statut commercial est obligatoire",
+    }).default("AVAILABLE")
 });
 
 // Schéma alternatif pour l'édition d'œuvres d'art (image principale optionnelle)
@@ -154,7 +157,10 @@ export const physicalArtworkEditSchema = z.object({
         .refine(val => val !== '', "L'adresse d'expédition doit être sélectionnée"),
     physicalCollectionId: z.string()
         .min(1, "La collection est obligatoire")
-        .refine(val => val !== '', "La collection doit être sélectionnée")
+        .refine(val => val !== '', "La collection doit être sélectionnée"),
+    commercialStatus: z.enum(["AVAILABLE", "UNAVAILABLE"], {
+        required_error: "Le statut commercial est obligatoire",
+    }).default("AVAILABLE")
 });
 
 // Type unifié pour représenter les données du formulaire, compatible avec les deux schémas
@@ -192,6 +198,7 @@ export type PhysicalArtworkFormData = {
     shippingAddressId?: string;
     physicalCollectionId?: string;
     mainImageUrl?: string;
+    commercialStatus?: "AVAILABLE" | "UNAVAILABLE";
 }
 
 

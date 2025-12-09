@@ -525,6 +525,7 @@ model PhysicalItem {
   item              Item               @relation(fields: [itemId], references: [id], onDelete: Cascade)
   price             Int                @default(0)
   status            PhysicalItemStatus @default(created)
+  commercialStatus  PhysicalItemCommercialStatus @default(AVAILABLE)
   stockQty          Int                @default(0)
   initialQty        Int                @default(1)
   isOnline          Boolean            @default(false)
@@ -592,6 +593,13 @@ enum PhysicalItemStatus {
   pending
   listed
   sold
+
+  @@schema("backoffice")
+}
+
+enum PhysicalItemCommercialStatus {
+  AVAILABLE      // Disponible à la vente
+  UNAVAILABLE    // Indisponible
 
   @@schema("backoffice")
 }

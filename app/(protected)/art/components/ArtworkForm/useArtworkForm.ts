@@ -120,6 +120,7 @@ export function useArtworkForm({
             initialQty: initialData?.initialQty?.toString() || '1',
             physicalCollectionId: (initialData?.physicalItem as any)?.physicalCollectionId?.toString() || '',
             mainImageUrl: initialData?.imageUrl || '',
+            commercialStatus: (initialData?.physicalItem as any)?.commercialStatus || 'AVAILABLE',
         }
     })
 
@@ -758,6 +759,7 @@ export function useArtworkForm({
                             styleIds: data.styleIds ? data.styleIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
                             techniqueIds: data.techniqueIds ? data.techniqueIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
                             themeIds: data.themeIds ? data.themeIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
+                            commercialStatus: data.commercialStatus || 'AVAILABLE',
                         }
                     }
 
@@ -990,6 +992,7 @@ export function useArtworkForm({
                         styleIds: data.styleIds ? data.styleIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
                         techniqueIds: data.techniqueIds ? data.techniqueIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
                         themeIds: data.themeIds ? data.themeIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) : undefined,
+                        commercialStatus: data.commercialStatus || 'AVAILABLE',
                     } : null
 
                     // Mettre à jour la modale de progression

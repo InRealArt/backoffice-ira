@@ -3,7 +3,7 @@
 import { memberSchema } from "@/app/(admin)/boAdmin/create-member/schema";
 import { MemberFormData } from "@/app/(admin)/boAdmin/create-member/schema";
 import { prisma } from "@/lib/prisma"
-import { BackofficeUser, WhiteListedUser, Artist, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType, PhysicalItemStatus, NftItemStatus } from "@prisma/client"
+import { BackofficeUser, WhiteListedUser, Artist, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType, PhysicalItemStatus, NftItemStatus, PhysicalItemCommercialStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache";
 import { PrismaClient } from '@prisma/client'
 import { Decimal } from '@prisma/client/runtime/library'
@@ -505,7 +505,8 @@ export async function createItemRecord(
     supportId?: number,
     styleIds?: number[],
     techniqueIds?: number[],
-    themeIds?: number[]
+    themeIds?: number[],
+    commercialStatus?: 'AVAILABLE' | 'UNAVAILABLE'
   } | null,
   nftItemData?: {
     price?: number,
@@ -557,7 +558,8 @@ export async function createItemRecord(
             physicalCollectionId: physicalItemData.physicalCollectionId || null,
             mediumId: physicalItemData.mediumId || null,
             supportId: physicalItemData.supportId || null,
-            status: status as PhysicalItemStatus // Utiliser status comme enum pour PhysicalItem
+            status: status as PhysicalItemStatus, // Utiliser status comme enum pour PhysicalItem
+            commercialStatus: (physicalItemData.commercialStatus || 'AVAILABLE') as PhysicalItemCommercialStatus
           }
         })
 
@@ -914,6 +916,7 @@ export async function getItemById(itemId: number) {
             realViewCount: true,
             fakeViewCount: true,
             physicalCollectionId: true,
+            commercialStatus: true,
             // Caractéristiques artistiques (déplacées de Item vers PhysicalItem)
             mediumId: true,
             supportId: true,
@@ -2111,7 +2114,8 @@ export async function updateItemRecord(
       supportId?: number,
       styleIds?: number[],
       techniqueIds?: number[],
-      themeIds?: number[]
+      themeIds?: number[],
+      commercialStatus?: 'AVAILABLE' | 'UNAVAILABLE'
     },
     nftItemData?: {
       price?: number
@@ -2193,6 +2197,7 @@ export async function updateItemRecord(
         if (physicalData.physicalCollectionId !== undefined) physicalUpdateData.physicalCollectionId = physicalData.physicalCollectionId
         if (physicalData.mediumId !== undefined) physicalUpdateData.mediumId = physicalData.mediumId
         if (physicalData.supportId !== undefined) physicalUpdateData.supportId = physicalData.supportId
+        if (physicalData.commercialStatus !== undefined) physicalUpdateData.commercialStatus = physicalData.commercialStatus as PhysicalItemCommercialStatus
 
         if (existingPhysicalItem) {
           // Mettre à jour le PhysicalItem existant
@@ -2267,7 +2272,8 @@ export async function updateItemRecord(
               physicalCollectionId: physicalData.physicalCollectionId || null,
               mediumId: physicalData.mediumId || null,
               supportId: physicalData.supportId || null,
-              status: PhysicalItemStatus.created
+              status: PhysicalItemStatus.created,
+              commercialStatus: (physicalData.commercialStatus || 'AVAILABLE') as PhysicalItemCommercialStatus
             }
           })
 

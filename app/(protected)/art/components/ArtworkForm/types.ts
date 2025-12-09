@@ -86,6 +86,7 @@ export interface ArtworkFormProps {
             weight?: number | string
             creationYear?: number | string
             status?: string
+            commercialStatus?: 'AVAILABLE' | 'UNAVAILABLE'
             shippingAddressId?: number
             physicalCollectionId?: number
             mediumId?: number
