@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Eye, Heart, ExternalLink, FolderOpen } from "lucide-react";
 import NavigationButton from "@/app/components/NavigationButton";
+import Badge from "@/app/components/PageLayout/Badge";
 
 export interface PhysicalArtworkListItemProps {
   id: number;
@@ -16,6 +17,7 @@ export interface PhysicalArtworkListItemProps {
     id: number;
     name: string;
   } | null;
+  commercialStatus?: "AVAILABLE" | "UNAVAILABLE";
   editHref?: string;
   viewHref?: string;
   onViewClick?: () => void;
@@ -32,6 +34,7 @@ export default function PhysicalArtworkListItem({
   views = 0,
   wishlistCount = 0,
   collection,
+  commercialStatus,
   editHref,
   viewHref,
   onViewClick,
@@ -86,7 +89,18 @@ export default function PhysicalArtworkListItem({
       </div>
 
       <div className="flex-1 flex flex-col gap-2">
-        <div className="text-lg font-bold text-gray-900">{displayName}</div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="text-lg font-bold text-gray-900">{displayName}</div>
+          {commercialStatus && (
+            <Badge
+              variant={
+                commercialStatus === "AVAILABLE" ? "success" : "danger"
+              }
+              text={commercialStatus === "AVAILABLE" ? "Disponible" : "Indisponible"}
+              size="small"
+            />
+          )}
+        </div>
         <div className="text-sm text-gray-500">Créé le {formattedDate}</div>
         {collection && collection.name ? (
           <div className="flex items-center gap-2 text-sm text-indigo-600">

@@ -1219,7 +1219,7 @@ model BackofficeAuthVerification {
 model PhysicalArtworkView {
   id        BigInt   @id @default(autoincrement())
   artworkId BigInt
-  viewerId  BigInt?
+  viewerId  BigInt?  // ID utilisateur si connecté (optionnel)
   viewedAt  DateTime @default(now())
   ipAddress String?  @db.Inet
   userAgent String?
@@ -1227,8 +1227,10 @@ model PhysicalArtworkView {
   // Relations
   artwork PhysicalItem @relation(fields: [artworkId], references: [id], onDelete: Cascade)
 
+  // Index pour requêtes d'agrégation et nettoyage
   @@index([artworkId, viewedAt], name: "idx_artworkViews_artworkId_viewedAt")
-  @@map("artworkViews")
+  @@index([viewedAt], name: "idx_artworkViews_viewedAt") // Pour nettoyage par date
+  @@map("PhysicalArtworkView")
   @@schema("statistics")
 }
 
@@ -1244,6 +1246,6 @@ model PhysicalArtworkViewStat {
 
   @@unique([artworkId, year, month], name: "unique_artwork_month")
   @@index([artworkId, year, month], name: "idx_artworkViewStats_artworkId_year_month")
-  @@map("artworkViewStats")
+  @@map("PhysicalArtworkViewStat")
   @@schema("statistics")
 }

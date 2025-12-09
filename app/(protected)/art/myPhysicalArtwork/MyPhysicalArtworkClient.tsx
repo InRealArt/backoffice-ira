@@ -190,6 +190,12 @@ export default function MyPhysicalArtworkClient({
                     views={views}
                     wishlistCount={wishlist}
                     collection={collection}
+                    commercialStatus={
+                      item.physicalItem?.commercialStatus as
+                        | "AVAILABLE"
+                        | "UNAVAILABLE"
+                        | undefined
+                    }
                     editHref={`/art/editPhysicalArtwork/${item.id}`}
                   />
                 );
