@@ -640,14 +640,26 @@ export async function getAllArtistsAndGalleries() {
                 publicKey: true,
                 imageUrl: true,
                 isGallery: true,
-                backgroundImage: true
+                backgroundImage: true,
+                BackofficeUser: {
+                    select: {
+                        id: true
+                    }
+                }
             },
             orderBy: {
                 name: 'asc'
             }
         })
 
-        return artists
+        // Mapper les artistes pour correspondre au type FilterArtist
+        return artists.map(artist => {
+            const { BackofficeUser, ...artistWithoutBackofficeUser } = artist
+            return {
+                ...artistWithoutBackofficeUser,
+                idUser: BackofficeUser.length > 0 ? String(BackofficeUser[0].id) : null
+            }
+        })
     } catch (error) {
         console.error('Erreur lors de la récupération des artistes:', error)
         return []

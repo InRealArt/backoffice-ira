@@ -1,5 +1,5 @@
 import { getAllPresaleArtworks } from '@/lib/actions/presale-artwork-actions'
-import { getAllArtists } from '@/lib/actions/prisma-actions'
+import { getAllArtistsAndGalleries } from '@/lib/actions/artist-actions'
 import PresaleArtworksClient from './PresaleArtworksClient'
 import { loadPresaleArtworksSearchParams } from './searchParams'
 import type { SearchParams } from 'nuqs/server'
@@ -17,10 +17,10 @@ export default async function PresaleArtworksPage({ searchParams }: PageProps) {
   // Charger les paramètres de recherche côté serveur
   const { artistId, sortColumn, sortDirection, page, itemsPerPage } = await loadPresaleArtworksSearchParams(searchParams)
   
-  // Récupérer toutes les œuvres et tous les artistes
+  // Récupérer toutes les œuvres et tous les artistes (y compris les galeries)
   const [presaleArtworksData, allArtists] = await Promise.all([
     getAllPresaleArtworks(),
-    getAllArtists()
+    getAllArtistsAndGalleries()
   ])
   
   // Transformer les données pour s'assurer que 'order' est toujours un nombre

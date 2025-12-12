@@ -347,16 +347,16 @@ export default function PresaleArtworksClient({
         <Filters>
           <FilterItem
             id="artistFilter"
-            label="Filtrer par artiste:"
+            label="Filtrer par artiste/galerie:"
             value={
               searchParams.artistId ? searchParams.artistId.toString() : ""
             }
             onChange={handleArtistFilterChange}
             options={[
-              { value: "", label: "Tous les artistes" },
+              { value: "", label: "Tous les artistes et galeries" },
               ...artists.map((artist) => ({
                 value: artist.id.toString(),
-                label: `${artist.name} ${artist.surname}`,
+                label: `${artist.name} ${artist.surname}${artist.isGallery ? ' (Galerie)' : ' (Artiste)'}`,
               })),
             ]}
           />
