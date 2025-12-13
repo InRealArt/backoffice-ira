@@ -130,7 +130,7 @@ export default function MultiSelect({
   }
 
   return (
-    <div className={`relative ${className}`} ref={containerRef}>
+    <div className={`relative ${className}`} ref={containerRef} style={{ zIndex: isOpen ? 10000 : 'auto' }}>
       {/* Label */}
       {label && (
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -194,8 +194,8 @@ export default function MultiSelect({
       {isOpen && !disabled && (
         <div 
           ref={dropdownRef}
-          className={`fixed z-[9999] bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl max-h-64 overflow-hidden`}
-          style={dropdownStyle}
+          className={`fixed bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl max-h-64 overflow-hidden`}
+          style={{ ...dropdownStyle, zIndex: 10000 }}
         >
           {/* Search input */}
           <div className="p-2 border-b border-gray-200 dark:border-gray-700">

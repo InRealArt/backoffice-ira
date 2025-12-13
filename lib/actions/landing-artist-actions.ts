@@ -14,6 +14,7 @@ export interface LandingArtistData {
     artistId?: number
     slug?: string
     categoryIds?: number[]
+    specialtyIds?: number[]
     // Champs Artist complémentaires
     quoteFromInRealArt?: string | null
     biographyHeader1?: string | null
@@ -54,7 +55,15 @@ export async function getLandingArtistById(id: number) {
             id
         },
         include: {
-            artist: true,
+            artist: {
+                include: {
+                    artistSpecialties: {
+                        include: {
+                            artistSpecialty: true
+                        }
+                    }
+                }
+            },
             artistCategories: {
                 include: {
                     category: true
@@ -237,6 +246,28 @@ async function handleArtistCategories(landingArtistId: number, categoryIds?: num
 }
 
 /**
+ * Gère les spécialités d'artiste pour un Artist
+ */
+async function handleArtistSpecialties(artistId: number, specialtyIds?: number[]) {
+    if (specialtyIds !== undefined) {
+        // Supprimer toutes les spécialités existantes
+        await prisma.artistSpecialtyArtist.deleteMany({
+            where: { artistId }
+        })
+
+        // Créer les nouvelles relations de spécialités
+        if (specialtyIds.length > 0) {
+            await prisma.artistSpecialtyArtist.createMany({
+                data: specialtyIds.map(specialtyId => ({
+                    artistId,
+                    artistSpecialtyId: specialtyId
+                }))
+            })
+        }
+    }
+}
+
+/**
  * Crée un nouvel artiste sur la landing page (Server Action)
  */
 export async function createLandingArtistAction(formData: LandingArtistData): Promise<{
@@ -287,6 +318,11 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
         if (result.success && result.landingArtist) {
             // Gérer les catégories après la création
             await handleArtistCategories(result.landingArtist.id, formData.categoryIds)
+            
+            // Gérer les spécialités après la création (via l'artiste)
+            if (formData.artistId && formData.specialtyIds !== undefined) {
+                await handleArtistSpecialties(formData.artistId, formData.specialtyIds)
+            }
         }
 
         // Revalider les chemins pour mettre à jour les données dans toutes les pages concernées
@@ -350,6 +386,11 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
         if (result.success && result.landingArtist) {
             // Gérer les catégories après la mise à jour
             await handleArtistCategories(result.landingArtist.id, formData.categoryIds)
+            
+            // Gérer les spécialités après la mise à jour (via l'artiste)
+            if (existingLandingArtist.artistId && formData.specialtyIds !== undefined) {
+                await handleArtistSpecialties(existingLandingArtist.artistId, formData.specialtyIds)
+            }
         }
 
         // Revalider le chemin pour mettre à jour les données

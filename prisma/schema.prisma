@@ -257,6 +257,7 @@ model Artist {
   items              Item[]
   BackofficeAuthUser BackofficeAuthUser[]
   WhiteListedUsers   WhiteListedUser[]
+  artistSpecialties  ArtistSpecialtyArtist[]
 
   @@schema("public")
 }
@@ -997,6 +998,31 @@ model ArtworkStyle {
   itemStyles ItemStyle[]
 
   @@schema("backoffice")
+}
+
+model ArtistSpecialty {
+  id                Int                    @id @default(autoincrement())
+  name              String                 @unique
+  artistSpecialties ArtistSpecialtyArtist[]
+
+  @@schema("public")
+}
+
+// Table de jointure pour la relation many-to-many Artist <-> ArtistSpecialty
+model ArtistSpecialtyArtist {
+  id                Int            @id @default(autoincrement())
+  artistId          Int
+  artistSpecialtyId Int
+  createdAt         DateTime       @default(now())
+
+  artist          Artist          @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  artistSpecialty ArtistSpecialty @relation(fields: [artistSpecialtyId], references: [id], onDelete: Cascade)
+
+  @@unique([artistId, artistSpecialtyId])
+  @@index([artistId])
+  @@index([artistSpecialtyId])
+  @@map("ArtistSpecialtyArtist")
+  @@schema("public")
 }
 
 // Table de jointure pour la relation many-to-many PhysicalItem <-> ArtworkStyle

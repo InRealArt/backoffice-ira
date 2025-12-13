@@ -13,11 +13,12 @@ import TranslationField from "@/app/components/TranslationField";
 import { handleEntityTranslations } from "@/lib/actions/translation-actions";
 import { generateSlug } from "@/lib/utils";
 import MediumMultiSelect from "@/app/components/Common/MediumMultiSelect";
-import CategoryMultiSelect from "@/app/components/Common/CategoryMultiSelect";
-import type { ArtistCategory } from "@prisma/client";
+import MultiSelect from "@/app/components/Forms/MultiSelect";
+import type { ArtistCategory, ArtistSpecialty } from "@prisma/client";
 import ArtistImageUpload from "@/app/(protected)/art/create-artist-profile/ArtistImageUpload";
 import OptionalImageUpload from "@/app/(protected)/art/create-artist-profile/OptionalImageUpload";
 import ProgressModal from "@/app/(protected)/art/create-artist-profile/ProgressModal";
+import { Controller } from "react-hook-form";
 
 // Schéma de validation
 const formSchema = z.object({
@@ -64,6 +65,7 @@ const formSchema = z.object({
     .transform((val) => (val === "" ? null : val)),
   slug: z.string().optional(),
   categoryIds: z.array(z.string()).optional(),
+  specialtyIds: z.array(z.union([z.string(), z.number()])).optional(),
   mediumTags: z.array(z.string()).default([]),
   quoteFromInRealArt: z.string().optional(),
   biographyHeader1: z.string().optional(),
@@ -113,6 +115,13 @@ interface LandingArtistWithArtist {
     linkedinUrl: string | null;
     countryCode?: string | null;
     birthYear?: number | null;
+    artistSpecialties?: Array<{
+      artistSpecialtyId: number;
+      artistSpecialty: {
+        id: number;
+        name: string;
+      };
+    }>;
   };
   slug?: string;
 }
@@ -121,12 +130,14 @@ interface LandingArtistEditFormProps {
   landingArtist: LandingArtistWithArtist;
   mediums: string[];
   categories: ArtistCategory[];
+  specialties: ArtistSpecialty[];
 }
 
 export default function LandingArtistEditForm({
   landingArtist,
   mediums,
   categories,
+  specialties,
 }: LandingArtistEditFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -240,6 +251,9 @@ export default function LandingArtistEditForm({
             (c) => String(c.categoryId)
           )
         : [],
+      specialtyIds: Array.isArray(landingArtist.artist?.artistSpecialties)
+        ? landingArtist.artist.artistSpecialties.map((s) => s.artistSpecialtyId)
+        : [],
       mediumTags: landingArtist.mediumTags || [],
       quoteFromInRealArt: landingArtist.quoteFromInRealArt || "",
       biographyHeader1: landingArtist.biographyHeader1 || "",
@@ -257,7 +271,6 @@ export default function LandingArtistEditForm({
   // Utiliser useWatch pour optimiser les re-renders (best practice React Hook Form)
   const artistsPage = useWatch({ control, name: "artistsPage" });
   const mediumTags = useWatch({ control, name: "mediumTags" }) || [];
-  const categoryIds = useWatch({ control, name: "categoryIds" }) || [];
 
   useEffect(() => {
     // Générer le slug à partir des informations de l'artiste
@@ -642,8 +655,13 @@ export default function LandingArtistEditForm({
       // Appel à la server action pour mettre à jour l'artiste
       const result = await updateLandingArtistAction(landingArtist.id, {
         ...landingArtistDataWithImages,
-        categoryIds: Array.isArray(categoryIds)
-          ? categoryIds.map((v) => parseInt(v))
+        categoryIds: Array.isArray(data.categoryIds)
+          ? data.categoryIds.map((v) => parseInt(v))
+          : undefined,
+        specialtyIds: Array.isArray(data.specialtyIds)
+          ? data.specialtyIds.map((v) =>
+              typeof v === "string" ? parseInt(v) : v
+            )
           : undefined,
       });
 
@@ -813,29 +831,52 @@ export default function LandingArtistEditForm({
                   />
                 </div>
 
-                <div style={{ flex: 1 }}>
-                  <div className="form-group">
-                    <label className="form-label">Catégories</label>
-                    <CategoryMultiSelect
-                      options={useMemo(
-                        () =>
-                          categories.map((c) => ({
+                <div style={{ flex: 1, position: "relative" }}>
+                  <div
+                    className="form-group"
+                    style={{ position: "relative", zIndex: 1000 }}
+                  >
+                    <Controller
+                      name="categoryIds"
+                      control={control}
+                      render={({ field }) => (
+                        <MultiSelect
+                          label="Catégories"
+                          options={categories.map((c) => ({
                             id: c.id,
                             name: c.name,
-                          })),
-                        [categories]
+                          }))}
+                          value={
+                            field.value
+                              ? field.value.map((v: string) => parseInt(v))
+                              : []
+                          }
+                          onChange={(values: (number | string)[]) => {
+                            field.onChange(values.map((v) => String(v)));
+                          }}
+                          placeholder="Sélectionnez une ou plusieurs catégories"
+                        />
                       )}
-                      selected={useMemo(
-                        () => categoryIds.map((v) => parseInt(v)),
-                        [categoryIds]
-                      )}
-                      onChange={useCallback(
-                        (values: number[]) => {
-                          setValue("categoryIds" as any, values.map(String), {
-                            shouldValidate: true,
-                          });
-                        },
-                        [setValue]
+                    />
+                  </div>
+                  <div
+                    className="form-group"
+                    style={{ position: "relative", zIndex: 999 }}
+                  >
+                    <Controller
+                      name="specialtyIds"
+                      control={control}
+                      render={({ field }) => (
+                        <MultiSelect
+                          label="Spécialités"
+                          options={specialties.map((specialty) => ({
+                            id: specialty.id,
+                            name: specialty.name,
+                          }))}
+                          value={field.value || []}
+                          onChange={field.onChange}
+                          placeholder="Sélectionnez une ou plusieurs spécialités"
+                        />
                       )}
                     />
                   </div>

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getLandingArtistById } from '@/lib/actions/landing-artist-actions'
 import { getAllArtistCategories } from '@/lib/actions/artist-categories-actions'
+import { getAllArtistSpecialties } from '@/lib/actions/artist-specialty-actions'
 import LandingArtistEditForm from './LandingArtistEditForm'
 import { getAllArtworkMediums } from '@/lib/actions/artwork-medium-actions'
 
@@ -13,15 +14,16 @@ export default async function EditLandingArtistPage({ params }: { params: Promis
     notFound()
   }
   
-  const [landingArtist, mediums, categories] = await Promise.all([
+  const [landingArtist, mediums, categories, specialties] = await Promise.all([
     getLandingArtistById(landingArtistId),
     getAllArtworkMediums(),
-    getAllArtistCategories()
+    getAllArtistCategories(),
+    getAllArtistSpecialties()
   ])
   
   if (!landingArtist) {
     notFound()
   }
   
-  return <LandingArtistEditForm landingArtist={landingArtist} mediums={mediums.map(m => m.name)} categories={categories} />
+  return <LandingArtistEditForm landingArtist={landingArtist} mediums={mediums.map(m => m.name)} categories={categories} specialties={specialties} />
 } 
