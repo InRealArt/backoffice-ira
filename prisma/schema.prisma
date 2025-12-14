@@ -258,7 +258,22 @@ model Artist {
   BackofficeAuthUser BackofficeAuthUser[]
   WhiteListedUsers   WhiteListedUser[]
   artistSpecialties  ArtistSpecialtyArtist[]
+  awards             ArtistAward[]
 
+  @@schema("public")
+}
+
+// Modèle pour les récompenses d'un artiste
+model ArtistAward {
+  id          Int      @id @default(autoincrement())
+  name        String   // Nom de la récompense
+  description String?  // Description de la récompense
+  year        Int?     // Année de la récompense
+  artistId    Int
+  artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  
+  @@index([artistId])
+  @@index([year])
   @@schema("public")
 }
 

@@ -13,6 +13,7 @@ import Button from "@/app/components/Button/Button";
 import ArtistImageUpload from "./ArtistImageUpload";
 import OptionalImageUpload from "./OptionalImageUpload";
 import ProgressModal from "./ProgressModal";
+import DynamicFormList from "@/app/components/Forms/DynamicFormList/DynamicFormList";
 
 // Schéma de validation simplifié pour un utilisateur
 const formSchema = z.object({
@@ -96,6 +97,9 @@ export default function CreateArtistProfileForm({
     null
   );
   const [studioImageFile, setStudioImageFile] = useState<File | null>(null);
+  const [awardsList, setAwardsList] = useState<
+    Array<{ name: string; description?: string; year?: number; order?: number }>
+  >([]);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [progressSteps, setProgressSteps] = useState<
     Array<{
@@ -124,6 +128,7 @@ export default function CreateArtistProfileForm({
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors, dirtyFields },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -376,6 +381,9 @@ export default function CreateArtistProfileForm({
         formData.append("biographyText4", data.biographyText4);
       }
 
+      // Ajouter les récompenses
+      formData.append("awards", JSON.stringify(awardsList));
+
       const result = await createUserArtistProfile(formData);
 
       updateStepStatus("creation", "completed");
@@ -421,7 +429,7 @@ export default function CreateArtistProfileForm({
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="pl-6 sm:pl-8 md:pl-10">
         {formError && (
           <div className="alert alert-danger mb-4">
             <p>{formError}</p>
@@ -652,6 +660,62 @@ export default function CreateArtistProfileForm({
               <p className="form-error">{errors.countryCode.message}</p>
             )}
           </div>
+        </div>
+
+        {/* Section Récompenses */}
+        <div className="form-group mb-4">
+          <DynamicFormList
+            title="Récompenses"
+            description="Ajoutez jusqu'à 3 récompenses ou distinctions que vous avez reçues"
+            fields={[
+              {
+                name: "name",
+                label: "Nom de la récompense",
+                type: "text",
+                placeholder: "Ex: Prix du meilleur artiste",
+                required: true,
+                colSpan: 2,
+              },
+              {
+                name: "year",
+                label: "Année",
+                type: "number",
+                placeholder: "2024",
+                required: false,
+                colSpan: 1,
+                validation: (value) => {
+                  if (value === null || value === undefined || value === "")
+                    return true;
+                  const year =
+                    typeof value === "number" ? value : parseInt(value);
+                  if (isNaN(year)) return "L'année doit être un nombre";
+                  if (year < 1900) return "L'année doit être supérieure à 1900";
+                  if (year > new Date().getFullYear())
+                    return "L'année ne peut pas être dans le futur";
+                  return true;
+                },
+              },
+              {
+                name: "description",
+                label: "Description",
+                type: "textarea",
+                placeholder: "Décrivez la récompense, son contexte...",
+                required: false,
+                colSpan: 3,
+              },
+            ]}
+            items={awardsList}
+            onItemsChange={setAwardsList}
+            register={register}
+            errors={errors}
+            setValue={setValue}
+            getValues={getValues}
+            maxItems={3}
+            minItems={0}
+            itemLabel={(item, index) =>
+              `Récompense ${index + 1}${item.name ? ` - ${item.name}` : ""}`
+            }
+          />
         </div>
 
         {/* Section Expositions */}

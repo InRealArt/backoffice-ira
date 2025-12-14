@@ -6,13 +6,19 @@ import { useToast } from "@/app/components/Toast/ToastContext";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { updateUserArtistProfile, getLandingArtistByArtistId } from "@/lib/actions/artist-actions";
+import {
+  updateUserArtistProfile,
+  getLandingArtistByArtistId,
+} from "@/lib/actions/artist-actions";
 import CountrySelect from "@/app/components/Common/CountrySelect";
 import { getCountries } from "@/lib/utils";
 import Button from "@/app/components/Button/Button";
 import ArtistImageUpload from "../create-artist-profile/ArtistImageUpload";
 import OptionalImageUpload from "../create-artist-profile/OptionalImageUpload";
 import ProgressModal from "../create-artist-profile/ProgressModal";
+import DynamicFormList from "@/app/components/Forms/DynamicFormList/DynamicFormList";
+import MultiSelect from "@/app/components/Forms/MultiSelect";
+import { Controller } from "react-hook-form";
 
 // Schéma de validation pour l'édition
 const formSchema = z.object({
@@ -75,6 +81,7 @@ const formSchema = z.object({
   biographyText3: z.string().nullable().optional().or(z.literal("")),
   biographyHeader4: z.string().nullable().optional().or(z.literal("")),
   biographyText4: z.string().nullable().optional().or(z.literal("")),
+  specialtyIds: z.array(z.number()).optional().default([]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -109,11 +116,25 @@ interface EditArtistProfileFormProps {
     biographyHeader4: string | null;
     biographyText4: string | null;
   } | null;
+  awards?: Array<{
+    id?: number;
+    name: string;
+    description: string | null;
+    year: number | null;
+  }>;
+  specialtyIds?: number[];
+  allSpecialties?: Array<{
+    id: number;
+    name: string;
+  }>;
 }
 
 export default function EditArtistProfileForm({
   artist,
   landingArtist,
+  awards = [],
+  specialtyIds = [],
+  allSpecialties = [],
 }: EditArtistProfileFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,9 +144,20 @@ export default function EditArtistProfileForm({
     null
   );
   const [studioImageFile, setStudioImageFile] = useState<File | null>(null);
+  const [awardsList, setAwardsList] = useState<
+    Array<{ name: string; description?: string; year?: number; order?: number }>
+  >(
+    awards.map((award, index) => ({
+      name: award.name,
+      description: award.description || "",
+      year: award.year || undefined,
+      order: index,
+    }))
+  );
   // États pour marquer les images à supprimer
   const [shouldDeleteMainImage, setShouldDeleteMainImage] = useState(false);
-  const [shouldDeleteSecondaryImage, setShouldDeleteSecondaryImage] = useState(false);
+  const [shouldDeleteSecondaryImage, setShouldDeleteSecondaryImage] =
+    useState(false);
   const [shouldDeleteStudioImage, setShouldDeleteStudioImage] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [progressSteps, setProgressSteps] = useState<
@@ -155,7 +187,9 @@ export default function EditArtistProfileForm({
     handleSubmit,
     watch,
     setValue,
+    getValues,
     reset,
+    control,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -178,6 +212,7 @@ export default function EditArtistProfileForm({
       biographyText3: landingArtist?.biographyText3 || "",
       biographyHeader4: landingArtist?.biographyHeader4 || "",
       biographyText4: landingArtist?.biographyText4 || "",
+      specialtyIds: specialtyIds,
     },
   });
 
@@ -306,21 +341,30 @@ export default function EditArtistProfileForm({
       // Vérifier que si l'image principale est supprimée, une nouvelle est fournie
       if (shouldDeleteMainImage && !selectedImageFile) {
         updateStepStatus("validation", "error");
-        setProgressError("Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle");
-        setFormError("Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle");
-        errorToast("Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle");
+        setProgressError(
+          "Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle"
+        );
+        setFormError(
+          "Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle"
+        );
+        errorToast(
+          "Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle"
+        );
         setIsSubmitting(false);
         return;
       }
 
       // Gérer les images : nouvelle upload, suppression, ou conservation
       let imageUrl: string = artist.imageUrl;
-      let secondaryImageUrl: string | null = landingArtist?.secondaryImageUrl || null;
-      let studioImageUrl: string | null = landingArtist?.imageArtistStudio || null;
-      
+      let secondaryImageUrl: string | null =
+        landingArtist?.secondaryImageUrl || null;
+      let studioImageUrl: string | null =
+        landingArtist?.imageArtistStudio || null;
+
       // Marquer les images à supprimer
       const shouldDeleteMain = shouldDeleteMainImage && !selectedImageFile;
-      const shouldDeleteSecondary = shouldDeleteSecondaryImage && !secondaryImageFile;
+      const shouldDeleteSecondary =
+        shouldDeleteSecondaryImage && !secondaryImageFile;
       const shouldDeleteStudio = shouldDeleteStudioImage && !studioImageFile;
 
       // Upload de la nouvelle image principale si fournie
@@ -397,13 +441,13 @@ export default function EditArtistProfileForm({
       } else if (secondaryImageUrl) {
         formData.append("secondaryImageUrl", secondaryImageUrl);
       }
-      
+
       if (shouldDeleteStudio) {
         formData.append("deleteStudioImage", "true");
       } else if (studioImageUrl) {
         formData.append("imageArtistStudio", studioImageUrl);
       }
-      
+
       if (shouldDeleteMain) {
         formData.append("deleteMainImage", "true");
       }
@@ -461,6 +505,12 @@ export default function EditArtistProfileForm({
         formData.append("biographyText4", data.biographyText4);
       }
 
+      // Ajouter les récompenses
+      formData.append("awards", JSON.stringify(awardsList));
+
+      // Ajouter les spécialités
+      formData.append("specialtyIds", JSON.stringify(data.specialtyIds || []));
+
       const result = await updateUserArtistProfile(formData);
 
       updateStepStatus("update", "completed");
@@ -503,7 +553,7 @@ export default function EditArtistProfileForm({
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="pl-6 sm:pl-8 md:pl-10">
         {formError && (
           <div className="alert alert-danger mb-4">
             <p>{formError}</p>
@@ -512,15 +562,11 @@ export default function EditArtistProfileForm({
 
         {/* Section Informations de base */}
         <div className="form-group mb-4">
-          <h3
-            className="h5 mb-3"
-            style={{
-              borderBottom: "2px solid #e0e0e0",
-              paddingBottom: "0.5rem",
-            }}
-          >
-            Informations de base
-          </h3>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              Informations de base
+            </h3>
+          </div>
           <div className="d-flex gap-lg align-items-start">
             <div style={{ width: "200px", flexShrink: 0 }}>
               <ArtistImageUpload
@@ -559,7 +605,10 @@ export default function EditArtistProfileForm({
                       cursor: "not-allowed",
                     }}
                   />
-                  <p className="form-help text-muted mt-1" style={{ fontSize: "0.875rem" }}>
+                  <p
+                    className="form-help text-muted mt-1"
+                    style={{ fontSize: "0.875rem" }}
+                  >
                     Le prénom ne peut pas être modifié
                   </p>
                 </div>
@@ -578,7 +627,10 @@ export default function EditArtistProfileForm({
                       cursor: "not-allowed",
                     }}
                   />
-                  <p className="form-help text-muted mt-1" style={{ fontSize: "0.875rem" }}>
+                  <p
+                    className="form-help text-muted mt-1"
+                    style={{ fontSize: "0.875rem" }}
+                  >
                     Le nom ne peut pas être modifié
                   </p>
                 </div>
@@ -604,15 +656,11 @@ export default function EditArtistProfileForm({
 
         {/* Section Images supplémentaires */}
         <div className="form-group mb-4">
-          <h3
-            className="h5 mb-3"
-            style={{
-              borderBottom: "2px solid #e0e0e0",
-              paddingBottom: "0.5rem",
-            }}
-          >
-            Images supplémentaires (optionnel)
-          </h3>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              Images supplémentaires (optionnel)
+            </h3>
+          </div>
           <div className="d-flex gap-md" style={{ flexWrap: "wrap" }}>
             <div style={{ flex: "1 1 300px", minWidth: "250px" }}>
               <OptionalImageUpload
@@ -631,7 +679,11 @@ export default function EditArtistProfileForm({
                 }}
                 label="Image secondaire de l'artiste"
                 description="Une photo supplémentaire de vous pour enrichir votre profil"
-                previewUrl={shouldDeleteSecondaryImage ? null : (landingArtist?.secondaryImageUrl || null)}
+                previewUrl={
+                  shouldDeleteSecondaryImage
+                    ? null
+                    : landingArtist?.secondaryImageUrl || null
+                }
                 allowDelete={true}
               />
             </div>
@@ -652,7 +704,11 @@ export default function EditArtistProfileForm({
                 }}
                 label="Image de votre studio"
                 description="Une photo de votre espace de travail ou atelier"
-                previewUrl={shouldDeleteStudioImage ? null : (landingArtist?.imageArtistStudio || null)}
+                previewUrl={
+                  shouldDeleteStudioImage
+                    ? null
+                    : landingArtist?.imageArtistStudio || null
+                }
                 allowDelete={true}
               />
             </div>
@@ -753,12 +809,12 @@ export default function EditArtistProfileForm({
               Année de naissance
             </label>
             <input
-              key={`birthYear-${artist.birthYear || 'empty'}`}
+              key={`birthYear-${artist.birthYear || "empty"}`}
               id="birthYear"
               type="number"
-              {...register("birthYear", { 
+              {...register("birthYear", {
                 valueAsNumber: true,
-                setValueAs: (value) => value === "" ? null : Number(value)
+                setValueAs: (value) => (value === "" ? null : Number(value)),
               })}
               className={`form-input ${errors.birthYear ? "input-error" : ""}`}
               placeholder="1990"
@@ -774,7 +830,7 @@ export default function EditArtistProfileForm({
               Pays
             </label>
             <CountrySelect
-              key={`country-${artist.countryCode || 'empty'}`}
+              key={`country-${artist.countryCode || "empty"}`}
               countries={getCountries()}
               value={countryCode || artist.countryCode || ""}
               onChange={(code) => setValue("countryCode", code)}
@@ -786,24 +842,102 @@ export default function EditArtistProfileForm({
           </div>
         </div>
 
+        {/* Section Spécialités */}
+        <div className="form-group mb-4">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              Spécialités
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Sélectionnez vos spécialités artistiques
+            </p>
+          </div>
+          <Controller
+            name="specialtyIds"
+            control={control}
+            render={({ field }) => (
+              <MultiSelect
+                label="Spécialités"
+                options={allSpecialties.map((specialty) => ({
+                  id: specialty.id,
+                  name: specialty.name,
+                }))}
+                value={field.value || []}
+                onChange={field.onChange}
+                placeholder="Sélectionnez une ou plusieurs spécialités"
+                error={errors.specialtyIds?.message as string}
+              />
+            )}
+          />
+        </div>
+
+        {/* Section Récompenses */}
+        <div className="form-group mb-4">
+          <DynamicFormList
+            title="Récompenses"
+            description="Ajoutez jusqu'à 3 récompenses ou distinctions que vous avez reçues"
+            fields={[
+              {
+                name: "name",
+                label: "Nom de la récompense",
+                type: "text",
+                placeholder: "Ex: Prix du meilleur artiste",
+                required: true,
+                colSpan: 2,
+              },
+              {
+                name: "year",
+                label: "Année",
+                type: "number",
+                placeholder: "2024",
+                required: false,
+                colSpan: 1,
+                validation: (value) => {
+                  if (value === null || value === undefined || value === "")
+                    return true;
+                  const year =
+                    typeof value === "number" ? value : parseInt(value);
+                  if (isNaN(year)) return "L'année doit être un nombre";
+                  if (year < 1900) return "L'année doit être supérieure à 1900";
+                  if (year > new Date().getFullYear())
+                    return "L'année ne peut pas être dans le futur";
+                  return true;
+                },
+              },
+              {
+                name: "description",
+                label: "Description",
+                type: "textarea",
+                placeholder: "Décrivez la récompense, son contexte...",
+                required: false,
+                colSpan: 3,
+              },
+            ]}
+            items={awardsList}
+            onItemsChange={setAwardsList}
+            register={register}
+            errors={errors}
+            setValue={setValue}
+            getValues={getValues}
+            maxItems={3}
+            minItems={0}
+            itemLabel={(item, index) =>
+              `Récompense ${index + 1}${item.name ? ` - ${item.name}` : ""}`
+            }
+          />
+        </div>
+
         {/* Section Expositions */}
         <div className="form-group mb-4">
-          <h3
-            className="h5 mb-3"
-            style={{
-              borderBottom: "2px solid #e0e0e0",
-              paddingBottom: "0.5rem",
-            }}
-          >
-            Expositions et parcours (optionnel)
-          </h3>
-          <p
-            className="form-help text-muted mb-3"
-            style={{ fontSize: "0.875rem" }}
-          >
-            Vous pouvez ajouter jusqu'à 4 expositions ou événements marquants
-            de votre parcours artistique.
-          </p>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              Expositions et parcours (optionnel)
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Vous pouvez ajouter jusqu'à 4 expositions ou événements marquants
+              de votre parcours artistique.
+            </p>
+          </div>
 
           {[
             {
@@ -872,15 +1006,11 @@ export default function EditArtistProfileForm({
         </div>
 
         <div className="form-group mb-4">
-          <h3
-            className="h5 mb-3"
-            style={{
-              borderBottom: "2px solid #e0e0e0",
-              paddingBottom: "0.5rem",
-            }}
-          >
-            Réseaux sociaux (facultatif)
-          </h3>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              Réseaux sociaux (facultatif)
+            </h3>
+          </div>
           <div className="form-group mb-3">
             <label htmlFor="websiteUrl" className="form-label">
               Site web
@@ -1002,4 +1132,3 @@ export default function EditArtistProfileForm({
     </>
   );
 }
-

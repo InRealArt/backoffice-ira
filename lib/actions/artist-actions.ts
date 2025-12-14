@@ -377,6 +377,37 @@ export async function createUserArtistProfile(
             data: { artistId: artist.id }
         })
 
+        // Gérer les récompenses (awards)
+        const awardsData = formData.get('awards') as string | null
+        if (awardsData) {
+            try {
+                const awards = JSON.parse(awardsData) as Array<{ name: string; description?: string; year?: number }>
+                console.log('Récompenses reçues pour création:', awards)
+                if (Array.isArray(awards) && awards.length > 0) {
+                    const awardsToCreate = awards
+                        .filter(award => award.name && award.name.trim() !== '')
+                        .map((award) => ({
+                            artistId: artist.id,
+                            name: award.name.trim(),
+                            description: award.description?.trim() || null,
+                            year: award.year || null
+                        }))
+                    console.log('Récompenses à créer:', awardsToCreate)
+                    if (awardsToCreate.length > 0) {
+                        await prisma.artistAward.createMany({
+                            data: awardsToCreate
+                        })
+                        console.log(`${awardsToCreate.length} récompense(s) créée(s) avec succès`)
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur lors de la création des récompenses:', error)
+                // Ne pas bloquer la création du profil si les récompenses échouent
+            }
+        } else {
+            console.log('Aucune donnée de récompenses reçue')
+        }
+
         // Revalider les chemins
         revalidatePath('/dataAdministration/artists')
         revalidatePath('/landing/landingArtists')
@@ -411,6 +442,48 @@ export async function getLandingArtistByArtistId(artistId: number) {
     } catch (error) {
         console.error('Erreur lors de la récupération du LandingArtist:', error)
         return null
+    }
+}
+
+/**
+ * Récupère les récompenses d'un artiste
+ */
+export async function getArtistAwards(artistId: number) {
+    try {
+        return await prisma.artistAward.findMany({
+            where: { artistId },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                year: true,
+                artistId: true
+            },
+            orderBy: [
+                { year: 'desc' }
+            ]
+        })
+    } catch (error) {
+        console.error('Erreur lors de la récupération des récompenses:', error)
+        return []
+    }
+}
+
+/**
+ * Récupère les spécialités d'un artiste
+ */
+export async function getArtistSpecialties(artistId: number) {
+    try {
+        const artistSpecialties = await prisma.artistSpecialtyArtist.findMany({
+            where: { artistId },
+            select: {
+                artistSpecialtyId: true
+            }
+        })
+        return artistSpecialties.map(asa => asa.artistSpecialtyId)
+    } catch (error) {
+        console.error('Erreur lors de la récupération des spécialités:', error)
+        return []
     }
 }
 
@@ -602,6 +675,77 @@ export async function updateUserArtistProfile(
                 console.error('Erreur lors de la suppression de l\'image principale sur Firebase:', error)
                 // Continuer même en cas d'erreur de suppression Firebase
             }
+        }
+
+        // Gérer les récompenses (awards) - remplacer toutes les récompenses existantes
+        const awardsData = formData.get('awards') as string | null
+        if (awardsData !== null) {
+            try {
+                // Supprimer toutes les récompenses existantes
+                await prisma.artistAward.deleteMany({
+                    where: { artistId: artist.id }
+                })
+
+                // Créer les nouvelles récompenses
+                const awards = JSON.parse(awardsData) as Array<{ name: string; description?: string; year?: number }>
+                console.log('Récompenses reçues pour mise à jour:', awards)
+                if (Array.isArray(awards) && awards.length > 0) {
+                    const awardsToCreate = awards
+                        .filter(award => award.name && award.name.trim() !== '')
+                        .map((award) => ({
+                            artistId: artist.id,
+                            name: award.name.trim(),
+                            description: award.description?.trim() || null,
+                            year: award.year || null
+                        }))
+                    console.log('Récompenses à créer:', awardsToCreate)
+                    if (awardsToCreate.length > 0) {
+                        await prisma.artistAward.createMany({
+                            data: awardsToCreate
+                        })
+                        console.log(`${awardsToCreate.length} récompense(s) mise(s) à jour avec succès`)
+                    }
+                } else {
+                    console.log('Aucune récompense à créer (liste vide)')
+                }
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour des récompenses:', error)
+                // Ne pas bloquer la mise à jour du profil si les récompenses échouent
+            }
+        } else {
+            console.log('Aucune donnée de récompenses reçue pour la mise à jour')
+        }
+
+        // Gérer les spécialités de l'artiste
+        const specialtyIdsData = formData.get('specialtyIds') as string | null
+        if (specialtyIdsData !== null) {
+            try {
+                const specialtyIds = JSON.parse(specialtyIdsData) as number[]
+                console.log('Spécialités reçues pour mise à jour:', specialtyIds)
+
+                // Supprimer toutes les spécialités existantes
+                await prisma.artistSpecialtyArtist.deleteMany({
+                    where: { artistId: artist.id }
+                })
+
+                // Créer les nouvelles relations de spécialités
+                if (specialtyIds.length > 0) {
+                    await prisma.artistSpecialtyArtist.createMany({
+                        data: specialtyIds.map(specialtyId => ({
+                            artistId: artist.id,
+                            artistSpecialtyId: specialtyId
+                        }))
+                    })
+                    console.log(`${specialtyIds.length} spécialité(s) mise(s) à jour avec succès`)
+                } else {
+                    console.log('Aucune spécialité à créer (liste vide)')
+                }
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour des spécialités:', error)
+                // Ne pas bloquer la mise à jour du profil si les spécialités échouent
+            }
+        } else {
+            console.log('Aucune donnée de spécialités reçue pour la mise à jour')
         }
 
         // Revalider les chemins
