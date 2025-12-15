@@ -50,6 +50,8 @@ export function DashboardStats({
   isLoadingArtistsCount = false,
   isAdmin = false,
 }: DashboardStatsProps) {
+  // Masquer les MetricCard liés à la Marketplace en production (Vercel)
+  const isProduction = process.env.NODE_ENV === "production";
   if (isAdmin) {
     return (
       <div className="dashboard-stats">
@@ -75,33 +77,37 @@ export function DashboardStats({
         buttonTitle="Voir les œuvres"
         buttonRoute="/art/presale-artworks"
       />
-      <MetricCard
-        title="Œuvres physiques disponibles sur la Marketplace"
-        value={availablePhysicalItemsCount}
-        icon={Box}
-        color="#10b981"
-        isLoading={isLoadingAvailablePhysicalItemsCount}
-        buttonTitle="Voir les œuvres"
-        buttonRoute="/art/myPhysicalArtwork?commercialStatus=AVAILABLE"
-      />
-      <MetricCard
-        title="Œuvres physiques indisponibles sur la Marketplace"
-        value={unavailablePhysicalItemsCount}
-        icon={Box}
-        color="#f59e0b"
-        isLoading={isLoadingUnavailablePhysicalItemsCount}
-        buttonTitle="Voir les œuvres"
-        buttonRoute="/art/myPhysicalArtwork?commercialStatus=UNAVAILABLE"
-      />
-      <MetricCard
-        title="Collections sur la Marketplace"
-        value={physicalCollectionsCount}
-        icon={FolderOpen}
-        color="#8b5cf6"
-        isLoading={isLoadingPhysicalCollectionsCount}
-        buttonTitle="Voir les collections"
-        buttonRoute="/art/physicalCollection"
-      />
+      {!isProduction && (
+        <>
+          <MetricCard
+            title="Œuvres physiques disponibles sur la Marketplace"
+            value={availablePhysicalItemsCount}
+            icon={Box}
+            color="#10b981"
+            isLoading={isLoadingAvailablePhysicalItemsCount}
+            buttonTitle="Voir les œuvres"
+            buttonRoute="/art/myPhysicalArtwork?commercialStatus=AVAILABLE"
+          />
+          <MetricCard
+            title="Œuvres physiques indisponibles sur la Marketplace"
+            value={unavailablePhysicalItemsCount}
+            icon={Box}
+            color="#f59e0b"
+            isLoading={isLoadingUnavailablePhysicalItemsCount}
+            buttonTitle="Voir les œuvres"
+            buttonRoute="/art/myPhysicalArtwork?commercialStatus=UNAVAILABLE"
+          />
+          <MetricCard
+            title="Collections sur la Marketplace"
+            value={physicalCollectionsCount}
+            icon={FolderOpen}
+            color="#8b5cf6"
+            isLoading={isLoadingPhysicalCollectionsCount}
+            buttonTitle="Voir les collections"
+            buttonRoute="/art/physicalCollection"
+          />
+        </>
+      )}
       {/* <MetricCard
         title="Items en attente"
         value={pendingItemsCount}
