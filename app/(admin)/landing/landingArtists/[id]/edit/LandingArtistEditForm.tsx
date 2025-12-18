@@ -11,7 +11,7 @@ import { X, Plus } from "lucide-react";
 import { updateLandingArtistAction } from "@/lib/actions/landing-artist-actions";
 import TranslationField from "@/app/components/TranslationField";
 import { handleEntityTranslations } from "@/lib/actions/translation-actions";
-import { generateSlug } from "@/lib/utils";
+import { generateSlug, validateUrl } from "@/lib/utils";
 import MediumMultiSelect from "@/app/components/Common/MediumMultiSelect";
 import MultiSelect from "@/app/components/Forms/MultiSelect";
 import type { ArtistCategory, ArtistSpecialty } from "@prisma/client";
@@ -30,35 +30,35 @@ const formSchema = z.object({
   secondaryImageUrl: z.string().nullable().optional(),
   websiteUrl: z
     .string()
-    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+    .refine(validateUrl, {
       message: "URL invalide",
     })
     .optional()
     .transform((val) => (val === "" ? null : val)),
   facebookUrl: z
     .string()
-    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+    .refine(validateUrl, {
       message: "URL Facebook invalide",
     })
     .optional()
     .transform((val) => (val === "" ? null : val)),
   instagramUrl: z
     .string()
-    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+    .refine(validateUrl, {
       message: "URL Instagram invalide",
     })
     .optional()
     .transform((val) => (val === "" ? null : val)),
   twitterUrl: z
     .string()
-    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+    .refine(validateUrl, {
       message: "URL Twitter invalide",
     })
     .optional()
     .transform((val) => (val === "" ? null : val)),
   linkedinUrl: z
     .string()
-    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+    .refine(validateUrl, {
       message: "URL LinkedIn invalide",
     })
     .optional()

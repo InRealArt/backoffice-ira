@@ -5,6 +5,23 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
+/**
+ * Valide une URL (gère les entités HTML comme &amp;)
+ * @param val - L'URL à valider (peut être une chaîne vide ou undefined)
+ * @returns true si l'URL est valide ou vide, false sinon
+ */
+export function validateUrl(val: string | undefined): boolean {
+  if (val === "" || !val) return true
+  // Décoder les entités HTML comme &amp; en &
+  const decoded = val.replace(/&amp;/g, "&")
+  try {
+    new URL(decoded)
+    return true
+  } catch {
+    return false
+  }
+}
+
 
 /**
  * Formate une date en format français

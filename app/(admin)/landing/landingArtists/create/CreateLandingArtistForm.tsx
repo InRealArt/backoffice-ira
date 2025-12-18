@@ -10,7 +10,7 @@ import { X, Plus } from "lucide-react";
 import { createLandingArtistAction } from "@/lib/actions/landing-artist-actions";
 import TranslationField from "@/app/components/TranslationField";
 import { handleEntityTranslations } from "@/lib/actions/translation-actions";
-import { generateSlug } from "@/lib/utils";
+import { generateSlug, validateUrl } from "@/lib/utils";
 import MediumMultiSelect from "@/app/components/Common/MediumMultiSelect";
 import type { ArtistCategory } from "@prisma/client";
 import CategoryMultiSelect from "@/app/components/Common/CategoryMultiSelect";
@@ -29,51 +29,51 @@ const formSchema = z.object({
   secondaryImageUrl: z.string().nullable().optional(),
   websiteUrl: z
     .string()
-    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+    .refine(validateUrl, {
       message: "URL invalide",
     })
     .optional()
     .transform((val) => (val === "" ? null : val)),
   facebookUrl: z
     .string()
-    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+    .refine(validateUrl, {
       message: "URL Facebook invalide",
     })
     .optional()
     .transform((val) => (val === "" ? null : val)),
   instagramUrl: z
     .string()
-    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+    .refine(validateUrl, {
       message: "URL Instagram invalide",
     })
     .optional()
     .transform((val) => (val === "" ? null : val)),
   twitterUrl: z
     .string()
-    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+    .refine(validateUrl, {
       message: "URL Twitter invalide",
     })
     .optional()
     .transform((val) => (val === "" ? null : val)),
   linkedinUrl: z
     .string()
-    .refine((val) => val === "" || /^https?:\/\//.test(val), {
+    .refine(validateUrl, {
       message: "URL LinkedIn invalide",
     })
     .optional()
     .transform((val) => (val === "" ? null : val)),
   slug: z.string().optional(),
   categoryIds: z.array(z.string()).optional(),
-    quoteFromInRealArt: z.string().optional(),
-    biographyHeader1: z.string().optional(),
-    biographyText1: z.string().optional(),
-    biographyHeader2: z.string().optional(),
-    biographyText2: z.string().optional(),
-    biographyHeader3: z.string().optional(),
-    biographyText3: z.string().optional(),
-    biographyHeader4: z.string().optional(),
-    biographyText4: z.string().optional(),
-    mediumTags: z.array(z.string()).default([]),
+  quoteFromInRealArt: z.string().optional(),
+  biographyHeader1: z.string().optional(),
+  biographyText1: z.string().optional(),
+  biographyHeader2: z.string().optional(),
+  biographyText2: z.string().optional(),
+  biographyHeader3: z.string().optional(),
+  biographyText3: z.string().optional(),
+  biographyHeader4: z.string().optional(),
+  biographyText4: z.string().optional(),
+  mediumTags: z.array(z.string()).default([]),
   imageArtistStudio: z.string().nullable().optional(),
 });
 
@@ -186,7 +186,7 @@ export default function CreateLandingArtistForm({
     const id = parseInt(e.target.value);
     const artist = artists.find((a) => a.id === id) || null;
     setSelectedArtist(artist);
-    
+
     // Générer et mettre à jour le slug
     if (artist) {
       const generatedSlug = generateSlug(artist.name + " " + artist.surname);
@@ -240,7 +240,7 @@ export default function CreateLandingArtistForm({
       throw error;
     }
   };
-  
+
   const onSubmit = async (data: FormValues) => {
     setFormError(null);
     setIsSubmitting(true);
@@ -420,7 +420,7 @@ export default function CreateLandingArtistForm({
         imageUrl: imageUrl,
         secondaryImageUrl: secondaryImageUrl,
         websiteUrl: data.websiteUrl || null,
-        facebookUrl: data.facebookUrl || null, 
+        facebookUrl: data.facebookUrl || null,
         instagramUrl: data.instagramUrl || null,
         twitterUrl: data.twitterUrl || null,
         linkedinUrl: data.linkedinUrl || null,
@@ -472,16 +472,16 @@ export default function CreateLandingArtistForm({
         imageArtistStudio: studioImageUrl || null,
       };
       const payload = { ...formattedData, ...artistExtra };
-      
+
       // Appel à la server action pour créer l'artiste
       const result = await createLandingArtistAction(payload);
 
       updateStepStatus("creation", "completed");
-      
+
       if (result.success) {
         // Étape 5: Création des traductions
         updateStepStatus("translations", "in-progress");
-        
+
         // Gestion des traductions pour intro, description et style artistique
         try {
           if (result.landingArtist?.id) {
@@ -489,8 +489,8 @@ export default function CreateLandingArtistForm({
               "LandingArtist",
               result.landingArtist.id,
               {
-              intro: data.intro || null,
-              description: data.description || null,
+                intro: data.intro || null,
+                description: data.description || null,
                 artworkStyle: data.artworkStyle || null,
               }
             );
@@ -512,14 +512,14 @@ export default function CreateLandingArtistForm({
               "LandingArtist",
               result.landingArtist.id,
               {
-              quoteFromInRealArt: data.quoteFromInRealArt || null,
-              biographyHeader1: data.biographyHeader1 || null,
-              biographyText1: data.biographyText1 || null,
-              biographyHeader2: data.biographyHeader2 || null,
-              biographyText2: data.biographyText2 || null,
-              biographyHeader3: data.biographyHeader3 || null,
-              biographyText3: data.biographyText3 || null,
-              biographyHeader4: data.biographyHeader4 || null,
+                quoteFromInRealArt: data.quoteFromInRealArt || null,
+                biographyHeader1: data.biographyHeader1 || null,
+                biographyText1: data.biographyText1 || null,
+                biographyHeader2: data.biographyHeader2 || null,
+                biographyText2: data.biographyText2 || null,
+                biographyHeader3: data.biographyHeader3 || null,
+                biographyText3: data.biographyText3 || null,
+                biographyHeader4: data.biographyHeader4 || null,
                 biographyText4: data.biographyText4 || null,
               }
             );
@@ -533,7 +533,7 @@ export default function CreateLandingArtistForm({
           setProgressError("Erreur lors de la création des traductions");
           // On ne bloque pas la création en cas d'erreur de traduction
         }
-        
+
         updateStepStatus("translations", "completed");
 
         // Étape 6: Finalisation
@@ -570,25 +570,25 @@ export default function CreateLandingArtistForm({
       setIsSubmitting(false);
     }
   };
-  
+
   const handleCancel = () => {
     router.push("/landing/landingArtists");
   };
-  
+
   const handleAddImage = () => {
     if (newImageUrl.trim() === "") return;
-    
+
     // Ajouter la nouvelle image à la liste
     setArtworkImages([
       ...artworkImages,
       { name: newImageName, url: newImageUrl },
     ]);
-    
+
     // Réinitialiser les champs
     setNewImageUrl("");
     setNewImageName("");
   };
-  
+
   const handleRemoveImage = (index: number) => {
     const updatedImages = [...artworkImages];
     updatedImages.splice(index, 1);
@@ -639,7 +639,7 @@ export default function CreateLandingArtistForm({
                 <p className="form-error">{errors.artistId.message}</p>
               )}
             </div>
-            
+
             {selectedArtist && (
               <>
                 <div className="form-section mt-lg">
@@ -671,7 +671,7 @@ export default function CreateLandingArtistForm({
                         }
                       />
                     </div>
-                    
+
                     <div style={{ flex: 1 }}>
                       <div className="form-group">
                         <label className="form-label">Catégories</label>
@@ -774,7 +774,7 @@ export default function CreateLandingArtistForm({
                           </span>
                         </div>
                       </div>
-                      
+
                       <TranslationField
                         entityType="LandingArtist"
                         entityId={null}
@@ -792,7 +792,7 @@ export default function CreateLandingArtistForm({
                           placeholder="Courte introduction de l'artiste qui sera affichée sur la page d'accueil"
                         />
                       </TranslationField>
-                      
+
                       <TranslationField
                         entityType="LandingArtist"
                         entityId={null}
@@ -810,7 +810,7 @@ export default function CreateLandingArtistForm({
                           placeholder="Description complète de l'artiste"
                         />
                       </TranslationField>
-                      
+
                       <TranslationField
                         entityType="LandingArtist"
                         entityId={null}
@@ -831,14 +831,14 @@ export default function CreateLandingArtistForm({
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="form-section mt-lg">
                   <h2 className="section-title">Images des œuvres</h2>
                   <p className="section-subtitle">
                     Ajoutez les images des œuvres qui seront affichées sur la
                     page d'accueil
                   </p>
-                  
+
                   <div className="form-group mt-md">
                     <div className="d-flex gap-md mb-md">
                       <div style={{ flex: 2 }}>
@@ -879,7 +879,7 @@ export default function CreateLandingArtistForm({
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="image-list mt-md">
                       {artworkImages.length === 0 ? (
                         <p className="text-muted">Aucune image ajoutée</p>
@@ -1127,7 +1127,7 @@ export default function CreateLandingArtistForm({
                     Ajoutez les liens vers les réseaux sociaux et site web de
                     l'artiste
                   </p>
-                  
+
                   <div className="form-group mt-md">
                     <label htmlFor="websiteUrl" className="form-label">
                       Site web
@@ -1145,7 +1145,7 @@ export default function CreateLandingArtistForm({
                       <p className="form-error">{errors.websiteUrl.message}</p>
                     )}
                   </div>
-                  
+
                   <div className="d-flex gap-md mt-md">
                     <div className="form-group" style={{ flex: 1 }}>
                       <label htmlFor="facebookUrl" className="form-label">
@@ -1166,7 +1166,7 @@ export default function CreateLandingArtistForm({
                         </p>
                       )}
                     </div>
-                    
+
                     <div className="form-group" style={{ flex: 1 }}>
                       <label htmlFor="instagramUrl" className="form-label">
                         Instagram
@@ -1187,7 +1187,7 @@ export default function CreateLandingArtistForm({
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="d-flex gap-md mt-md">
                     <div className="form-group" style={{ flex: 1 }}>
                       <label htmlFor="twitterUrl" className="form-label">
@@ -1208,7 +1208,7 @@ export default function CreateLandingArtistForm({
                         </p>
                       )}
                     </div>
-                    
+
                     <div className="form-group" style={{ flex: 1 }}>
                       <label htmlFor="linkedinUrl" className="form-label">
                         LinkedIn
@@ -1233,7 +1233,7 @@ export default function CreateLandingArtistForm({
               </>
             )}
           </div>
-          
+
           <div className="card-footer">
             <div className="d-flex justify-content-between">
               <button
@@ -1272,4 +1272,4 @@ export default function CreateLandingArtistForm({
       />
     </div>
   );
-} 
+}
