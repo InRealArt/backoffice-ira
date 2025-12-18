@@ -15,9 +15,9 @@ import { generateSlug } from "@/lib/utils";
 import MediumMultiSelect from "@/app/components/Common/MediumMultiSelect";
 import MultiSelect from "@/app/components/Forms/MultiSelect";
 import type { ArtistCategory, ArtistSpecialty } from "@prisma/client";
-import ArtistImageUpload from "@/app/(protected)/art/create-artist-profile/ArtistImageUpload";
-import OptionalImageUpload from "@/app/(protected)/art/create-artist-profile/OptionalImageUpload";
-import ProgressModal from "@/app/(protected)/art/create-artist-profile/ProgressModal";
+import ArtistImageUpload from "@/app/components/art/ArtistImageUpload";
+import OptionalImageUpload from "@/app/components/art/OptionalImageUpload";
+import ProgressModal from "@/app/components/art/ProgressModal";
 import { Controller } from "react-hook-form";
 
 // Schéma de validation
@@ -492,31 +492,14 @@ export default function LandingArtistEditForm({
           updateStepStatus("upload", "completed");
         }
 
-        // Upload de l'image secondaire si fournie (dans le répertoire existant avec casse exacte)
+        // Upload de l'image secondaire si fournie
         if (secondaryImageFile) {
           try {
-            const { uploadImageToExistingFolder } = await import(
-              "@/lib/firebase/storage"
-            );
-            const fileName = `${landingArtist.artist.name} ${landingArtist.artist.surname}_2`;
-            secondaryImageUrl = await uploadImageToExistingFolder(
+            secondaryImageUrl = await handleUpload(
               secondaryImageFile,
-              folderName,
-              fileName,
-              (status, error) => {
-                if (status === "error") {
-                  updateStepStatus("conversion", status);
-                } else {
-                  updateStepStatus("conversion", status);
-                }
-              },
-              (status, error) => {
-                if (status === "error") {
-                  updateStepStatus("upload", status);
-                } else {
-                  updateStepStatus("upload", status);
-                }
-              }
+              landingArtist.artist.name,
+              landingArtist.artist.surname,
+              "secondary"
             );
           } catch (err: any) {
             console.error(
@@ -534,31 +517,14 @@ export default function LandingArtistEditForm({
           secondaryImageUrl = null;
         }
 
-        // Upload de l'image du studio si fournie (dans le répertoire existant avec casse exacte)
+        // Upload de l'image du studio si fournie
         if (studioImageFile) {
           try {
-            const { uploadImageToExistingFolder } = await import(
-              "@/lib/firebase/storage"
-            );
-            const fileName = `${landingArtist.artist.name} ${landingArtist.artist.surname}_studio`;
-            studioImageUrl = await uploadImageToExistingFolder(
+            studioImageUrl = await handleUpload(
               studioImageFile,
-              folderName,
-              fileName,
-              (status, error) => {
-                if (status === "error") {
-                  updateStepStatus("conversion", status);
-                } else {
-                  updateStepStatus("conversion", status);
-                }
-              },
-              (status, error) => {
-                if (status === "error") {
-                  updateStepStatus("upload", status);
-                } else {
-                  updateStepStatus("upload", status);
-                }
-              }
+              landingArtist.artist.name,
+              landingArtist.artist.surname,
+              "studio"
             );
           } catch (err: any) {
             console.error("Erreur lors de l'upload de l'image du studio:", err);

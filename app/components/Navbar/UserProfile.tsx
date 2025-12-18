@@ -2,12 +2,14 @@
 
 import { authClient } from "@/lib/auth-client";
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { getUserRole } from "@/lib/actions/auth-actions";
 import { Badge } from "@/app/components/PageLayout";
 import { User, LogOut, UserCircle, Key } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function UserProfile() {
+  const t = useTranslations("user");
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
@@ -30,7 +32,7 @@ export default function UserProfile() {
           const role = await getUserRole(user.email);
           setUserRole(role);
         } catch (error) {
-          console.error("Erreur lors de la récupération du rôle:", error);
+          console.error(t("errors.fetchingRole"), error);
           setUserRole(null);
         }
       } else if (!isLoggedIn) {
@@ -64,24 +66,24 @@ export default function UserProfile() {
     }
   };
 
-  // Fonction pour obtenir le texte du rôle en français
+  // Fonction pour obtenir le texte du rôle traduit
   const getRoleText = (role: string | null | undefined): string => {
-    if (!role) return "User";
+    if (!role) return t("roles.user");
 
     const roleLC = role.toLowerCase();
 
     switch (roleLC) {
       case "admin":
       case "administrateur":
-        return "Admin";
+        return t("roles.admin");
       case "artist":
       case "artiste":
-        return "Artiste";
+        return t("roles.artist");
       case "gallerymanager":
       case "gallery manager":
-        return "Resp. galerie";
+        return t("roles.galleryManager");
       default:
-        return "User";
+        return t("roles.user");
     }
   };
 
@@ -108,7 +110,7 @@ export default function UserProfile() {
           <a className="justify-between font-semibold">
             <span className="flex items-center gap-2">
               <User className="w-4 h-4" />
-              Profil
+              {t("profile")}
             </span>
             <Badge
               variant={getRoleBadgeVariant(userRole)}
@@ -126,7 +128,7 @@ export default function UserProfile() {
           <a onClick={handleSignOut} className="text-error hover:bg-error/10">
             <span className="flex items-center gap-2">
               <LogOut className="w-4 h-4" />
-              Déconnexion
+              {t("signOut")}
             </span>
           </a>
         </li>

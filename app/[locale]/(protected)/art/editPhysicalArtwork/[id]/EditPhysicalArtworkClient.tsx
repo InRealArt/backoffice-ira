@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import LoadingSpinner from "@/app/components/LoadingSpinner/LoadingSpinner";
-import ArtworkForm from "@/app/(protected)/art/components/ArtworkForm";
+import ArtworkForm from "@/app/components/art/ArtworkForm";
 import {
   getItemById,
   getBackofficeUserAddresses,
@@ -17,7 +17,7 @@ import { normalizeString } from "@/lib/utils";
 import {
   Address,
   PhysicalCollection,
-} from "@/app/(protected)/art/components/ArtworkForm/types";
+} from "@/app/components/art/ArtworkForm/types";
 import {
   ArtworkMedium,
   ArtworkStyle,

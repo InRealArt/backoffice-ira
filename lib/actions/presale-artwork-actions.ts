@@ -268,18 +268,8 @@ export async function deletePresaleArtwork(id: number) {
             }
         })
 
-        // Supprimer le fichier WebP depuis Firebase Storage
-        try {
-            const { deletePresaleArtworkImage } = await import('@/lib/firebase/storage')
-            await deletePresaleArtworkImage(
-                artwork.artist.name,
-                artwork.artist.surname,
-                artwork.name
-            )
-        } catch (firebaseError) {
-            // Ne pas bloquer la suppression si l'image n'existe pas ou ne peut pas être supprimée
-            console.error('Erreur lors de la suppression de l\'image Firebase (non bloquant):', firebaseError)
-        }
+        // Note: La suppression du fichier Firebase est gérée côté client avant d'appeler cette fonction
+        // Voir PresaleArtworksClient.tsx -> handleDelete()
 
         // Supprimer l'œuvre
         await prisma.presaleArtwork.delete({

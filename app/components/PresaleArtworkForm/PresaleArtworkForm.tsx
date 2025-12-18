@@ -26,7 +26,7 @@ import {
 } from "@/lib/firebase/storage";
 import { convertToWebPIfNeeded } from "@/lib/utils/webp-converter";
 import { normalizeString } from "@/lib/utils";
-import ProgressModal from "@/app/(protected)/art/create-artist-profile/ProgressModal";
+import ProgressModal from "@/app/components/art/ProgressModal";
 
 // Schéma de validation
 const presaleArtworkSchema = z.object({

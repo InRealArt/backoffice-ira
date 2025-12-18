@@ -313,7 +313,7 @@ export async function uploadArtistImageWithWebP(
         // Déterminer le nom du fichier selon le type
         let filePrefix = `${name} ${surname}`
         if (imageType === 'secondary') {
-            filePrefix = `${name} ${surname}_2`
+            filePrefix = `${name} ${surname}_secondary`
         } else if (imageType === 'studio') {
             filePrefix = `${name} ${surname}_studio`
         }
@@ -372,7 +372,7 @@ export async function checkFolderExists(folderPath: string): Promise<boolean> {
  * 
  * @param imageFile - Le fichier image à uploader
  * @param folderName - Nom du répertoire avec la casse exacte (ex: "Jean Dupont")
- * @param fileName - Nom du fichier (ex: "Jean Dupont_2" ou "Jean Dupont_studio")
+ * @param fileName - Nom du fichier (ex: "Jean Dupont_secondary" ou "Jean Dupont_studio")
  * @param onConversionStatus - Callback pour le statut de conversion
  * @param onUploadStatus - Callback pour le statut d'upload
  * @returns URL de l'image uploadée
@@ -513,7 +513,7 @@ export async function deletePresaleArtworkImage(
     artworkName: string
 ): Promise<boolean> {
     try {
-        // Authentification Firebase côté serveur
+        // Authentification Firebase côté client
         const { getAuth, signInAnonymously } = await import('firebase/auth')
         const { app } = await import('./config')
 

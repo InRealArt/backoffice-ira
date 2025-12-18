@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Package, FileText, Users, Box, FolderOpen } from "lucide-react";
 import { MetricCard } from "./MetricCard";
 
@@ -50,13 +51,15 @@ export function DashboardStats({
   isLoadingArtistsCount = false,
   isAdmin = false,
 }: DashboardStatsProps) {
+  const t = useTranslations("dashboard");
+
   // Masquer les MetricCard liés à la Marketplace en production (Vercel)
   const isProduction = process.env.NODE_ENV === "production";
   if (isAdmin) {
     return (
       <div className="dashboard-stats">
         <MetricCard
-          title="Nb artistes"
+          title={t("admin.artistsCount")}
           value={visibleArtistsCount}
           icon={Users}
           color="#3b82f6"
@@ -69,41 +72,41 @@ export function DashboardStats({
   return (
     <div className="dashboard-stats">
       <MetricCard
-        title="Œuvres en prévente sur le site web InRealArt"
+        title={t("presale.artworksCount")}
         value={presaleArtworkCount}
         icon={Package}
         color="#3b82f6"
         isLoading={isLoadingPresaleCount}
-        buttonTitle="Voir les œuvres"
+        buttonTitle={t("physical.viewArtworks")}
         buttonRoute="/art/presale-artworks"
       />
       {!isProduction && (
         <>
           <MetricCard
-            title="Œuvres physiques disponibles sur la Marketplace"
+            title={t("physical.availableTitle")}
             value={availablePhysicalItemsCount}
             icon={Box}
             color="#10b981"
             isLoading={isLoadingAvailablePhysicalItemsCount}
-            buttonTitle="Voir les œuvres"
+            buttonTitle={t("physical.viewArtworks")}
             buttonRoute="/art/myPhysicalArtwork?commercialStatus=AVAILABLE"
           />
           <MetricCard
-            title="Œuvres physiques indisponibles sur la Marketplace"
+            title={t("physical.unavailableTitle")}
             value={unavailablePhysicalItemsCount}
             icon={Box}
             color="#f59e0b"
             isLoading={isLoadingUnavailablePhysicalItemsCount}
-            buttonTitle="Voir les œuvres"
+            buttonTitle={t("physical.viewArtworks")}
             buttonRoute="/art/myPhysicalArtwork?commercialStatus=UNAVAILABLE"
           />
           <MetricCard
-            title="Collections sur la Marketplace"
+            title={t("physical.collectionsTitle")}
             value={physicalCollectionsCount}
             icon={FolderOpen}
             color="#8b5cf6"
             isLoading={isLoadingPhysicalCollectionsCount}
-            buttonTitle="Voir les collections"
+            buttonTitle={t("physical.viewCollections")}
             buttonRoute="/art/physicalCollection"
           />
         </>

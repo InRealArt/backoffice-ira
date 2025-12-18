@@ -1,5 +1,5 @@
 import { getAllPresaleArtworks } from "@/lib/actions/presale-artwork-actions";
-import DisplayOrderManager from "@/app/(protected)/art/my-artworks/DisplayOrderManager";
+import DisplayOrderManager from "@/app/components/art/DisplayOrderManager";
 import { loadPresaleArtworksSearchParams } from "../searchParams";
 import type { SearchParams } from "nuqs/server";
 import { redirect } from "next/navigation";

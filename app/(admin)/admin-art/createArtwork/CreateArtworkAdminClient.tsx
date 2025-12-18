@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import ArtworkForm from '@/app/(protected)/art/components/ArtworkForm'
+import ArtworkForm from '@/app/components/art/ArtworkForm'
 import styles from './createArtworkAdmin.module.scss'
 import { useRouter } from 'next/navigation'
-import { Address } from '@/app/(protected)/art/components/ArtworkForm/types'
+import { Address } from '@/app/components/art/ArtworkForm/types'
 import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from '@prisma/client'
 import { getAddressesByArtistId } from '@/lib/actions/address-actions'
 

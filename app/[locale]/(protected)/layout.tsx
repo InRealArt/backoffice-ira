@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { authClient } from "@/lib/auth-client";
 import Navbar from "@/app/components/Navbar/Navbar";
@@ -13,6 +13,8 @@ export default function ProtectedLayout({
 }) {
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
+  const params = useParams();
+  const locale = params.locale || 'fr';
   const hasRedirected = useRef(false);
   const routerRef = useRef(router);
 
@@ -24,9 +26,9 @@ export default function ProtectedLayout({
   useEffect(() => {
     if (!isPending && !session && !hasRedirected.current) {
       hasRedirected.current = true;
-      routerRef.current.push("/");
+      routerRef.current.push(`/${locale}/sign-in`);
     }
-  }, [session, isPending]);
+  }, [session, isPending, locale]);
 
   if (isPending) return null;
   if (!session) return null;

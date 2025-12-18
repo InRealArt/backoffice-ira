@@ -269,7 +269,6 @@ export default function EditArtistProfileForm({
       const { convertToWebPIfNeeded } = await import(
         "@/lib/utils/webp-converter"
       );
-      const { normalizeString } = await import("@/lib/utils");
 
       const auth = getAuth(app);
       await signInAnonymously(auth);
@@ -288,17 +287,17 @@ export default function EditArtistProfileForm({
       updateStepStatus("conversion", "completed");
 
       updateStepStatus("upload", "in-progress");
-      const fileName = normalizeString(`${name} ${surname}`);
+      const folderName = `${name} ${surname}`.trim();
       const fileExtension = "webp";
 
-      let filePrefix = `${name} ${surname}`;
+      let fileName = `${name} ${surname}`;
       if (imageType === "secondary") {
-        filePrefix = `${name} ${surname}_2`;
+        fileName = `${name} ${surname}_secondary`;
       } else if (imageType === "studio") {
-        filePrefix = `${name} ${surname}_studio`;
+        fileName = `${name} ${surname}_studio`;
       }
 
-      const storagePath = `artists/${fileName}/${filePrefix}.${fileExtension}`;
+      const storagePath = `artists/${folderName}/${fileName}.${fileExtension}`;
       const storageRef = ref(storage, storagePath);
 
       await uploadBytes(storageRef, conversionResult.file);
@@ -424,6 +423,43 @@ export default function EditArtistProfileForm({
       }
 
       updateStepStatus("validation", "completed");
+
+      // Supprimer les images Firebase si nécessaire (côté client)
+      try {
+        const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+
+        // Supprimer l'image principale si demandé
+        if (shouldDeleteMain && artist.imageUrl) {
+          try {
+            await deleteImageFromFirebase(artist.imageUrl)
+            console.log('Image principale Firebase supprimée avec succès')
+          } catch (error) {
+            console.warn('Erreur lors de la suppression de l\'image principale Firebase (non bloquant):', error)
+          }
+        }
+
+        // Supprimer l'image secondaire si demandé
+        if (shouldDeleteSecondary && landingArtist?.secondaryImageUrl) {
+          try {
+            await deleteImageFromFirebase(landingArtist.secondaryImageUrl)
+            console.log('Image secondaire Firebase supprimée avec succès')
+          } catch (error) {
+            console.warn('Erreur lors de la suppression de l\'image secondaire Firebase (non bloquant):', error)
+          }
+        }
+
+        // Supprimer l'image studio si demandé
+        if (shouldDeleteStudio && landingArtist?.imageArtistStudio) {
+          try {
+            await deleteImageFromFirebase(landingArtist.imageArtistStudio)
+            console.log('Image studio Firebase supprimée avec succès')
+          } catch (error) {
+            console.warn('Erreur lors de la suppression de l\'image studio Firebase (non bloquant):', error)
+          }
+        }
+      } catch (error) {
+        console.warn('Erreur lors de l\'import de deleteImageFromFirebase (non bloquant):', error)
+      }
 
       // Mise à jour du profil
       updateStepStatus("update", "in-progress");

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle'
 import NavbarMenu from './NavbarMenu'
 import UserProfile from './UserProfile'
+import LanguageSwitcher from '../LanguageSwitcher'
 
 export default function Navbar() {
 
@@ -29,7 +30,8 @@ export default function Navbar() {
       </div>
       
       <div className="navbar-end">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           <ThemeToggle />
           <UserProfile />
         </div>

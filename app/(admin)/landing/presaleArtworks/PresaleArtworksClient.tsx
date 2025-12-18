@@ -145,6 +145,29 @@ export default function PresaleArtworksClient({
 
   const handleDelete = async (artworkId: number): Promise<void> => {
     try {
+      // Récupérer les infos de l'œuvre pour supprimer l'image Firebase
+      const artwork = presaleArtworks.find(a => a.id === artworkId)
+      
+      if (!artwork) {
+        error("Œuvre introuvable")
+        return
+      }
+
+      // Supprimer l'image depuis Firebase Storage (côté client)
+      try {
+        const { deletePresaleArtworkImage } = await import('@/lib/firebase/storage')
+        await deletePresaleArtworkImage(
+          artwork.artist.name,
+          artwork.artist.surname,
+          artwork.name
+        )
+        console.log('Image Firebase supprimée avec succès')
+      } catch (firebaseError) {
+        // Ne pas bloquer la suppression si l'image n'existe pas ou ne peut pas être supprimée
+        console.warn('Erreur lors de la suppression de l\'image Firebase (non bloquant):', firebaseError)
+      }
+
+      // Supprimer l'œuvre de la base de données via la Server Action
       const result = await deletePresaleArtwork(artworkId);
 
       if (result.success) {

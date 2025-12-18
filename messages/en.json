@@ -1,0 +1,164 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "submit": "Submit",
+    "close": "Close"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset password",
+    "confirmPassword": "Confirm password"
+  },
+  "home": {
+    "title": "Welcome to InRealArt backoffice",
+    "checkingAccess": "Checking your access...",
+    "loginPrompt": "Sign in to access the backoffice",
+    "signInButton": "Sign In",
+    "signUpButton": "Sign Up"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "loading": "Loading dashboard...",
+    "notDefined": "Not defined",
+    "userInfo": {
+      "title": "User Information",
+      "description": "Your account information",
+      "email": "Email:",
+      "associatedArtist": "Associated Artist:",
+      "loading": "Loading...",
+      "none": "None",
+      "editProfile": "Edit my artist profile",
+      "createProfile": "Create my Artist Profile"
+    },
+    "admin": {
+      "title": "Administration Panel",
+      "description": "Manage users and settings",
+      "viewUsersDescription": "View users and their information.",
+      "viewUsers": "View users",
+      "artistsCount": "Number of artists"
+    },
+    "presale": {
+      "title": "Create presale artwork on InRealArt website",
+      "description": "Create new presale artworks on InRealArt website",
+      "createDescription": "Create and publish a new presale artwork on InRealArt website.",
+      "createArtwork": "Create artwork",
+      "artworksCount": "Presale artworks on InRealArt website"
+    },
+    "physical": {
+      "availableTitle": "Physical artworks available on Marketplace",
+      "unavailableTitle": "Physical artworks unavailable on Marketplace",
+      "collectionsTitle": "Collections on Marketplace",
+      "viewArtworks": "View artworks",
+      "viewCollections": "View collections"
+    },
+    "errors": {
+      "fetchingArtists": "Error fetching visible artists count:",
+      "fetchingItems": "Error fetching items count:",
+      "userNotFound": "Backoffice user not found for this email",
+      "fetchingStats": "Error fetching item statistics:"
+    }
+  },
+  "art": {
+    "myArtworks": "My Artworks",
+    "createArtwork": "Create Artwork",
+    "editArtwork": "Edit Artwork",
+    "collection": "Collection",
+    "physicalCollection": "Physical Collection",
+    "presaleArtwork": "Presale Artwork",
+    "artistProfile": "Artist Profile"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "profile": {
+      "title": "PROFILE",
+      "edit": "Edit my profile",
+      "create": "Create my Artist Profile"
+    },
+    "website": {
+      "title": "INREALART WEBSITE",
+      "createArtwork": "Create artwork",
+      "viewArtworks": "View my artworks"
+    },
+    "marketplace": {
+      "title": "MARKETPLACE",
+      "viewArtworks": "View my artworks",
+      "viewCollections": "View my collections"
+    },
+    "landing": {
+      "title": "LANDING PAGES",
+      "languages": "Languages",
+      "translations": "Translations",
+      "team": "Team",
+      "faq": "FAQ",
+      "detailedFaq": "Detailed FAQ",
+      "faqByPage": "FAQ by page",
+      "detailedGlossary": "Detailed glossary",
+      "artistsPage": "Artists page",
+      "presaleArtworks": "Presale artworks",
+      "blogArticles": "Blog articles"
+    },
+    "dataAdmin": {
+      "title": "DATA ADMINISTRATION",
+      "artists": "Artists",
+      "artistCategories": "Artist categories",
+      "artworkMediums": "Artwork mediums",
+      "artworkStyles": "Artwork styles",
+      "artworkTechniques": "Artwork techniques"
+    },
+    "backofficeAdmin": {
+      "title": "BACKOFFICE ADMIN",
+      "memberManagement": "Member Management",
+      "createMember": "Create Member",
+      "websiteInventory": "Website inventory"
+    },
+    "blockchain": {
+      "title": "BLOCKCHAIN",
+      "smartContracts": "Smart Contracts",
+      "collections": "Collections",
+      "royalties": "Royalties"
+    },
+    "marketplaceAdmin": {
+      "title": "MARKETPLACE",
+      "createArtwork": "Create artwork",
+      "artworkCollection": "Artwork collection",
+      "nftsToMint": "NFTs to mint",
+      "marketplaceListing": "Marketplace Listing",
+      "transactions": "Marketplace Transactions",
+      "invoices": "Invoices"
+    },
+    "tools": {
+      "title": "TOOLS",
+      "webpConverter": "WebP Converter"
+    },
+    "errors": {
+      "fetchingArtist": "Error fetching associated artist:"
+    }
+  },
+  "user": {
+    "profile": "Profile",
+    "signOut": "Sign Out",
+    "roles": {
+      "admin": "Admin",
+      "artist": "Artist",
+      "galleryManager": "Gallery Mgr",
+      "user": "User"
+    },
+    "errors": {
+      "fetchingRole": "Error fetching role:"
+    }
+  }
+}

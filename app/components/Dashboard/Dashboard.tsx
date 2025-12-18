@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
 import { User, Settings, FolderOpen, PlusCircle } from "lucide-react";
@@ -21,6 +22,7 @@ import { useIsAdmin } from "@/app/hooks/useIsAdmin";
 import { DashboardStats } from "./DashboardStats";
 
 export default function Dashboard() {
+  const t = useTranslations("dashboard");
   const { data: session } = authClient.useSession();
   const user = session?.user;
   // Note: primaryWallet sera géré plus tard dans une migration séparée des wallets
@@ -59,7 +61,7 @@ export default function Dashboard() {
   const { isAdmin, isLoading } = useIsAdmin();
 
   const truncateAddress = (address: string | undefined) => {
-    if (!address) return "Non défini";
+    if (!address) return t("notDefined");
     const start = address.substring(0, 6);
     const end = address.substring(address.length - 4);
     return `${start}...${end}`;
@@ -72,10 +74,7 @@ export default function Dashboard() {
           const { count } = await getVisibleLandingArtistsCount();
           setVisibleArtistsCount(count);
         } catch (error) {
-          console.error(
-            "Erreur lors de la récupération du nombre d'artistes visibles:",
-            error
-          );
+          console.error(t("errors.fetchingArtists"), error);
           // En cas d'erreur (timeout ou autre), définir une valeur par défaut
           setVisibleArtistsCount(0);
         } finally {
@@ -94,10 +93,7 @@ export default function Dashboard() {
           const { count } = await getPendingItemsCount();
           setPendingItemsCount(count);
         } catch (error) {
-          console.error(
-            "Erreur lors de la récupération du nombre d'items:",
-            error
-          );
+          console.error(t("errors.fetchingItems"), error);
           // En cas d'erreur (timeout ou autre), définir une valeur par défaut
           setPendingItemsCount(0);
         } finally {
@@ -122,7 +118,7 @@ export default function Dashboard() {
           if (!isMounted) return;
 
           if (!backofficeUser) {
-            console.error("Utilisateur Backoffice non trouvé pour cet email");
+            console.error(t("errors.userNotFound"));
             setIsLoadingUserCounts(false);
             setIsLoadingArtist(false);
             setIsLoadingPresaleCount(false);
@@ -177,10 +173,7 @@ export default function Dashboard() {
           setIsLoadingPhysicalCollectionsCount(false);
         } catch (error) {
           if (!isMounted) return;
-          console.error(
-            "Erreur lors de la récupération des statistiques d'items:",
-            error
-          );
+          console.error(t("errors.fetchingStats"), error);
           // En cas d'erreur (timeout ou autre), définir des valeurs par défaut
           setMintedItemsCount(0);
           setListedItemsCount(0);
@@ -210,14 +203,11 @@ export default function Dashboard() {
     };
   }, [isAdmin, user?.email]); // Utiliser user?.email au lieu de user pour stabiliser
 
-  if (isLoading)
-    return (
-      <LoadingSpinner fullPage message="Chargement du tableau de bord..." />
-    );
+  if (isLoading) return <LoadingSpinner fullPage message={t("loading")} />;
 
   return (
     <div className="dashboard-container">
-      <h2 className="dashboard-title">Tableau de bord</h2>
+      <h2 className="dashboard-title">{t("title")}</h2>
 
       <DashboardStats
         presaleArtworkCount={presaleArtworkCount}
@@ -247,24 +237,26 @@ export default function Dashboard() {
 
       <div className="dashboard-content">
         <DashboardCard
-          title="Informations utilisateur"
+          title={t("userInfo.title")}
           icon={<User />}
-          description="Vos informations de compte"
+          description={t("userInfo.description")}
         >
           <p>
-            <strong>Email:</strong> {user?.email || "Non défini"}
+            <strong>{t("userInfo.email")}</strong>{" "}
+            {user?.email || t("notDefined")}
           </p>
           {!isAdmin && (
             <>
               {isLoadingArtist ? (
                 <p>
-                  <strong>Artiste associé:</strong> Chargement...
+                  <strong>{t("userInfo.associatedArtist")}</strong>{" "}
+                  {t("userInfo.loading")}
                 </p>
               ) : associatedArtist ? (
                 <>
                   <p>
-                    <strong>Artiste associé:</strong> {associatedArtist.name}{" "}
-                    {associatedArtist.surname}
+                    <strong>{t("userInfo.associatedArtist")}</strong>{" "}
+                    {associatedArtist.name} {associatedArtist.surname}
                   </p>
                   {associatedArtist.imageUrl && (
                     <div className="artist-image-container">
@@ -287,21 +279,22 @@ export default function Dashboard() {
                       href="/art/edit-artist-profile"
                       variant="primary"
                     >
-                      Éditer mon profil artiste
+                      {t("userInfo.editProfile")}
                     </NavigationButton>
                   </div>
                 </>
               ) : (
                 <>
                   <p>
-                    <strong>Artiste associé:</strong> Aucun
+                    <strong>{t("userInfo.associatedArtist")}</strong>{" "}
+                    {t("userInfo.none")}
                   </p>
                   <div className="mt-3">
                     <NavigationButton
                       href="/art/create-artist-profile"
                       variant="primary"
                     >
-                      Créer mon profil Artiste
+                      {t("userInfo.createProfile")}
                     </NavigationButton>
                   </div>
                 </>
@@ -313,13 +306,13 @@ export default function Dashboard() {
         {isAdmin ? (
           <>
             <DashboardCard
-              title="Panneau d'Administration"
+              title={t("admin.title")}
               icon={<Settings />}
-              description="Gérez les utilisateurs et les paramètres"
+              description={t("admin.description")}
             >
-              <p>Voir les utilisateurs et leurs informations.</p>
+              <p>{t("admin.viewUsersDescription")}</p>
               <NavigationButton href="/boAdmin/users">
-                Voir les utilisateurs
+                {t("admin.viewUsers")}
               </NavigationButton>
             </DashboardCard>
           </>
@@ -341,16 +334,13 @@ export default function Dashboard() {
                 </DashboardCard> */}
 
                 <DashboardCard
-                  title="Création d'œuvre en prévente sur le site Web InRealArt"
+                  title={t("presale.title")}
                   icon={<PlusCircle />}
-                  description="Créez de nouvelles œuvres d'art en prévente sur le site Web InRealArt"
+                  description={t("presale.description")}
                 >
-                  <p>
-                    Créez et publiez une nouvelle œuvre d'art en prévente sur le
-                    site Web InRealArt.
-                  </p>
+                  <p>{t("presale.createDescription")}</p>
                   <NavigationButton href="/art/create-presale-artwork">
-                    Créer une œuvre
+                    {t("presale.createArtwork")}
                   </NavigationButton>
                 </DashboardCard>
               </>

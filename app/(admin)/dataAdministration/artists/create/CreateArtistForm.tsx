@@ -10,8 +10,8 @@ import { createArtist } from "@/lib/actions/artist-actions";
 import styles from "./createArtistForm.module.scss";
 import CountrySelect from "@/app/components/Common/CountrySelect";
 import { getCountries } from "@/lib/utils";
-import OptionalImageUpload from "@/app/(protected)/art/create-artist-profile/OptionalImageUpload";
-import ProgressModal from "@/app/(protected)/art/create-artist-profile/ProgressModal";
+import OptionalImageUpload from "@/app/components/art/OptionalImageUpload";
+import ProgressModal from "@/app/components/art/ProgressModal";
 
 // Schéma de validation
 const formSchema = z.object({

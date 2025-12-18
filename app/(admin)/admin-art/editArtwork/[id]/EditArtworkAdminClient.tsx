@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import ArtworkForm from '@/app/(protected)/art/components/ArtworkForm'
+import ArtworkForm from '@/app/components/art/ArtworkForm'
 import { getPhysicalCertificateByItemId } from '@/lib/actions/prisma-actions'
 import { getAllAddressesForAdmin } from '@/lib/actions/address-actions'
 import styles from './editArtworkAdmin.module.scss'
 import { normalizeString } from '@/lib/utils'
-import FormSection from '@/app/(protected)/art/components/ArtworkForm/FormSection'
+import FormSection from '@/app/components/art/ArtworkForm/FormSection'
 import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from '@prisma/client'
 
 interface EditArtworkAdminClientProps {

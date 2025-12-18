@@ -577,16 +577,8 @@ export async function updateUserArtistProfile(
             }
         }
 
-        // Supprimer l'image principale sur Firebase si demandé
-        if (deleteMainImage && existingArtist.imageUrl) {
-            try {
-                const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
-                await deleteImageFromFirebase(existingArtist.imageUrl)
-            } catch (error) {
-                console.error('Erreur lors de la suppression de l\'image principale sur Firebase:', error)
-                // Continuer même en cas d'erreur de suppression Firebase
-            }
-        }
+        // Note: La suppression du fichier Firebase est gérée côté client avant d'appeler cette fonction
+        // Voir EditArtistProfileForm.tsx -> onSubmit()
 
         // Mettre à jour l'artiste dans la table Artist
         const artist = await prisma.artist.update({
@@ -627,33 +619,15 @@ export async function updateUserArtistProfile(
             }
 
             // Gérer les images secondaires et studio
+            // Note: La suppression des fichiers Firebase est gérée côté client avant d'appeler cette fonction
+            // Voir EditArtistProfileForm.tsx -> onSubmit()
             if (deleteSecondaryImage) {
-                // Supprimer l'image sur Firebase si elle existe
-                if (landingArtist.secondaryImageUrl) {
-                    try {
-                        const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
-                        await deleteImageFromFirebase(landingArtist.secondaryImageUrl)
-                    } catch (error) {
-                        console.error('Erreur lors de la suppression de l\'image secondaire sur Firebase:', error)
-                        // Continuer même en cas d'erreur de suppression Firebase
-                    }
-                }
                 landingArtistData.secondaryImageUrl = null
             } else if (secondaryImageUrl) {
                 landingArtistData.secondaryImageUrl = secondaryImageUrl
             }
 
             if (deleteStudioImage) {
-                // Supprimer l'image sur Firebase si elle existe
-                if (landingArtist.imageArtistStudio) {
-                    try {
-                        const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
-                        await deleteImageFromFirebase(landingArtist.imageArtistStudio)
-                    } catch (error) {
-                        console.error('Erreur lors de la suppression de l\'image studio sur Firebase:', error)
-                        // Continuer même en cas d'erreur de suppression Firebase
-                    }
-                }
                 landingArtistData.imageArtistStudio = null
             } else if (imageArtistStudio) {
                 landingArtistData.imageArtistStudio = imageArtistStudio
@@ -664,17 +638,6 @@ export async function updateUserArtistProfile(
                 where: { id: landingArtist.id },
                 data: landingArtistData
             })
-        }
-
-        // Supprimer l'image principale sur Firebase si demandé
-        if (deleteMainImage && existingArtist.imageUrl) {
-            try {
-                const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
-                await deleteImageFromFirebase(existingArtist.imageUrl)
-            } catch (error) {
-                console.error('Erreur lors de la suppression de l\'image principale sur Firebase:', error)
-                // Continuer même en cas d'erreur de suppression Firebase
-            }
         }
 
         // Gérer les récompenses (awards) - remplacer toutes les récompenses existantes

@@ -10,7 +10,7 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import BulkArtworkTable from './BulkArtworkTable'
 import { createBulkPresaleArtworks } from '@/lib/actions/presale-artwork-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
-import ProgressModal from '@/app/(protected)/art/create-artist-profile/ProgressModal'
+import ProgressModal from '@/app/components/art/ProgressModal'
 import { ensureFolderExists, uploadImageToLandingFolder } from '@/lib/firebase/storage'
 import { normalizeString } from '@/lib/utils'
 

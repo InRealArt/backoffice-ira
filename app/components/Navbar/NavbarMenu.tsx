@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { usePathname } from "@/i18n/navigation";
 import { useSideMenuLogic } from "../SideMenu/useSideMenuLogic";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -41,6 +42,7 @@ import {
 } from "lucide-react";
 
 export default function NavbarMenu() {
+  const t = useTranslations("navigation");
   const pathname = usePathname();
   const {
     isLoggedIn,
@@ -53,7 +55,7 @@ export default function NavbarMenu() {
     handleNavigation,
   } = useSideMenuLogic();
 
-  // Masquer le bloc MARKETPLACE en production (Vercel)
+  // Masquer le bloc {t("marketplace.title")} en production (Vercel)
   const isProduction = process.env.NODE_ENV === "production";
 
   // Récupérer la session utilisateur
@@ -202,10 +204,7 @@ export default function NavbarMenu() {
           setIsLoadingArtist(false);
         } catch (error) {
           if (!isMounted) return;
-          console.error(
-            "Erreur lors de la récupération de l'artiste associé:",
-            error
-          );
+          console.error(t("errors.fetchingArtist"), error);
           setAssociatedArtist(null);
           setIsLoadingArtist(false);
         }
@@ -259,12 +258,12 @@ export default function NavbarMenu() {
                 <>
                   <span className="loading loading-spinner loading-sm"></span>
                   <UserCircle size={18} />
-                  <span>Créer mon profil artiste</span>
+                  <span>{t("profile.create")}</span>
                 </>
               ) : (
                 <>
                   <UserCircle size={18} />
-                  <span>Créer mon profil artiste</span>
+                  <span>{t("profile.create")}</span>
                 </>
               )}
             </a>
@@ -285,12 +284,12 @@ export default function NavbarMenu() {
                 <>
                   <span className="loading loading-spinner loading-sm"></span>
                   <LayoutDashboard size={18} />
-                  <span>Dashboard</span>
+                  <span>{t("dashboard")}</span>
                 </>
               ) : (
                 <>
                   <LayoutDashboard size={18} />
-                  <span>Dashboard</span>
+                  <span>{t("dashboard")}</span>
                 </>
               )}
             </a>
@@ -300,7 +299,7 @@ export default function NavbarMenu() {
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
               <UserCircle size={16} />
-              PROFIL
+              {t("profile.title")}
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
@@ -317,12 +316,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <UserCircle size={18} />
-                      <span>Éditer mon profil</span>
+                      <span>{t("profile.edit")}</span>
                     </>
                   ) : (
                     <>
                       <UserCircle size={18} />
-                      <span>Éditer mon profil</span>
+                      <span>{t("profile.edit")}</span>
                     </>
                   )}
                 </a>
@@ -334,7 +333,7 @@ export default function NavbarMenu() {
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
               <Globe size={16} />
-              SITE WEB INREALART
+              {t("website.title")}
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
@@ -351,12 +350,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <PlusCircle size={18} />
-                      <span>Créer une œuvre</span>
+                      <span>{t("website.createArtwork")}</span>
                     </>
                   ) : (
                     <>
                       <PlusCircle size={18} />
-                      <span>Créer une œuvre</span>
+                      <span>{t("website.createArtwork")}</span>
                     </>
                   )}
                 </a>
@@ -372,12 +371,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Image size={18} />
-                      <span>Voir mes œuvres</span>
+                      <span>{t("website.viewArtworks")}</span>
                     </>
                   ) : (
                     <>
                       <Image size={18} />
-                      <span>Voir mes œuvres</span>
+                      <span>{t("website.viewArtworks")}</span>
                     </>
                   )}
                 </a>
@@ -391,7 +390,7 @@ export default function NavbarMenu() {
               <li>
                 <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
                   <Store size={16} />
-                  MARKETPLACE
+                  {t("marketplace.title")}
                 </a>
                 <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
                   <li>
@@ -408,12 +407,12 @@ export default function NavbarMenu() {
                         <>
                           <span className="loading loading-spinner loading-sm"></span>
                           <Image size={18} />
-                          <span>Voir mes œuvres</span>
+                          <span>{t("website.viewArtworks")}</span>
                         </>
                       ) : (
                         <>
                           <Image size={18} />
-                          <span>Voir mes œuvres</span>
+                          <span>{t("website.viewArtworks")}</span>
                         </>
                       )}
                     </a>
@@ -432,12 +431,12 @@ export default function NavbarMenu() {
                         <>
                           <span className="loading loading-spinner loading-sm"></span>
                           <Folder size={18} />
-                          <span>Voir mes collections</span>
+                          <span>{t("marketplace.viewCollections")}</span>
                         </>
                       ) : (
                         <>
                           <Folder size={18} />
-                          <span>Voir mes collections</span>
+                          <span>{t("marketplace.viewCollections")}</span>
                         </>
                       )}
                     </a>
@@ -462,12 +461,12 @@ export default function NavbarMenu() {
                 <>
                   <span className="loading loading-spinner loading-sm"></span>
                   <LayoutDashboard size={18} />
-                  <span>Dashboard</span>
+                  <span>{t("dashboard")}</span>
                 </>
               ) : (
                 <>
                   <LayoutDashboard size={18} />
-                  <span>Dashboard</span>
+                  <span>{t("dashboard")}</span>
                 </>
               )}
             </a>
@@ -476,7 +475,7 @@ export default function NavbarMenu() {
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
               <Globe size={16} />
-              LANDING PAGES
+              {t("landing.title")}
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
@@ -490,12 +489,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Languages size={18} />
-                      <span>Languages</span>
+                      <span>{t("landing.languages")}</span>
                     </>
                   ) : (
                     <>
                       <Languages size={18} />
-                      <span>Languages</span>
+                      <span>{t("landing.languages")}</span>
                     </>
                   )}
                 </a>
@@ -514,12 +513,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <FileText size={18} />
-                      <span>Translations</span>
+                      <span>{t("landing.translations")}</span>
                     </>
                   ) : (
                     <>
                       <FileText size={18} />
-                      <span>Translations</span>
+                      <span>{t("landing.translations")}</span>
                     </>
                   )}
                 </a>
@@ -533,12 +532,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Users size={18} />
-                      <span>Team</span>
+                      <span>{t("landing.team")}</span>
                     </>
                   ) : (
                     <>
                       <Users size={18} />
-                      <span>Team</span>
+                      <span>{t("landing.team")}</span>
                     </>
                   )}
                 </a>
@@ -552,12 +551,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <HelpCircle size={18} />
-                      <span>FAQ</span>
+                      <span>{t("landing.faq")}</span>
                     </>
                   ) : (
                     <>
                       <HelpCircle size={18} />
-                      <span>FAQ</span>
+                      <span>{t("landing.faq")}</span>
                     </>
                   )}
                 </a>
@@ -573,12 +572,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <FileText size={18} />
-                      <span>FAQ détaillée</span>
+                      <span>{t("landing.detailedFaq")}</span>
                     </>
                   ) : (
                     <>
                       <FileText size={18} />
-                      <span>FAQ détaillée</span>
+                      <span>{t("landing.detailedFaq")}</span>
                     </>
                   )}
                 </a>
@@ -597,12 +596,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <BookOpen size={18} />
-                      <span>FAQ par page</span>
+                      <span>{t("landing.faqByPage")}</span>
                     </>
                   ) : (
                     <>
                       <BookOpen size={18} />
-                      <span>FAQ par page</span>
+                      <span>{t("landing.faqByPage")}</span>
                     </>
                   )}
                 </a>
@@ -621,12 +620,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <BookOpen size={18} />
-                      <span>Glossaire détaillé</span>
+                      <span>{t("landing.detailedGlossary")}</span>
                     </>
                   ) : (
                     <>
                       <BookOpen size={18} />
-                      <span>Glossaire détaillé</span>
+                      <span>{t("landing.detailedGlossary")}</span>
                     </>
                   )}
                 </a>
@@ -645,12 +644,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Users size={18} />
-                      <span>Page artistes</span>
+                      <span>{t("landing.artistsPage")}</span>
                     </>
                   ) : (
                     <>
                       <Users size={18} />
-                      <span>Page artistes</span>
+                      <span>{t("landing.artistsPage")}</span>
                     </>
                   )}
                 </a>
@@ -669,12 +668,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <ShoppingCart size={18} />
-                      <span>Œuvres en prévente</span>
+                      <span>{t("landing.presaleArtworks")}</span>
                     </>
                   ) : (
                     <>
                       <ShoppingCart size={18} />
-                      <span>Œuvres en prévente</span>
+                      <span>{t("landing.presaleArtworks")}</span>
                     </>
                   )}
                 </a>
@@ -690,12 +689,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <FileText size={18} />
-                      <span>Articles de blog</span>
+                      <span>{t("landing.blogArticles")}</span>
                     </>
                   ) : (
                     <>
                       <FileText size={18} />
-                      <span>Articles de blog</span>
+                      <span>{t("landing.blogArticles")}</span>
                     </>
                   )}
                 </a>
@@ -706,7 +705,7 @@ export default function NavbarMenu() {
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
               <Database size={16} />
-              DATA ADMINISTRATION
+              {t("dataAdmin.title")}
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
@@ -723,12 +722,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Users size={18} />
-                      <span>Artistes</span>
+                      <span>{t("dataAdmin.artists")}</span>
                     </>
                   ) : (
                     <>
                       <Users size={18} />
-                      <span>Artistes</span>
+                      <span>{t("dataAdmin.artists")}</span>
                     </>
                   )}
                 </a>
@@ -747,12 +746,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Tag size={18} />
-                      <span>Catégories d'artistes</span>
+                      <span>{t("dataAdmin.artistCategories")}</span>
                     </>
                   ) : (
                     <>
                       <Tag size={18} />
-                      <span>Catégories d'artistes</span>
+                      <span>{t("dataAdmin.artistCategories")}</span>
                     </>
                   )}
                 </a>
@@ -771,12 +770,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Palette size={18} />
-                      <span>Mediums d'œuvres</span>
+                      <span>{t("dataAdmin.artworkMediums")}</span>
                     </>
                   ) : (
                     <>
                       <Palette size={18} />
-                      <span>Mediums d'œuvres</span>
+                      <span>{t("dataAdmin.artworkMediums")}</span>
                     </>
                   )}
                 </a>
@@ -795,12 +794,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Brush size={18} />
-                      <span>Styles d'œuvres</span>
+                      <span>{t("dataAdmin.artworkStyles")}</span>
                     </>
                   ) : (
                     <>
                       <Brush size={18} />
-                      <span>Styles d'œuvres</span>
+                      <span>{t("dataAdmin.artworkStyles")}</span>
                     </>
                   )}
                 </a>
@@ -819,12 +818,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Wrench size={18} />
-                      <span>Techniques d'œuvres</span>
+                      <span>{t("dataAdmin.artworkTechniques")}</span>
                     </>
                   ) : (
                     <>
                       <Wrench size={18} />
-                      <span>Techniques d'œuvres</span>
+                      <span>{t("dataAdmin.artworkTechniques")}</span>
                     </>
                   )}
                 </a>
@@ -835,7 +834,7 @@ export default function NavbarMenu() {
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
               <Shield size={16} />
-              BACKOFFICE ADMIN
+              {t("backofficeAdmin.title")}
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
@@ -849,12 +848,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Users size={18} />
-                      <span>Gestion des Membres</span>
+                      <span>{t("backofficeAdmin.memberManagement")}</span>
                     </>
                   ) : (
                     <>
                       <Users size={18} />
-                      <span>Gestion des Membres</span>
+                      <span>{t("backofficeAdmin.memberManagement")}</span>
                     </>
                   )}
                 </a>
@@ -873,12 +872,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <UserPlus size={18} />
-                      <span>Créer un Membre</span>
+                      <span>{t("backofficeAdmin.createMember")}</span>
                     </>
                   ) : (
                     <>
                       <UserPlus size={18} />
-                      <span>Créer un Membre</span>
+                      <span>{t("backofficeAdmin.createMember")}</span>
                     </>
                   )}
                 </a>
@@ -897,12 +896,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Package size={18} />
-                      <span>Inventaire site web</span>
+                      <span>{t("backofficeAdmin.websiteInventory")}</span>
                     </>
                   ) : (
                     <>
                       <Package size={18} />
-                      <span>Inventaire site web</span>
+                      <span>{t("backofficeAdmin.websiteInventory")}</span>
                     </>
                   )}
                 </a>
@@ -913,7 +912,7 @@ export default function NavbarMenu() {
           {/* <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
               <Link size={16} />
-              BLOCKCHAIN
+              {t("blockchain.title")}
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
@@ -922,12 +921,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <FileCode size={18} />
-                      <span>Smart Contracts</span>
+                      <span>{t("blockchain.smartContracts")}</span>
                     </>
                   ) : (
                     <>
                       <FileCode size={18} />
-                      <span>Smart Contracts</span>
+                      <span>{t("blockchain.smartContracts")}</span>
                     </>
                   )}
                 </a>
@@ -938,12 +937,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Folder size={18} />
-                      <span>Collections</span>
+                      <span>{t("blockchain.collections")}</span>
                     </>
                   ) : (
                     <>
                       <Folder size={18} />
-                      <span>Collections</span>
+                      <span>{t("blockchain.collections")}</span>
                     </>
                   )}
                 </a>
@@ -954,12 +953,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Coins size={18} />
-                      <span>Royalties</span>
+                      <span>{t("blockchain.royalties")}</span>
                     </>
                   ) : (
                     <>
                       <Coins size={18} />
-                      <span>Royalties</span>
+                      <span>{t("blockchain.royalties")}</span>
                     </>
                   )}
                 </a>
@@ -970,7 +969,7 @@ export default function NavbarMenu() {
           {/* <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
               <Store size={16} />
-              MARKETPLACE
+              {t("marketplace.title")}
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
@@ -979,12 +978,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <PlusCircle size={18} />
-                      <span>Créer une œuvre</span>
+                      <span>{t("website.createArtwork")}</span>
                     </>
                   ) : (
                     <>
                       <PlusCircle size={18} />
-                      <span>Créer une œuvre</span>
+                      <span>{t("website.createArtwork")}</span>
                     </>
                   )}
                 </a>
@@ -995,12 +994,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Folder size={18} />
-                      <span>Collection d'œuvres</span>
+                      <span>{t("marketplaceAdmin.artworkCollection")}</span>
                     </>
                   ) : (
                     <>
                       <Folder size={18} />
-                      <span>Collection d'œuvres</span>
+                      <span>{t("marketplaceAdmin.artworkCollection")}</span>
                     </>
                   )}
                 </a>
@@ -1011,12 +1010,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Sparkles size={18} />
-                      <span>NFTs à minter</span>
+                      <span>{t("marketplaceAdmin.nftsToMint")}</span>
                     </>
                   ) : (
                     <>
                       <Sparkles size={18} />
-                      <span>NFTs à minter</span>
+                      <span>{t("marketplaceAdmin.nftsToMint")}</span>
                     </>
                   )}
                 </a>
@@ -1027,12 +1026,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Coins size={18} />
-                      <span>Royalties</span>
+                      <span>{t("blockchain.royalties")}</span>
                     </>
                   ) : (
                     <>
                       <Coins size={18} />
-                      <span>Royalties</span>
+                      <span>{t("blockchain.royalties")}</span>
                     </>
                   )}
                 </a>
@@ -1043,12 +1042,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <ShoppingBag size={18} />
-                      <span>Marketplace Listing</span>
+                      <span>{t("marketplaceAdmin.marketplaceListing")}</span>
                     </>
                   ) : (
                     <>
                       <ShoppingBag size={18} />
-                      <span>Marketplace Listing</span>
+                      <span>{t("marketplaceAdmin.marketplaceListing")}</span>
                     </>
                   )}
                 </a>
@@ -1059,12 +1058,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Receipt size={18} />
-                      <span>Transactions Marketplace</span>
+                      <span>{t("marketplaceAdmin.transactions")}</span>
                     </>
                   ) : (
                     <>
                       <Receipt size={18} />
-                      <span>Transactions Marketplace</span>
+                      <span>{t("marketplaceAdmin.transactions")}</span>
                     </>
                   )}
                 </a>
@@ -1075,12 +1074,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <FileText size={18} />
-                      <span>Factures</span>
+                      <span>{t("marketplaceAdmin.invoices")}</span>
                     </>
                   ) : (
                     <>
                       <FileText size={18} />
-                      <span>Factures</span>
+                      <span>{t("marketplaceAdmin.invoices")}</span>
                     </>
                   )}
                 </a>
@@ -1091,7 +1090,7 @@ export default function NavbarMenu() {
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
               <Wrench size={16} />
-              TOOLS
+              {t("tools.title")}
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
@@ -1108,12 +1107,12 @@ export default function NavbarMenu() {
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
                       <Image size={18} />
-                      <span>Convertisseur WebP</span>
+                      <span>{t("tools.webpConverter")}</span>
                     </>
                   ) : (
                     <>
                       <Image size={18} />
-                      <span>Convertisseur WebP</span>
+                      <span>{t("tools.webpConverter")}</span>
                     </>
                   )}
                 </a>

@@ -29,7 +29,7 @@ import { useToast } from "@/app/components/Toast/ToastContext";
 import Button from "@/app/components/Button/Button";
 import ArtworkTabs from "./ArtworkTabs";
 import ValidationErrorsModal from "./components/ValidationErrorsModal";
-import ProgressModal from "@/app/(protected)/art/create-artist-profile/ProgressModal";
+import ProgressModal from "../ProgressModal";
 
 export default function ArtworkForm({
   mode = "create",

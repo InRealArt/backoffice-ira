@@ -1,0 +1,164 @@
+{
+  "common": {
+    "welcome": "Bienvenue",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "submit": "Soumettre",
+    "close": "Fermer"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "signOut": "Se déconnecter",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "confirmPassword": "Confirmer le mot de passe"
+  },
+  "home": {
+    "title": "Bienvenue sur le backoffice InRealArt",
+    "checkingAccess": "Vérification de vos accès...",
+    "loginPrompt": "Connectez-vous pour accéder au backoffice",
+    "signInButton": "Se connecter",
+    "signUpButton": "S'inscrire"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "loading": "Chargement du tableau de bord...",
+    "notDefined": "Non défini",
+    "userInfo": {
+      "title": "Informations utilisateur",
+      "description": "Vos informations de compte",
+      "email": "Email:",
+      "associatedArtist": "Artiste associé:",
+      "loading": "Chargement...",
+      "none": "Aucun",
+      "editProfile": "Éditer mon profil artiste",
+      "createProfile": "Créer mon profil Artiste"
+    },
+    "admin": {
+      "title": "Panneau d'Administration",
+      "description": "Gérez les utilisateurs et les paramètres",
+      "viewUsersDescription": "Voir les utilisateurs et leurs informations.",
+      "viewUsers": "Voir les utilisateurs",
+      "artistsCount": "Nb artistes"
+    },
+    "presale": {
+      "title": "Création d'œuvre en prévente sur le site Web InRealArt",
+      "description": "Créez de nouvelles œuvres d'art en prévente sur le site Web InRealArt",
+      "createDescription": "Créez et publiez une nouvelle œuvre d'art en prévente sur le site Web InRealArt.",
+      "createArtwork": "Créer une œuvre",
+      "artworksCount": "Œuvres en prévente sur le site web InRealArt"
+    },
+    "physical": {
+      "availableTitle": "Œuvres physiques disponibles sur la Marketplace",
+      "unavailableTitle": "Œuvres physiques indisponibles sur la Marketplace",
+      "collectionsTitle": "Collections sur la Marketplace",
+      "viewArtworks": "Voir les œuvres",
+      "viewCollections": "Voir les collections"
+    },
+    "errors": {
+      "fetchingArtists": "Erreur lors de la récupération du nombre d'artistes visibles:",
+      "fetchingItems": "Erreur lors de la récupération du nombre d'items:",
+      "userNotFound": "Utilisateur Backoffice non trouvé pour cet email",
+      "fetchingStats": "Erreur lors de la récupération des statistiques d'items:"
+    }
+  },
+  "art": {
+    "myArtworks": "Mes œuvres",
+    "createArtwork": "Créer une œuvre",
+    "editArtwork": "Modifier l'œuvre",
+    "collection": "Collection",
+    "physicalCollection": "Collection physique",
+    "presaleArtwork": "Œuvre en prévente",
+    "artistProfile": "Profil d'artiste"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "profile": {
+      "title": "PROFIL",
+      "edit": "Éditer mon profil",
+      "create": "Créer mon profil artiste"
+    },
+    "website": {
+      "title": "SITE WEB INREALART",
+      "createArtwork": "Créer une œuvre",
+      "viewArtworks": "Voir mes œuvres"
+    },
+    "marketplace": {
+      "title": "MARKETPLACE",
+      "viewArtworks": "Voir mes œuvres",
+      "viewCollections": "Voir mes collections"
+    },
+    "landing": {
+      "title": "LANDING PAGES",
+      "languages": "Languages",
+      "translations": "Translations",
+      "team": "Team",
+      "faq": "FAQ",
+      "detailedFaq": "FAQ détaillée",
+      "faqByPage": "FAQ par page",
+      "detailedGlossary": "Glossaire détaillé",
+      "artistsPage": "Page artistes",
+      "presaleArtworks": "Œuvres en prévente",
+      "blogArticles": "Articles de blog"
+    },
+    "dataAdmin": {
+      "title": "DATA ADMINISTRATION",
+      "artists": "Artistes",
+      "artistCategories": "Catégories d'artistes",
+      "artworkMediums": "Mediums d'œuvres",
+      "artworkStyles": "Styles d'œuvres",
+      "artworkTechniques": "Techniques d'œuvres"
+    },
+    "backofficeAdmin": {
+      "title": "BACKOFFICE ADMIN",
+      "memberManagement": "Gestion des Membres",
+      "createMember": "Créer un Membre",
+      "websiteInventory": "Inventaire site web"
+    },
+    "blockchain": {
+      "title": "BLOCKCHAIN",
+      "smartContracts": "Smart Contracts",
+      "collections": "Collections",
+      "royalties": "Royalties"
+    },
+    "marketplaceAdmin": {
+      "title": "MARKETPLACE",
+      "createArtwork": "Créer une œuvre",
+      "artworkCollection": "Collection d'œuvres",
+      "nftsToMint": "NFTs à minter",
+      "marketplaceListing": "Marketplace Listing",
+      "transactions": "Transactions Marketplace",
+      "invoices": "Factures"
+    },
+    "tools": {
+      "title": "TOOLS",
+      "webpConverter": "Convertisseur WebP"
+    },
+    "errors": {
+      "fetchingArtist": "Erreur lors de la récupération de l'artiste associé:"
+    }
+  },
+  "user": {
+    "profile": "Profil",
+    "signOut": "Déconnexion",
+    "roles": {
+      "admin": "Admin",
+      "artist": "Artiste",
+      "galleryManager": "Resp. galerie",
+      "user": "User"
+    },
+    "errors": {
+      "fetchingRole": "Erreur lors de la récupération du rôle:"
+    }
+  }
+}

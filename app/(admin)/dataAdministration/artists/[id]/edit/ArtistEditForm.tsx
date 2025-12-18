@@ -13,7 +13,7 @@ import { X, Plus } from "lucide-react";
 import { generateSlug } from "@/lib/utils";
 import CountrySelect from "@/app/components/Common/CountrySelect";
 import { getCountries } from "@/lib/utils";
-import ArtistImageUpload from "@/app/(protected)/art/create-artist-profile/ArtistImageUpload";
+import ArtistImageUpload from "@/app/components/art/ArtistImageUpload";
 
 // Schéma de validation
 const formSchema = z.object({
