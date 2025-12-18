@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Artist } from "@prisma/client";
 import { ArrowLeft, ArrowUpDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // Type pour les artistes du filtre (retourné par getAllArtists)
 type FilterArtist = {
@@ -37,12 +38,12 @@ import {
 } from "../../../components/PageLayout/index";
 import styles from "../../../styles/list-components.module.scss";
 
-function ImageThumbnail({ url }: { url: string }) {
+function ImageThumbnail({ url, alt }: { url: string; alt: string }) {
   return (
     <div className={styles.thumbnailContainer}>
       <Image
         src={url}
-        alt="Miniature"
+        alt={alt}
         fill
         className="object-cover"
         onError={(e) => {
@@ -104,6 +105,8 @@ export default function PresaleArtworksClient({
 }: PresaleArtworksClientProps) {
   const router = useRouter();
   const [loadingArtworkId, setLoadingArtworkId] = useState<number | null>(null);
+  const t = useTranslations("art.presaleArtworks");
+  const tCommon = useTranslations("common");
 
   // Utiliser Nuqs pour gérer les paramètres de recherche
   const [searchParams, setSearchParams] = useQueryStates(
@@ -149,7 +152,7 @@ export default function PresaleArtworksClient({
       const artwork = presaleArtworks.find(a => a.id === artworkId)
       
       if (!artwork) {
-        error("Œuvre introuvable")
+        error(t("errors.artworkNotFound"))
         return
       }
 
@@ -171,7 +174,7 @@ export default function PresaleArtworksClient({
       const result = await deletePresaleArtwork(artworkId);
 
       if (result.success) {
-        success("Œuvre en prévente supprimée avec succès");
+        success(t("errors.deleteSuccess"));
 
         // Rediriger vers la page de liste appropriée selon le mode
         const listRoute = isArtistMode
@@ -181,18 +184,18 @@ export default function PresaleArtworksClient({
         router.push(listRoute);
       } else {
         error(
-          result.message || "Une erreur est survenue lors de la suppression"
+          result.message || t("errors.deleteError")
         );
       }
     } catch (err: any) {
       console.error("Erreur lors de la suppression:", err);
-      error("Une erreur est survenue lors de la suppression");
+      error(t("errors.deleteError"));
     }
   };
 
   // Formater le prix en euros
   const formatPrice = (price: number | null) => {
-    if (price === null) return "Non défini";
+    if (price === null) return t("notDefined");
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "EUR",
@@ -250,26 +253,26 @@ export default function PresaleArtworksClient({
   const columns: Column<PresaleArtwork>[] = [
     {
       key: "imageUrl",
-      header: "Image",
+      header: t("columns.image"),
       width: "50px",
-      render: (artwork) => <ImageThumbnail url={artwork.imageUrl} />,
+      render: (artwork) => <ImageThumbnail url={artwork.imageUrl} alt={t("thumbnail")} />,
     },
     {
       key: "order",
-      header: "Ordre",
+      header: t("columns.order"),
       width: "80px",
       sortable: true,
     },
     {
       key: "displayOrder",
-      header: "Ordre affichage site web",
+      header: t("columns.displayOrder"),
       width: "120px",
       sortable: !!searchParams.artistId,
       render: (artwork) => artwork.displayOrder ?? "-",
     },
     {
       key: "name",
-      header: "Nom",
+      header: t("columns.name"),
       sortable: true,
       render: (artwork) => (
         <div className="d-flex align-items-center gap-sm">
@@ -284,31 +287,31 @@ export default function PresaleArtworksClient({
     },
     {
       key: "artist",
-      header: "Artiste",
+      header: t("columns.artist"),
       render: (artwork) => `${artwork.artist.name} ${artwork.artist.surname}`,
     },
     {
       key: "dimensions",
-      header: "Dimensions",
+      header: t("columns.dimensions"),
       width: "120px",
       render: (artwork) => formatDimensions(artwork.width, artwork.height),
     },
     {
       key: "price",
-      header: "Prix",
+      header: t("columns.price"),
       sortable: true,
       render: (artwork) => formatPrice(artwork.price),
     },
     {
       key: "actions",
-      header: "Actions",
+      header: t("columns.actions"),
       width: "120px",
       render: (artwork) => (
         <DeleteActionButton
           onDelete={() => handleDelete(artwork.id)}
           disabled={loadingArtworkId !== null}
-          itemName={`l'œuvre "${artwork.name}"`}
-          confirmMessage={`Êtes-vous sûr de vouloir supprimer l'œuvre "${artwork.name}" ? Cette action est irréversible.`}
+          itemName={t("deleteItemName", { name: artwork.name })}
+          confirmMessage={t("deleteConfirm", { name: artwork.name })}
         />
       ),
     },
@@ -317,17 +320,17 @@ export default function PresaleArtworksClient({
   return (
     <PageContainer>
       <PageHeader
-        title={isArtistMode ? "Mes œuvres en prévente sur le site web InRealArt" : "Œuvres en prévente sur la Marketplace InRealArt"}
+        title={isArtistMode ? t("title") : t("titleAdmin")}
         subtitle={
           isArtistMode
-            ? "Gérez vos œuvres sur le site web InRealArt"
-            : "Gérez les œuvres disponibles en prévente"
+            ? t("subtitle")
+            : t("subtitleAdmin")
         }
         actions={
           <div className="d-flex gap-sm">
             {isArtistMode && (
               <ActionButton
-                label="Ordre d'affichage"
+                label={t("displayOrder")}
                 onClick={() => router.push("/art/my-artworks/display-order")}
                 size="small"
                 variant="secondary"
@@ -336,7 +339,7 @@ export default function PresaleArtworksClient({
             )}
             {!isArtistMode && searchParams.artistId && (
               <ActionButton
-                label="Ordre affichage sur site web"
+                label={t("displayOrderWebsite")}
                 onClick={() => router.push(`/landing/presaleArtworks/display-order?artistId=${searchParams.artistId}`)}
                 size="small"
                 variant="secondary"
@@ -345,20 +348,20 @@ export default function PresaleArtworksClient({
             )}
             {!isArtistMode && (
               <ActionButton
-                label="Ajout par import"
+                label={t("importByExcel")}
                 onClick={handleImportExcel}
                 size="small"
                 variant="secondary"
               />
             )}
             <ActionButton
-              label="Ajouter en masse"
+              label={t("bulkAdd")}
               onClick={handleBulkAdd}
               size="small"
               variant="secondary"
             />
             <ActionButton
-              label="Ajouter une œuvre"
+              label={t("addArtwork")}
               onClick={handleAddNewArtwork}
               size="small"
             />
@@ -370,16 +373,16 @@ export default function PresaleArtworksClient({
         <Filters>
           <FilterItem
             id="artistFilter"
-            label="Filtrer par artiste/galerie:"
+            label={t("filterByArtist")}
             value={
               searchParams.artistId ? searchParams.artistId.toString() : ""
             }
             onChange={handleArtistFilterChange}
             options={[
-              { value: "", label: "Tous les artistes et galeries" },
+              { value: "", label: t("allArtists") },
               ...artists.map((artist) => ({
                 value: artist.id.toString(),
-                label: `${artist.name} ${artist.surname}${artist.isGallery ? ' (Galerie)' : ' (Artiste)'}`,
+                label: `${artist.name} ${artist.surname}${artist.isGallery ? ` (${t("gallery")})` : ` (${t("artist")})`}`,
               })),
             ]}
           />
@@ -407,7 +410,7 @@ export default function PresaleArtworksClient({
             showItemsPerPage: true,
             itemsPerPageOptions: [10, 25, 50, 100],
           }}
-          emptyState={<EmptyState message="Aucune œuvre en prévente trouvée" />}
+          emptyState={<EmptyState message={t("emptyState")} />}
         />
       </PageContent>
     </PageContainer>

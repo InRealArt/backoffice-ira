@@ -11,7 +11,16 @@
     "search": "Search",
     "filter": "Filter",
     "submit": "Submit",
-    "close": "Close"
+    "close": "Close",
+    "add": "Add",
+    "noItemsAdded": "No items added",
+    "deleteConfirm": {
+      "title": "Delete confirmation",
+      "message": "Are you sure you want to delete {itemName}? This action is irreversible.",
+      "confirmButton": "Confirm deletion",
+      "deleting": "Deleting...",
+      "defaultItemName": "this item"
+    }
   },
   "auth": {
     "signIn": "Sign In",
@@ -79,7 +88,252 @@
     "collection": "Collection",
     "physicalCollection": "Physical Collection",
     "presaleArtwork": "Presale Artwork",
-    "artistProfile": "Artist Profile"
+    "artistProfile": "Artist Profile",
+    "myArtworksPage": {
+      "title": "My Artworks | InRealArt Website",
+      "description": "Manage your presale artworks for the InRealArt website"
+    },
+    "createPresaleArtworkPage": {
+      "title": "Create presale artwork | InRealArt Website",
+      "description": "Create a new presale artwork",
+      "pageTitle": "Create presale artwork",
+      "pageSubtitle": "Add a new presale artwork for the InRealArt website"
+    },
+    "presaleArtworkForm": {
+      "validation": {
+        "nameRequired": "Name is required",
+        "artistRequired": "Please select an artist"
+      },
+      "fields": {
+        "name": "Artwork name",
+        "namePlaceholder": "Ex: Mona Lisa, Sunflowers...",
+        "description": "Description",
+        "descriptionPlaceholder": "Artwork description...",
+        "artist": "Artist",
+        "selectArtist": "Select an artist",
+        "mainImage": "Main image",
+        "clickOrDrag": "Click or drag and drop your image",
+        "dropHere": "Drop your image here...",
+        "formats": "Formats: JPEG, PNG, GIF, WebP (max 10MB)",
+        "imagePreview": "Image preview",
+        "remove": "Remove",
+        "uploading": "Uploading...",
+        "price": "Price (€)",
+        "pricePlaceholder": "Ex: 1500",
+        "dimensions": "Dimensions (cm)",
+        "width": "Width",
+        "widthPlaceholder": "Ex: 50",
+        "height": "Height",
+        "heightPlaceholder": "Ex: 70",
+        "dimensionsNote": "Dimensions in centimeters (optional)",
+        "mockupName": "Mockup name (optional)",
+        "mockupNamePlaceholder": "Mockup name",
+        "mockups": "Mockup URLs",
+        "clickOrDragMockup": "Click or drag and drop a mockup",
+        "dropMockupHere": "Drop your mockup here...",
+        "noMockup": "No mockup added",
+        "removeMockup": "Remove mockup"
+      },
+      "errors": {
+        "fetchArtists": "Error fetching artists",
+        "fetchArtwork": "Error fetching presale artwork",
+        "artworkNotFound": "Presale artwork not found",
+        "selectArtist": "Please select an artist",
+        "imageRequired": "Please upload an image or provide an image URL",
+        "imageUrlRequired": "Image URL is required. Please upload an image or provide a URL.",
+        "unsupportedFormat": "Unsupported format. Use JPEG, PNG, GIF or WebP",
+        "imageTooLarge": "Image is too large (max 10MB)",
+        "firebaseFolderError": "Unable to create Firebase folder",
+        "webpConversionError": "Error converting to WebP",
+        "uploadError": "Upload error",
+        "mainImageUploadError": "Error uploading main image",
+        "mockupUploadError": "Error uploading mockups",
+        "mockupUploadErrorWithIndex": "Error uploading mockup {index}",
+        "translationError": "Error managing translations",
+        "createError": "Error creating presale artwork",
+        "updateError": "Error updating presale artwork",
+        "submitError": "An error occurred"
+      },
+      "success": {
+        "created": "Presale artwork created successfully",
+        "updated": "Presale artwork updated successfully",
+        "mockupsUploaded": "Mockups uploaded successfully"
+      },
+      "progress": {
+        "loading": "Loading data...",
+        "checkingFolder": "Checking Firebase folder",
+        "converting": "Converting image to WebP",
+        "uploading": "Uploading to Firebase",
+        "creating": "Creating presale artwork",
+        "uploadingMockup": "Uploading mockup {current}/{total}..."
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "create": "Create artwork",
+        "update": "Update artwork",
+        "creating": "Creating...",
+        "updating": "Updating..."
+      },
+      "thumbnail": "Thumbnail"
+    },
+    "editArtistProfilePage": {
+      "title": "Edit my Artist Profile",
+      "subtitle": "Edit your artist profile information. First name and last name fields cannot be modified."
+    },
+    "editArtistProfileForm": {
+      "validation": {
+        "pseudoRequired": "Pseudo is required",
+        "descriptionMinLength": "Description must contain at least 10 characters",
+        "birthYearMin": "Birth year must be greater than 1900",
+        "birthYearMax": "Birth year cannot be in the future",
+        "countryCodeMin": "Country code must contain at least 2 characters",
+        "countryCodeMax": "Country code cannot exceed 3 characters",
+        "websiteUrlInvalid": "Invalid website URL",
+        "facebookUrlInvalid": "Invalid Facebook URL",
+        "instagramUrlInvalid": "Invalid Instagram URL",
+        "twitterUrlInvalid": "Invalid Twitter URL",
+        "linkedinUrlInvalid": "Invalid LinkedIn URL",
+        "yearInvalid": "Year must be a number",
+        "yearMin": "Year must be greater than 1900",
+        "yearMax": "Year cannot be in the future"
+      },
+      "sections": {
+        "basicInfo": "Basic Information",
+        "additionalImages": "Additional Images (optional)",
+        "specialties": "Specialties",
+        "awards": "Awards",
+        "exhibitions": "Exhibitions and Career (optional)",
+        "socialNetworks": "Social Networks (optional)"
+      },
+      "fields": {
+        "firstName": "First Name",
+        "firstNameHelp": "First name cannot be modified",
+        "lastName": "Last Name",
+        "lastNameHelp": "Last name cannot be modified",
+        "pseudo": "Pseudo",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe your artistic journey, your style, your influences...",
+        "descriptionHelp": "This description will be used for your artist profile and presentation page.",
+        "artistsPage": "Display on homepage",
+        "artistsPageNotDisplayed": "Not displayed",
+        "artistsPageDisplayed": "Displayed",
+        "artistsPageHelp": "Enable this option to display your profile on the site's homepage.",
+        "birthYear": "Birth Year",
+        "birthYearPlaceholder": "1990",
+        "country": "Country",
+        "countryPlaceholder": "Select a country",
+        "specialties": "Specialties",
+        "specialtiesHelp": "Select your artistic specialties",
+        "specialtiesPlaceholder": "Select one or more specialties",
+        "awardsTitle": "Awards",
+        "awardsDescription": "Add up to 3 awards or distinctions you have received",
+        "awardName": "Award Name",
+        "awardNamePlaceholder": "Ex: Best Artist Award",
+        "awardYear": "Year",
+        "awardYearPlaceholder": "2024",
+        "awardDescription": "Description",
+        "awardDescriptionPlaceholder": "Describe the award, its context...",
+        "awardItemLabel": "Award {index}",
+        "exhibitionsDescription": "You can add up to 4 exhibitions or significant events in your artistic career.",
+        "exhibition": "Exhibition {num}",
+        "exhibitionTitle": "Exhibition {num} Title",
+        "exhibitionTitlePlaceholder": "Ex: \"Group Exhibition at Gallery X\"",
+        "exhibitionDescription": "Exhibition {num} Description",
+        "exhibitionDescriptionPlaceholder": "Describe this exhibition, its context, its importance in your career...",
+        "website": "Website",
+        "websitePlaceholder": "https://www.example.com",
+        "facebook": "Facebook",
+        "facebookPlaceholder": "https://facebook.com/profile",
+        "instagram": "Instagram",
+        "instagramPlaceholder": "https://instagram.com/profile",
+        "twitter": "Twitter",
+        "twitterPlaceholder": "https://twitter.com/profile",
+        "linkedin": "LinkedIn",
+        "linkedinPlaceholder": "https://linkedin.com/profile",
+        "secondaryImageLabel": "Artist secondary image",
+        "secondaryImageDescription": "An additional photo of you to enrich your profile",
+        "studioImageLabel": "Your studio image",
+        "studioImageDescription": "A photo of your workspace or studio"
+      },
+      "progress": {
+        "validation": "Data validation",
+        "conversion": "Converting image to WebP",
+        "upload": "Uploading to Firebase",
+        "update": "Updating artist profile",
+        "finalization": "Finalization"
+      },
+      "errors": {
+        "webpConversion": "Error converting image to WebP",
+        "upload": "Upload error",
+        "mainImageRequired": "You must provide a new profile photo if you delete the current one",
+        "updateError": "An error occurred",
+        "updateFailed": "Failed to update artist profile",
+        "updateProfileError": "An error occurred while updating the artist profile"
+      },
+      "success": {
+        "updated": "Artist profile updated successfully"
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "update": "Update my profile",
+        "updating": "Updating..."
+      }
+    },
+    "presaleArtworks": {
+      "title": "My presale artworks on InRealArt website",
+      "titleAdmin": "Presale artworks on InRealArt Marketplace",
+      "subtitle": "Manage your artworks on InRealArt website",
+      "subtitleAdmin": "Manage available presale artworks",
+      "displayOrder": "Display order in the InRealArt website",
+      "displayOrderWebsite": "Display order on the website",
+      "importByExcel": "Import by Excel",
+      "bulkAdd": "Bulk add",
+      "addArtwork": "Add an artwork",
+      "columns": {
+        "image": "Image",
+        "order": "Order",
+        "displayOrder": "Website display order",
+        "name": "Name",
+        "artist": "Artist",
+        "dimensions": "Dimensions",
+        "price": "Price",
+        "actions": "Actions"
+      },
+      "thumbnail": "Thumbnail",
+      "notDefined": "Not defined",
+      "filterByArtist": "Filter by artist/gallery:",
+      "allArtists": "All artists and galleries",
+      "gallery": "Gallery",
+      "artist": "Artist",
+      "emptyState": "No presale artwork found",
+      "errors": {
+        "artworkNotFound": "Artwork not found",
+        "deleteSuccess": "Presale artwork deleted successfully",
+        "deleteError": "An error occurred while deleting"
+      },
+      "deleteConfirm": "Are you sure you want to delete the artwork \"{name}\"? This action is irreversible.",
+      "deleteItemName": "the artwork \"{name}\""
+    },
+    "imageUpload": {
+      "profilePhoto": "Profile Photo",
+      "preview": "Photo preview",
+      "previewImage": "Image preview",
+      "remove": "Remove",
+      "clickOrDrag": "Click or drag and drop your photo",
+      "dropHere": "Drop your photo here...",
+      "clickOrDragImage": "Click or drag and drop an image",
+      "dropImageHere": "Drop your image here...",
+      "formats": "Formats: JPEG, PNG, GIF, WebP (max 10MB)",
+      "errors": {
+        "unsupportedFormat": "Unsupported image format",
+        "imageTooLarge": "Image is too large (max 10MB)"
+      }
+    },
+    "progressModal": {
+      "defaultTitle": "Creating artist profile",
+      "close": "Close",
+      "error": "Error:"
+    }
   },
   "navigation": {
     "dashboard": "Dashboard",

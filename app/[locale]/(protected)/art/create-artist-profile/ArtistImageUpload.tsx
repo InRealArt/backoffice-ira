@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useDropzone } from 'react-dropzone'
 import Image from 'next/image'
 import { Camera } from 'lucide-react'
@@ -14,6 +15,7 @@ interface ArtistImageUploadProps {
 }
 
 export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, error, allowDelete = false }: ArtistImageUploadProps) {
+  const t = useTranslations('art.imageUpload')
   const [localPreview, setLocalPreview] = useState<string | null>(previewUrl || null)
   const [localError, setLocalError] = useState<string | null>(null)
   const [hasLocalFile, setHasLocalFile] = useState(false)
@@ -38,7 +40,7 @@ export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, 
       // Vérifier la taille (max 10MB)
       const maxSize = 10 * 1024 * 1024
       if (file.size > maxSize) {
-        setLocalError('L\'image est trop volumineuse (max 10MB)')
+        setLocalError(t('errors.imageTooLarge'))
         onFileSelect(null)
         return
       }
@@ -79,13 +81,13 @@ export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, 
 
   return (
     <div className="form-group">
-      <label className="form-label">Photo de profil *</label>
+      <label className="form-label">{t('profilePhoto')} *</label>
 
       {displayPreview ? (
         <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden', marginBottom: '1rem' }}>
           <Image
             src={displayPreview}
-            alt="Aperçu de la photo"
+            alt={t('preview')}
             fill
             style={{ objectFit: 'cover' }}
           />
@@ -105,7 +107,7 @@ export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, 
               fontSize: '12px'
             }}
           >
-            ✕ Supprimer
+            ✕ {t('remove')}
           </button>
         </div>
       ) : (
@@ -125,10 +127,10 @@ export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
             <Camera size={32} color="#666" />
             <p style={{ margin: 0, fontWeight: 600 }}>
-              {isDragActive ? 'Déposez votre photo ici...' : 'Cliquez ou glissez-déposez votre photo'}
+              {isDragActive ? t('dropHere') : t('clickOrDrag')}
             </p>
             <p style={{ margin: 0, fontSize: '0.875rem', color: '#666' }}>
-              Formats: JPEG, PNG, GIF, WebP (max 10MB)
+              {t('formats')}
             </p>
           </div>
         </div>

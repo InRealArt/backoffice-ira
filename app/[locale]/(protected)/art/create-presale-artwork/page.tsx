@@ -2,14 +2,19 @@ import { getAuthenticatedUserEmail } from '@/lib/auth-helpers'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { redirect } from 'next/navigation'
 import PresaleArtworkForm from '@/app/components/PresaleArtworkForm/PresaleArtworkForm'
+import { getTranslations } from 'next-intl/server'
 
-export const metadata = {
-  title: 'Créer une œuvre en prévente | Site web InRealArt',
-  description: 'Créez une nouvelle œuvre en prévente',
+export async function generateMetadata() {
+  const t = await getTranslations('art.createPresaleArtworkPage')
+  return {
+    title: t('title'),
+    description: t('description'),
+  }
 }
 
 export default async function CreatePresaleArtworkPage() {
   const userEmail = await getAuthenticatedUserEmail()
+  const t = await getTranslations('art.createPresaleArtworkPage')
   
   // Récupérer l'utilisateur backoffice
   const backofficeUser = await getBackofficeUserByEmail(userEmail)
@@ -22,9 +27,9 @@ export default async function CreatePresaleArtworkPage() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">Créer une œuvre en prévente</h1>
+        <h1 className="page-title">{t('pageTitle')}</h1>
         <p className="page-subtitle">
-          Ajoutez une nouvelle œuvre en prévente pour le site web InRealArt
+          {t('pageSubtitle')}
         </p>
       </div>
       

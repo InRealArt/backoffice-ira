@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useToast } from "@/app/components/Toast/ToastContext";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -20,55 +21,55 @@ import DynamicFormList from "@/app/components/Forms/DynamicFormList/DynamicFormL
 import MultiSelect from "@/app/components/Forms/MultiSelect";
 import { Controller } from "react-hook-form";
 
-// Schéma de validation pour l'édition
-const formSchema = z.object({
-  pseudo: z.string().min(1, "Le pseudo est requis"),
+// Fonction pour créer le schéma de validation avec traductions
+const createFormSchema = (t: (key: string) => string) => z.object({
+  pseudo: z.string().min(1, t("validation.pseudoRequired")),
   description: z
     .string()
-    .min(10, "La description doit contenir au moins 10 caractères"),
+    .min(10, t("validation.descriptionMinLength")),
   artistsPage: z.boolean().default(false),
   birthYear: z
     .number()
-    .min(1900, "L'année de naissance doit être supérieure à 1900")
+    .min(1900, t("validation.birthYearMin"))
     .max(
       new Date().getFullYear(),
-      "L'année de naissance ne peut pas être dans le futur"
+      t("validation.birthYearMax")
     )
     .nullable()
     .optional(),
   countryCode: z
     .string()
-    .min(2, "Le code pays doit contenir au moins 2 caractères")
-    .max(3, "Le code pays ne peut pas dépasser 3 caractères")
+    .min(2, t("validation.countryCodeMin"))
+    .max(3, t("validation.countryCodeMax"))
     .nullable()
     .optional(),
   websiteUrl: z
     .string()
-    .url("URL de site web invalide")
+    .url(t("validation.websiteUrlInvalid"))
     .nullable()
     .optional()
     .or(z.literal("")),
   facebookUrl: z
     .string()
-    .url("URL Facebook invalide")
+    .url(t("validation.facebookUrlInvalid"))
     .nullable()
     .optional()
     .or(z.literal("")),
   instagramUrl: z
     .string()
-    .url("URL Instagram invalide")
+    .url(t("validation.instagramUrlInvalid"))
     .nullable()
     .optional()
     .or(z.literal("")),
   twitterUrl: z
     .string()
-    .url("URL Twitter invalide")
+    .url(t("validation.twitterUrlInvalid"))
     .nullable()
     .optional()
     .or(z.literal("")),
   linkedinUrl: z
     .string()
-    .url("URL LinkedIn invalide")
+    .url(t("validation.linkedinUrlInvalid"))
     .nullable()
     .optional()
     .or(z.literal("")),
@@ -84,7 +85,7 @@ const formSchema = z.object({
   specialtyIds: z.array(z.number()).optional().default([]),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 interface EditArtistProfileFormProps {
   artist: {
@@ -137,6 +138,7 @@ export default function EditArtistProfileForm({
   allSpecialties = [],
 }: EditArtistProfileFormProps) {
   const router = useRouter();
+  const t = useTranslations("art.editArtistProfileForm");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
@@ -166,21 +168,26 @@ export default function EditArtistProfileForm({
       label: string;
       status: "pending" | "in-progress" | "completed" | "error";
     }>
-  >([
-    { id: "validation", label: "Validation des données", status: "pending" },
-    {
-      id: "conversion",
-      label: "Conversion de l'image en WebP",
-      status: "pending",
-    },
-    { id: "upload", label: "Upload vers Firebase", status: "pending" },
-    { id: "update", label: "Mise à jour du profil artiste", status: "pending" },
-    { id: "finalization", label: "Finalisation", status: "pending" },
-  ]);
+  >([]);
   const [progressError, setProgressError] = useState<string | undefined>(
     undefined
   );
   const { success, error: errorToast } = useToast();
+
+  // Initialiser les étapes de progression avec les traductions
+  useEffect(() => {
+    setProgressSteps([
+      { id: "validation", label: t("progress.validation"), status: "pending" },
+      {
+        id: "conversion",
+        label: t("progress.conversion"),
+        status: "pending",
+      },
+      { id: "upload", label: t("progress.upload"), status: "pending" },
+      { id: "update", label: t("progress.update"), status: "pending" },
+      { id: "finalization", label: t("progress.finalization"), status: "pending" },
+    ]);
+  }, [t]);
 
   const {
     register,
@@ -192,7 +199,7 @@ export default function EditArtistProfileForm({
     control,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(createFormSchema(t)),
     defaultValues: {
       pseudo: artist.pseudo,
       description: artist.description,
@@ -280,7 +287,7 @@ export default function EditArtistProfileForm({
         updateStepStatus("conversion", "error");
         throw new Error(
           conversionResult.error ||
-            "Erreur lors de la conversion de l'image en WebP"
+            t("errors.webpConversion")
         );
       }
 
@@ -319,19 +326,19 @@ export default function EditArtistProfileForm({
     setProgressError(undefined);
 
     setProgressSteps([
-      { id: "validation", label: "Validation des données", status: "pending" },
+      { id: "validation", label: t("progress.validation"), status: "pending" },
       {
         id: "conversion",
-        label: "Conversion de l'image en WebP",
+        label: t("progress.conversion"),
         status: "pending",
       },
-      { id: "upload", label: "Upload vers Firebase", status: "pending" },
+      { id: "upload", label: t("progress.upload"), status: "pending" },
       {
         id: "update",
-        label: "Mise à jour du profil artiste",
+        label: t("progress.update"),
         status: "pending",
       },
-      { id: "finalization", label: "Finalisation", status: "pending" },
+      { id: "finalization", label: t("progress.finalization"), status: "pending" },
     ]);
 
     try {
@@ -341,13 +348,13 @@ export default function EditArtistProfileForm({
       if (shouldDeleteMainImage && !selectedImageFile) {
         updateStepStatus("validation", "error");
         setProgressError(
-          "Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle"
+          t("errors.mainImageRequired")
         );
         setFormError(
-          "Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle"
+          t("errors.mainImageRequired")
         );
         errorToast(
-          "Vous devez fournir une nouvelle photo de profil si vous supprimez l'actuelle"
+          t("errors.mainImageRequired")
         );
         setIsSubmitting(false);
         return;
@@ -377,7 +384,7 @@ export default function EditArtistProfileForm({
           );
         } catch (uploadError: any) {
           const errorMessage =
-            uploadError?.message || "Erreur lors de l'upload";
+            uploadError?.message || t("errors.upload");
           if (
             errorMessage.toLowerCase().includes("conversion") ||
             errorMessage.toLowerCase().includes("webp")
@@ -388,7 +395,7 @@ export default function EditArtistProfileForm({
           }
           setProgressError(errorMessage);
           errorToast(errorMessage);
-          setFormError("Une erreur est survenue");
+          setFormError(t("errors.updateError"));
           setIsSubmitting(false);
           return;
         }
@@ -556,7 +563,7 @@ export default function EditArtistProfileForm({
         await new Promise((resolve) => setTimeout(resolve, 500));
         updateStepStatus("finalization", "completed");
 
-        success("Profil artiste mis à jour avec succès");
+        success(t("success.updated"));
 
         setTimeout(() => {
           setShowProgressModal(false);
@@ -565,10 +572,10 @@ export default function EditArtistProfileForm({
         }, 1000);
       } else {
         updateStepStatus("update", "error");
-        setProgressError(result.message || "Une erreur est survenue");
-        errorToast(result.message || "Une erreur est survenue");
+        setProgressError(result.message || t("errors.updateError"));
+        errorToast(result.message || t("errors.updateError"));
         setFormError(
-          result.message || "Échec de la mise à jour du profil artiste"
+          result.message || t("errors.updateFailed")
         );
         setIsSubmitting(false);
       }
@@ -576,13 +583,13 @@ export default function EditArtistProfileForm({
       console.error("Erreur lors de la mise à jour du profil artiste:", error);
       const errorMessage =
         error?.message ||
-        "Une erreur est survenue lors de la mise à jour du profil artiste";
+        t("errors.updateProfileError");
 
       updateStepStatus("update", "error");
 
       setProgressError(errorMessage);
       errorToast(errorMessage);
-      setFormError("Une erreur est survenue");
+      setFormError(t("errors.updateError"));
       setIsSubmitting(false);
     }
   };
@@ -600,7 +607,7 @@ export default function EditArtistProfileForm({
         <div className="form-group mb-4">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-              Informations de base
+              {t("sections.basicInfo")}
             </h3>
           </div>
           <div className="d-flex gap-lg align-items-start">
@@ -628,7 +635,7 @@ export default function EditArtistProfileForm({
               <div className="d-flex gap-md mb-3">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label htmlFor="name" className="form-label">
-                    Prénom
+                    {t("fields.firstName")}
                   </label>
                   <input
                     id="name"
@@ -645,12 +652,12 @@ export default function EditArtistProfileForm({
                     className="form-help text-muted mt-1"
                     style={{ fontSize: "0.875rem" }}
                   >
-                    Le prénom ne peut pas être modifié
+                    {t("fields.firstNameHelp")}
                   </p>
                 </div>
                 <div className="form-group" style={{ flex: 1 }}>
                   <label htmlFor="surname" className="form-label">
-                    Nom
+                    {t("fields.lastName")}
                   </label>
                   <input
                     id="surname"
@@ -667,14 +674,14 @@ export default function EditArtistProfileForm({
                     className="form-help text-muted mt-1"
                     style={{ fontSize: "0.875rem" }}
                   >
-                    Le nom ne peut pas être modifié
+                    {t("fields.lastNameHelp")}
                   </p>
                 </div>
               </div>
 
               <div className="form-group mb-3">
                 <label htmlFor="pseudo" className="form-label">
-                  Pseudo *
+                  {t("fields.pseudo")} *
                 </label>
                 <input
                   id="pseudo"
@@ -694,7 +701,7 @@ export default function EditArtistProfileForm({
         <div className="form-group mb-4">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-              Images supplémentaires (optionnel)
+              {t("sections.additionalImages")}
             </h3>
           </div>
           <div className="d-flex gap-md" style={{ flexWrap: "wrap" }}>
@@ -713,8 +720,8 @@ export default function EditArtistProfileForm({
                     setShouldDeleteSecondaryImage(false);
                   }
                 }}
-                label="Image secondaire de l'artiste"
-                description="Une photo supplémentaire de vous pour enrichir votre profil"
+                label={t("fields.secondaryImageLabel")}
+                description={t("fields.secondaryImageDescription")}
                 previewUrl={
                   shouldDeleteSecondaryImage
                     ? null
@@ -738,8 +745,8 @@ export default function EditArtistProfileForm({
                     setShouldDeleteStudioImage(false);
                   }
                 }}
-                label="Image de votre studio"
-                description="Une photo de votre espace de travail ou atelier"
+                label={t("fields.studioImageLabel")}
+                description={t("fields.studioImageDescription")}
                 previewUrl={
                   shouldDeleteStudioImage
                     ? null
@@ -753,7 +760,7 @@ export default function EditArtistProfileForm({
 
         <div className="form-group mb-4">
           <label htmlFor="description" className="form-label">
-            Description *
+            {t("fields.description")} *
           </label>
           <textarea
             id="description"
@@ -762,25 +769,24 @@ export default function EditArtistProfileForm({
               errors.description ? "input-error" : ""
             }`}
             rows={5}
-            placeholder="Décrivez votre parcours artistique, votre style, vos influences..."
+            placeholder={t("fields.descriptionPlaceholder")}
           />
           {errors.description && (
             <p className="form-error">{errors.description.message}</p>
           )}
           <p className="form-help text-muted mt-1">
-            Cette description sera utilisée pour votre profil artiste et votre
-            page de présentation.
+            {t("fields.descriptionHelp")}
           </p>
         </div>
 
         <div className="form-group mb-4">
-          <label className="form-label">Affichage sur la page d'accueil</label>
+          <label className="form-label">{t("fields.artistsPage")}</label>
           <div className="d-flex align-items-center gap-md">
             <span
               className={!artistsPage ? "text-primary" : "text-muted"}
               style={{ fontWeight: !artistsPage ? "bold" : "normal" }}
             >
-              Non affiché
+              {t("fields.artistsPageNotDisplayed")}
             </span>
             <label
               style={{
@@ -830,19 +836,18 @@ export default function EditArtistProfileForm({
               className={artistsPage ? "text-primary" : "text-muted"}
               style={{ fontWeight: artistsPage ? "bold" : "normal" }}
             >
-              Affiché
+              {t("fields.artistsPageDisplayed")}
             </span>
           </div>
           <p className="form-help text-muted mt-1">
-            Activez cette option pour afficher votre profil sur la page
-            d'accueil du site.
+            {t("fields.artistsPageHelp")}
           </p>
         </div>
 
         <div className="d-flex gap-md mb-4">
           <div className="form-group" style={{ flex: 1 }}>
             <label htmlFor="birthYear" className="form-label">
-              Année de naissance
+              {t("fields.birthYear")}
             </label>
             <input
               key={`birthYear-${artist.birthYear || "empty"}`}
@@ -853,7 +858,7 @@ export default function EditArtistProfileForm({
                 setValueAs: (value) => (value === "" ? null : Number(value)),
               })}
               className={`form-input ${errors.birthYear ? "input-error" : ""}`}
-              placeholder="1990"
+              placeholder={t("fields.birthYearPlaceholder")}
               min="1900"
               max={new Date().getFullYear()}
             />
@@ -863,14 +868,14 @@ export default function EditArtistProfileForm({
           </div>
           <div className="form-group" style={{ flex: 1 }}>
             <label htmlFor="countryCode" className="form-label">
-              Pays
+              {t("fields.country")}
             </label>
             <CountrySelect
               key={`country-${artist.countryCode || "empty"}`}
               countries={getCountries()}
               value={countryCode || artist.countryCode || ""}
               onChange={(code) => setValue("countryCode", code)}
-              placeholder="Sélectionner un pays"
+              placeholder={t("fields.countryPlaceholder")}
             />
             {errors.countryCode && (
               <p className="form-error">{errors.countryCode.message}</p>
@@ -882,10 +887,10 @@ export default function EditArtistProfileForm({
         <div className="form-group mb-4">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-              Spécialités
+              {t("sections.specialties")}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Sélectionnez vos spécialités artistiques
+              {t("fields.specialtiesHelp")}
             </p>
           </div>
           <Controller
@@ -893,14 +898,14 @@ export default function EditArtistProfileForm({
             control={control}
             render={({ field }) => (
               <MultiSelect
-                label="Spécialités"
+                label={t("fields.specialties")}
                 options={allSpecialties.map((specialty) => ({
                   id: specialty.id,
                   name: specialty.name,
                 }))}
                 value={field.value || []}
                 onChange={field.onChange}
-                placeholder="Sélectionnez une ou plusieurs spécialités"
+                placeholder={t("fields.specialtiesPlaceholder")}
                 error={errors.specialtyIds?.message as string}
               />
             )}
@@ -910,22 +915,22 @@ export default function EditArtistProfileForm({
         {/* Section Récompenses */}
         <div className="form-group mb-4">
           <DynamicFormList
-            title="Récompenses"
-            description="Ajoutez jusqu'à 3 récompenses ou distinctions que vous avez reçues"
+            title={t("sections.awards")}
+            description={t("fields.awardsDescription")}
             fields={[
               {
                 name: "name",
-                label: "Nom de la récompense",
+                label: t("fields.awardName"),
                 type: "text",
-                placeholder: "Ex: Prix du meilleur artiste",
+                placeholder: t("fields.awardNamePlaceholder"),
                 required: true,
                 colSpan: 2,
               },
               {
                 name: "year",
-                label: "Année",
+                label: t("fields.awardYear"),
                 type: "number",
-                placeholder: "2024",
+                placeholder: t("fields.awardYearPlaceholder"),
                 required: false,
                 colSpan: 1,
                 validation: (value) => {
@@ -933,18 +938,18 @@ export default function EditArtistProfileForm({
                     return true;
                   const year =
                     typeof value === "number" ? value : parseInt(value);
-                  if (isNaN(year)) return "L'année doit être un nombre";
-                  if (year < 1900) return "L'année doit être supérieure à 1900";
+                  if (isNaN(year)) return t("validation.yearInvalid");
+                  if (year < 1900) return t("validation.yearMin");
                   if (year > new Date().getFullYear())
-                    return "L'année ne peut pas être dans le futur";
+                    return t("validation.yearMax");
                   return true;
                 },
               },
               {
                 name: "description",
-                label: "Description",
+                label: t("fields.awardDescription"),
                 type: "textarea",
-                placeholder: "Décrivez la récompense, son contexte...",
+                placeholder: t("fields.awardDescriptionPlaceholder"),
                 required: false,
                 colSpan: 3,
               },
@@ -958,7 +963,7 @@ export default function EditArtistProfileForm({
             maxItems={3}
             minItems={0}
             itemLabel={(item, index) =>
-              `Récompense ${index + 1}${item.name ? ` - ${item.name}` : ""}`
+              t("fields.awardItemLabel", { index: index + 1 }) + (item.name ? ` - ${item.name}` : "")
             }
           />
         </div>
@@ -967,11 +972,10 @@ export default function EditArtistProfileForm({
         <div className="form-group mb-4">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-              Expositions et parcours (optionnel)
+              {t("sections.exhibitions")}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              Vous pouvez ajouter jusqu'à 4 expositions ou événements marquants
-              de votre parcours artistique.
+              {t("fields.exhibitionsDescription")}
             </p>
           </div>
 
@@ -1011,30 +1015,30 @@ export default function EditArtistProfileForm({
                 className="h6 mb-3"
                 style={{ color: "#666", fontWeight: 600 }}
               >
-                Exposition {num}
+                {t("fields.exhibition", { num })}
               </h4>
               <div className="form-group mb-3">
                 <label htmlFor={headerKey} className="form-label">
-                  Titre de l'exposition {num}
+                  {t("fields.exhibitionTitle", { num })}
                 </label>
                 <input
                   id={headerKey}
                   type="text"
                   {...register(headerKey)}
                   className="form-input"
-                  placeholder={`Ex: "Exposition collective à la Galerie X"`}
+                  placeholder={t("fields.exhibitionTitlePlaceholder")}
                 />
               </div>
               <div className="form-group">
                 <label htmlFor={textKey} className="form-label">
-                  Description de l'exposition {num}
+                  {t("fields.exhibitionDescription", { num })}
                 </label>
                 <textarea
                   id={textKey}
                   {...register(textKey)}
                   className="form-textarea"
                   rows={4}
-                  placeholder={`Décrivez cette exposition, son contexte, son importance dans votre parcours...`}
+                  placeholder={t("fields.exhibitionDescriptionPlaceholder")}
                 />
               </div>
             </div>
@@ -1044,19 +1048,19 @@ export default function EditArtistProfileForm({
         <div className="form-group mb-4">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-              Réseaux sociaux (facultatif)
+              {t("sections.socialNetworks")}
             </h3>
           </div>
           <div className="form-group mb-3">
             <label htmlFor="websiteUrl" className="form-label">
-              Site web
+              {t("fields.website")}
             </label>
             <input
               id="websiteUrl"
               type="url"
               {...register("websiteUrl")}
               className={`form-input ${errors.websiteUrl ? "input-error" : ""}`}
-              placeholder="https://www.example.com"
+              placeholder={t("fields.websitePlaceholder")}
             />
             {errors.websiteUrl && (
               <p className="form-error">{errors.websiteUrl.message}</p>
@@ -1066,7 +1070,7 @@ export default function EditArtistProfileForm({
           <div className="d-flex gap-md">
             <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="facebookUrl" className="form-label">
-                Facebook
+                {t("fields.facebook")}
               </label>
               <input
                 id="facebookUrl"
@@ -1075,7 +1079,7 @@ export default function EditArtistProfileForm({
                 className={`form-input ${
                   errors.facebookUrl ? "input-error" : ""
                 }`}
-                placeholder="https://facebook.com/profile"
+                placeholder={t("fields.facebookPlaceholder")}
               />
               {errors.facebookUrl && (
                 <p className="form-error">{errors.facebookUrl.message}</p>
@@ -1083,7 +1087,7 @@ export default function EditArtistProfileForm({
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="instagramUrl" className="form-label">
-                Instagram
+                {t("fields.instagram")}
               </label>
               <input
                 id="instagramUrl"
@@ -1092,7 +1096,7 @@ export default function EditArtistProfileForm({
                 className={`form-input ${
                   errors.instagramUrl ? "input-error" : ""
                 }`}
-                placeholder="https://instagram.com/profile"
+                placeholder={t("fields.instagramPlaceholder")}
               />
               {errors.instagramUrl && (
                 <p className="form-error">{errors.instagramUrl.message}</p>
@@ -1103,7 +1107,7 @@ export default function EditArtistProfileForm({
           <div className="d-flex gap-md mt-3">
             <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="twitterUrl" className="form-label">
-                Twitter
+                {t("fields.twitter")}
               </label>
               <input
                 id="twitterUrl"
@@ -1112,7 +1116,7 @@ export default function EditArtistProfileForm({
                 className={`form-input ${
                   errors.twitterUrl ? "input-error" : ""
                 }`}
-                placeholder="https://twitter.com/profile"
+                placeholder={t("fields.twitterPlaceholder")}
               />
               {errors.twitterUrl && (
                 <p className="form-error">{errors.twitterUrl.message}</p>
@@ -1120,7 +1124,7 @@ export default function EditArtistProfileForm({
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="linkedinUrl" className="form-label">
-                LinkedIn
+                {t("fields.linkedin")}
               </label>
               <input
                 id="linkedinUrl"
@@ -1129,7 +1133,7 @@ export default function EditArtistProfileForm({
                 className={`form-input ${
                   errors.linkedinUrl ? "input-error" : ""
                 }`}
-                placeholder="https://linkedin.com/profile"
+                placeholder={t("fields.linkedinPlaceholder")}
               />
               {errors.linkedinUrl && (
                 <p className="form-error">{errors.linkedinUrl.message}</p>
@@ -1145,16 +1149,16 @@ export default function EditArtistProfileForm({
             disabled={isSubmitting}
             type="button"
           >
-            Annuler
+            {t("buttons.cancel")}
           </Button>
           <Button
             variant="primary"
             type="submit"
             disabled={isSubmitting}
             isLoading={isSubmitting}
-            loadingText="Mise à jour en cours..."
+            loadingText={t("buttons.updating")}
           >
-            Mettre à jour mon profil
+            {t("buttons.update")}
           </Button>
         </div>
       </form>

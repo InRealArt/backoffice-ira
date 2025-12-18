@@ -10,9 +10,11 @@ import {
 } from "@/lib/actions/artist-actions";
 import { getAllArtistSpecialties } from "@/lib/actions/artist-specialty-actions";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import EditArtistProfileForm from "./EditArtistProfileForm";
 
 export default async function EditArtistProfilePage() {
+  const t = await getTranslations("art.editArtistProfilePage");
   const userEmail = await getAuthenticatedUserEmail();
 
   // Récupérer l'utilisateur backoffice
@@ -42,7 +44,7 @@ export default async function EditArtistProfilePage() {
       <div className="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-            Modifier mon profil Artiste
+            {t("title")}
             {artist.pseudo && (
               <span className="font-semibold text-primary dark:text-primary">
                 {" "}
@@ -51,8 +53,7 @@ export default async function EditArtistProfilePage() {
             )}
           </h1>
           <p className="text-base text-gray-600 dark:text-gray-400">
-            Modifiez les informations de votre profil artiste. Les champs prénom
-            et nom ne peuvent pas être modifiés.
+            {t("subtitle")}
           </p>
         </div>
       </div>

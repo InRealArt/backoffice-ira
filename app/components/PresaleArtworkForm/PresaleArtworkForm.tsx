@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslations } from "next-intl";
 import { useToast } from "@/app/components/Toast/ToastContext";
 import Image from "next/image";
 import { X, Plus, AlertCircle, Camera } from "lucide-react";
@@ -28,18 +29,21 @@ import { convertToWebPIfNeeded } from "@/lib/utils/webp-converter";
 import { normalizeString } from "@/lib/utils";
 import ProgressModal from "@/app/components/art/ProgressModal";
 
-// Schéma de validation
-const presaleArtworkSchema = z.object({
-  name: z.string().min(1, "Le nom est requis"),
-  artistId: z.string().min(1, "Veuillez sélectionner un artiste"),
-  imageUrl: z.string().optional(), // Sera validé manuellement si un fichier est uploadé
-  description: z.string().optional(),
-  price: z.string().optional(),
-  width: z.string().optional(),
-  height: z.string().optional(),
-});
+// Fonction pour créer le schéma de validation avec traductions
+const createPresaleArtworkSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z.string().min(1, t("validation.nameRequired")),
+    artistId: z.string().min(1, t("validation.artistRequired")),
+    imageUrl: z.string().optional(), // Sera validé manuellement si un fichier est uploadé
+    description: z.string().optional(),
+    price: z.string().optional(),
+    width: z.string().optional(),
+    height: z.string().optional(),
+  });
 
-type PresaleArtworkFormValues = z.infer<typeof presaleArtworkSchema>;
+type PresaleArtworkFormValues = z.infer<
+  ReturnType<typeof createPresaleArtworkSchema>
+>;
 
 interface Artist {
   id: number;
@@ -69,13 +73,13 @@ export interface PresaleArtworkFormProps {
   pageSubtitle?: string;
 }
 
-function ImageThumbnail({ url }: { url: string }) {
+function ImageThumbnail({ url, alt }: { url: string; alt: string }) {
   return (
     <div className="inline-flex items-center">
       <div className="relative w-6 h-6 mr-1">
         <Image
           src={url}
-          alt="Miniature"
+          alt={alt}
           width={96}
           height={96}
           className="object-cover"
@@ -98,6 +102,7 @@ export default function PresaleArtworkForm({
   pageSubtitle,
 }: PresaleArtworkFormProps) {
   const router = useRouter();
+  const t = useTranslations("art.presaleArtworkForm");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(mode === "edit");
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -124,7 +129,7 @@ export default function PresaleArtworkForm({
     undefined
   );
   const mainImageInputRef = useRef<HTMLInputElement>(null);
-  const { success, error, info } = useToast();
+  const { success, error: showError, info } = useToast();
 
   // Fonction pour gérer l'annulation
   const handleCancel = () => {
@@ -145,7 +150,7 @@ export default function PresaleArtworkForm({
     watch,
     formState: { errors },
   } = useForm<PresaleArtworkFormValues>({
-    resolver: zodResolver(presaleArtworkSchema),
+    resolver: zodResolver(createPresaleArtworkSchema(t)),
     defaultValues: {
       name: "",
       artistId: defaultArtistId ? defaultArtistId.toString() : "",
@@ -165,12 +170,12 @@ export default function PresaleArtworkForm({
         setArtists(artistsData);
       } catch (error: any) {
         console.error("Erreur lors de la récupération des artistes:", error);
-        error("Erreur lors de la récupération des artistes");
+        showError(t("errors.fetchArtists"));
       }
     };
 
     fetchArtists();
-  }, [error]);
+  }, [showError, t]);
 
   // Pré-sélectionner l'artiste par défaut une fois que les artistes sont chargés
   useEffect(() => {
@@ -240,7 +245,7 @@ export default function PresaleArtworkForm({
               }
             }
           } else {
-            error("Œuvre en prévente non trouvée");
+            showError(t("errors.artworkNotFound"));
             router.push(redirectUrl || "/landing/presaleArtworks");
           }
         } catch (error: any) {
@@ -248,7 +253,7 @@ export default function PresaleArtworkForm({
             "Erreur lors de la récupération de l'œuvre en prévente:",
             error
           );
-          error("Erreur lors de la récupération de l'œuvre en prévente");
+          showError(t("errors.fetchArtwork"));
         } finally {
           setIsLoading(false);
         }
@@ -258,7 +263,7 @@ export default function PresaleArtworkForm({
     };
 
     fetchPresaleArtwork();
-  }, [mode, presaleArtworkId, setValue, router, redirectUrl, error]);
+  }, [mode, presaleArtworkId, setValue, router, redirectUrl, showError, t]);
 
   const onSubmit = async (data: PresaleArtworkFormValues) => {
     setIsSubmitting(true);
@@ -269,14 +274,14 @@ export default function PresaleArtworkForm({
         (a) => a.id.toString() === data.artistId
       );
       if (!selectedArtist) {
-        error("Veuillez sélectionner un artiste");
+        showError(t("errors.selectArtist"));
         setIsSubmitting(false);
         return;
       }
 
       // Validation manuelle : vérifier qu'une image est fournie (soit URL, soit fichier)
       if (!mainImageFile && !data.imageUrl) {
-        error("Veuillez uploader une image ou fournir une URL d'image");
+        showError(t("errors.imageRequired"));
         setIsSubmitting(false);
         return;
       }
@@ -294,17 +299,17 @@ export default function PresaleArtworkForm({
         setProgressSteps([
           {
             id: "folder-check",
-            label: "Vérification du répertoire Firebase",
+            label: t("progress.checkingFolder"),
             status: "in-progress",
           },
           {
             id: "conversion",
-            label: "Conversion de l'image en WebP",
+            label: t("progress.converting"),
             status: "pending",
           },
           {
             id: "upload",
-            label: "Upload vers Firebase",
+            label: t("progress.uploading"),
             status: "pending",
           },
         ]);
@@ -324,8 +329,8 @@ export default function PresaleArtworkForm({
                 s.id === "folder-check" ? { ...s, status: "error" } : s
               )
             );
-            setProgressError("Impossible de créer le répertoire Firebase");
-            error("Impossible de créer le répertoire Firebase");
+            setProgressError(t("errors.firebaseFolderError"));
+            showError(t("errors.firebaseFolderError"));
             setIsSubmitting(false);
             return;
           }
@@ -347,7 +352,7 @@ export default function PresaleArtworkForm({
 
           if (!conversionResult.success) {
             throw new Error(
-              conversionResult.error || "Erreur lors de la conversion WebP"
+              conversionResult.error || t("errors.webpConversionError")
             );
           }
 
@@ -383,7 +388,7 @@ export default function PresaleArtworkForm({
                     s.id === "upload" ? { ...s, status: "error" } : s
                   )
                 );
-                setProgressError(error || "Erreur lors de l'upload");
+                setProgressError(error || t("errors.uploadError"));
               }
             }
           );
@@ -408,13 +413,9 @@ export default function PresaleArtworkForm({
             uploadError
           );
           setProgressError(
-            uploadError.message ||
-              "Erreur lors de l'upload de l'image principale"
+            uploadError.message || t("errors.mainImageUploadError")
           );
-          error(
-            uploadError.message ||
-              "Erreur lors de l'upload de l'image principale"
-          );
+          showError(uploadError.message || t("errors.mainImageUploadError"));
           setIsSubmitting(false);
           return;
         }
@@ -434,7 +435,12 @@ export default function PresaleArtworkForm({
           for (let i = 0; i < mockupFiles.length; i++) {
             const mockup = mockupFiles[i];
             try {
-              info(`Upload du mockup ${i + 1}/${mockupFiles.length}...`);
+              info(
+                t("progress.uploadingMockup", {
+                  current: i + 1,
+                  total: mockupFiles.length,
+                })
+              );
               const mockupUrl = await uploadMockupToFirebase(
                 mockup.file,
                 selectedArtist.name,
@@ -447,17 +453,16 @@ export default function PresaleArtworkForm({
                 `Erreur lors de l'upload du mockup ${i + 1}:`,
                 mockupError
               );
-              error(
-                `Erreur lors de l'upload du mockup ${i + 1}: ${
-                  mockupError.message
-                }`
+              showError(
+                t("errors.mockupUploadErrorWithIndex", { index: i + 1 }) +
+                  `: ${mockupError.message}`
               );
             }
           }
-          success("Mockups uploadés avec succès");
+          success(t("success.mockupsUploaded"));
         } catch (uploadError: any) {
           console.error("Erreur lors de l'upload des mockups:", uploadError);
-          error("Erreur lors de l'upload des mockups");
+          showError(t("errors.mockupUploadError"));
         } finally {
           setUploadingMockups([]);
         }
@@ -465,9 +470,7 @@ export default function PresaleArtworkForm({
 
       // Vérifier que finalImageUrl est défini après l'upload
       if (!finalImageUrl) {
-        error(
-          "L'URL de l'image est requise. Veuillez uploader une image ou fournir une URL."
-        );
+        showError(t("errors.imageUrlRequired"));
         setIsSubmitting(false);
         return;
       }
@@ -494,7 +497,7 @@ export default function PresaleArtworkForm({
         });
 
         if (result.success) {
-          success("Œuvre en prévente créée avec succès");
+          success(t("success.created"));
 
           // Gestion des traductions pour name et description
           try {
@@ -523,10 +526,7 @@ export default function PresaleArtworkForm({
             router.back();
           }
         } else {
-          error(
-            result.message ||
-              "Erreur lors de la création de l'œuvre en prévente"
-          );
+          showError(result.message || t("errors.createError"));
         }
       } else if (mode === "edit" && presaleArtworkId) {
         const result = await updatePresaleArtwork(presaleArtworkId, {
@@ -541,7 +541,7 @@ export default function PresaleArtworkForm({
         });
 
         if (result.success) {
-          success("Œuvre en prévente mise à jour avec succès");
+          success(t("success.updated"));
 
           // Gestion des traductions pour name et description
           try {
@@ -564,15 +564,12 @@ export default function PresaleArtworkForm({
             router.back();
           }
         } else {
-          error(
-            result.message ||
-              "Erreur lors de la mise à jour de l'œuvre en prévente"
-          );
+          showError(result.message || t("errors.updateError"));
         }
       }
     } catch (error: any) {
       console.error("Erreur lors de la soumission:", error);
-      error("Une erreur est survenue");
+      showError(t("errors.submitError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -591,13 +588,13 @@ export default function PresaleArtworkForm({
           "image/webp",
         ];
         if (!validTypes.includes(file.type)) {
-          error("Format non supporté. Utilisez JPEG, PNG, GIF ou WebP");
+          showError(t("errors.unsupportedFormat"));
           return;
         }
 
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (file.size > maxSize) {
-          error("L'image est trop volumineuse (max 10MB)");
+          showError(t("errors.imageTooLarge"));
           return;
         }
 
@@ -609,7 +606,7 @@ export default function PresaleArtworkForm({
         reader.readAsDataURL(file);
       }
     },
-    [error]
+    [showError, t]
   );
 
   const {
@@ -649,13 +646,13 @@ export default function PresaleArtworkForm({
           "image/webp",
         ];
         if (!validTypes.includes(file.type)) {
-          error("Format non supporté. Utilisez JPEG, PNG, GIF ou WebP");
+          showError(t("errors.unsupportedFormat"));
           return;
         }
 
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (file.size > maxSize) {
-          error("L'image est trop volumineuse (max 10MB)");
+          showError(t("errors.imageTooLarge"));
           return;
         }
 
@@ -663,7 +660,7 @@ export default function PresaleArtworkForm({
         setNewMockupName("");
       }
     },
-    [error, mockupFiles, newMockupName]
+    [showError, t, mockupFiles, newMockupName]
   );
 
   const {
@@ -695,7 +692,7 @@ export default function PresaleArtworkForm({
   };
 
   if (isLoading) {
-    return <LoadingSpinner message="Chargement des données..." />;
+    return <LoadingSpinner message={t("progress.loading")} />;
   }
 
   // Déterminer si le champ artiste doit être en lecture seule
@@ -712,7 +709,7 @@ export default function PresaleArtworkForm({
             field="name"
             label={
               <>
-                Nom de l'œuvre <span className="text-danger">*</span>
+                {t("fields.name")} <span className="text-danger">*</span>
               </>
             }
             errorMessage={errors.name?.message}
@@ -722,7 +719,7 @@ export default function PresaleArtworkForm({
               type="text"
               {...register("name")}
               className={`form-input ${errors.name ? "input-error" : ""}`}
-              placeholder="Ex: La Joconde, Les Tournesols..."
+              placeholder={t("fields.namePlaceholder")}
               disabled={isSubmitting}
             />
           </TranslationField>
@@ -731,7 +728,7 @@ export default function PresaleArtworkForm({
             entityType="PresaleArtwork"
             entityId={mode === "edit" ? presaleArtworkId || null : null}
             field="description"
-            label="Description"
+            label={t("fields.description")}
             errorMessage={errors.description?.message}
           >
             <textarea
@@ -740,7 +737,7 @@ export default function PresaleArtworkForm({
               className={`form-input ${
                 errors.description ? "input-error" : ""
               }`}
-              placeholder="Description de l'œuvre..."
+              placeholder={t("fields.descriptionPlaceholder")}
               rows={3}
               disabled={isSubmitting}
             />
@@ -748,7 +745,7 @@ export default function PresaleArtworkForm({
 
           <div className="form-group">
             <label htmlFor="artistId" className="form-label">
-              Artiste <span className="text-danger">*</span>
+              {t("fields.artist")} <span className="text-danger">*</span>
             </label>
             <select
               id="artistId"
@@ -757,7 +754,7 @@ export default function PresaleArtworkForm({
               disabled={isSubmitting || isArtistReadOnly}
               key={`artist-select-${artists.length}-${defaultArtistId || ""}`}
             >
-              <option value="">Sélectionnez un artiste</option>
+              <option value="">{t("fields.selectArtist")}</option>
               {artists.map((artist) => (
                 <option key={artist.id} value={artist.id.toString()}>
                   {artist.name} {artist.surname}
@@ -771,7 +768,7 @@ export default function PresaleArtworkForm({
 
           <div className="form-group">
             <label className="form-label">
-              Image principale <span className="text-danger">*</span>
+              {t("fields.mainImage")} <span className="text-danger">*</span>
             </label>
             {!imagePreview ? (
               <div className="mb-3">
@@ -823,13 +820,13 @@ export default function PresaleArtworkForm({
                       }}
                     >
                       {isMainImageDragActive
-                        ? "Déposez votre image ici..."
-                        : "Cliquez ou glissez-déposez votre image"}
+                        ? t("fields.dropHere")
+                        : t("fields.clickOrDrag")}
                     </p>
                     <p
                       style={{ margin: 0, fontSize: "0.75rem", color: "#666" }}
                     >
-                      Formats: JPEG, PNG, GIF, WebP (max 10MB)
+                      {t("fields.formats")}
                     </p>
                   </div>
                 </div>
@@ -850,7 +847,7 @@ export default function PresaleArtworkForm({
               >
                 <Image
                   src={imagePreview}
-                  alt="Aperçu de l'image"
+                  alt={t("fields.imagePreview")}
                   fill
                   style={{ objectFit: "cover" }}
                 />
@@ -872,7 +869,7 @@ export default function PresaleArtworkForm({
                   }}
                   disabled={isSubmitting || uploadingMainImage}
                 >
-                  ✕ Supprimer
+                  ✕ {t("fields.remove")}
                 </button>
                 {uploadingMainImage && (
                   <div
@@ -890,7 +887,7 @@ export default function PresaleArtworkForm({
                       zIndex: 10,
                     }}
                   >
-                    Upload en cours...
+                    {t("fields.uploading")}
                   </div>
                 )}
               </div>
@@ -902,14 +899,14 @@ export default function PresaleArtworkForm({
 
           <div className="form-group">
             <label htmlFor="price" className="form-label">
-              Prix (€)
+              {t("fields.price")}
             </label>
             <input
               id="price"
               type="text"
               {...register("price")}
               className={`form-input ${errors.price ? "input-error" : ""}`}
-              placeholder="Ex: 1500"
+              placeholder={t("fields.pricePlaceholder")}
               disabled={isSubmitting}
             />
             {errors.price && (
@@ -918,11 +915,11 @@ export default function PresaleArtworkForm({
           </div>
 
           <div className="form-group">
-            <label className="form-label">Dimensions (cm)</label>
+            <label className="form-label">{t("fields.dimensions")}</label>
             <div className="d-flex gap-sm">
               <div style={{ flex: 1 }}>
                 <label htmlFor="width" className="form-label">
-                  Largeur
+                  {t("fields.width")}
                 </label>
                 <input
                   id="width"
@@ -931,7 +928,7 @@ export default function PresaleArtworkForm({
                   step="1"
                   {...register("width")}
                   className={`form-input ${errors.width ? "input-error" : ""}`}
-                  placeholder="Ex: 50"
+                  placeholder={t("fields.widthPlaceholder")}
                   disabled={isSubmitting}
                 />
                 {errors.width && (
@@ -940,7 +937,7 @@ export default function PresaleArtworkForm({
               </div>
               <div style={{ flex: 1 }}>
                 <label htmlFor="height" className="form-label">
-                  Hauteur
+                  {t("fields.height")}
                 </label>
                 <input
                   id="height"
@@ -949,7 +946,7 @@ export default function PresaleArtworkForm({
                   step="1"
                   {...register("height")}
                   className={`form-input ${errors.height ? "input-error" : ""}`}
-                  placeholder="Ex: 70"
+                  placeholder={t("fields.heightPlaceholder")}
                   disabled={isSubmitting}
                 />
                 {errors.height && (
@@ -958,17 +955,17 @@ export default function PresaleArtworkForm({
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Dimensions en centimètres (optionnel)
+              {t("fields.dimensionsNote")}
             </p>
           </div>
 
           {/* Section mockups masquée temporairement */}
           <div className="form-group" style={{ display: "none" }}>
-            <label className="form-label">URLs des mockups</label>
+            <label className="form-label">{t("fields.mockups")}</label>
             <div className="d-flex gap-sm mb-3">
               <div style={{ flex: 1 }}>
                 <label htmlFor="newMockupName" className="form-label">
-                  Nom du mockup (optionnel)
+                  {t("fields.mockupName")}
                 </label>
                 <input
                   id="newMockupName"
@@ -976,7 +973,7 @@ export default function PresaleArtworkForm({
                   value={newMockupName}
                   onChange={(e) => setNewMockupName(e.target.value)}
                   className="form-input"
-                  placeholder="Nom du mockup"
+                  placeholder={t("fields.mockupNamePlaceholder")}
                   disabled={isSubmitting}
                 />
               </div>
@@ -1007,18 +1004,18 @@ export default function PresaleArtworkForm({
                 <Camera size={24} color="#666" />
                 <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 600 }}>
                   {isMockupDragActive
-                    ? "Déposez votre mockup ici..."
-                    : "Cliquez ou glissez-déposez un mockup"}
+                    ? t("fields.dropMockupHere")
+                    : t("fields.clickOrDragMockup")}
                 </p>
                 <p style={{ margin: 0, fontSize: "0.75rem", color: "#666" }}>
-                  Formats: JPEG, PNG, GIF, WebP (max 10MB)
+                  {t("fields.formats")}
                 </p>
               </div>
             </div>
 
             <div className="mockup-list mt-3">
               {mockupUrls.length === 0 && mockupFiles.length === 0 ? (
-                <p className="text-xs text-gray-500">Aucun mockup ajouté</p>
+                <p className="text-xs text-gray-500">{t("fields.noMockup")}</p>
               ) : (
                 <div className="d-flex flex-wrap gap-2 mt-2">
                   {mockupUrls.map((mockup, index) => (
@@ -1057,7 +1054,7 @@ export default function PresaleArtworkForm({
                           padding: "2px",
                           borderRadius: "50%",
                         }}
-                        aria-label="Supprimer le mockup"
+                        aria-label={t("fields.removeMockup")}
                         disabled={isSubmitting}
                       >
                         <X size={14} />
@@ -1135,7 +1132,7 @@ export default function PresaleArtworkForm({
                             padding: "2px",
                             borderRadius: "50%",
                           }}
-                          aria-label="Supprimer le mockup"
+                          aria-label={t("fields.removeMockup")}
                           disabled={isSubmitting || isUploading}
                         >
                           <X size={14} />
@@ -1167,7 +1164,7 @@ export default function PresaleArtworkForm({
         isOpen={showProgressModal}
         steps={progressSteps}
         currentError={progressError}
-        title="Création de l'œuvre en prévente"
+        title={t("progress.creating")}
         onClose={() => {
           if (progressError) {
             setShowProgressModal(false);
@@ -1183,7 +1180,7 @@ export default function PresaleArtworkForm({
           className="btn btn-secondary btn-medium"
           disabled={isSubmitting}
         >
-          Annuler
+          {t("buttons.cancel")}
         </button>
         <button
           type="submit"
@@ -1194,13 +1191,13 @@ export default function PresaleArtworkForm({
             <>
               <LoadingSpinner size="small" message="" inline />
               {mode === "create"
-                ? "Création en cours..."
-                : "Mise à jour en cours..."}
+                ? t("buttons.creating")
+                : t("buttons.updating")}
             </>
           ) : mode === "create" ? (
-            "Créer l'œuvre"
+            t("buttons.create")
           ) : (
-            "Mettre à jour l'œuvre"
+            t("buttons.update")
           )}
         </button>
       </div>

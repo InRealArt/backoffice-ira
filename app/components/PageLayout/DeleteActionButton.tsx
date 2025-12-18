@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import LoadingSpinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 import Modal from "@/app/components/Common/Modal";
 
@@ -20,15 +21,22 @@ export function DeleteActionButton({
   onDelete,
   isDeleting = false,
   disabled = false,
-  itemName = "cet élément",
-  confirmTitle = "Confirmation de suppression",
+  itemName,
+  confirmTitle,
   confirmMessage,
-  buttonText = "Supprimer",
+  buttonText,
   buttonSize = "small",
   className = "",
 }: DeleteActionButtonProps) {
+  const t = useTranslations("common");
+  const tDelete = useTranslations("common.deleteConfirm");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Utiliser les traductions par défaut si non fournies
+  const defaultItemName = itemName || tDelete("defaultItemName");
+  const defaultConfirmTitle = confirmTitle || tDelete("title");
+  const defaultButtonText = buttonText || t("delete");
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -57,7 +65,7 @@ export function DeleteActionButton({
 
   const defaultMessage =
     confirmMessage ||
-    `Êtes-vous sûr de vouloir supprimer ${itemName} ? Cette action est irréversible.`;
+    tDelete("message", { itemName: defaultItemName });
 
   const isButtonDisabled = disabled || isDeleting || isProcessing;
 
@@ -71,11 +79,11 @@ export function DeleteActionButton({
         {isDeleting || isProcessing ? (
           <LoadingSpinner size="small" message="" inline />
         ) : (
-          buttonText
+          defaultButtonText
         )}
       </button>
 
-      <Modal isOpen={isModalOpen} onClose={handleCancel} title={confirmTitle}>
+      <Modal isOpen={isModalOpen} onClose={handleCancel} title={defaultConfirmTitle}>
         <div className="flex flex-col gap-4">
           <p className="text-red-600 text-base leading-relaxed">
             {defaultMessage}
@@ -90,7 +98,7 @@ export function DeleteActionButton({
               }}
               disabled={isProcessing}
             >
-              Annuler
+              {t("cancel")}
             </button>
             <button
               className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
@@ -103,10 +111,10 @@ export function DeleteActionButton({
               {isProcessing ? (
                 <>
                   <LoadingSpinner size="small" message="" inline />
-                  <span>Suppression...</span>
+                  <span>{tDelete("deleting")}</span>
                 </>
               ) : (
-                "Confirmer la suppression"
+                tDelete("confirmButton")
               )}
             </button>
           </div>

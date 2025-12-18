@@ -5,11 +5,15 @@ import { getAllPresaleArtworks } from "@/lib/actions/presale-artwork-actions";
 import PresaleArtworksClient from "@/app/(admin)/landing/presaleArtworks/PresaleArtworksClient";
 import { loadPresaleArtworksSearchParams } from "@/app/(admin)/landing/presaleArtworks/searchParams";
 import type { SearchParams } from "nuqs/server";
+import { getTranslations } from "next-intl/server";
 
-export const metadata = {
-  title: "Mes œuvres | Site web InRealArt",
-  description: "Gérez vos œuvres en prévente pour le site web InRealArt",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("art.myArtworksPage");
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
 type PageProps = {
   searchParams: Promise<SearchParams>;

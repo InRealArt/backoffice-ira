@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   UseFormRegister,
   FieldErrors,
@@ -53,6 +54,7 @@ export default function DynamicFormList<T extends Record<string, any>>({
   itemLabel,
   className = "",
 }: DynamicFormListProps<T>) {
+  const t = useTranslations("common");
   const [itemErrors, setItemErrors] = useState<
     Record<number, Record<string, string>>
   >({});
@@ -408,7 +410,7 @@ export default function DynamicFormList<T extends Record<string, any>>({
 
         {items.length === 0 && (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-            <p className="text-sm">Aucun élément ajouté</p>
+            <p className="text-sm">{t("noItemsAdded")}</p>
           </div>
         )}
       </div>
@@ -421,7 +423,7 @@ export default function DynamicFormList<T extends Record<string, any>>({
           className="mt-4"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Ajouter {title.toLowerCase()}
+          {t("add")} {title}
         </Button>
       )}
     </div>

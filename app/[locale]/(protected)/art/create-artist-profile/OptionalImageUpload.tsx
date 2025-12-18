@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import { Camera, X } from "lucide-react";
@@ -24,6 +25,7 @@ export default function OptionalImageUpload({
   error,
   allowDelete = false,
 }: OptionalImageUploadProps) {
+  const t = useTranslations("art.imageUpload");
   const [localPreview, setLocalPreview] = useState<string | null>(
     previewUrl || null
   );
@@ -50,7 +52,7 @@ export default function OptionalImageUpload({
           "image/webp",
         ];
         if (!validTypes.includes(file.type)) {
-          setLocalError("Format d'image non supporté");
+          setLocalError(t("errors.unsupportedFormat"));
           onFileSelect(null);
           return;
         }
@@ -58,7 +60,7 @@ export default function OptionalImageUpload({
         // Vérifier la taille (max 10MB)
         const maxSize = 10 * 1024 * 1024;
         if (file.size > maxSize) {
-          setLocalError("L'image est trop volumineuse (max 10MB)");
+          setLocalError(t("errors.imageTooLarge"));
           onFileSelect(null);
           return;
         }
@@ -127,7 +129,7 @@ export default function OptionalImageUpload({
         >
           <Image
             src={displayPreview}
-            alt="Aperçu de l'image"
+            alt={t("previewImage")}
             fill
             style={{ objectFit: "cover" }}
           />
@@ -184,11 +186,11 @@ export default function OptionalImageUpload({
             <Camera size={24} color="#666" />
             <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 500 }}>
               {isDragActive
-                ? "Déposez votre image ici..."
-                : "Cliquez ou glissez-déposez une image"}
+                ? t("dropImageHere")
+                : t("clickOrDragImage")}
             </p>
             <p style={{ margin: 0, fontSize: "0.75rem", color: "#666" }}>
-              Formats: JPEG, PNG, GIF, WebP (max 10MB)
+              {t("formats")}
             </p>
           </div>
         </div>

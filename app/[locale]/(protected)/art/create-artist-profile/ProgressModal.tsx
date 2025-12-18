@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { X } from 'lucide-react'
 
 interface ProgressStep {
@@ -16,7 +17,10 @@ interface ProgressModalProps {
   title?: string
 }
 
-export default function ProgressModal({ isOpen, steps, currentError, onClose, title = 'Création du profil artiste' }: ProgressModalProps) {
+export default function ProgressModal({ isOpen, steps, currentError, onClose, title }: ProgressModalProps) {
+  const t = useTranslations('art.progressModal')
+  const defaultTitle = title || t('defaultTitle')
+  
   if (!isOpen) return null
 
   return (
@@ -68,13 +72,13 @@ export default function ProgressModal({ isOpen, steps, currentError, onClose, ti
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent'
             }}
-            aria-label="Fermer"
+            aria-label={t('close')}
           >
             <X size={20} color="#6b7280" />
           </button>
         )}
         <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.5rem', fontWeight: 'bold' }}>
-          {title}
+          {defaultTitle}
         </h2>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -155,7 +159,7 @@ export default function ProgressModal({ isOpen, steps, currentError, onClose, ti
               fontSize: '0.875rem'
             }}
           >
-            <strong>Erreur :</strong> {currentError}
+            <strong>{t('error')}</strong> {currentError}
             {onClose && (
               <button
                 onClick={onClose}
@@ -179,7 +183,7 @@ export default function ProgressModal({ isOpen, steps, currentError, onClose, ti
                   e.currentTarget.style.backgroundColor = '#dc2626'
                 }}
               >
-                Fermer
+                {t('close')}
               </button>
             )}
           </div>
