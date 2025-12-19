@@ -892,6 +892,7 @@ model PresaleArtwork {
   price        Int?
   imageUrl     String   @unique
   mockupUrls   Json     @default("[]")
+  isSold       Boolean  @default(false)
   createdAt    DateTime @default(now())
   artist       Artist   @relation(fields: [artistId], references: [id])
 

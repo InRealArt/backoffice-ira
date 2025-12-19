@@ -39,6 +39,7 @@ const createPresaleArtworkSchema = (t: (key: string) => string) =>
     price: z.string().optional(),
     width: z.string().optional(),
     height: z.string().optional(),
+    isSold: z.boolean().optional().default(false),
   });
 
 type PresaleArtworkFormValues = z.infer<
@@ -159,6 +160,7 @@ export default function PresaleArtworkForm({
       description: "",
       width: "",
       height: "",
+      isSold: false,
     },
   });
 
@@ -216,6 +218,7 @@ export default function PresaleArtworkForm({
             setValue("description", presaleArtwork.description || "");
             setValue("width", presaleArtwork.width?.toString() || "");
             setValue("height", presaleArtwork.height?.toString() || "");
+            setValue("isSold", presaleArtwork.isSold ?? false);
             setImagePreview(presaleArtwork.imageUrl);
 
             // Initialiser les URLs de mockups
@@ -494,6 +497,7 @@ export default function PresaleArtworkForm({
           width: formattedWidth,
           height: formattedHeight,
           mockupUrls: JSON.stringify(finalMockupUrls),
+          isSold: data.isSold ?? false,
         });
 
         if (result.success) {
@@ -538,6 +542,7 @@ export default function PresaleArtworkForm({
           width: formattedWidth,
           height: formattedHeight,
           mockupUrls: JSON.stringify(finalMockupUrls),
+          isSold: data.isSold ?? false,
         });
 
         if (result.success) {
@@ -699,6 +704,9 @@ export default function PresaleArtworkForm({
   // En mode "edit" avec defaultArtistId, le champ est en lecture seule (page art/presale-artworks/[id]/edit)
   const isArtistReadOnly = !!defaultArtistId && mode === "edit";
 
+  // Surveiller la valeur de isSold pour le toggle switch
+  const isSold = watch("isSold") ?? false;
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="form-container">
       <div className="form-card">
@@ -837,59 +845,149 @@ export default function PresaleArtworkForm({
             {imagePreview && (
               <div
                 style={{
-                  position: "relative",
-                  width: "200px",
-                  height: "200px",
-                  borderRadius: "8px",
-                  overflow: "hidden",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "1rem",
                   marginTop: "1rem",
                 }}
               >
-                <Image
-                  src={imagePreview}
-                  alt={t("fields.imagePreview")}
-                  fill
-                  style={{ objectFit: "cover" }}
-                />
-                <button
-                  type="button"
-                  onClick={handleRemoveMainImage}
+                <div
                   style={{
-                    position: "absolute",
-                    top: "8px",
-                    right: "8px",
-                    background: "rgba(0, 0, 0, 0.7)",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    padding: "4px 8px",
-                    cursor: "pointer",
-                    fontSize: "12px",
-                    zIndex: 10,
+                    position: "relative",
+                    width: "200px",
+                    height: "200px",
+                    borderRadius: "8px",
+                    overflow: "hidden",
                   }}
-                  disabled={isSubmitting || uploadingMainImage}
                 >
-                  ✕ {t("fields.remove")}
-                </button>
-                {uploadingMainImage && (
-                  <div
+                  <Image
+                    src={imagePreview}
+                    alt={t("fields.imagePreview")}
+                    fill
+                    style={{ objectFit: "cover" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveMainImage}
                     style={{
                       position: "absolute",
-                      bottom: "8px",
-                      left: "8px",
+                      top: "8px",
                       right: "8px",
                       background: "rgba(0, 0, 0, 0.7)",
                       color: "white",
-                      padding: "4px 8px",
+                      border: "none",
                       borderRadius: "4px",
+                      padding: "4px 8px",
+                      cursor: "pointer",
                       fontSize: "12px",
-                      textAlign: "center",
                       zIndex: 10,
                     }}
+                    disabled={isSubmitting || uploadingMainImage}
                   >
-                    {t("fields.uploading")}
+                    ✕ {t("fields.remove")}
+                  </button>
+                  {uploadingMainImage && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "8px",
+                        left: "8px",
+                        right: "8px",
+                        background: "rgba(0, 0, 0, 0.7)",
+                        color: "white",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        textAlign: "center",
+                        zIndex: 10,
+                      }}
+                    >
+                      {t("fields.uploading")}
+                    </div>
+                  )}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
+                    paddingTop: "0.5rem",
+                  }}
+                >
+                  <label
+                    className="form-label"
+                    style={{ marginBottom: "0.5rem" }}
+                  >
+                    {t("fields.isSold") || "Statut de vente"}
+                  </label>
+                  <div className="d-flex align-items-center gap-md">
+                    <span
+                      className={!isSold ? "text-primary" : "text-muted"}
+                      style={{ fontWeight: !isSold ? "bold" : "normal" }}
+                    >
+                      {t("fields.notSold") || "Non vendu"}
+                    </span>
+                    <label
+                      style={{
+                        position: "relative",
+                        display: "inline-block",
+                        width: "60px",
+                        height: "30px",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        {...register("isSold")}
+                        disabled={isSubmitting}
+                        style={{ opacity: 0, width: 0, height: 0 }}
+                      />
+                      <span
+                        style={{
+                          position: "absolute",
+                          cursor: "pointer",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          backgroundColor: isSold ? "#4f46e5" : "#ccc",
+                          borderRadius: "34px",
+                          transition: "0.4s",
+                        }}
+                      >
+                        <span
+                          style={{
+                            position: "absolute",
+                            content: '""',
+                            height: "22px",
+                            width: "22px",
+                            left: "4px",
+                            bottom: "4px",
+                            backgroundColor: "white",
+                            borderRadius: "50%",
+                            transition: "0.4s",
+                            transform: isSold
+                              ? "translateX(30px)"
+                              : "translateX(0)",
+                          }}
+                        ></span>
+                      </span>
+                    </label>
+                    <span
+                      className={isSold ? "text-primary" : "text-muted"}
+                      style={{ fontWeight: isSold ? "bold" : "normal" }}
+                    >
+                      {t("fields.sold") || "Vendu"}
+                    </span>
                   </div>
-                )}
+                  {errors.isSold && (
+                    <p
+                      className="form-error"
+                      style={{ fontSize: "0.75rem", margin: 0 }}
+                    >
+                      {errors.isSold.message}
+                    </p>
+                  )}
+                </div>
               </div>
             )}
             {errors.imageUrl && (
