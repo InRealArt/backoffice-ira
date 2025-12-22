@@ -317,6 +317,43 @@
       "deleteConfirm": "Êtes-vous sûr de vouloir supprimer l'œuvre \"{name}\" ? Cette action est irréversible.",
       "deleteItemName": "l'œuvre \"{name}\""
     },
+    "displayOrderPage": {
+      "title": "Ordre d'affichage | Mes œuvres",
+      "description": "Réorganisez l'ordre d'affichage de vos œuvres",
+      "manager": {
+        "backButton": "Retour à la liste des œuvres",
+        "title": "Ordre d'affichage sur site web",
+        "subtitle": "Réorganisez vos œuvres en les glissant-déposant. Cet ordre sera utilisé pour l'affichage sur une autre application.",
+        "resetButton": "Réinitialiser",
+        "emptyState": "Aucune œuvre à réordonner",
+        "emptyMessage": "Aucune œuvre à afficher",
+        "saving": "Enregistrement de l'ordre...",
+        "success": {
+          "updated": "Ordre d'affichage mis à jour avec succès",
+          "reset": "Ordre d'affichage réinitialisé avec succès"
+        },
+        "errors": {
+          "update": "Erreur lors de la mise à jour de l'ordre",
+          "updateGeneric": "Une erreur est survenue lors de la mise à jour",
+          "reset": "Erreur lors de la réinitialisation",
+          "resetGeneric": "Une erreur est survenue lors de la réinitialisation"
+        },
+        "resetModal": {
+          "title": "Réinitialiser l'ordre d'affichage",
+          "message": "Êtes-vous sûr de vouloir réinitialiser l'ordre d'affichage ? L'ordre actuel sera perdu.",
+          "cancel": "Annuler",
+          "confirm": "Confirmer",
+          "resetting": "Réinitialisation..."
+        },
+        "artworkItem": {
+          "order": "Ordre",
+          "artist": "Artiste",
+          "dimensions": "Dimensions",
+          "price": "Prix",
+          "notDefined": "Non défini"
+        }
+      }
+    },
     "imageUpload": {
       "profilePhoto": "Photo de profil",
       "preview": "Aperçu de la photo",
@@ -336,6 +373,98 @@
       "defaultTitle": "Création du profil artiste",
       "close": "Fermer",
       "error": "Erreur :"
+    },
+    "bulkAddPage": {
+      "title": "Ajout en masse d'œuvres en prévente | Site web InRealArt",
+      "description": "Ajoutez plusieurs œuvres en prévente en une seule fois",
+      "form": {
+        "title": "Ajout en masse d'œuvres en prévente",
+        "subtitle": "Ajoutez plusieurs œuvres en prévente en une seule fois pour un artiste sélectionné.",
+        "sectionTitle": "Sélection de l'artiste et du nombre d'œuvres",
+        "artistLabel": "Artiste",
+        "selectArtist": "Sélectionnez un artiste",
+        "numberOfArtworksLabel": "Nombre d'œuvres à créer",
+        "numberOfArtworksPlaceholder": "Ex: 5",
+        "maxArtworks": "Maximum 50 œuvres par lot",
+        "cancel": "Annuler",
+        "validate": "Valider",
+        "validating": "Validation en cours...",
+        "back": "Retour",
+        "save": "Enregistrer",
+        "saving": "Enregistrement en cours...",
+        "dataEntryTitle": "Saisie des données pour {artistName}",
+        "artworksToCreate": "{count} œuvre à créer",
+        "artworksToCreatePlural": "{count} œuvres à créer",
+        "creationTitle": "Création des œuvres",
+        "uploadProgress": "Upload de l'œuvre {current} / {total}...",
+        "validation": {
+          "artistRequired": "Veuillez sélectionner un artiste",
+          "numberRequired": "Le nombre d'œuvres est requis",
+          "numberRange": "Le nombre doit être entre 1 et 50",
+          "nameRequired": "Le nom est requis",
+          "imageRequired": "Une image est requise (fichier ou URL)",
+          "imageUrlInvalid": "L'URL de l'image doit être valide",
+          "pricePositive": "Le prix doit être un nombre positif",
+          "widthPositive": "La largeur doit être un nombre positif",
+          "heightPositive": "La hauteur doit être un nombre positif"
+        },
+        "errors": {
+          "artistNotFound": "Artiste non trouvé",
+          "noArtistSelected": "Aucun artiste sélectionné",
+          "correctErrors": "Veuillez corriger les erreurs dans les œuvres {artworks}",
+          "folderError": "Impossible de créer le répertoire Firebase",
+          "uploadError": "Erreur lors de l'upload de l'image pour l'œuvre {index}",
+          "noImage": "Aucune image pour l'œuvre {index}",
+          "creationError": "Erreur lors de la création des œuvres",
+          "saveError": "Une erreur est survenue lors de l'enregistrement"
+        },
+        "success": {
+          "created": "{count} œuvre créée avec succès",
+          "createdPlural": "{count} œuvres créées avec succès"
+        },
+        "progress": {
+          "folderCheck": "Vérification du répertoire Firebase",
+          "upload": "Upload des images",
+          "creation": "Création des œuvres",
+          "translation": "Traduction des descriptions"
+        }
+      },
+      "table": {
+        "title": "Saisie des données des œuvres",
+        "artworksCount": "{count} œuvre",
+        "artworksCountPlural": "{count} œuvres",
+        "allValid": "Toutes les données sont valides",
+        "errorsToFix": "{count} erreur à corriger",
+        "errorsToFixPlural": "{count} erreurs à corriger",
+        "errorsTitle": "Erreurs à corriger :",
+        "artworkNumber": "Œuvre {number} :",
+        "columns": {
+          "number": "#",
+          "name": "Nom de l'œuvre *",
+          "description": "Description",
+          "height": "Hauteur (cm)",
+          "width": "Largeur (cm)",
+          "price": "Prix (€)",
+          "image": "Image *"
+        },
+        "placeholders": {
+          "name": "Nom de l'œuvre",
+          "description": "Description...",
+          "height": "70",
+          "width": "50",
+          "price": "1500"
+        }
+      },
+      "imageUpload": {
+        "preview": "Aperçu artwork {index}",
+        "dropImage": "Déposez l'image...",
+        "clickOrDrag": "Cliquez ou glissez-déposez",
+        "formats": "JPEG, PNG, GIF, WebP (max 10MB)",
+        "errors": {
+          "unsupportedFormat": "Format non supporté. Utilisez JPEG, PNG, GIF ou WebP",
+          "imageTooLarge": "L'image est trop volumineuse (max 10MB)"
+        }
+      }
     }
   },
   "navigation": {

@@ -317,6 +317,43 @@
       "deleteConfirm": "Are you sure you want to delete the artwork \"{name}\"? This action is irreversible.",
       "deleteItemName": "the artwork \"{name}\""
     },
+    "displayOrderPage": {
+      "title": "Display Order | My Artworks",
+      "description": "Reorganize the display order of your artworks",
+      "manager": {
+        "backButton": "Back to artworks list",
+        "title": "Display order on website",
+        "subtitle": "Reorganize your artworks by dragging and dropping them. This order will be used for display on another application.",
+        "resetButton": "Reset",
+        "emptyState": "No artworks to reorder",
+        "emptyMessage": "No artworks to display",
+        "saving": "Saving order...",
+        "success": {
+          "updated": "Display order updated successfully",
+          "reset": "Display order reset successfully"
+        },
+        "errors": {
+          "update": "Error updating order",
+          "updateGeneric": "An error occurred while updating",
+          "reset": "Error resetting",
+          "resetGeneric": "An error occurred while resetting"
+        },
+        "resetModal": {
+          "title": "Reset display order",
+          "message": "Are you sure you want to reset the display order? The current order will be lost.",
+          "cancel": "Cancel",
+          "confirm": "Confirm",
+          "resetting": "Resetting..."
+        },
+        "artworkItem": {
+          "order": "Order",
+          "artist": "Artist",
+          "dimensions": "Dimensions",
+          "price": "Price",
+          "notDefined": "Not defined"
+        }
+      }
+    },
     "imageUpload": {
       "profilePhoto": "Profile Photo",
       "preview": "Photo preview",
@@ -336,6 +373,98 @@
       "defaultTitle": "Creating artist profile",
       "close": "Close",
       "error": "Error:"
+    },
+    "bulkAddPage": {
+      "title": "Bulk Add Presale Artworks | InRealArt Website",
+      "description": "Add multiple presale artworks at once",
+      "form": {
+        "title": "Bulk Add Presale Artworks",
+        "subtitle": "Add multiple presale artworks at once for a selected artist.",
+        "sectionTitle": "Artist and number of artworks selection",
+        "artistLabel": "Artist",
+        "selectArtist": "Select an artist",
+        "numberOfArtworksLabel": "Number of artworks to create",
+        "numberOfArtworksPlaceholder": "Ex: 5",
+        "maxArtworks": "Maximum 50 artworks per batch",
+        "cancel": "Cancel",
+        "validate": "Validate",
+        "validating": "Validating...",
+        "back": "Back",
+        "save": "Save",
+        "saving": "Saving...",
+        "dataEntryTitle": "Data entry for {artistName}",
+        "artworksToCreate": "{count} artwork to create",
+        "artworksToCreatePlural": "{count} artworks to create",
+        "creationTitle": "Creating artworks",
+        "uploadProgress": "Uploading artwork {current} / {total}...",
+        "validation": {
+          "artistRequired": "Please select an artist",
+          "numberRequired": "Number of artworks is required",
+          "numberRange": "Number must be between 1 and 50",
+          "nameRequired": "Name is required",
+          "imageRequired": "An image is required (file or URL)",
+          "imageUrlInvalid": "Image URL must be valid",
+          "pricePositive": "Price must be a positive number",
+          "widthPositive": "Width must be a positive number",
+          "heightPositive": "Height must be a positive number"
+        },
+        "errors": {
+          "artistNotFound": "Artist not found",
+          "noArtistSelected": "No artist selected",
+          "correctErrors": "Please correct errors in artworks {artworks}",
+          "folderError": "Unable to create Firebase folder",
+          "uploadError": "Error uploading image for artwork {index}",
+          "noImage": "No image for artwork {index}",
+          "creationError": "Error creating artworks",
+          "saveError": "An error occurred while saving"
+        },
+        "success": {
+          "created": "{count} artwork created successfully",
+          "createdPlural": "{count} artworks created successfully"
+        },
+        "progress": {
+          "folderCheck": "Checking Firebase folder",
+          "upload": "Uploading images",
+          "creation": "Creating artworks",
+          "translation": "Translating descriptions"
+        }
+      },
+      "table": {
+        "title": "Artwork data entry",
+        "artworksCount": "{count} artwork",
+        "artworksCountPlural": "{count} artworks",
+        "allValid": "All data is valid",
+        "errorsToFix": "{count} error to fix",
+        "errorsToFixPlural": "{count} errors to fix",
+        "errorsTitle": "Errors to fix:",
+        "artworkNumber": "Artwork {number}:",
+        "columns": {
+          "number": "#",
+          "name": "Artwork name *",
+          "description": "Description",
+          "height": "Height (cm)",
+          "width": "Width (cm)",
+          "price": "Price (€)",
+          "image": "Image *"
+        },
+        "placeholders": {
+          "name": "Artwork name",
+          "description": "Description...",
+          "height": "70",
+          "width": "50",
+          "price": "1500"
+        }
+      },
+      "imageUpload": {
+        "preview": "Artwork {index} preview",
+        "dropImage": "Drop image...",
+        "clickOrDrag": "Click or drag and drop",
+        "formats": "JPEG, PNG, GIF, WebP (max 10MB)",
+        "errors": {
+          "unsupportedFormat": "Unsupported format. Use JPEG, PNG, GIF or WebP",
+          "imageTooLarge": "Image is too large (max 10MB)"
+        }
+      }
     }
   },
   "navigation": {

@@ -9,9 +9,10 @@ import {
 import { updateDisplayOrder } from "@/lib/actions/display-order-actions";
 import { useToast } from "@/app/components/Toast/ToastContext";
 import { RotateCcw, ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { resetDisplayOrderForArtist } from "@/lib/actions/display-order-actions";
 import Modal from "@/app/components/Common/Modal";
+import { useTranslations } from "next-intl";
 import styles from "./DisplayOrderManager.module.scss";
 
 interface PresaleArtwork {
@@ -48,6 +49,7 @@ export default function DisplayOrderManager({
   const [isResetting, setIsResetting] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const { success, error } = useToast();
+  const t = useTranslations("art.displayOrderPage.manager");
 
   // Trier les œuvres par displayOrder, puis par id
   useEffect(() => {
@@ -81,18 +83,22 @@ export default function DisplayOrderManager({
     ];
 
     try {
-      const result = await updateDisplayOrder("presaleArtwork", updates, pathsToRevalidate);
+      const result = await updateDisplayOrder(
+        "presaleArtwork",
+        updates,
+        pathsToRevalidate
+      );
 
       if (result.success) {
-        success("Ordre d'affichage mis à jour avec succès");
+        success(t("success.updated"));
       } else {
-        error(result.message || "Erreur lors de la mise à jour de l'ordre");
+        error(result.message || t("errors.update"));
         // Restaurer l'ordre précédent en cas d'erreur
         setArtworks(initialArtworks);
       }
     } catch (err) {
       console.error("Erreur lors du réordonnancement:", err);
-      error("Une erreur est survenue lors de la mise à jour");
+      error(t("errors.updateGeneric"));
       setArtworks(initialArtworks);
     } finally {
       setIsSaving(false);
@@ -114,18 +120,21 @@ export default function DisplayOrderManager({
     ];
 
     try {
-      const result = await resetDisplayOrderForArtist(artistId, pathsToRevalidate);
+      const result = await resetDisplayOrderForArtist(
+        artistId,
+        pathsToRevalidate
+      );
 
       if (result.success) {
-        success("Ordre d'affichage réinitialisé avec succès");
+        success(t("success.reset"));
         // Recharger la page pour afficher le nouvel ordre
         window.location.reload();
       } else {
-        error(result.message || "Erreur lors de la réinitialisation");
+        error(result.message || t("errors.reset"));
       }
     } catch (err) {
       console.error("Erreur lors de la réinitialisation:", err);
-      error("Une erreur est survenue lors de la réinitialisation");
+      error(t("errors.resetGeneric"));
     } finally {
       setIsResetting(false);
     }
@@ -144,16 +153,13 @@ export default function DisplayOrderManager({
               type="button"
               onClick={() => router.push(backUrl)}
               className={styles.backButton}
-              aria-label="Retour à la liste des œuvres"
+              aria-label={t("backButton")}
             >
               <ArrowLeft size={20} />
             </button>
-            <h2 className={styles.title}>Ordre d'affichage sur site web</h2>
+            <h2 className={styles.title}>{t("title")}</h2>
           </div>
-          <p className={styles.subtitle}>
-            Réorganisez vos œuvres en les glissant-déposant. Cet ordre sera
-            utilisé pour l'affichage sur une autre application.
-          </p>
+          <p className={styles.subtitle}>{t("subtitle")}</p>
         </div>
         <div className={styles.actions}>
           <button
@@ -163,7 +169,7 @@ export default function DisplayOrderManager({
             className={styles.resetButton}
           >
             <RotateCcw size={16} />
-            Réinitialiser
+            {t("resetButton")}
           </button>
         </div>
       </div>
@@ -171,7 +177,7 @@ export default function DisplayOrderManager({
       <div className={styles.content}>
         {artworks.length === 0 ? (
           <div className={styles.emptyState}>
-            <p>Aucune œuvre à réordonner</p>
+            <p>{t("emptyState")}</p>
           </div>
         ) : (
           <SortableList
@@ -185,13 +191,13 @@ export default function DisplayOrderManager({
               />
             )}
             disabled={isSaving || isResetting}
-            emptyMessage="Aucune œuvre à afficher"
+            emptyMessage={t("emptyMessage")}
           />
         )}
 
         {isSaving && (
           <div className={styles.savingIndicator}>
-            <p>Enregistrement de l'ordre...</p>
+            <p>{t("saving")}</p>
           </div>
         )}
       </div>
@@ -199,13 +205,10 @@ export default function DisplayOrderManager({
       <Modal
         isOpen={isResetModalOpen}
         onClose={handleResetCancel}
-        title="Réinitialiser l'ordre d'affichage"
+        title={t("resetModal.title")}
       >
         <div className="flex flex-col gap-4">
-          <p className="text-base leading-relaxed">
-            Êtes-vous sûr de vouloir réinitialiser l'ordre d'affichage ? L'ordre
-            actuel sera perdu.
-          </p>
+          <p className="text-base leading-relaxed">{t("resetModal.message")}</p>
 
           <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-gray-200">
             <button
@@ -213,14 +216,16 @@ export default function DisplayOrderManager({
               onClick={handleResetCancel}
               disabled={isResetting}
             >
-              Annuler
+              {t("resetModal.cancel")}
             </button>
             <button
               className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               onClick={handleResetConfirm}
               disabled={isResetting}
             >
-              {isResetting ? "Réinitialisation..." : "Confirmer"}
+              {isResetting
+                ? t("resetModal.resetting")
+                : t("resetModal.confirm")}
             </button>
           </div>
         </div>

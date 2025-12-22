@@ -2,11 +2,16 @@ import { getAuthenticatedUserEmail } from "@/lib/auth-helpers";
 import { getBackofficeUserByEmail, getArtistById } from "@/lib/actions/prisma-actions";
 import { redirect } from "next/navigation";
 import BulkAddForm from "@/app/(admin)/landing/presaleArtworks/bulk-add/BulkAddForm";
+import { getTranslations } from "next-intl/server";
 
-export const metadata = {
-  title: "Ajout en masse d'œuvres en prévente | Site web InRealArt",
-  description: "Ajoutez plusieurs œuvres en prévente en une seule fois",
-};
+export async function generateMetadata() {
+  const t = await getTranslations("art.bulkAddPage");
+  
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
 export default async function ArtistBulkAddPage() {
   const userEmail = await getAuthenticatedUserEmail();

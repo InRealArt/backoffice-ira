@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import { Camera, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ImageUploadInputProps {
   onFileSelect: (file: File | null) => void;
@@ -20,6 +21,7 @@ export default function ImageUploadInput({
   disabled = false,
   artworkIndex,
 }: ImageUploadInputProps) {
+  const t = useTranslations("art.bulkAddPage.imageUpload");
   const [localPreview, setLocalPreview] = useState<string | null>(
     previewUrl || null
   );
@@ -44,14 +46,14 @@ export default function ImageUploadInput({
           "image/webp",
         ];
         if (!validTypes.includes(file.type)) {
-          setLocalError("Format non supporté. Utilisez JPEG, PNG, GIF ou WebP");
+          setLocalError(t("errors.unsupportedFormat"));
           onFileSelect(null);
           return;
         }
 
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (file.size > maxSize) {
-          setLocalError("L'image est trop volumineuse (max 10MB)");
+          setLocalError(t("errors.imageTooLarge"));
           onFileSelect(null);
           return;
         }
@@ -96,7 +98,7 @@ export default function ImageUploadInput({
           <div className="relative w-24 h-24 rounded border overflow-hidden">
             <Image
               src={displayPreview}
-              alt={`Aperçu artwork ${artworkIndex + 1}`}
+              alt={t("preview", { index: artworkIndex + 1 })}
               fill
               className="object-cover"
             />
@@ -128,11 +130,11 @@ export default function ImageUploadInput({
             <Camera size={20} className="text-gray-500" />
             <p className="text-xs text-gray-600">
               {isDragActive
-                ? "Déposez l'image..."
-                : "Cliquez ou glissez-déposez"}
+                ? t("dropImage")
+                : t("clickOrDrag")}
             </p>
             <p className="text-xs text-gray-400">
-              JPEG, PNG, GIF, WebP (max 10MB)
+              {t("formats")}
             </p>
           </div>
         </div>

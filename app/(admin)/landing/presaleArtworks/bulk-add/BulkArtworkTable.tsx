@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { ArtworkData } from "./BulkAddForm";
 import ImageUploadInput from "./ImageUploadInput";
 
@@ -37,6 +38,8 @@ export default function BulkArtworkTable({
   onDataChange,
   isSubmitting,
 }: BulkArtworkTableProps) {
+  const t = useTranslations("art.bulkAddPage.form");
+  const tTable = useTranslations("art.bulkAddPage.table");
   const [validationErrors, setValidationErrors] = useState<
     Record<number, string[]>
   >({});
@@ -61,37 +64,37 @@ export default function BulkArtworkTable({
     const errors: string[] = [];
 
     if (!artwork.name.trim()) {
-      errors.push("Le nom est requis");
+      errors.push(t("validation.nameRequired"));
     }
 
     if (!artwork.imageFile && !artwork.imageUrl) {
-      errors.push("Une image est requise");
+      errors.push(t("validation.imageRequired"));
     } else if (artwork.imageUrl && artwork.imageUrl.trim()) {
       try {
         new URL(artwork.imageUrl);
       } catch {
-        errors.push("L'URL de l'image doit être valide");
+        errors.push(t("validation.imageUrlInvalid"));
       }
     }
 
     if (artwork.price && artwork.price.trim()) {
       const price = parseFloat(artwork.price.replace(",", "."));
       if (isNaN(price) || price < 0) {
-        errors.push("Le prix doit être un nombre positif");
+        errors.push(t("validation.pricePositive"));
       }
     }
 
     if (artwork.width && artwork.width.trim()) {
       const width = parseInt(artwork.width);
       if (isNaN(width) || width <= 0) {
-        errors.push("La largeur doit être un nombre positif");
+        errors.push(t("validation.widthPositive"));
       }
     }
 
     if (artwork.height && artwork.height.trim()) {
       const height = parseInt(artwork.height);
       if (isNaN(height) || height <= 0) {
-        errors.push("La hauteur doit être un nombre positif");
+        errors.push(t("validation.heightPositive"));
       }
     }
 
@@ -127,20 +130,24 @@ export default function BulkArtworkTable({
     <div className="form-card">
       <div className="card-content">
         <div className="form-group">
-          <h3 className="form-title">Saisie des données des œuvres</h3>
+          <h3 className="form-title">{tTable("title")}</h3>
           <div className="d-flex justify-content-between align-items-center mb-3">
             <span className="text-sm text-text-secondary">
-              {artworksData.length} œuvre{artworksData.length > 1 ? "s" : ""} •
+              {artworksData.length > 1
+                ? tTable("artworksCountPlural", { count: artworksData.length })
+                : tTable("artworksCount", { count: artworksData.length })}{" "}
+              •
               {getTotalErrors() === 0 ? (
                 <span className="text-green-600 dark:text-green-400 ml-1">
                   <CheckCircle size={16} className="inline mr-1" />
-                  Toutes les données sont valides
+                  {tTable("allValid")}
                 </span>
               ) : (
                 <span className="text-red-600 dark:text-red-400 ml-1">
                   <AlertCircle size={16} className="inline mr-1" />
-                  {getTotalErrors()} erreur{getTotalErrors() > 1 ? "s" : ""} à
-                  corriger
+                  {getTotalErrors() > 1
+                    ? tTable("errorsToFixPlural", { count: getTotalErrors() })
+                    : tTable("errorsToFix", { count: getTotalErrors() })}
                 </span>
               )}
             </span>
@@ -151,13 +158,13 @@ export default function BulkArtworkTable({
           <table className="data-table">
             <thead>
               <tr>
-                <th className="w-[50px]">#</th>
-                <th>Nom de l'œuvre *</th>
-                <th>Description</th>
-                <th className="w-[100px]">Hauteur (cm)</th>
-                <th className="w-[100px]">Largeur (cm)</th>
-                <th className="w-[100px]">Prix (€)</th>
-                <th>Image *</th>
+                <th className="w-[50px]">{tTable("columns.number")}</th>
+                <th>{tTable("columns.name")}</th>
+                <th>{tTable("columns.description")}</th>
+                <th className="w-[100px]">{tTable("columns.height")}</th>
+                <th className="w-[100px]">{tTable("columns.width")}</th>
+                <th className="w-[100px]">{tTable("columns.price")}</th>
+                <th>{tTable("columns.image")}</th>
               </tr>
             </thead>
             <tbody>
@@ -180,11 +187,13 @@ export default function BulkArtworkTable({
                           updateArtwork(index, "name", e.target.value)
                         }
                         className={`form-input ${
-                          errors.some((e) => e.includes("nom"))
+                          errors.some(
+                            (e) => e.includes("nom") || e.includes("name")
+                          )
                             ? "input-error"
                             : ""
                         }`}
-                        placeholder="Nom de l'œuvre"
+                        placeholder={tTable("placeholders.name")}
                         disabled={isSubmitting}
                       />
                     </td>
@@ -196,7 +205,7 @@ export default function BulkArtworkTable({
                           updateArtwork(index, "description", e.target.value)
                         }
                         className="form-textarea"
-                        placeholder="Description..."
+                        placeholder={tTable("placeholders.description")}
                         rows={2}
                         disabled={isSubmitting}
                       />
@@ -212,11 +221,13 @@ export default function BulkArtworkTable({
                           updateArtwork(index, "height", e.target.value)
                         }
                         className={`form-input ${
-                          errors.some((e) => e.includes("hauteur"))
+                          errors.some(
+                            (e) => e.includes("hauteur") || e.includes("height")
+                          )
                             ? "input-error"
                             : ""
                         }`}
-                        placeholder="70"
+                        placeholder={tTable("placeholders.height")}
                         disabled={isSubmitting}
                       />
                     </td>
@@ -231,11 +242,13 @@ export default function BulkArtworkTable({
                           updateArtwork(index, "width", e.target.value)
                         }
                         className={`form-input ${
-                          errors.some((e) => e.includes("largeur"))
+                          errors.some(
+                            (e) => e.includes("largeur") || e.includes("width")
+                          )
                             ? "input-error"
                             : ""
                         }`}
-                        placeholder="50"
+                        placeholder={tTable("placeholders.width")}
                         disabled={isSubmitting}
                       />
                     </td>
@@ -248,11 +261,13 @@ export default function BulkArtworkTable({
                           updateArtwork(index, "price", e.target.value)
                         }
                         className={`form-input ${
-                          errors.some((e) => e.includes("prix"))
+                          errors.some(
+                            (e) => e.includes("prix") || e.includes("price")
+                          )
                             ? "input-error"
                             : ""
                         }`}
-                        placeholder="1500"
+                        placeholder={tTable("placeholders.price")}
                         disabled={isSubmitting}
                       />
                     </td>
@@ -290,7 +305,7 @@ export default function BulkArtworkTable({
           <div className="form-group">
             <div className="p-4 bg-background-light dark:bg-background-light border border-red-300 dark:border-red-700 rounded-md mt-4">
               <h5 className="text-red-600 dark:text-red-400 mb-3 text-base font-semibold m-0">
-                Erreurs à corriger :
+                {tTable("errorsTitle")}
               </h5>
               <div>
                 {Object.entries(validationErrors).map(
@@ -298,7 +313,9 @@ export default function BulkArtworkTable({
                     errors.length > 0 && (
                       <div key={index} className="mb-2">
                         <strong className="text-red-600 dark:text-red-400">
-                          Œuvre {parseInt(index) + 1} :
+                          {tTable("artworkNumber", {
+                            number: parseInt(index) + 1,
+                          })}
                         </strong>
                         <ul className="mt-1 ml-4 list-disc text-red-700 dark:text-red-300">
                           {errors.map((error, errorIndex) => (

@@ -257,12 +257,17 @@ export default function PresaleArtworksClient({
       width: "50px",
       render: (artwork) => <ImageThumbnail url={artwork.imageUrl} alt={t("thumbnail")} />,
     },
-    {
-      key: "order",
-      header: t("columns.order"),
-      width: "80px",
-      sortable: true,
-    },
+    // Exclure la colonne "order" en mode artiste
+    ...(isArtistMode
+      ? []
+      : [
+          {
+            key: "order",
+            header: t("columns.order"),
+            width: "80px",
+            sortable: true,
+          },
+        ]),
     {
       key: "displayOrder",
       header: t("columns.displayOrder"),
