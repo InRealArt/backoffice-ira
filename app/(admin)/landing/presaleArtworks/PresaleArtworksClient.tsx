@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Artist } from "@prisma/client";
-import { ArrowLeft, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, ArrowUpDown, BarChart3 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 // Type pour les artistes du filtre (retourné par getAllArtists)
@@ -36,6 +36,7 @@ import {
   DeleteActionButton,
   Column,
 } from "../../../components/PageLayout/index";
+import PresaleArtworkStatsModal from "@/app/components/PresaleArtwork/PresaleArtworkStatsModal";
 import styles from "../../../styles/list-components.module.scss";
 
 function ImageThumbnail({ url, alt }: { url: string; alt: string }) {
@@ -105,6 +106,9 @@ export default function PresaleArtworksClient({
 }: PresaleArtworksClientProps) {
   const router = useRouter();
   const [loadingArtworkId, setLoadingArtworkId] = useState<number | null>(null);
+  const [statsModalOpen, setStatsModalOpen] = useState(false);
+  const [selectedArtworkForStats, setSelectedArtworkForStats] =
+    useState<PresaleArtwork | null>(null);
   const t = useTranslations("art.presaleArtworks");
   const tCommon = useTranslations("common");
 
@@ -149,25 +153,30 @@ export default function PresaleArtworksClient({
   const handleDelete = async (artworkId: number): Promise<void> => {
     try {
       // Récupérer les infos de l'œuvre pour supprimer l'image Firebase
-      const artwork = presaleArtworks.find(a => a.id === artworkId)
-      
+      const artwork = presaleArtworks.find((a) => a.id === artworkId);
+
       if (!artwork) {
-        error(t("errors.artworkNotFound"))
-        return
+        error(t("errors.artworkNotFound"));
+        return;
       }
 
       // Supprimer l'image depuis Firebase Storage (côté client)
       try {
-        const { deletePresaleArtworkImage } = await import('@/lib/firebase/storage')
+        const { deletePresaleArtworkImage } = await import(
+          "@/lib/firebase/storage"
+        );
         await deletePresaleArtworkImage(
           artwork.artist.name,
           artwork.artist.surname,
           artwork.name
-        )
-        console.log('Image Firebase supprimée avec succès')
+        );
+        console.log("Image Firebase supprimée avec succès");
       } catch (firebaseError) {
         // Ne pas bloquer la suppression si l'image n'existe pas ou ne peut pas être supprimée
-        console.warn('Erreur lors de la suppression de l\'image Firebase (non bloquant):', firebaseError)
+        console.warn(
+          "Erreur lors de la suppression de l'image Firebase (non bloquant):",
+          firebaseError
+        );
       }
 
       // Supprimer l'œuvre de la base de données via la Server Action
@@ -183,9 +192,7 @@ export default function PresaleArtworksClient({
 
         router.push(listRoute);
       } else {
-        error(
-          result.message || t("errors.deleteError")
-        );
+        error(result.message || t("errors.deleteError"));
       }
     } catch (err: any) {
       console.error("Erreur lors de la suppression:", err);
@@ -255,7 +262,9 @@ export default function PresaleArtworksClient({
       key: "imageUrl",
       header: t("columns.image"),
       width: "50px",
-      render: (artwork) => <ImageThumbnail url={artwork.imageUrl} alt={t("thumbnail")} />,
+      render: (artwork) => (
+        <ImageThumbnail url={artwork.imageUrl} alt={t("thumbnail")} />
+      ),
     },
     // Exclure la colonne "order" en mode artiste
     ...(isArtistMode
@@ -310,14 +319,29 @@ export default function PresaleArtworksClient({
     {
       key: "actions",
       header: t("columns.actions"),
-      width: "120px",
+      width: "180px",
       render: (artwork) => (
-        <DeleteActionButton
-          onDelete={() => handleDelete(artwork.id)}
-          disabled={loadingArtworkId !== null}
-          itemName={t("deleteItemName", { name: artwork.name })}
-          confirmMessage={t("deleteConfirm", { name: artwork.name })}
-        />
+        <div className="d-flex gap-sm align-items-center">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedArtworkForStats(artwork);
+              setStatsModalOpen(true);
+            }}
+            className="flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-indigo-600 transition-colors p-1.5 rounded hover:bg-gray-50"
+            title="Voir les statistiques Umami"
+          >
+            <BarChart3 size={14} />
+            <span>Statistiques</span>
+          </button>
+          <DeleteActionButton
+            onDelete={() => handleDelete(artwork.id)}
+            disabled={loadingArtworkId !== null}
+            itemName={t("deleteItemName", { name: artwork.name })}
+            confirmMessage={t("deleteConfirm", { name: artwork.name })}
+          />
+        </div>
       ),
     },
   ];
@@ -326,11 +350,7 @@ export default function PresaleArtworksClient({
     <PageContainer>
       <PageHeader
         title={isArtistMode ? t("title") : t("titleAdmin")}
-        subtitle={
-          isArtistMode
-            ? t("subtitle")
-            : t("subtitleAdmin")
-        }
+        subtitle={isArtistMode ? t("subtitle") : t("subtitleAdmin")}
         actions={
           <div className="d-flex gap-sm">
             {isArtistMode && (
@@ -345,7 +365,11 @@ export default function PresaleArtworksClient({
             {!isArtistMode && searchParams.artistId && (
               <ActionButton
                 label={t("displayOrderWebsite")}
-                onClick={() => router.push(`/landing/presaleArtworks/display-order?artistId=${searchParams.artistId}`)}
+                onClick={() =>
+                  router.push(
+                    `/landing/presaleArtworks/display-order?artistId=${searchParams.artistId}`
+                  )
+                }
                 size="small"
                 variant="secondary"
                 icon={<ArrowUpDown size={16} />}
@@ -387,7 +411,9 @@ export default function PresaleArtworksClient({
               { value: "", label: t("allArtists") },
               ...artists.map((artist) => ({
                 value: artist.id.toString(),
-                label: `${artist.name} ${artist.surname}${artist.isGallery ? ` (${t("gallery")})` : ` (${t("artist")})`}`,
+                label: `${artist.name} ${artist.surname}${
+                  artist.isGallery ? ` (${t("gallery")})` : ` (${t("artist")})`
+                }`,
               })),
             ]}
           />
@@ -418,6 +444,19 @@ export default function PresaleArtworksClient({
           emptyState={<EmptyState message={t("emptyState")} />}
         />
       </PageContent>
+
+      {/* Modale de statistiques */}
+      {selectedArtworkForStats && (
+        <PresaleArtworkStatsModal
+          isOpen={statsModalOpen}
+          onClose={() => {
+            setStatsModalOpen(false);
+            setSelectedArtworkForStats(null);
+          }}
+          artworkName={selectedArtworkForStats.name}
+          artworkId={selectedArtworkForStats.id}
+        />
+      )}
     </PageContainer>
   );
 }

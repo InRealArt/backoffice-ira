@@ -19,6 +19,7 @@
     "test-standalone-translation": "tsx scripts/test-complete-translation-standalone.ts",
     "test-better-auth-signup": "USE_DIRECT_PRISMA=1 tsx scripts/test-better-auth-signup.ts",
     "check-backoffice-auth-schema": "USE_DIRECT_PRISMA=1 tsx scripts/check-backoffice-auth-schema.ts",
+    "umami-stats": "tsx scripts/get-umami-stats.ts",
     "postinstall": "bash scripts/postinstall.sh"
   },
   "dependencies": {
@@ -42,6 +43,7 @@
     "@react-three/fiber": "^9.4.0",
     "@supabase/supabase-js": "^2.49.1",
     "@tanstack/react-query": "^5.66.9",
+    "@umami/api-client": "^0.80.0",
     "axios": "^1.9.0",
     "better-auth": "^1.3.33",
     "class-variance-authority": "^0.7.1",

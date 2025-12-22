@@ -11,15 +11,15 @@ export function cn(...inputs: ClassValue[]) {
  * @returns true si l'URL est valide ou vide, false sinon
  */
 export function validateUrl(val: string | undefined): boolean {
-  if (val === "" || !val) return true
-  // Décoder les entités HTML comme &amp; en &
-  const decoded = val.replace(/&amp;/g, "&")
-  try {
-    new URL(decoded)
-    return true
-  } catch {
-    return false
-  }
+    if (val === "" || !val) return true
+    // Décoder les entités HTML comme &amp; en &
+    const decoded = val.replace(/&amp;/g, "&")
+    try {
+        new URL(decoded)
+        return true
+    } catch {
+        return false
+    }
 }
 
 
@@ -63,6 +63,23 @@ export function generateSlug(name: string): string {
         .replace(/[^\w\s]/gi, '')
         .replace(/\s+/g, '-')
         .replace(/^-|-$/g, '') // Supprime les tirets au début et à la fin
+}
+
+/**
+ * Convertit une chaîne en slug (utilisé sur le site web inrealart.com)
+ * Cette fonction doit correspondre exactement à celle utilisée sur le site web
+ * @param str - La chaîne à convertir
+ * @returns Le slug généré
+ */
+export function stringToSlug(str: string): string {
+    return str
+        .toLowerCase()
+        .trim()
+        .normalize('NFD') // Decompose accented characters
+        .replace(/[\u0300-\u036f]/g, '') // Remove diacritical marks (accents)
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-') // Replace spaces with -
+        .replace(/-+/g, '-') // Replace multiple - with single -
 }
 
 /**
