@@ -322,19 +322,21 @@ export default function PresaleArtworksClient({
       width: "180px",
       render: (artwork) => (
         <div className="d-flex gap-sm align-items-center">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedArtworkForStats(artwork);
-              setStatsModalOpen(true);
-            }}
-            className="flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-indigo-600 transition-colors p-1.5 rounded hover:bg-gray-50"
-            title="Voir les statistiques Umami"
-          >
-            <BarChart3 size={14} />
-            <span>Statistiques</span>
-          </button>
+          {!isArtistMode && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedArtworkForStats(artwork);
+                setStatsModalOpen(true);
+              }}
+              className="flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-indigo-600 transition-colors p-1.5 rounded hover:bg-gray-50"
+              title="Voir les statistiques Umami"
+            >
+              <BarChart3 size={14} />
+              <span>Statistiques</span>
+            </button>
+          )}
           <DeleteActionButton
             onDelete={() => handleDelete(artwork.id)}
             disabled={loadingArtworkId !== null}
