@@ -2174,14 +2174,29 @@ export async function updateItemRecord(
   }
 ): Promise<{ success: boolean, message?: string, item?: any }> {
   try {
-    // Vérifier si l'item existe
+    // Vérifier si l'item existe et récupérer les associations existantes
     const existingItem = await prisma.item.findUnique({
       where: { id: itemId },
       select: {
         id: true,
         physicalItem: {
           select: {
-            id: true
+            id: true,
+            itemStyles: {
+              select: {
+                styleId: true
+              }
+            },
+            itemTechniques: {
+              select: {
+                techniqueId: true
+              }
+            },
+            itemThemes: {
+              select: {
+                themeId: true
+              }
+            }
           }
         }
       }
@@ -2193,6 +2208,11 @@ export async function updateItemRecord(
         message: 'Item non trouvé'
       }
     }
+
+    // Récupérer les IDs existants pour comparaison
+    const existingStyleIds = existingItem.physicalItem?.itemStyles?.map(is => is.styleId).sort() || []
+    const existingTechniqueIds = existingItem.physicalItem?.itemTechniques?.map(it => it.techniqueId).sort() || []
+    const existingThemeIds = existingItem.physicalItem?.itemThemes?.map(ith => ith.themeId).sort() || []
 
     // Préparer les données de mise à jour pour l'Item principal
     const updateData: any = {}
@@ -2259,52 +2279,70 @@ export async function updateItemRecord(
 
           // Gérer les relations many-to-many pour les styles
           if (physicalData.styleIds !== undefined) {
-            // Supprimer les anciennes associations
-            await tx.itemStyle.deleteMany({
-              where: { physicalItemId: existingPhysicalItem.id }
-            })
-            // Créer les nouvelles associations
-            if (physicalData.styleIds.length > 0) {
-              await tx.itemStyle.createMany({
-                data: physicalData.styleIds.map(styleId => ({
-                  physicalItemId: existingPhysicalItem.id,
-                  styleId
-                }))
+            // Comparer les nouvelles valeurs avec les existantes
+            const newStyleIds = [...physicalData.styleIds].sort()
+            const styleIdsChanged = JSON.stringify(newStyleIds) !== JSON.stringify(existingStyleIds)
+            
+            if (styleIdsChanged) {
+              // Supprimer les anciennes associations
+              await tx.itemStyle.deleteMany({
+                where: { physicalItemId: existingPhysicalItem.id }
               })
+              // Créer les nouvelles associations
+              if (physicalData.styleIds.length > 0) {
+                await tx.itemStyle.createMany({
+                  data: physicalData.styleIds.map(styleId => ({
+                    physicalItemId: existingPhysicalItem.id,
+                    styleId
+                  }))
+                })
+              }
             }
           }
 
           // Gérer les relations many-to-many pour les techniques
           if (physicalData.techniqueIds !== undefined) {
-            // Supprimer les anciennes associations
-            await tx.itemTechnique.deleteMany({
-              where: { physicalItemId: existingPhysicalItem.id }
-            })
-            // Créer les nouvelles associations
-            if (physicalData.techniqueIds.length > 0) {
-              await tx.itemTechnique.createMany({
-                data: physicalData.techniqueIds.map(techniqueId => ({
-                  physicalItemId: existingPhysicalItem.id,
-                  techniqueId
-                }))
+            // Comparer les nouvelles valeurs avec les existantes
+            const newTechniqueIds = [...physicalData.techniqueIds].sort()
+            const techniqueIdsChanged = JSON.stringify(newTechniqueIds) !== JSON.stringify(existingTechniqueIds)
+            
+            if (techniqueIdsChanged) {
+              // Supprimer les anciennes associations
+              await tx.itemTechnique.deleteMany({
+                where: { physicalItemId: existingPhysicalItem.id }
               })
+              // Créer les nouvelles associations
+              if (physicalData.techniqueIds.length > 0) {
+                await tx.itemTechnique.createMany({
+                  data: physicalData.techniqueIds.map(techniqueId => ({
+                    physicalItemId: existingPhysicalItem.id,
+                    techniqueId
+                  }))
+                })
+              }
             }
           }
 
           // Gérer les relations many-to-many pour les thèmes
           if (physicalData.themeIds !== undefined) {
-            // Supprimer les anciennes associations
-            await tx.itemTheme.deleteMany({
-              where: { physicalItemId: existingPhysicalItem.id }
-            })
-            // Créer les nouvelles associations
-            if (physicalData.themeIds.length > 0) {
-              await tx.itemTheme.createMany({
-                data: physicalData.themeIds.map(themeId => ({
-                  physicalItemId: existingPhysicalItem.id,
-                  themeId
-                }))
+            // Comparer les nouvelles valeurs avec les existantes
+            const newThemeIds = [...physicalData.themeIds].sort()
+            const themeIdsChanged = JSON.stringify(newThemeIds) !== JSON.stringify(existingThemeIds)
+            
+            if (themeIdsChanged) {
+              // Supprimer les anciennes associations
+              await tx.itemTheme.deleteMany({
+                where: { physicalItemId: existingPhysicalItem.id }
               })
+              // Créer les nouvelles associations
+              if (physicalData.themeIds.length > 0) {
+                await tx.itemTheme.createMany({
+                  data: physicalData.themeIds.map(themeId => ({
+                    physicalItemId: existingPhysicalItem.id,
+                    themeId
+                  }))
+                })
+              }
             }
           }
         } else {

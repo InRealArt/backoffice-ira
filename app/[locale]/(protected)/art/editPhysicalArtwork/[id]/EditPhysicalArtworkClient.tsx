@@ -54,6 +54,7 @@ export default function EditPhysicalArtworkClient({
   const [collections, setCollections] = useState<PhysicalCollection[]>([]);
   const [artistName, setArtistName] = useState("");
   const [artistSurname, setArtistSurname] = useState("");
+  const [imagesByType, setImagesByType] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { data: session, isPending: isSessionPending } =
@@ -112,6 +113,36 @@ export default function EditPhysicalArtworkClient({
               setArtistSurname(backofficeUser.artist?.surname || "");
             }
 
+            // Transformer les images par type pour le formulaire
+            const formattedImagesByType: Record<string, string[]> = {}
+            if (itemData.physicalItem?.images && Array.isArray(itemData.physicalItem.images)) {
+              // Créer un tableau avec les images et leur ordre pour faciliter le tri
+              const imagesWithOrder = itemData.physicalItem.images.map((image: any) => ({
+                imageUrl: image.imageUrl,
+                imageType: image.imageType,
+                order: image.order ?? 0
+              }))
+              
+              // Trier d'abord par type, puis par ordre
+              imagesWithOrder.sort((a, b) => {
+                if (a.imageType !== b.imageType) {
+                  return a.imageType.localeCompare(b.imageType)
+                }
+                return a.order - b.order
+              })
+              
+              // Grouper par type
+              imagesWithOrder.forEach((image) => {
+                if (!formattedImagesByType[image.imageType]) {
+                  formattedImagesByType[image.imageType] = []
+                }
+                formattedImagesByType[image.imageType].push(image.imageUrl)
+              })
+            }
+            
+            // Stocker dans le state
+            setImagesByType(formattedImagesByType)
+
             // Vérifier les valeurs reçues
             console.log("Item chargé pour l'édition:", {
               id: itemData.id,
@@ -126,6 +157,9 @@ export default function EditPhysicalArtworkClient({
               physicalItemThemes: itemData.physicalItem?.itemThemes,
               physicalItemStyles: itemData.physicalItem?.itemStyles,
               physicalItemTechniques: itemData.physicalItem?.itemTechniques,
+              // Vérifier les images par type
+              imagesByType: formattedImagesByType,
+              physicalItemImages: itemData.physicalItem?.images,
               // Afficher l'objet complet pour debugging
               itemComplet: itemData,
             });
@@ -296,6 +330,8 @@ export default function EditPhysicalArtworkClient({
               // Transmettre les nouveaux certificats
               physicalCertificateUrl: physicalCertificate?.fileUrl || null,
               nftCertificateUrl: nftCertificate?.fileUrl || null,
+              // Transmettre les images par type
+              imagesByType: imagesByType,
             }}
             onSuccess={handleSuccess}
           />

@@ -24,6 +24,7 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
   const [physicalCertificate, setPhysicalCertificate] = useState<any>(null)
   const [nftCertificate, setNftCertificate] = useState<any>(null)
   const [addresses, setAddresses] = useState<any[]>([])
+  const [imagesByType, setImagesByType] = useState<Record<string, string[]>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -42,6 +43,36 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
         if (isMounted) {
           setAddresses(userAddresses)
 
+          // Transformer les images par type pour le formulaire
+          const formattedImagesByType: Record<string, string[]> = {}
+          if (item.physicalItem?.images && Array.isArray(item.physicalItem.images)) {
+            // Créer un tableau avec les images et leur ordre pour faciliter le tri
+            const imagesWithOrder = item.physicalItem.images.map((image: any) => ({
+              imageUrl: image.imageUrl,
+              imageType: image.imageType,
+              order: image.order ?? 0
+            }))
+            
+            // Trier d'abord par type, puis par ordre
+            imagesWithOrder.sort((a, b) => {
+              if (a.imageType !== b.imageType) {
+                return a.imageType.localeCompare(b.imageType)
+              }
+              return a.order - b.order
+            })
+            
+            // Grouper par type
+            imagesWithOrder.forEach((image) => {
+              if (!formattedImagesByType[image.imageType]) {
+                formattedImagesByType[image.imageType] = []
+              }
+              formattedImagesByType[image.imageType].push(image.imageUrl)
+            })
+          }
+          
+          // Stocker dans le state
+          setImagesByType(formattedImagesByType)
+
           // Vérifier les valeurs reçues
           console.log('Item chargé pour l\'édition admin:', {
             id: item.id,
@@ -54,6 +85,9 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
             // Vérifier si l'item a des relations
             hasPhysicalItem: !!item.physicalItem,
             hasNftItem: !!item.nftItem,
+            // Vérifier les images par type
+            imagesByType: formattedImagesByType,
+            physicalItemImages: item.physicalItem?.images,
             // Debug des artistes
             totalArtists: artists.length,
             artistsIds: artists.map(a => a.id),
@@ -207,7 +241,9 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
               certificateUrl: certificate?.fileUrl || null,
               // Transmettre les nouveaux certificats
               physicalCertificateUrl: physicalCertificate?.fileUrl || null,
-              nftCertificateUrl: nftCertificate?.fileUrl || null
+              nftCertificateUrl: nftCertificate?.fileUrl || null,
+              // Transmettre les images par type
+              imagesByType: imagesByType
             }}
             onSuccess={handleSuccess}
           />
