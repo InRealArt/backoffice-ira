@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Artist } from "@prisma/client";
-import { updateArtist } from "@/lib/actions/artist-actions";
+import { updateArtist, duplicateArtist } from "@/lib/actions/artist-actions";
 import { useToast } from "@/app/components/Toast/ToastContext";
 import Image from "next/image";
 import { z } from "zod";
@@ -14,6 +14,7 @@ import { generateSlug } from "@/lib/utils";
 import CountrySelect from "@/app/components/Common/CountrySelect";
 import { getCountries } from "@/lib/utils";
 import ArtistImageUpload from "@/app/components/art/ArtistImageUpload";
+import Modal from "@/app/components/Common/Modal";
 
 // Schéma de validation
 const formSchema = z.object({
@@ -96,6 +97,8 @@ interface ArtistEditFormProps {
 export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [newImageName, setNewImageName] = useState("");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
@@ -250,6 +253,44 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
 
   const handleCancel = () => {
     router.push("/dataAdministration/artists");
+  };
+
+  const handleDuplicateClick = () => {
+    setIsDuplicateModalOpen(true);
+  };
+
+  const handleDuplicateConfirm = async () => {
+    setIsDuplicateModalOpen(false);
+    setIsDuplicating(true);
+
+    try {
+      const result = await duplicateArtist(artist.id);
+
+      if (result.success) {
+        success(
+          `Artiste dupliqué avec succès : "${result.artist?.name} ${result.artist?.surname}"`
+        );
+
+        // Rediriger vers la liste des artistes après 1 seconde
+        setTimeout(() => {
+          router.push("/dataAdministration/artists");
+          router.refresh();
+        }, 1000);
+      } else {
+        error(
+          result.message || "Une erreur est survenue lors de la duplication"
+        );
+      }
+    } catch (err: any) {
+      error("Une erreur est survenue lors de la duplication");
+      console.error(err);
+    } finally {
+      setIsDuplicating(false);
+    }
+  };
+
+  const handleDuplicateCancel = () => {
+    setIsDuplicateModalOpen(false);
   };
 
   return (
@@ -624,14 +665,33 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
             type="button"
             onClick={handleCancel}
             className="btn btn-secondary btn-medium"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isDuplicating}
           >
             Annuler
           </button>
           <button
+            type="button"
+            onClick={handleDuplicateClick}
+            className="btn btn-medium"
+            disabled={isSubmitting || isDuplicating}
+            style={{
+              backgroundColor: "#8b5cf6",
+              color: "white",
+              border: "none",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#7c3aed";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "#8b5cf6";
+            }}
+          >
+            {isDuplicating ? "Duplication en cours..." : "Dupliquer l'artiste"}
+          </button>
+          <button
             type="submit"
             className="btn btn-primary btn-medium"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isDuplicating}
           >
             {isSubmitting
               ? "Mise à jour en cours..."
@@ -639,6 +699,54 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
           </button>
         </div>
       </form>
+
+      <Modal
+        isOpen={isDuplicateModalOpen}
+        onClose={handleDuplicateCancel}
+        title="Dupliquer l'artiste"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-base leading-relaxed">
+            Êtes-vous sûr de vouloir dupliquer l&apos;artiste &quot;
+            {artist.name} {artist.surname}&quot; ?
+            <br />
+            <span className="text-sm text-gray-600 mt-2 block">
+              Un nouvel artiste sera créé avec le nom &quot;{artist.name}{" "}
+              {artist.surname} TEST&quot;.
+            </span>
+          </p>
+
+          <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-gray-200">
+            <button
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              onClick={handleDuplicateCancel}
+              disabled={isDuplicating}
+            >
+              Annuler
+            </button>
+            <button
+              className="px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              onClick={handleDuplicateConfirm}
+              disabled={isDuplicating}
+              style={{
+                backgroundColor: "#8b5cf6",
+              }}
+              onMouseEnter={(e) => {
+                if (!isDuplicating) {
+                  e.currentTarget.style.backgroundColor = "#7c3aed";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isDuplicating) {
+                  e.currentTarget.style.backgroundColor = "#8b5cf6";
+                }
+              }}
+            >
+              {isDuplicating ? "Duplication en cours..." : "Dupliquer"}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

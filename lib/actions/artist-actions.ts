@@ -774,6 +774,104 @@ export async function getAllArtistsAndGalleries() {
 }
 
 /**
+ * Duplique un artiste en ajoutant "TEST" au nom de famille
+ */
+export async function duplicateArtist(artistId: number): Promise<{ success: boolean; message?: string; artist?: Artist }> {
+    try {
+        // Récupérer l'artiste original
+        const originalArtist = await prisma.artist.findUnique({
+            where: { id: artistId }
+        })
+
+        if (!originalArtist) {
+            return {
+                success: false,
+                message: 'Artiste non trouvé'
+            }
+        }
+
+        // Préparer les données dupliquées
+        const newSurname = `${originalArtist.surname} TEST`
+        const newDescription = `${originalArtist.description} (TEST)`
+        const newSlug = generateSlug(`${originalArtist.name} ${newSurname}`)
+
+        // Générer un pseudo unique sans timestamp
+        let newPseudo = `${originalArtist.pseudo}-test`
+        let counter = 1
+        while (await prisma.artist.findFirst({ where: { pseudo: newPseudo } })) {
+            newPseudo = `${originalArtist.pseudo}-test-${counter}`
+            counter++
+        }
+
+        // Générer une clé publique unique sans timestamp
+        let newPublicKey = `${originalArtist.publicKey}-test`
+        counter = 1
+        while (await prisma.artist.findFirst({ where: { publicKey: newPublicKey } })) {
+            newPublicKey = `${originalArtist.publicKey}-test-${counter}`
+            counter++
+        }
+
+        // Utiliser la même imageUrl avec un paramètre de requête pour respecter l'unicité
+        // Le paramètre de requête ne change pas l'image réelle mais rend l'URL unique
+        let newImageUrl = originalArtist.imageUrl || ''
+        if (newImageUrl) {
+            // Ajouter un paramètre de requête pour rendre l'URL unique sans changer l'image
+            const separator = newImageUrl.includes('?') ? '&' : '?'
+            newImageUrl = `${newImageUrl}${separator}duplicate=${Date.now()}`
+        }
+
+        // S'assurer que le pays existe dans la base de données
+        if (originalArtist.countryCode) {
+            await ensureCountryExists(originalArtist.countryCode)
+        }
+
+        // Créer l'artiste dupliqué
+        const duplicatedArtist = await prisma.artist.create({
+            data: {
+                name: originalArtist.name,
+                surname: newSurname,
+                pseudo: newPseudo,
+                description: newDescription,
+                publicKey: newPublicKey,
+                imageUrl: newImageUrl,
+                isGallery: originalArtist.isGallery,
+                backgroundImage: originalArtist.backgroundImage,
+                slug: newSlug,
+                featuredArtwork: originalArtist.featuredArtwork,
+                birthYear: originalArtist.birthYear,
+                countryCode: originalArtist.countryCode,
+                websiteUrl: originalArtist.websiteUrl,
+                facebookUrl: originalArtist.facebookUrl,
+                instagramUrl: originalArtist.instagramUrl,
+                twitterUrl: originalArtist.twitterUrl,
+                linkedinUrl: originalArtist.linkedinUrl,
+            }
+        })
+
+        revalidatePath('/dataAdministration/artists')
+
+        return {
+            success: true,
+            artist: duplicatedArtist
+        }
+    } catch (error: any) {
+        console.error('Erreur lors de la duplication de l\'artiste:', error)
+
+        if (error.code === 'P2002') {
+            return {
+                success: false,
+                message: 'Un champ unique est déjà utilisé. Veuillez réessayer.'
+            }
+        }
+
+        return {
+            success: false,
+            message: error.message || 'Une erreur est survenue lors de la duplication de l\'artiste'
+        }
+    }
+}
+
+/**
  * Récupère tous les artistes avec le nombre de presaleArtwork correspondants et la date d'onboarding
  * @param nameFilter - Filtre optionnel pour rechercher par nom ou prénom
  */
