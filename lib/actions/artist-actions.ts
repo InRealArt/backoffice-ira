@@ -778,9 +778,16 @@ export async function getAllArtistsAndGalleries() {
  */
 export async function duplicateArtist(artistId: number): Promise<{ success: boolean; message?: string; artist?: Artist }> {
     try {
-        // Récupérer l'artiste original
+        // Récupérer l'artiste original avec son LandingArtist et ses relations
         const originalArtist = await prisma.artist.findUnique({
-            where: { id: artistId }
+            where: { id: artistId },
+            include: {
+                artistSpecialties: {
+                    include: {
+                        artistSpecialty: true
+                    }
+                }
+            }
         })
 
         if (!originalArtist) {
@@ -789,6 +796,14 @@ export async function duplicateArtist(artistId: number): Promise<{ success: bool
                 message: 'Artiste non trouvé'
             }
         }
+
+        // Récupérer le LandingArtist original s'il existe
+        const originalLandingArtist = await prisma.landingArtist.findFirst({
+            where: { artistId },
+            include: {
+                artistCategories: true
+            }
+        })
 
         // Préparer les données dupliquées
         const newSurname = `${originalArtist.surname} TEST`
@@ -848,7 +863,86 @@ export async function duplicateArtist(artistId: number): Promise<{ success: bool
             }
         })
 
+        // Dupliquer les spécialités de l'artiste
+        if (originalArtist.artistSpecialties && originalArtist.artistSpecialties.length > 0) {
+            await prisma.artistSpecialtyArtist.createMany({
+                data: originalArtist.artistSpecialties.map(specialty => ({
+                    artistId: duplicatedArtist.id,
+                    artistSpecialtyId: specialty.artistSpecialtyId
+                }))
+            })
+        }
+
+        // Créer le LandingArtist dupliqué s'il existe un LandingArtist original
+        if (originalLandingArtist) {
+            // Générer un slug unique pour le LandingArtist
+            let newLandingSlug = newSlug
+            counter = 1
+            while (await prisma.landingArtist.findFirst({ where: { slug: newLandingSlug } })) {
+                newLandingSlug = `${newSlug}-${counter}`
+                counter++
+            }
+
+            // Générer une imageUrl unique pour le LandingArtist
+            let newLandingImageUrl = originalLandingArtist.imageUrl
+            if (newLandingImageUrl) {
+                const separator = newLandingImageUrl.includes('?') ? '&' : '?'
+                newLandingImageUrl = `${newLandingImageUrl}${separator}duplicate=${Date.now()}`
+            }
+
+            // Générer une secondaryImageUrl unique si elle existe
+            let newSecondaryImageUrl = originalLandingArtist.secondaryImageUrl
+            if (newSecondaryImageUrl) {
+                const separator = newSecondaryImageUrl.includes('?') ? '&' : '?'
+                newSecondaryImageUrl = `${newSecondaryImageUrl}${separator}duplicate=${Date.now()}`
+            }
+
+            // Générer une imageArtistStudio unique si elle existe
+            let newImageArtistStudio = originalLandingArtist.imageArtistStudio
+            if (newImageArtistStudio) {
+                const separator = newImageArtistStudio.includes('?') ? '&' : '?'
+                newImageArtistStudio = `${newImageArtistStudio}${separator}duplicate=${Date.now()}`
+            }
+
+            // Créer le LandingArtist dupliqué
+            const duplicatedLandingArtist = await prisma.landingArtist.create({
+                data: {
+                    artistId: duplicatedArtist.id,
+                    slug: newLandingSlug,
+                    intro: originalLandingArtist.intro,
+                    description: originalLandingArtist.description,
+                    artworkImages: originalLandingArtist.artworkImages || '[]',
+                    artworkStyle: originalLandingArtist.artworkStyle,
+                    artistsPage: false, // Toujours à false lors de la duplication
+                    imageUrl: newLandingImageUrl,
+                    secondaryImageUrl: newSecondaryImageUrl,
+                    mediumTags: originalLandingArtist.mediumTags || [],
+                    quoteFromInRealArt: originalLandingArtist.quoteFromInRealArt,
+                    biographyHeader1: originalLandingArtist.biographyHeader1,
+                    biographyText1: originalLandingArtist.biographyText1,
+                    biographyHeader2: originalLandingArtist.biographyHeader2,
+                    biographyText2: originalLandingArtist.biographyText2,
+                    biographyHeader3: originalLandingArtist.biographyHeader3,
+                    biographyText3: originalLandingArtist.biographyText3,
+                    biographyHeader4: originalLandingArtist.biographyHeader4,
+                    biographyText4: originalLandingArtist.biographyText4,
+                    imageArtistStudio: newImageArtistStudio,
+                }
+            })
+
+            // Dupliquer les catégories d'artiste si elles existent
+            if (originalLandingArtist.artistCategories && originalLandingArtist.artistCategories.length > 0) {
+                await prisma.artistCategoryArtist.createMany({
+                    data: originalLandingArtist.artistCategories.map(category => ({
+                        landingArtistId: duplicatedLandingArtist.id,
+                        categoryId: category.categoryId
+                    }))
+                })
+            }
+        }
+
         revalidatePath('/dataAdministration/artists')
+        revalidatePath('/landing/landingArtists')
 
         return {
             success: true,
