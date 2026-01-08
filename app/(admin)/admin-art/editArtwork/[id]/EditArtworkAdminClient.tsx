@@ -1,80 +1,106 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import ArtworkForm from '@/app/components/art/ArtworkForm'
-import { getPhysicalCertificateByItemId } from '@/lib/actions/prisma-actions'
-import { getAllAddressesForAdmin } from '@/lib/actions/address-actions'
-import styles from './editArtworkAdmin.module.scss'
-import { normalizeString } from '@/lib/utils'
-import FormSection from '@/app/components/art/ArtworkForm/FormSection'
-import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from '@prisma/client'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import LoadingSpinner from "@/app/components/LoadingSpinner/LoadingSpinner";
+import ArtworkForm from "@/app/components/art/ArtworkForm";
+import { getPhysicalCertificateByItemId } from "@/lib/actions/prisma-actions";
+import { getAllAddressesForAdmin } from "@/lib/actions/address-actions";
+import styles from "./editArtworkAdmin.module.scss";
+import { normalizeString } from "@/lib/utils";
+import FormSection from "@/app/components/art/ArtworkForm/FormSection";
+import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from "@prisma/client";
 
 interface EditArtworkAdminClientProps {
-  mediums: ArtworkMedium[]
-  styles: ArtworkStyle[]
-  techniques: ArtworkTechnique[]
-  artists: any[]
-  item: any
+  mediums: ArtworkMedium[];
+  styles: ArtworkStyle[];
+  techniques: ArtworkTechnique[];
+  artists: any[];
+  item: any;
 }
 
-export default function EditArtworkAdminClient({ mediums, styles: artStyles, techniques, artists, item }: EditArtworkAdminClientProps) {
-  const [certificate, setCertificate] = useState<any>(null)
-  const [physicalCertificate, setPhysicalCertificate] = useState<any>(null)
-  const [nftCertificate, setNftCertificate] = useState<any>(null)
-  const [addresses, setAddresses] = useState<any[]>([])
-  const [imagesByType, setImagesByType] = useState<Record<string, string[]>>({})
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+export default function EditArtworkAdminClient({
+  mediums,
+  styles: artStyles,
+  techniques,
+  artists,
+  item,
+}: EditArtworkAdminClientProps) {
+  const [certificate, setCertificate] = useState<any>(null);
+  const [physicalCertificate, setPhysicalCertificate] = useState<any>(null);
+  const [nftCertificate, setNftCertificate] = useState<any>(null);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [imagesByType, setImagesByType] = useState<Record<string, string[]>>(
+    {}
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   // Trouver l'artiste associé à l'item
-  const associatedArtist = artists.find(artist => artist.id === item.artistId)
+  const associatedArtist = artists.find(
+    (artist) => artist.id === item.artistId
+  );
 
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
 
     const fetchData = async () => {
       try {
         // Récupérer toutes les adresses pour l'administration
-        const userAddresses = await getAllAddressesForAdmin()
+        const userAddresses = await getAllAddressesForAdmin();
 
         if (isMounted) {
-          setAddresses(userAddresses)
+          setAddresses(userAddresses);
 
           // Transformer les images par type pour le formulaire
-          const formattedImagesByType: Record<string, string[]> = {}
-          if (item.physicalItem?.images && Array.isArray(item.physicalItem.images)) {
+          const formattedImagesByType: Record<string, string[]> = {};
+          if (
+            item.physicalItem?.images &&
+            Array.isArray(item.physicalItem.images)
+          ) {
             // Créer un tableau avec les images et leur ordre pour faciliter le tri
-            const imagesWithOrder = item.physicalItem.images.map((image: any) => ({
-              imageUrl: image.imageUrl,
-              imageType: image.imageType,
-              order: image.order ?? 0
-            }))
-            
+            const imagesWithOrder = item.physicalItem.images.map(
+              (image: any) => ({
+                imageUrl: image.imageUrl,
+                imageType: image.imageType,
+                order: image.order ?? 0,
+              })
+            );
+
             // Trier d'abord par type, puis par ordre
-            imagesWithOrder.sort((a, b) => {
-              if (a.imageType !== b.imageType) {
-                return a.imageType.localeCompare(b.imageType)
+            imagesWithOrder.sort(
+              (
+                a: { imageUrl: string; imageType: string; order: number },
+                b: { imageUrl: string; imageType: string; order: number }
+              ) => {
+                if (a.imageType !== b.imageType) {
+                  return a.imageType.localeCompare(b.imageType);
+                }
+                return a.order - b.order;
               }
-              return a.order - b.order
-            })
-            
+            );
+
             // Grouper par type
-            imagesWithOrder.forEach((image) => {
-              if (!formattedImagesByType[image.imageType]) {
-                formattedImagesByType[image.imageType] = []
+            imagesWithOrder.forEach(
+              (image: {
+                imageUrl: string;
+                imageType: string;
+                order: number;
+              }) => {
+                if (!formattedImagesByType[image.imageType]) {
+                  formattedImagesByType[image.imageType] = [];
+                }
+                formattedImagesByType[image.imageType].push(image.imageUrl);
               }
-              formattedImagesByType[image.imageType].push(image.imageUrl)
-            })
+            );
           }
-          
+
           // Stocker dans le state
-          setImagesByType(formattedImagesByType)
+          setImagesByType(formattedImagesByType);
 
           // Vérifier les valeurs reçues
-          console.log('Item chargé pour l\'édition admin:', {
+          console.log("Item chargé pour l'édition admin:", {
             id: item.id,
             name: item.name,
             description: item.description,
@@ -90,70 +116,82 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
             physicalItemImages: item.physicalItem?.images,
             // Debug des artistes
             totalArtists: artists.length,
-            artistsIds: artists.map(a => a.id),
+            artistsIds: artists.map((a) => a.id),
             // Afficher l'objet complet pour debugging
-            itemComplet: item
-          })
+            itemComplet: item,
+          });
 
           // Récupérer les certificats en parallèle
-          const certificatePromises = []
+          const certificatePromises = [];
 
           // Certificat d'œuvre physique
           if (item.physicalItem) {
             certificatePromises.push(
-              getPhysicalCertificateByItemId(item.id).catch(error => {
-                console.error('Erreur lors de la récupération du certificat d\'œuvre physique:', error)
-                return null
+              getPhysicalCertificateByItemId(item.id).catch((error) => {
+                console.error(
+                  "Erreur lors de la récupération du certificat d'œuvre physique:",
+                  error
+                );
+                return null;
               })
-            )
-          } 
-
-          try {
-            const [physicalCertificateResult] = await Promise.all(certificatePromises)
-            
-            if (physicalCertificateResult) {
-              console.log('Certificat d\'œuvre physique trouvé:', physicalCertificateResult)
-              setPhysicalCertificate(physicalCertificateResult)
-            }
-
-          } catch (certError) {
-            console.error('Erreur lors de la récupération des certificats:', certError)
+            );
           }
 
-          setIsLoading(false)
+          try {
+            const [physicalCertificateResult] = await Promise.all(
+              certificatePromises
+            );
+
+            if (physicalCertificateResult) {
+              console.log(
+                "Certificat d'œuvre physique trouvé:",
+                physicalCertificateResult
+              );
+              setPhysicalCertificate(physicalCertificateResult);
+            }
+          } catch (certError) {
+            console.error(
+              "Erreur lors de la récupération des certificats:",
+              certError
+            );
+          }
+
+          setIsLoading(false);
         }
       } catch (error: any) {
-        console.error('Erreur lors du chargement des données:', error)
+        console.error("Erreur lors du chargement des données:", error);
         if (isMounted) {
-          setError(error.message || 'Une erreur est survenue')
-          setIsLoading(false)
+          setError(error.message || "Une erreur est survenue");
+          setIsLoading(false);
         }
       }
-    }
+    };
 
-    fetchData()
+    fetchData();
 
     return () => {
-      isMounted = false
-    }
-  }, [item.id, associatedArtist])
+      isMounted = false;
+    };
+  }, [item.id, associatedArtist]);
 
   const handleSuccess = () => {
-    router.push('/admin-art')
-  }
+    router.push("/admin-art");
+  };
 
   if (isLoading) {
     return (
       <div className={styles.container}>
         <LoadingSpinner />
       </div>
-    )
+    );
   }
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.pageTitle}>Édition d'œuvre d'art (Administration)</h1>
-      
+      <h1 className={styles.pageTitle}>
+        Édition d'œuvre d'art (Administration)
+      </h1>
+
       {error ? (
         <div className={styles.error}>{error}</div>
       ) : (
@@ -169,7 +207,9 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
                   {associatedArtist.description && (
                     <div className={styles.artistDetail}>
                       <strong>Description :</strong>
-                      <p className={styles.artistBio}>{associatedArtist.description}</p>
+                      <p className={styles.artistBio}>
+                        {associatedArtist.description}
+                      </p>
                     </div>
                   )}
                   {associatedArtist.pseudo && (
@@ -179,7 +219,8 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
                   )}
                   {associatedArtist.surname && (
                     <div className={styles.artistDetail}>
-                      <strong>Nom de famille :</strong> {associatedArtist.surname}
+                      <strong>Nom de famille :</strong>{" "}
+                      {associatedArtist.surname}
                     </div>
                   )}
                 </div>
@@ -204,51 +245,62 @@ export default function EditArtworkAdminClient({ mediums, styles: artStyles, tec
               description: item.description,
               metaTitle: item.metaTitle,
               metaDescription: item.metaDescription,
-              slug: item.slug || (item.name ? normalizeString(item.name) : ''),
+              slug: item.slug || (item.name ? normalizeString(item.name) : ""),
               imageUrl: item.mainImageUrl,
               secondaryImagesUrl: item.secondaryImagesUrl || [],
               // Caractéristiques artistiques depuis PhysicalItem
               mediumId: item.physicalItem?.mediumId,
-              styleIds: item.physicalItem?.itemStyles?.map((is: any) => is.styleId) || [],
-              techniqueIds: item.physicalItem?.itemTechniques?.map((it: any) => it.techniqueId) || [],
-              themeIds: item.physicalItem?.itemThemes?.map((ith: any) => ith.themeId) || [],
+              styleIds:
+                item.physicalItem?.itemStyles?.map((is: any) => is.styleId) ||
+                [],
+              techniqueIds:
+                item.physicalItem?.itemTechniques?.map(
+                  (it: any) => it.techniqueId
+                ) || [],
+              themeIds:
+                item.physicalItem?.itemThemes?.map((ith: any) => ith.themeId) ||
+                [],
               // Adresse d'expédition depuis PhysicalItem
               shippingAddressId: item.physicalItem?.shippingAddressId,
               // Transmettre les données du physicalItem s'il existe
-              physicalItem: item.physicalItem ? {
-                id: item.physicalItem.id,
-                price: item.physicalItem.price,
-                initialQty: item.physicalItem.initialQty,
-                stockQty: item.physicalItem.stockQty,
-                height: item.physicalItem.height,
-                width: item.physicalItem.width,
-                weight: item.physicalItem.weight,
-                creationYear: item.physicalItem.creationYear,
-                status: item.physicalItem.status,
-                shippingAddressId: item.physicalItem.shippingAddressId,
-                mediumId: item.physicalItem.mediumId,
-                itemStyles: item.physicalItem.itemStyles || [],
-                itemTechniques: item.physicalItem.itemTechniques || [],
-                itemThemes: item.physicalItem.itemThemes || []
-              } : null,
+              physicalItem: item.physicalItem
+                ? {
+                    id: item.physicalItem.id,
+                    price: item.physicalItem.price,
+                    initialQty: item.physicalItem.initialQty,
+                    stockQty: item.physicalItem.stockQty,
+                    height: item.physicalItem.height,
+                    width: item.physicalItem.width,
+                    weight: item.physicalItem.weight,
+                    creationYear: item.physicalItem.creationYear,
+                    status: item.physicalItem.status,
+                    shippingAddressId: item.physicalItem.shippingAddressId,
+                    mediumId: item.physicalItem.mediumId,
+                    itemStyles: item.physicalItem.itemStyles || [],
+                    itemTechniques: item.physicalItem.itemTechniques || [],
+                    itemThemes: item.physicalItem.itemThemes || [],
+                  }
+                : null,
               // Transmettre les données du nftItem s'il existe
-              nftItem: item.nftItem ? {
-                id: item.nftItem.id,
-                price: item.nftItem.price,
-                status: item.nftItem.status
-              } : null,
+              nftItem: item.nftItem
+                ? {
+                    id: item.nftItem.id,
+                    price: item.nftItem.price,
+                    status: item.nftItem.status,
+                  }
+                : null,
               // Transmettre le certificat d'authenticité s'il existe (pour rétrocompatibilité)
               certificateUrl: certificate?.fileUrl || null,
               // Transmettre les nouveaux certificats
               physicalCertificateUrl: physicalCertificate?.fileUrl || null,
               nftCertificateUrl: nftCertificate?.fileUrl || null,
               // Transmettre les images par type
-              imagesByType: imagesByType
+              imagesByType: imagesByType,
             }}
             onSuccess={handleSuccess}
           />
         </>
       )}
     </div>
-  )
-} 
+  );
+}
