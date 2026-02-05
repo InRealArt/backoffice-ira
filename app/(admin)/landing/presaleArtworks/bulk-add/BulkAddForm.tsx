@@ -29,11 +29,17 @@ const createBulkAddSchema = (t: (key: string) => string) =>
         const num = parseInt(val);
         return !isNaN(num) && num > 0 && num <= 50;
       }, t("validation.numberRange")),
+    defaultPrice: z.string().optional(),
+    defaultHeight: z.string().optional(),
+    defaultWidth: z.string().optional(),
   });
 
 type BulkAddFormValues = {
   artistId: string;
   numberOfArtworks: string;
+  defaultPrice?: string;
+  defaultHeight?: string;
+  defaultWidth?: string;
 };
 
 // Schéma de validation pour chaque œuvre
@@ -154,15 +160,15 @@ export default function BulkAddForm({
     setSelectedArtist(artist);
     setNumberOfArtworks(count);
 
-    // Initialiser les données des œuvres avec des valeurs vides
+    // Initialiser les données des œuvres avec les valeurs par défaut ou vides
     const initialArtworks: ArtworkData[] = Array.from(
       { length: count },
       () => ({
         name: "",
         description: "",
-        height: "",
-        width: "",
-        price: "",
+        height: data.defaultHeight || "",
+        width: data.defaultWidth || "",
+        price: data.defaultPrice || "",
         imageFile: null,
         imageUrl: "",
       })
@@ -603,6 +609,62 @@ export default function BulkAddForm({
               )}
               <p className="text-xs text-text-secondary mt-1">
                 {t("maxArtworks")}
+              </p>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="defaultPrice" className="form-label">
+                {t("defaultPriceLabel")}
+              </label>
+              <input
+                id="defaultPrice"
+                type="text"
+                {...register("defaultPrice")}
+                className="form-input"
+                placeholder={t("defaultPricePlaceholder")}
+                disabled={isSubmitting}
+              />
+              <p className="text-xs text-text-secondary mt-1">
+                {t("defaultPriceHelper")}
+              </p>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                {t("defaultDimensionsLabel")}
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="defaultHeight" className="text-xs text-text-secondary">
+                    {t("heightLabel")}
+                  </label>
+                  <input
+                    id="defaultHeight"
+                    type="number"
+                    min="1"
+                    {...register("defaultHeight")}
+                    className="form-input"
+                    placeholder={t("heightPlaceholder")}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="defaultWidth" className="text-xs text-text-secondary">
+                    {t("widthLabel")}
+                  </label>
+                  <input
+                    id="defaultWidth"
+                    type="number"
+                    min="1"
+                    {...register("defaultWidth")}
+                    className="form-input"
+                    placeholder={t("widthPlaceholder")}
+                    disabled={isSubmitting}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-text-secondary mt-1">
+                {t("defaultDimensionsHelper")}
               </p>
             </div>
           </div>

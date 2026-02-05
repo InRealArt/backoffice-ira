@@ -331,35 +331,39 @@ export async function createBulkPresaleArtworks(data: {
         // Récupérer l'ordre maximum actuel
         const maxOrder = await getMaxPresaleArtworkOrder()
 
-        // Créer les œuvres en lot
-        const createdArtworks = await prisma.$transaction(async (tx) => {
-            const artworks = []
+        // Préparer les données pour createMany (plus efficace que des create individuels)
+        const artworksData = data.artworks.map((artworkData, i) => ({
+            name: artworkData.name,
+            artistId: data.artistId,
+            price: artworkData.price,
+            imageUrl: artworkData.imageUrl,
+            description: artworkData.description,
+            width: artworkData.width,
+            height: artworkData.height,
+            order: maxOrder + 1 + i,
+            mockupUrls: "[]"
+        }))
 
-            for (let i = 0; i < data.artworks.length; i++) {
-                const artworkData = data.artworks[i]
-                const order = maxOrder + 1 + i
+        // Utiliser createMany pour une insertion en lot (beaucoup plus rapide)
+        await prisma.presaleArtwork.createMany({
+            data: artworksData
+        })
 
-                const artwork = await tx.presaleArtwork.create({
-                    data: {
-                        name: artworkData.name,
-                        artistId: data.artistId,
-                        price: artworkData.price,
-                        imageUrl: artworkData.imageUrl,
-                        description: artworkData.description,
-                        width: artworkData.width,
-                        height: artworkData.height,
-                        order: order,
-                        mockupUrls: "[]"
-                    },
-                    include: {
-                        artist: true
-                    }
-                })
-
-                artworks.push(artwork)
+        // Récupérer les œuvres créées avec les relations
+        const createdArtworks = await prisma.presaleArtwork.findMany({
+            where: {
+                artistId: data.artistId,
+                order: {
+                    gte: maxOrder + 1,
+                    lte: maxOrder + data.artworks.length
+                }
+            },
+            include: {
+                artist: true
+            },
+            orderBy: {
+                order: 'asc'
             }
-
-            return artworks
         })
 
         revalidatePath('/landing/presaleArtworks')
