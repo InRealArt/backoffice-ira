@@ -699,6 +699,30 @@ export default function NavbarMenu() {
                   )}
                 </a>
               </li>
+              <li>
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/landing/sticky-footer",
+                      "sticky-footer"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("sticky-footer") ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      <Layout size={18} />
+                      <span>{t("landing.stickyFooter")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Layout size={18} />
+                      <span>{t("landing.stickyFooter")}</span>
+                    </>
+                  )}
+                </a>
+              </li>
             </ul>
           </li>
           <li className="divider my-1"></li>
@@ -1459,6 +1483,20 @@ export default function NavbarMenu() {
                     >
                       <FileText size={18} />
                       Articles de blog
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleDesktopNavigation(
+                          "/landing/sticky-footer",
+                          "sticky-footer"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Layout size={18} />
+                      Paramétrage Sticky Footer
                     </a>
                   </li>
                 </ul>

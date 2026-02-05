@@ -495,7 +495,8 @@
       "detailedGlossary": "Glossaire détaillé",
       "artistsPage": "Page artistes",
       "presaleArtworks": "Œuvres en prévente",
-      "blogArticles": "Articles de blog"
+      "blogArticles": "Articles de blog",
+      "stickyFooter": "Paramétrage Sticky Footer"
     },
     "dataAdmin": {
       "title": "DATA ADMINISTRATION",

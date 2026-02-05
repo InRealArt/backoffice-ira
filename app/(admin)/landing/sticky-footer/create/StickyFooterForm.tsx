@@ -3,10 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/app/components/Toast/ToastContext'
-import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { createStickyFooter } from '@/lib/actions/sticky-footer-actions'
 import InputField from '@/app/components/Forms/InputField'
-import TextareaField from '@/app/components/Forms/TextareaField'
 import TranslationField from '@/app/components/TranslationField'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { z } from 'zod'
@@ -176,19 +174,28 @@ export default function StickyFooterForm() {
   const handleCancel = () => {
     router.push('/landing/sticky-footer')
   }
-  
+
+  const isActive = watchedValues.activeOnAllPages || watchedValues.activeOnSpecificPages
+
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>Créer un Sticky Footer</h1>
-        <p>Configurez les paramètres du sticky footer</p>
+        <div className="header-top-section">
+          <h1 className="page-title">
+            Ajouter un sticky footer
+          </h1>
+        </div>
+        <p className="page-subtitle">
+          Créer un nouveau sticky footer et configurer son activation et son contenu
+        </p>
       </div>
-      
-      <div className="page-content">
-        <form onSubmit={handleSubmit(onSubmit)} className="form">
-          <div className="form-section">
-            <h3>Activation</h3>
-            
+
+      <form onSubmit={handleSubmit(onSubmit)} className="form-container">
+        <div className="form-card">
+          <div className="card-header">
+            <h2 className="card-title">Activation</h2>
+          </div>
+          <div className="card-content">
             <div className="form-group">
               <label className="checkbox-label">
                 <input
@@ -199,10 +206,10 @@ export default function StickyFooterForm() {
                 <span className="checkbox-text">Activer sur toutes les pages</span>
               </label>
               {errors.activeOnAllPages && (
-                <span className="error-message">{errors.activeOnAllPages.message}</span>
+                <span className="form-error">{errors.activeOnAllPages.message}</span>
               )}
             </div>
-            
+
             <div className="form-group">
               <label className="checkbox-label">
                 <input
@@ -213,12 +220,12 @@ export default function StickyFooterForm() {
                 <span className="checkbox-text">Activer sur des pages spécifiques</span>
               </label>
               {errors.activeOnSpecificPages && (
-                <span className="error-message">{errors.activeOnSpecificPages.message}</span>
+                <span className="form-error">{errors.activeOnSpecificPages.message}</span>
               )}
             </div>
-            
+
             {watchedValues.activeOnSpecificPages && (
-              <div>
+              <div className="form-group">
                 <InputField
                   id="specificPages"
                   label="Pages spécifiques"
@@ -232,8 +239,8 @@ export default function StickyFooterForm() {
                 </small>
               </div>
             )}
-            
-            {(watchedValues.activeOnAllPages || watchedValues.activeOnSpecificPages) && (
+
+            {isActive && (
               <div className="form-group" style={{ maxWidth: '300px' }}>
                 <InputField
                   id="endValidityDate"
@@ -246,16 +253,19 @@ export default function StickyFooterForm() {
               </div>
             )}
           </div>
-          
-          <div className="form-section">
-            <h3>Contenu</h3>
-            
+        </div>
+
+        <div className="form-card">
+          <div className="card-header">
+            <h2 className="card-title">Contenu</h2>
+          </div>
+          <div className="card-content">
             <TranslationField
               entityType="StickyFooter"
               entityId={null}
               field="title"
               label="Titre"
-              required={watchedValues.activeOnAllPages || watchedValues.activeOnSpecificPages}
+              required={isActive}
               errorMessage={errors.title?.message}
             >
               <input
@@ -266,13 +276,13 @@ export default function StickyFooterForm() {
                 placeholder="Titre du sticky footer"
               />
             </TranslationField>
-            
+
             <TranslationField
               entityType="StickyFooter"
               entityId={null}
               field="text"
               label="Texte"
-              required={watchedValues.activeOnAllPages || watchedValues.activeOnSpecificPages}
+              required={isActive}
               errorMessage={errors.text?.message}
             >
               <textarea
@@ -283,13 +293,13 @@ export default function StickyFooterForm() {
                 placeholder="Texte du sticky footer"
               />
             </TranslationField>
-            
+
             <TranslationField
               entityType="StickyFooter"
               entityId={null}
               field="textButton"
               label="Texte du bouton"
-              required={watchedValues.activeOnAllPages || watchedValues.activeOnSpecificPages}
+              required={isActive}
               errorMessage={errors.textButton?.message}
             >
               <input
@@ -300,41 +310,37 @@ export default function StickyFooterForm() {
                 placeholder="Texte du bouton"
               />
             </TranslationField>
-            
+
             <InputField
               id="buttonUrl"
               label="URL du bouton"
               name="buttonUrl"
               register={register}
               error={errors.buttonUrl?.message}
-              required={watchedValues.activeOnAllPages || watchedValues.activeOnSpecificPages}
+              required={isActive}
               placeholder="/page-destination"
             />
           </div>
-          
-          <div className="form-actions">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="btn btn-secondary"
-              disabled={isSubmitting}
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary btn-medium"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <LoadingSpinner size="small" message="Enregistrement..." inline />
-              ) : (
-                'Créer'
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+        </div>
+
+        <div className="form-actions">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="btn btn-secondary"
+            disabled={isSubmitting}
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            className="btn btn-primary btn-medium"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Création en cours...' : 'Créer le sticky footer'}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
