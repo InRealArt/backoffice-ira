@@ -51,18 +51,30 @@ export function normalizeString(str: string): string {
 }
 
 /**
- * Génère un slug à partir du prénom et du nom
- * @param name - Le prénom
- * @returns Le slug généré (prénom-nom sans accents et en minuscules)
+ * Génère un slug SEO-friendly à partir d'un texte (titre, nom, etc.).
+ * - Ligatures (œ, æ) → équivalents ASCII (oe, ae)
+ * - Apostrophes (', ', ') → supprimées (élision française : "l'exploitation" → "lexploitation")
+ * - Accents et caractères spéciaux → normalisés ou supprimés
+ * - Espaces → tirets
+ * Conforme aux bonnes pratiques : URLs descriptives, caractères unreserved (RFC 3986),
+ * pas d’apostrophe dans le chemin pour éviter problèmes de partage et d’encodage.
+ * @param name - Le texte source (ex. titre d'article)
+ * @returns Le slug généré (minuscules, tirets, alphanumériques)
  */
 export function generateSlug(name: string): string {
     return name
-        .normalize('NFD') // Normalise les caractères Unicode (sépare les accents)
-        .replace(/[\u0300-\u036f]/g, '') // Supprime les diacritiques (accents)
+        .replace(/\u0153/g, 'oe')   // œ -> oe
+        .replace(/\u0152/g, 'oe')   // Œ -> oe
+        .replace(/\u00e6/g, 'ae')   // æ -> ae
+        .replace(/\u00c6/g, 'ae')   // Æ -> ae
+        .replace(/[\u0027\u2018\u2019\u201B]/g, '')  // Apostrophes (ASCII + typographiques) -> supprimées (élision)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase()
         .replace(/[^\w\s]/gi, '')
         .replace(/\s+/g, '-')
-        .replace(/^-|-$/g, '') // Supprime les tirets au début et à la fin
+        .replace(/-+/g, '-')        // Plusieurs tirets consécutifs -> un seul
+        .replace(/^-|-$/g, '')
 }
 
 /**

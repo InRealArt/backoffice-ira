@@ -1,4 +1,6 @@
 import { getAllSeoPosts } from '@/lib/actions/seo-post-actions'
+import { getAllSeoCategories } from '@/lib/actions/seo-category-actions'
+import { getAllLanguages } from '@/lib/services/translation-service'
 import SeoPostClient from './SeoPostClient'
 
 export const metadata = {
@@ -11,6 +13,20 @@ export const revalidate = 0
 export const dynamic = 'force-dynamic'
 
 export default async function SeoPostPage() {
-  const seoPosts = await getAllSeoPosts()
-  return <SeoPostClient seoPosts={seoPosts} />
+  const [seoPostsResult, languagesResult, categoriesResult] = await Promise.all([
+    getAllSeoPosts(),
+    getAllLanguages(),
+    getAllSeoCategories()
+  ])
+
+  const languages = languagesResult
+  const categories = (categoriesResult.success ? categoriesResult.categories : undefined) ?? []
+
+  return (
+    <SeoPostClient
+      seoPosts={seoPostsResult}
+      languages={languages}
+      categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+    />
+  )
 } 

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryStates } from 'nuqs'
 import { SeoPost, SeoCategory, PostStatus, Language } from '@prisma/client'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Image from 'next/image'
@@ -15,6 +16,8 @@ import {
   Column,
   Badge
 } from '../../../components/PageLayout/index'
+import { SeoPostFilter } from './SeoPostFilter'
+import { seoPostsSearchParams } from './searchParams'
 
 interface SeoPostWithRelations extends SeoPost {
   category: SeoCategory
@@ -28,17 +31,44 @@ interface SeoPostWithRelations extends SeoPost {
   }[]
 }
 
-interface SeoPostClientProps {
-  seoPosts: SeoPostWithRelations[]
+interface LanguageOption {
+  id: number
+  code: string
+  name: string
 }
 
-export default function SeoPostClient({ seoPosts }: SeoPostClientProps) {
+interface CategoryOption {
+  id: number
+  name: string
+}
+
+interface SeoPostClientProps {
+  seoPosts: SeoPostWithRelations[]
+  languages: LanguageOption[]
+  categories: CategoryOption[]
+}
+
+export default function SeoPostClient({ seoPosts, languages, categories }: SeoPostClientProps) {
+  const [searchParams] = useQueryStates(seoPostsSearchParams, { shallow: true })
+  const filteredSeoPosts = useMemo(() => {
+    const title = (searchParams.title || '').trim().toLowerCase()
+    const language = searchParams.language || ''
+    const categoryId = searchParams.category ? parseInt(searchParams.category, 10) : 0
+    if (!title && !language && !categoryId) return seoPosts
+    return seoPosts.filter((post) => {
+      const matchesTitle = !title || (post.title?.toLowerCase() || '').includes(title)
+      const matchesLanguage = !language || post.language.code === language
+      const matchesCategory = !categoryId || post.categoryId === categoryId
+      return matchesTitle && matchesLanguage && matchesCategory
+    })
+  }, [seoPosts, searchParams.title, searchParams.language, searchParams.category])
+
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
   const [loadingPostId, setLoadingPostId] = useState<number | null>(null)
   const [sortColumn, setSortColumn] = useState<string>('updatedAt')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
-  
+
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
     const checkIfMobile = () => {
@@ -86,7 +116,7 @@ export default function SeoPostClient({ seoPosts }: SeoPostClientProps) {
   }
   
   // Trier les articles selon le champ sélectionné
-  const sortedSeoPosts = [...seoPosts].sort((a, b) => {
+  const sortedSeoPosts = useMemo(() => [...filteredSeoPosts].sort((a, b) => {
     const valueA = (a as any)[sortColumn] ?? 0
     const valueB = (b as any)[sortColumn] ?? 0
     
@@ -103,8 +133,8 @@ export default function SeoPostClient({ seoPosts }: SeoPostClientProps) {
           ? valueB.getTime() - valueA.getTime()
           : valueB - valueA
     }
-  })
-  
+  }), [filteredSeoPosts, sortColumn, sortDirection])
+
   // Définition des colonnes pour le DataTable
   const columns: Column<SeoPostWithRelations>[] = [
     {
@@ -135,6 +165,11 @@ export default function SeoPostClient({ seoPosts }: SeoPostClientProps) {
           </div>
         </div>
       )
+    },
+    {
+      key: 'slug',
+      header: 'Slug',
+      render: (post) => <span className="text-muted">{post.slug}</span>
     },
     {
       key: 'status',
@@ -204,6 +239,22 @@ export default function SeoPostClient({ seoPosts }: SeoPostClientProps) {
       />
       
       <PageContent>
+        <div className="mb-6">
+          <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 hover:opacity-100 transition-opacity duration-300" />
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                  Filtrer les articles
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Recherchez par titre, langue ou catégorie
+                </p>
+              </div>
+            </div>
+            <SeoPostFilter languages={languages} categories={categories} />
+          </div>
+        </div>
         <DataTable
           data={sortedSeoPosts}
           columns={columns}
