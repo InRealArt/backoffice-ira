@@ -112,9 +112,12 @@ export default function StickyFooterEditForm({ stickyFooter }: StickyFooterEditF
       }
       
       if (data.buttonUrl?.trim()) {
-        const urlPattern = /^\/[a-zA-Z0-9\-_\/]*$/
-        if (!urlPattern.test(data.buttonUrl)) {
-          validationErrors.push('L\'URL du bouton doit commencer par "/" et contenir uniquement des caractères alphanumériques, tirets et slashes')
+        const relativeUrlPattern = /^\/[a-zA-Z0-9\-_\/]*$/
+        const absoluteUrlPattern = /^https?:\/\/[^\s]+$/
+        const trimmed = data.buttonUrl.trim()
+        const isValid = relativeUrlPattern.test(trimmed) || absoluteUrlPattern.test(trimmed)
+        if (!isValid) {
+          validationErrors.push('L\'URL du bouton doit être une URL relative (ex: /ma-page) pour inrealart.com ou une URL absolue (ex: https://mondomaine.com/test)')
         }
       }
       
@@ -326,15 +329,20 @@ export default function StickyFooterEditForm({ stickyFooter }: StickyFooterEditF
               />
             </TranslationField>
 
-            <InputField
-              id="buttonUrl"
-              label="URL du bouton"
-              name="buttonUrl"
-              register={register}
-              error={errors.buttonUrl?.message}
-              required={isActive}
-              placeholder="/page-destination"
-            />
+            <div className="form-group">
+              <InputField
+                id="buttonUrl"
+                label="URL du bouton"
+                name="buttonUrl"
+                register={register}
+                error={errors.buttonUrl?.message}
+                required={isActive}
+                placeholder="/ma-page ou https://mondomaine.com/page"
+              />
+              <small className="form-help">
+                Saisissez une URL relative au site inrealart.com (ex: /ma-page) ou une URL absolue (ex: https://mondomaine.com/test).
+              </small>
+            </div>
           </div>
         </div>
 
