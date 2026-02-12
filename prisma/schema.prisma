@@ -1,523 +1,772 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
+    provider        = "prisma-client-js"
+    previewFeatures = ["multiSchema"]
+    binaryTargets   = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-  schemas   = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "backoffice", "statistics"]
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
+    schemas   = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "backoffice", "statistics"]
 }
 
 // Orders in the Marketplace
 model Order {
-  id          Int      @id @default(autoincrement()) // PostgreSQL supporte nativement UUID
-  orderNumber String   @unique // Obligatoire pour traçabilité commerciale
-  createdAt   DateTime @default(now()) // Date de transaction obligatoire
+    id          Int      @id @default(autoincrement())
+    orderNumber String   @unique // Obligatoire pour traçabilité commerciale
+    createdAt   DateTime @default(now()) // Date de transaction obligatoire
+    updatedAt   DateTime @updatedAt // Dernière mise à jour
 
-  // Montants (strictement obligatoires fiscalement)
-  subtotalPrice Decimal @db.Decimal(10, 2) // Prix HT
-  vatAmount     Decimal @db.Decimal(10, 2) // Montant TVA (obligatoire)
-  totalPrice    Decimal @db.Decimal(10, 2) // Prix TTC
-  vatRate       Decimal @db.Decimal(5, 2) // Taux de TVA appliqué
+    // Statut de la commande (OBLIGATOIRE pour gestion cycle de vie)
+    status             OrderStatusMarketplace @default(PENDING)
+    cancelledAt        DateTime? // Date d'annulation
+    cancellationReason String? // Raison de l'annulation
+    refundedAt         DateTime? // Date de remboursement
+    refundAmount       Decimal?               @db.Decimal(10, 2) // Montant remboursé
 
-  // Facturation (obligatoire)
-  invoiceNumber String? // Obligatoire pour la facturation en France
-  paidAt        DateTime? // Date de paiement (obligation comptable)
-  paymentMethod String // Méthode de paiement (obligation de traçabilité)
+    // Montants (strictement obligatoires fiscalement)
+    currency        String  @default("EUR") // Devise ISO 4217
+    subtotalPrice   Decimal @db.Decimal(10, 2) // Prix HT articles
+    vatAmount       Decimal @db.Decimal(10, 2) // Montant TVA total
+    totalPrice      Decimal @db.Decimal(10, 2) // Prix TTC total
+    vatRate         Decimal @db.Decimal(5, 2) // Taux de TVA principal appliqué
+    shippingCost    Decimal @default(0) @db.Decimal(10, 2) // Frais de livraison HT
+    shippingVat     Decimal @default(0) @db.Decimal(10, 2) // TVA sur livraison
+    shippingVatRate Decimal @default(20) @db.Decimal(5, 2) // Taux TVA livraison
 
-  // Client (minimum RGPD)
-  customerId    String
-  customerName  String
-  customerEmail String
+    // Facturation (OBLIGATOIRE en France)
+    invoiceNumber String    @unique // Numéro de facture séquentiel obligatoire
+    invoiceDate   DateTime  @default(now()) // Date d'émission facture
+    paidAt        DateTime? // Date de paiement effectif
+    paymentMethod String // Méthode de paiement (CB, virement, etc.)
 
-  // Adresse de facturation (obligatoire fiscalement)
-  billingAddressId     Int
-  // Adresse figée
-  billingStreetAddress String
-  billingPostalCode    String
-  billingCity          String
-  billingCountry       String
-  billingVatNumber     String?
+    // Vendeur (OBLIGATOIRE pour marketplace - Loi anti-fraude TVA 2018)
+    sellerId        String // ID du vendeur/artiste
+    sellerName      String // Nom du vendeur (figé au moment de la commande)
+    sellerSiret     String? // SIRET pour vendeurs français
+    sellerVatNumber String? // N° TVA intracommunautaire
 
-  // Relation avec CustomerAddress
-  billingAddress CustomerAddress @relation(fields: [billingAddressId], references: [id])
+    // Client (minimum RGPD)
+    customerId    String
+    customerName  String
+    customerEmail String
+    customerPhone String? // Téléphone pour livraison
 
-  // Éléments achetés
-  items OrderItem[]
+    // Adresse de facturation (obligatoire fiscalement - données figées)
+    billingAddressId     Int
+    billingStreetAddress String
+    billingPostalCode    String
+    billingCity          String
+    billingCountry       String
+    billingCountryCode   String // Code pays ISO
+    billingVatNumber     String? // Pour clients professionnels B2B
+    billingCompanyName   String? // Nom société si B2B
 
-  @@index([customerId])
-  @@index([orderNumber])
-  @@index([billingAddressId])
-  @@map("Order")
-  @@schema("marketplace")
+    // Adresse de livraison (obligatoire pour traçabilité - données figées)
+    shippingAddressId     Int?
+    shippingStreetAddress String?
+    shippingPostalCode    String?
+    shippingCity          String?
+    shippingCountry       String?
+    shippingCountryCode   String?
+    shippingCompanyName   String? // Si livraison entreprise
+    shippingPhone         String? // Contact livraison
+
+    // Droit de rétractation (OBLIGATOIRE vente à distance - Art. L221-18 Code conso)
+    withdrawalDeadline DateTime? // Date limite de rétractation (14 jours)
+    withdrawalWaived   Boolean   @default(false) // Renonciation (contenus numériques)
+    withdrawnAt        DateTime? // Date de rétractation effective
+
+    // Consentements légaux et CGV (OBLIGATOIRE RGPD + Code consommation)
+    termsAccepted     Boolean   @default(false) // CGV acceptées
+    termsVersion      String? // Version des CGV acceptées
+    termsAcceptedAt   DateTime? // Date/heure acceptation CGV
+    privacyAccepted   Boolean   @default(false) // Politique confidentialité
+    privacyVersion    String? // Version politique confidentialité
+    privacyAcceptedAt DateTime? // Date/heure acceptation
+
+    // Traçabilité livraison
+    shippedAt       DateTime? // Date d'expédition
+    deliveredAt     DateTime? // Date de livraison
+    trackingNumber  String? // Numéro de suivi
+    shippingCarrier String? // Transporteur
+
+    // === DROIT DE SUITE (Revente œuvres d'art) ===
+    // Directive 2001/84/CE - Droit de suite revente > 750€
+    isResale                Boolean   @default(false) // Est-ce une revente ?
+    originalPurchaseDate    DateTime? // Date achat initial
+    originalPurchasePrice   Decimal?  @db.Decimal(10, 2) // Prix achat initial
+    // Calcul droit de suite : 4% jusqu'à 50k€, dégressif au-delà
+    artistResaleRightDue    Boolean   @default(false) // Droit de suite applicable ?
+    artistResaleRightAmount Decimal?  @db.Decimal(10, 2) // Montant à reverser à l'artiste
+    artistResaleRightPaid   Boolean   @default(false) // Versé à l'artiste ?
+    artistResaleRightDate   DateTime? // Date versement
+
+    // === ASSURANCE TRANSPORT (Œuvres de valeur) ===
+    // Recommandée pour œuvres > 1000€
+    insuranceRequired     Boolean  @default(false) // Client a souscrit assurance
+    insuredValue          Decimal? @db.Decimal(10, 2) // Valeur déclarée pour assurance
+    insuranceCost         Decimal? @db.Decimal(10, 2) // Coût assurance transport
+    insuranceProvider     String? // Nom assureur
+    insurancePolicyNumber String? // Numéro police d'assurance
+
+    // === PACKAGING SPÉCIALISÉ ART ===
+    // Transport adapté aux œuvres fragiles
+    requiresArtShipping  Boolean        @default(true) // Transport spécialisé art requis
+    packagingType        PackagingType? // Type emballage (carton, caisse bois, tube)
+    packagingCost        Decimal?       @db.Decimal(10, 2) // Coût emballage spécifique
+    // Instructions manutention et livraison
+    handlingInstructions String?        @default("Fragile - Œuvre d'art") // Instructions spéciales
+    requiresSignature    Boolean        @default(true) // Signature obligatoire à la livraison
+
+    // Relations avec CustomerAddress
+    billingAddress  CustomerAddress  @relation("OrderBilling", fields: [billingAddressId], references: [id])
+    shippingAddress CustomerAddress? @relation("OrderShipping", fields: [shippingAddressId], references: [id])
+
+    // Éléments achetés
+    items OrderItem[]
+
+    @@index([customerId])
+    @@index([sellerId])
+    @@index([orderNumber])
+    @@index([status])
+    @@index([createdAt])
+    @@index([billingAddressId])
+    @@index([shippingAddressId])
+    @@index([isResale])
+    @@map("Order")
+    @@schema("marketplace")
 }
 
 model CustomerAddress {
-  id            Int    @id @default(autoincrement())
-  name          String // Name for the address
-  // Champs minimums obligatoires pour facturation valide
-  firstName     String
-  lastName      String
-  streetAddress String
-  postalCode    String
-  city          String
-  country       String // Country name (for VAT rules)
-  countryCode   String // Country code (for VAT rules)
+    id            Int    @id @default(autoincrement())
+    name          String // Libellé de l'adresse (ex: "Domicile", "Bureau")
+    // Champs minimums obligatoires pour facturation valide
+    firstName     String
+    lastName      String
+    streetAddress String
+    postalCode    String
+    city          String
+    country       String // Nom du pays
+    countryCode   String // Code pays ISO (pour règles TVA)
 
-  // Relations Customer (1..N : un client peut avoir plusieurs adresses)
-  customerId String
+    // Champs additionnels pour conformité
+    phone        String? // Téléphone (utile pour livraison)
+    companyName  String? // Nom société (si B2B)
+    vatNumber    String? // N° TVA pour entreprises
+    addressLine2 String? // Complément d'adresse
 
-  // Relation avec Country
-  Country Country? @relation(fields: [countryCode], references: [code])
+    // Relations Customer (1..N : un client peut avoir plusieurs adresses)
+    customerId String
 
-  // Relations
-  orders              Order[]
-  physicalItems       PhysicalItem[]              @relation("PhysicalItemShipping")
-  thirdPartyAddresses ThirdPartyCustomerAddress[]
+    // Relation avec Country
+    Country Country? @relation(fields: [countryCode], references: [code])
 
-  @@index([customerId])
-  @@index([countryCode])
-  @@map("CustomerAddress")
-  @@schema("marketplace")
+    // Relations avec Orders (séparées facturation/livraison)
+    billingOrders  Order[] @relation("OrderBilling")
+    shippingOrders Order[] @relation("OrderShipping")
+
+    // Autres relations
+    physicalItems       PhysicalItem[]              @relation("PhysicalItemShipping")
+    thirdPartyAddresses ThirdPartyCustomerAddress[]
+
+    @@index([customerId])
+    @@index([countryCode])
+    @@map("CustomerAddress")
+    @@schema("marketplace")
 }
 
 model ThirdPartyCustomerAddress {
-  id String @id
+    id String @id
 
-  // Relations Customer (adresse d'un client dans la marketplace)
-  address   CustomerAddress? @relation(fields: [addressId], references: [id])
-  addressId Int?
+    // Relations Customer (adresse d'un client dans la marketplace)
+    address   CustomerAddress? @relation(fields: [addressId], references: [id])
+    addressId Int?
 
-  @@schema("marketplace")
+    @@schema("marketplace")
 }
 
 model OrderItem {
-  id      Int   @id @default(autoincrement())
-  orderId Int
-  order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    id      Int   @id @default(autoincrement())
+    orderId Int
+    order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  // Nouvelles relations directes avec NftItem et PhysicalItem
-  // nftItemId      Int?
-  // nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
-  physicalItemId BigInt?
-  physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id])
+    // Nouvelles relations directes avec NftItem et PhysicalItem
+    // nftItemId      Int?
+    // nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
+    physicalItemId BigInt?
+    physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id])
 
-  // Données figées obligatoires (pour conformité facture)
-  title String // Nom du bien vendu (obligation facture)
+    // Données figées obligatoires (pour conformité facture et traçabilité)
+    title       String // Nom du bien vendu (obligation facture Art. L441-9 Code commerce)
+    description String? // Description détaillée du produit
+    sku         String? // Référence produit (SKU)
 
-  // Prix (obligatoire fiscalement)
-  unitPrice  Decimal @db.Decimal(10, 2) // Prix unitaire HT
-  vatRate    Decimal @db.Decimal(5, 2) // Taux TVA
-  vatAmount  Decimal @db.Decimal(10, 2) // Montant TVA
-  totalPrice Decimal @db.Decimal(10, 2) // Prix TTC
+    // Quantité
+    quantity Int @default(1) // Quantité commandée
 
-  @@index([orderId])
-  // @@index([nftItemId])
-  @@index([physicalItemId])
-  @@map("OrderItem")
-  @@schema("marketplace")
+    // Prix (obligatoire fiscalement - Art. L441-9 Code commerce)
+    unitPrice  Decimal @db.Decimal(10, 2) // Prix unitaire HT
+    vatRate    Decimal @db.Decimal(5, 2) // Taux TVA appliqué (5.5%, 10%, 20%)
+    vatAmount  Decimal @db.Decimal(10, 2) // Montant TVA = (unitPrice * quantity * vatRate / 100)
+    totalPrice Decimal @db.Decimal(10, 2) // Prix TTC = unitPrice * quantity + vatAmount
+
+    // Informations complémentaires figées
+    weight     Decimal? @db.Decimal(10, 2) // Poids (pour calcul frais port)
+    dimensions String? // Dimensions figées au moment de la commande
+
+    // Statut de l'item (si traitement par article)
+    status OrderItemStatus @default(PENDING)
+
+    // Informations artiste/vendeur figées
+    artistName String? // Nom de l'artiste au moment de la vente
+    artistId   Int? // Référence artiste (pour statistiques)
+
+    @@index([orderId])
+    // @@index([nftItemId])
+    @@index([physicalItemId])
+    @@index([artistId])
+    @@map("OrderItem")
+    @@schema("marketplace")
+}
+
+// Statuts possibles pour chaque item de commande
+enum OrderItemStatus {
+    PENDING // En attente
+    CONFIRMED // Confirmé
+    PROCESSING // En traitement
+    SHIPPED // Expédié
+    DELIVERED // Livré
+    CANCELLED // Annulé
+    REFUNDED // Remboursé
+
+    @@schema("marketplace")
+}
+
+// === ENUMS SPÉCIFIQUES MARCHÉ DE L'ART ===
+
+// État de conservation d'une œuvre d'art
+// Code consommation Art. L111-1 : Information obligatoire acheteur
+enum ArtworkCondition {
+    EXCELLENT // Excellent état - aucun défaut visible
+    VERY_GOOD // Très bon état - défauts mineurs invisibles à distance
+    GOOD // Bon état - quelques marques d'usure normales
+    FAIR // État correct - défauts visibles mais acceptable
+    RESTORED // Œuvre restaurée (préciser détails dans conditionNotes)
+
+    @@schema("backoffice")
+}
+
+// Type de signature de l'artiste sur l'œuvre
+// Information essentielle pour authenticité et valeur
+enum SignatureType {
+    SIGNED_FRONT // Signée au recto (face avant visible)
+    SIGNED_BACK // Signée au verso (dos de l'œuvre)
+    SIGNED_CERTIFICATE // Signature uniquement sur certificat d'authenticité
+    UNSIGNED // Œuvre non signée
+    STAMPED // Cachet/tampon de l'artiste
+
+    @@schema("backoffice")
+}
+
+// Type de stockage/localisation de l'œuvre
+// Pour gestion multi-sites (artistes, entrepôts, galeries)
+enum StorageType {
+    ARTIST_STUDIO // Atelier de l'artiste
+    WAREHOUSE // Entrepôt de la marketplace
+    GALLERY // Galerie d'art partenaire
+    COLLECTOR_HOME // Domicile du collectionneur (pour revente)
+    PROFESSIONAL_STORAGE // Stockage professionnel climatisé
+
+    @@schema("backoffice")
+}
+
+// Type d'emballage pour transport œuvres d'art
+// Adapté à la fragilité et dimensions des œuvres
+enum PackagingType {
+    STANDARD // Carton standard avec protection bulles
+    REINFORCED_BOX // Carton renforcé double paroi
+    WOODEN_CRATE // Caisse en bois sur-mesure (grandes œuvres)
+    TUBE // Tube rigide (pour toiles roulées)
+    CUSTOM // Emballage personnalisé spécifique
+
+    @@schema("marketplace")
 }
 
 model Invoice {
-  id            Int       @id @default(autoincrement())
-  invoiceNumber String    @unique // Numéro de facture obligatoire
-  createdAt     DateTime  @default(now()) // Date d'émission de la facture
-  dueDate       DateTime? // Date d'échéance de paiement
+    id            Int       @id @default(autoincrement())
+    invoiceNumber String    @unique // Numéro séquentiel obligatoire (Art. L102 B CGI)
+    createdAt     DateTime  @default(now()) // Date d'émission obligatoire
+    updatedAt     DateTime  @updatedAt
+    dueDate       DateTime? // Date d'échéance de paiement
 
-  // Référence à la commande d'origine
-  orderId     Int      @unique
-  orderNumber String // Numéro de commande lié
-  orderDate   DateTime // Date de la commande
+    // Référence à la commande d'origine
+    orderId     Int      @unique
+    orderNumber String // Numéro de commande lié
+    orderDate   DateTime // Date de la commande
 
-  // Montants (strictement obligatoires fiscalement)
-  subtotalPrice Decimal @db.Decimal(10, 2) // Prix HT
-  vatAmount     Decimal @db.Decimal(10, 2) // Montant TVA
-  totalPrice    Decimal @db.Decimal(10, 2) // Prix TTC
-  vatRate       Decimal @db.Decimal(5, 2) // Taux de TVA appliqué
+    // Montants (strictement obligatoires fiscalement - Art. L441-9 Code commerce)
+    currency        String  @default("EUR") // Devise ISO 4217
+    subtotalPrice   Decimal @db.Decimal(10, 2) // Total HT articles
+    vatAmount       Decimal @db.Decimal(10, 2) // Total TVA
+    totalPrice      Decimal @db.Decimal(10, 2) // Total TTC
+    vatRate         Decimal @db.Decimal(5, 2) // Taux de TVA principal
+    shippingCost    Decimal @default(0) @db.Decimal(10, 2) // Frais livraison HT
+    shippingVat     Decimal @default(0) @db.Decimal(10, 2) // TVA livraison
+    shippingVatRate Decimal @default(20) @db.Decimal(5, 2) // Taux TVA livraison
 
-  // Statut de paiement
-  paidAt        DateTime? // Date du paiement
-  paymentMethod String // Méthode de paiement
-  isPaid        Boolean   @default(false)
+    // Statut de paiement
+    paidAt        DateTime? // Date du paiement effectif
+    paymentMethod String // Méthode de paiement (obligation traçabilité)
+    isPaid        Boolean   @default(false)
 
-  // Informations du vendeur (fixes)
-  sellerName      String // Nom de la société
-  sellerAddress   String // Adresse du vendeur
-  sellerVatNumber String? // Numéro de TVA intracommunautaire
-  sellerSiret     String // Numéro SIRET
-  sellerEmail     String // Email de contact
+    // Informations sur le remboursement (si applicable)
+    refundedAt   DateTime?
+    refundAmount Decimal?  @db.Decimal(10, 2)
+    creditNoteId Int? // Référence à l'avoir si remboursement
 
-  // Client (données figées pour historique)
-  customerName  String // Nom complet du client
-  customerEmail String // Email du client
-  customerId    String // ID du client dans le système
+    // Informations du vendeur/marketplace (OBLIGATOIRES Art. L441-9)
+    sellerName       String // Dénomination sociale
+    sellerAddress    String // Adresse complète siège social
+    sellerPostalCode String // Code postal
+    sellerCity       String // Ville
+    sellerCountry    String  @default("France") // Pays
+    sellerVatNumber  String? // N° TVA intracommunautaire (si applicable)
+    sellerSiret      String // N° SIRET obligatoire
+    sellerEmail      String // Email de contact
+    sellerPhone      String? // Téléphone
+    sellerRcs        String? // RCS (ex: "RCS Paris B 123 456 789")
+    sellerCapital    String? // Capital social
+    sellerLegalForm  String? // Forme juridique (SARL, SAS, etc.)
 
-  // Adresse de facturation (figée)
-  billingAddressFullname  String
-  billingAddressStreet    String
-  billingAddressCity      String
-  billingAddressPostCode  String
-  billingAddressCountry   String
-  billingAddressVatNumber String? // Pour clients professionnels
+    // Client (données figées pour historique - OBLIGATOIRES)
+    customerId    String // ID du client
+    customerName  String // Nom complet du client
+    customerEmail String // Email du client
+    customerPhone String? // Téléphone du client
 
-  // Éléments de la facture (copiés depuis la commande)
-  items InvoiceItem[]
+    // Adresse de facturation (figée - OBLIGATOIRE Art. L441-9)
+    billingAddressFullname    String // Prénom + Nom ou Raison sociale
+    billingAddressStreet      String // Adresse ligne 1
+    billingAddressLine2       String? // Adresse ligne 2
+    billingAddressCity        String // Ville
+    billingAddressPostCode    String // Code postal
+    billingAddressCountry     String // Pays
+    billingAddressCountryCode String // Code pays ISO
+    billingAddressVatNumber   String? // N° TVA pour clients B2B
+    billingAddressCompanyName String? // Raison sociale si B2B
 
-  // Champs spécifiques pour conformité légale
-  legalMentions String // Mentions légales obligatoires
-  paymentTerms  String // Conditions de paiement
-  invoiceType   InvoiceType @default(INVOICE) // Type de document (facture, avoir, etc.)
+    // Éléments de la facture (copiés depuis la commande)
+    items InvoiceItem[]
 
-  // Références pour recherches
-  @@index([orderNumber])
-  @@index([invoiceNumber])
-  @@index([customerId])
-  @@map("Invoice")
-  @@schema("marketplace")
+    // Champs spécifiques pour conformité légale française
+    legalMentions String // Mentions légales obligatoires (CGV, RCS, etc.)
+    paymentTerms  String // Conditions de paiement (Art. L441-9)
+    invoiceType   InvoiceType @default(INVOICE) // Type de document
+
+    // Pénalités de retard (OBLIGATOIRE Art. L441-10 Code commerce)
+    latePaymentPenalty String? // "Taux BCE + 10 points" ou taux précis
+    recoveryFee        String  @default("40 EUR") // Indemnité forfaitaire 40€
+
+    // Escompte (si paiement anticipé)
+    discountRate   Decimal? @db.Decimal(5, 2) // Taux d'escompte si applicable
+    discountAmount Decimal? @db.Decimal(10, 2) // Montant escompte
+
+    // Conservation légale (10 ans obligatoire)
+    archivedAt DateTime? // Date d'archivage
+    pdfUrl     String? // URL du PDF généré (stockage sécurisé)
+
+    // Références pour recherches
+    @@index([orderNumber])
+    @@index([invoiceNumber])
+    @@index([customerId])
+    @@index([createdAt])
+    @@index([isPaid])
+    @@map("Invoice")
+    @@schema("marketplace")
 }
 
 model InvoiceItem {
-  id        Int     @id @default(autoincrement())
-  invoiceId Int
-  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+    id        Int     @id @default(autoincrement())
+    invoiceId Int
+    invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
-  // Nouvelles relations directes avec NftItem et PhysicalItem
-  // nftItemId      Int?
-  // nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
-  physicalItemId BigInt?
-  physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id])
+    // Nouvelles relations directes avec NftItem et PhysicalItem
+    // nftItemId      Int?
+    // nftItem        NftItem?      @relation(fields: [nftItemId], references: [id])
+    physicalItemId BigInt?
+    physicalItem   PhysicalItem? @relation(fields: [physicalItemId], references: [id])
 
-  // Données figées de l'article (pour historique complet)
-  title       String // Nom du produit
-  description String? // Description du produit
+    // Données figées de l'article (pour historique complet et conformité - Art. L441-9)
+    title       String // Désignation précise du produit (OBLIGATOIRE)
+    description String? // Description détaillée
+    sku         String? // Référence produit (SKU/EAN)
 
-  // Prix (obligatoire fiscalement)
-  unitPrice  Decimal @db.Decimal(10, 2) // Prix unitaire HT
-  vatRate    Decimal @db.Decimal(5, 2) // Taux TVA
-  vatAmount  Decimal @db.Decimal(10, 2) // Montant TVA
-  totalPrice Decimal @db.Decimal(10, 2) // Prix TTC
+    // Quantité (OBLIGATOIRE Art. L441-9)
+    quantity Int @default(1) // Quantité facturée
 
-  @@index([invoiceId])
-  // @@index([nftItemId])
-  @@index([physicalItemId])
-  @@map("InvoiceItem")
-  @@schema("marketplace")
+    // Prix (strictement obligatoire fiscalement - Art. L441-9 Code commerce)
+    unitPrice  Decimal @db.Decimal(10, 2) // Prix unitaire HT
+    vatRate    Decimal @db.Decimal(5, 2) // Taux TVA appliqué (5.5%, 10%, 20%)
+    vatAmount  Decimal @db.Decimal(10, 2) // Montant TVA
+    totalPrice Decimal @db.Decimal(10, 2) // Prix TTC ligne
+
+    // Remise éventuelle (doit figurer sur facture si applicable)
+    discountRate   Decimal? @db.Decimal(5, 2) // Taux de remise en %
+    discountAmount Decimal? @db.Decimal(10, 2) // Montant remise en €
+
+    // Informations complémentaires figées
+    weight     Decimal? @db.Decimal(10, 2) // Poids unitaire
+    dimensions String? // Dimensions
+
+    // Informations artiste/vendeur figées (traçabilité marketplace)
+    artistName String? // Nom de l'artiste
+    artistId   Int? // Référence artiste
+
+    @@index([invoiceId])
+    // @@index([nftItemId])
+    @@index([physicalItemId])
+    @@index([artistId])
+    @@map("InvoiceItem")
+    @@schema("marketplace")
 }
 
 enum InvoiceType {
-  INVOICE // Facture standard
-  CREDIT_NOTE // Avoir
-  PROFORMA // Facture proforma
-  RECEIPT // Reçu
+    INVOICE // Facture standard (Art. L441-9 Code commerce)
+    CREDIT_NOTE // Avoir (remboursement total ou partiel)
+    PROFORMA // Facture proforma (devis détaillé)
+    RECEIPT // Reçu / Ticket (ventes < seuil)
+    DEPOSIT_INVOICE // Facture d'acompte
+    FINAL_INVOICE // Facture de solde
+    CORRECTION // Facture rectificative
 
-  @@schema("marketplace")
+    @@schema("marketplace")
 }
 
 model ArtistCategory {
-  id               Int                    @id @default(autoincrement())
-  name             String
-  imageUrl         String? //Image visible for the category card on landing & MP
-  description      String?
-  order            Int?
-  slug             String?                @unique
-  artistCategories ArtistCategoryArtist[]
+    id               Int                    @id @default(autoincrement())
+    name             String
+    imageUrl         String? //Image visible for the category card on landing & MP
+    description      String?
+    order            Int?
+    slug             String?                @unique
+    artistCategories ArtistCategoryArtist[]
 
-  @@schema("public")
+    @@schema("public")
 }
 
 // Données intrinsèques à l'artiste
 model Artist {
-  id                 Int                  @id @default(autoincrement())
-  name               String
-  surname            String
-  pseudo             String               @unique
-  description        String               @unique
-  publicKey          String               @unique
-  imageUrl           String               @unique
-  isGallery          Boolean              @default(false)
-  backgroundImage    String?
-  slug               String?              @unique
-  birthYear          Int?
-  featuredArtwork    String?
-  countryCode        String?
-  websiteUrl         String?
-  facebookUrl        String?
-  instagramUrl       String?
-  twitterUrl         String?
-  linkedinUrl        String?
-  collections        NftCollection[]
-  Profile            Profile[]
-  BackofficeUser     BackofficeUser[]
-  LandingArtist      LandingArtist[]
-  PresaleArtworks    PresaleArtwork[]
-  Country            Country?             @relation(fields: [countryCode], references: [code])
-  items              Item[]
-  BackofficeAuthUser BackofficeAuthUser[]
-  WhiteListedUsers   WhiteListedUser[]
-  artistSpecialties  ArtistSpecialtyArtist[]
-  awards             ArtistAward[]
+    id                 Int                     @id @default(autoincrement())
+    name               String
+    surname            String
+    pseudo             String                  @unique
+    description        String                  @unique
+    publicKey          String                  @unique
+    imageUrl           String                  @unique
+    isGallery          Boolean                 @default(false)
+    backgroundImage    String?
+    slug               String?                 @unique
+    birthYear          Int?
+    // === CONFORMITÉ FISCALE - Calcul TVA réduite ===
+    // Art. 278 septies CGI : TVA 5,5% si artiste vivant ou décédé < 50 ans
+    deathYear          Int? // Année de décès (null = vivant)
+    featuredArtwork    String?
+    countryCode        String?
+    websiteUrl         String?
+    facebookUrl        String?
+    instagramUrl       String?
+    twitterUrl         String?
+    linkedinUrl        String?
+    collections        NftCollection[]
+    Profile            Profile[]
+    BackofficeUser     BackofficeUser[]
+    LandingArtist      LandingArtist[]
+    PresaleArtworks    PresaleArtwork[]
+    Country            Country?                @relation(fields: [countryCode], references: [code])
+    items              Item[]
+    BackofficeAuthUser BackofficeAuthUser[]
+    WhiteListedUsers   WhiteListedUser[]
+    artistSpecialties  ArtistSpecialtyArtist[]
+    awards             ArtistAward[]
 
-  @@schema("public")
+    @@schema("public")
 }
 
 // Modèle pour les récompenses d'un artiste
 model ArtistAward {
-  id          Int      @id @default(autoincrement())
-  name        String   // Nom de la récompense
-  description String?  // Description de la récompense
-  year        Int?     // Année de la récompense
-  artistId    Int
-  artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  
-  @@index([artistId])
-  @@index([year])
-  @@schema("public")
+    id          Int     @id @default(autoincrement())
+    name        String // Nom de la récompense
+    description String? // Description de la récompense
+    year        Int? // Année de la récompense
+    artistId    Int
+    artist      Artist  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+    @@index([artistId])
+    @@index([year])
+    @@schema("public")
 }
 
 // Modèle LandingArtist : données affichées sur la landing
 model LandingArtist {
-  id                  Int                    @id @default(autoincrement())
-  slug                String                 @unique
-  intro               String?
-  description         String?
-  artworkImages       Json                   @default("[]")
-  artworkStyle        String?
-  artistsPage         Boolean?               @default(false)
-  imageUrl            String                 @unique
-  secondaryImageUrl   String?
-  artistId            Int
-  //Champs pour le descriptif détaillé de l'artiste sur la landing
-  mediumTags          String[]               @default([])
-  quoteFromInRealArt  String?
-  biographyHeader1    String?
-  biographyText1      String?
-  biographyHeader2    String?
-  biographyText2      String?
-  biographyHeader3    String?
-  biographyText3      String?
-  biographyHeader4    String?
-  biographyText4      String?
-  imageArtistStudio   String?
-  onboardingBo        DateTime?
-  artistCategories    ArtistCategoryArtist[]
-  artist              Artist                 @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  physicalCollections PhysicalCollection[]
+    id                  Int                    @id @default(autoincrement())
+    slug                String                 @unique
+    intro               String?
+    description         String?
+    artworkImages       Json                   @default("[]")
+    artworkStyle        String?
+    artistsPage         Boolean?               @default(false)
+    imageUrl            String                 @unique
+    secondaryImageUrl   String?
+    artistId            Int
+    //Champs pour le descriptif détaillé de l'artiste sur la landing
+    mediumTags          String[]               @default([])
+    quoteFromInRealArt  String?
+    biographyHeader1    String?
+    biographyText1      String?
+    biographyHeader2    String?
+    biographyText2      String?
+    biographyHeader3    String?
+    biographyText3      String?
+    biographyHeader4    String?
+    biographyText4      String?
+    imageArtistStudio   String?
+    onboardingBo        DateTime?
+    artistCategories    ArtistCategoryArtist[]
+    artist              Artist                 @relation(fields: [artistId], references: [id], onDelete: Cascade)
+    physicalCollections PhysicalCollection[]
 
-  @@index([artistId])
-  @@schema("landing")
+    @@index([artistId])
+    @@schema("landing")
 }
 
 model ArtistCategoryArtist {
-  id              Int            @id @default(autoincrement())
-  landingArtistId Int
-  categoryId      Int
-  landingArtist   LandingArtist  @relation(fields: [landingArtistId], references: [id])
-  category        ArtistCategory @relation(fields: [categoryId], references: [id])
+    id              Int            @id @default(autoincrement())
+    landingArtistId Int
+    categoryId      Int
+    landingArtist   LandingArtist  @relation(fields: [landingArtistId], references: [id])
+    category        ArtistCategory @relation(fields: [categoryId], references: [id])
 
-  @@unique([landingArtistId, categoryId])
-  @@map("ArtistCategoryArtist")
-  @@schema("public")
+    @@unique([landingArtistId, categoryId])
+    @@map("ArtistCategoryArtist")
+    @@schema("public")
 }
 
 model NftCollection {
-  id              Int              @id @default(autoincrement())
-  name            String
-  symbol          String
-  addressAdmin    String
-  artistId        Int
-  contractAddress String?
-  transactionHash String?
-  status          CollectionStatus @default(pending)
-  smartContractId Int?
-  artist          Artist           @relation(fields: [artistId], references: [id])
-  nftResource     NftResource[]
-  smartContract   SmartContract?   @relation(fields: [smartContractId], references: [id])
+    id              Int              @id @default(autoincrement())
+    name            String
+    symbol          String
+    addressAdmin    String
+    artistId        Int
+    contractAddress String?
+    transactionHash String?
+    status          CollectionStatus @default(pending)
+    smartContractId Int?
+    artist          Artist           @relation(fields: [artistId], references: [id])
+    nftResource     NftResource[]
+    smartContract   SmartContract?   @relation(fields: [smartContractId], references: [id])
 
-  @@unique([symbol, smartContractId]) //Contrainte d'unicité composée
-  @@schema("public")
+    @@unique([symbol, smartContractId]) //Contrainte d'unicité composée
+    @@schema("public")
 }
 
 model NftResource {
-  id                      Int                      @id @default(autoincrement())
-  tokenId                 Int?
-  tokenUri                String?                  @unique
-  status                  ResourceNftStatuses
-  type                    ResourceTypes
-  minter                  String?
-  collectionId            Int
-  name                    String                   @unique
-  imageUri                String?
-  description             String
-  certificateUri          String?                  @unique
-  blockchainItemId        Int?                     @unique
-  mockups                 String[]
-  owner                   String?
-  transactionHash         String?
-  tags                    String[]
-  purchasedOnce           Boolean?                 @default(false)
-  previousOwner           String?
-  collection              NftCollection            @relation(fields: [collectionId], references: [id])
-  royaltyBeneficiaries    RoyaltyBeneficiary[]
-  marketPlaceTransactions MarketPlaceTransaction[]
-  // NftItem                 NftItem[]
+    id                      Int                      @id @default(autoincrement())
+    tokenId                 Int?
+    tokenUri                String?                  @unique
+    status                  ResourceNftStatuses
+    type                    ResourceTypes
+    minter                  String?
+    collectionId            Int
+    name                    String                   @unique
+    imageUri                String?
+    description             String
+    certificateUri          String?                  @unique
+    blockchainItemId        Int?                     @unique
+    mockups                 String[]
+    owner                   String?
+    transactionHash         String?
+    tags                    String[]
+    purchasedOnce           Boolean?                 @default(false)
+    previousOwner           String?
+    collection              NftCollection            @relation(fields: [collectionId], references: [id])
+    royaltyBeneficiaries    RoyaltyBeneficiary[]
+    marketPlaceTransactions MarketPlaceTransaction[]
+    // NftItem                 NftItem[]
 
-  @@schema("public")
+    @@schema("public")
 }
 
 model Web3Address {
-  id        Int       @id @default(autoincrement())
-  publicKey String
-  role      Web3Roles
+    id        Int       @id @default(autoincrement())
+    publicKey String
+    role      Web3Roles
 
-  @@schema("blockchain")
+    @@schema("blockchain")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Profile {
-  id         BigInt     @default(autoincrement())
-  created_at DateTime   @default(now()) @db.Timestamptz(6)
-  artistId   Int?
-  userRole   UserRoles? @default(SELLER)
-  userId     String     @id @db.Uuid
-  Artist     Artist?    @relation(fields: [artistId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+    id         BigInt     @default(autoincrement())
+    created_at DateTime   @default(now()) @db.Timestamptz(6)
+    artistId   Int?
+    userRole   UserRoles? @default(SELLER)
+    userId     String     @id @db.Uuid
+    Artist     Artist?    @relation(fields: [artistId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@schema("public")
+    @@schema("public")
 }
 
 model Transaction {
-  id              Int       @id @default(autoincrement())
-  tokenId         Int?
-  functionName    String?
-  transactionHash String?   @unique(map: "Transaction_txHash_key")
-  from            String
-  to              String
-  created_at      DateTime? @default(now()) @db.Timestamptz(6)
-  price           Decimal?  @db.Decimal
-  transferFrom    String?
-  transferTo      String?
-  contractAddress String?
+    id              Int       @id @default(autoincrement())
+    tokenId         Int?
+    functionName    String?
+    transactionHash String?   @unique(map: "Transaction_txHash_key")
+    from            String
+    to              String
+    created_at      DateTime? @default(now()) @db.Timestamptz(6)
+    price           Decimal?  @db.Decimal
+    transferFrom    String?
+    transferTo      String?
+    contractAddress String?
 
-  @@schema("blockchain")
+    @@schema("blockchain")
 }
 
 model BackofficeUser {
-  id            Int                  @id @default(autoincrement())
-  email         String?              @unique
-  walletAddress String?              @unique
-  linkedWallets Json                 @default("[]")
-  lastLogin     DateTime             @db.Timestamp(6)
-  userMetadata  Json
-  role          BackofficeUserRoles?
-  firstName     String?
-  lastName      String?
-  createdAt     DateTime             @default(now()) @db.Timestamp(6)
-  artistId      Int?
-  artist        Artist?              @relation(fields: [artistId], references: [id]) // Nouvelle relation
+    id            Int                  @id @default(autoincrement())
+    email         String?              @unique
+    walletAddress String?              @unique
+    linkedWallets Json                 @default("[]")
+    lastLogin     DateTime             @db.Timestamp(6)
+    userMetadata  Json
+    role          BackofficeUserRoles?
+    firstName     String?
+    lastName      String?
+    createdAt     DateTime             @default(now()) @db.Timestamp(6)
+    artistId      Int?
+    artist        Artist?              @relation(fields: [artistId], references: [id]) // Nouvelle relation
 
-  @@index([email])
-  @@index([walletAddress])
-  @@index([artistId]) // Nouvel index pour la clé étrangère
-  @@schema("public")
+    @@index([email])
+    @@index([walletAddress])
+    @@index([artistId]) // Nouvel index pour la clé étrangère
+    @@schema("public")
 }
 
 enum BackofficeUserRoles {
-  admin
-  artist
-  galleryManager
+    admin
+    artist
+    galleryManager
 
-  @@schema("backoffice")
+    @@schema("backoffice")
 }
 
 enum ResourceTypes {
-  IMAGE
-  VIDEO
+    IMAGE
+    VIDEO
 
-  @@schema("public")
+    @@schema("public")
 }
 
 enum Web3Roles {
-  MINTER
-  ADMIN
+    MINTER
+    ADMIN
 
-  @@schema("public")
+    @@schema("public")
 }
 
 enum ResourceNftStatuses {
-  UPLOADIPFS
-  UPLOADCERTIFICATE
-  UPLOADMETADATA
-  MINED
-  ROYALTYSET
-  LISTED
-  SOLD
+    UPLOADIPFS
+    UPLOADCERTIFICATE
+    UPLOADMETADATA
+    MINED
+    ROYALTYSET
+    LISTED
+    SOLD
 
-  @@schema("public")
+    @@schema("public")
 }
 
 enum UserRoles {
-  SELLER
-  PARTNER
-  GALLERY
-  ADMIN
+    SELLER
+    PARTNER
+    GALLERY
+    ADMIN
 
-  @@schema("public")
+    @@schema("public")
 }
 
 enum OrderStatus {
-  WAITING_FOR_CONFIRMATION
-  CONFIRMED
-  PROCESS_OF_DELIVERY
-  DELIVER
+    WAITING_FOR_CONFIRMATION
+    CONFIRMED
+    PROCESS_OF_DELIVERY
+    DELIVER
 
-  @@schema("public")
+    @@schema("public")
+}
+
+// Statuts de commande marketplace (conforme législation française)
+enum OrderStatusMarketplace {
+    PENDING // En attente de paiement
+    PAID // Payée (paiement confirmé)
+    PROCESSING // En cours de traitement par le vendeur
+    READY_TO_SHIP // Prête à être expédiée
+    SHIPPED // Expédiée
+    DELIVERED // Livrée (confirmée)
+    COMPLETED // Complétée (délai rétractation passé)
+    CANCELLED // Annulée (par client ou vendeur)
+    REFUNDED // Remboursée
+    PARTIALLY_REFUNDED // Partiellement remboursée
+    DISPUTED // En litige
+    WITHDRAWN // Rétractation exercée (14 jours)
+
+    @@schema("marketplace")
 }
 
 enum Chain {
-  eth_mainnet
-  sepolia
-  polygon_mainnet
-  polygon_testnet
+    eth_mainnet
+    sepolia
+    polygon_mainnet
+    polygon_testnet
 
-  @@schema("blockchain")
+    @@schema("blockchain")
 }
 
 enum CollectionStatus {
-  pending
-  confirmed
-  failed
+    pending
+    confirmed
+    failed
 
-  @@schema("public")
+    @@schema("public")
 }
 
 model Item {
-  id                 Int                @id @default(autoincrement())
-  name               String
-  description        String
-  idUser             String
-  user               BackofficeAuthUser @relation(fields: [idUser], references: [id])
-  artistId           Int?
-  artist             Artist?            @relation(fields: [artistId], references: [id])
-  tags               String[]           @default([])
-  slug               String?            @unique
-  metaDescription    String
-  metaTitle          String
-  mainImageUrl       String?
-  secondaryImagesUrl String[]           @default([])
-  featured           Boolean?           @default(false)
+    id                 Int                @id @default(autoincrement())
+    name               String
+    description        String
+    idUser             String
+    user               BackofficeAuthUser @relation(fields: [idUser], references: [id])
+    artistId           Int?
+    artist             Artist?            @relation(fields: [artistId], references: [id])
+    tags               String[]           @default([])
+    slug               String?            @unique
+    metaDescription    String
+    metaTitle          String
+    mainImageUrl       String?
+    secondaryImagesUrl String[]           @default([])
+    featured           Boolean?           @default(false)
 
-  createdAt DateTime @default(now()) @db.Date
+    createdAt DateTime @default(now()) @db.Date
 
-  // Relations
-  // nftItem      NftItem?
-  physicalItem PhysicalItem?
+    // Relations
+    // nftItem      NftItem?
+    physicalItem PhysicalItem?
 
-  @@index([idUser])
-  @@index([artistId])
-  @@schema("backoffice")
+    @@index([idUser])
+    @@index([artistId])
+    @@schema("backoffice")
 }
 
 // model NftItem {
@@ -537,616 +786,732 @@ model Item {
 // }
 
 model PhysicalItem {
-  id                BigInt             @id @default(autoincrement())
-  itemId            Int                @unique
-  item              Item               @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  price             Int                @default(0)
-  status            PhysicalItemStatus @default(created)
-  commercialStatus  PhysicalItemCommercialStatus @default(AVAILABLE)
-  stockQty          Int                @default(0)
-  initialQty        Int                @default(1)
-  isOnline          Boolean            @default(false)
-  height            Decimal?           @db.Decimal(10, 2)
-  width             Decimal?           @db.Decimal(10, 2)
-  weight            Decimal?           @db.Decimal(10, 2)
-  thickness         Decimal?           @db.Decimal(10, 2)
-  unitHeight        String?            @default("cm")
-  unitWidth         String?            @default("cm")
-  unitWeight        String?            @default("kg")
-  unitThickness     String?            @default("cm")
-  creationYear      Int?
-  shippingAddressId Int?
-  shippingAddress   CustomerAddress?   @relation("PhysicalItemShipping", fields: [shippingAddressId], references: [id])
-  orderItems        OrderItem[]
-  invoiceItems      InvoiceItem[]
+    id                BigInt                       @id @default(autoincrement())
+    itemId            Int                          @unique
+    item              Item                         @relation(fields: [itemId], references: [id], onDelete: Cascade)
+    price             Int                          @default(0)
+    status            PhysicalItemStatus           @default(created)
+    commercialStatus  PhysicalItemCommercialStatus @default(AVAILABLE)
+    stockQty          Int                          @default(0)
+    initialQty        Int                          @default(1)
+    isOnline          Boolean                      @default(false)
+    height            Decimal?                     @db.Decimal(10, 2)
+    width             Decimal?                     @db.Decimal(10, 2)
+    weight            Decimal?                     @db.Decimal(10, 2)
+    thickness         Decimal?                     @db.Decimal(10, 2)
+    unitHeight        String?                      @default("cm")
+    unitWidth         String?                      @default("cm")
+    unitWeight        String?                      @default("kg")
+    unitThickness     String?                      @default("cm")
+    creationYear      Int?
+    shippingAddressId Int?
+    shippingAddress   CustomerAddress?             @relation("PhysicalItemShipping", fields: [shippingAddressId], references: [id])
+    orderItems        OrderItem[]
+    invoiceItems      InvoiceItem[]
 
-  realViewCount Int @default(0)
-  fakeViewCount Int @default(0)
+    realViewCount Int @default(0)
+    fakeViewCount Int @default(0)
 
-  // Caractéristiques artistiques
-  mediumId       Int?
-  medium         ArtworkMedium?  @relation(fields: [mediumId], references: [id])
-  supportId Int?
-  support ArtworkSupport? @relation(fields: [supportId], references: [id])
-  
-  // Relations many-to-many via tables de jointure
-  itemStyles     ItemStyle[]
-  itemTechniques ItemTechnique[]
-  itemThemes     ItemTheme[]
+    // Caractéristiques artistiques
+    mediumId  Int?
+    medium    ArtworkMedium?  @relation(fields: [mediumId], references: [id])
+    supportId Int?
+    support   ArtworkSupport? @relation(fields: [supportId], references: [id])
 
-  // Relations
-  authCertificate      AuthCertificatePhysicalArtwork?
-  ArtistAddress        ArtistAddress?                  @relation(fields: [artistAddressId], references: [id])
-  artistAddressId      Int?
-  physicalCollectionId Int?
-  physicalCollection   PhysicalCollection?             @relation(fields: [physicalCollectionId], references: [id])
+    // Relations many-to-many via tables de jointure
+    itemStyles     ItemStyle[]
+    itemTechniques ItemTechnique[]
+    itemThemes     ItemTheme[]
 
-  createdAt                DateTime                  @default(now())
-  physicalArtworkViews     PhysicalArtworkView[]
-  physicalArtworkViewStats PhysicalArtworkViewStat[]
-  images                   PhysicalItemImage[]
+    // Relations
+    authCertificate      AuthCertificatePhysicalArtwork?
+    ArtistAddress        ArtistAddress?                  @relation(fields: [artistAddressId], references: [id])
+    artistAddressId      Int?
+    physicalCollectionId Int?
+    physicalCollection   PhysicalCollection?             @relation(fields: [physicalCollectionId], references: [id])
 
-  @@index([itemId])
-  @@index([artistAddressId])
-  @@index([shippingAddressId])
-  @@index([mediumId])
-  @@index([isOnline])
-  @@index([physicalCollectionId])
-  @@schema("backoffice")
+    createdAt                DateTime                  @default(now())
+    physicalArtworkViews     PhysicalArtworkView[]
+    physicalArtworkViewStats PhysicalArtworkViewStat[]
+    images                   PhysicalItemImage[]
+
+    // === NOUVELLES RELATIONS (Modèles satellites pour organisation) ===
+    artDetails PhysicalItemArtDetails? // Détails spécifiques marché de l'art
+    shipping   PhysicalItemShipping? // Logistique et stockage
+    provenance PhysicalItemProvenance? // Provenance et expertise (optionnel)
+
+    @@index([itemId])
+    @@index([artistAddressId])
+    @@index([shippingAddressId])
+    @@index([mediumId])
+    @@index([isOnline])
+    @@index([physicalCollectionId])
+    @@schema("backoffice")
+}
+
+// ============================================
+// MODÈLES SATELLITES - Organisation PhysicalItem
+// ============================================
+
+// Détails spécifiques au marché de l'art (TVA, authenticité, état)
+model PhysicalItemArtDetails {
+    id             BigInt       @id @default(autoincrement())
+    physicalItemId BigInt       @unique
+    physicalItem   PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+
+    // === TVA ET ORIGINALITÉ ===
+    // Art. 278 septies CGI - TVA réduite 5,5% pour œuvres originales
+    isOriginalArtwork Boolean @default(true) // Œuvre originale vs reproduction (impact TVA)
+    isLimitedEdition  Boolean @default(false) // Édition limitée (max 30 pour TVA 5,5%)
+    editionNumber     String? // Ex: "5/50" - Numérotation de l'édition
+    editionSize       Int? // Taille totale de l'édition
+
+    // === ÉTAT ET CONSERVATION ===
+    // Transparence obligatoire pour acheteurs (Code consommation Art. L111-1)
+    condition      ArtworkCondition @default(EXCELLENT) // État général de conservation
+    conditionNotes String? // Détails : restaurations, défauts visibles, etc.
+
+    // === SIGNATURE DE L'ARTISTE ===
+    // Information essentielle pour valeur et authenticité de l'œuvre
+    isSigned          Boolean        @default(false) // Œuvre signée par l'artiste
+    signatureType     SignatureType? @default(SIGNED_FRONT) // Type et localisation signature
+    signatureLocation String? // Précision localisation (ex: "En bas à droite")
+
+    // === ENCADREMENT ===
+    // Impact sur transport, valeur et présentation
+    isFramed         Boolean  @default(false) // Œuvre encadrée
+    frameDescription String? // Description cadre (matériau, style, couleur)
+    frameIncluded    Boolean  @default(true) // Cadre inclus dans prix de vente
+    frameValue       Decimal? @db.Decimal(10, 2) // Valeur cadre si vendu séparément
+
+    // === CERTIFICAT D'AUTHENTICITÉ ===
+    // Obligation légale et garantie pour acheteur (marché de l'art)
+    certificateIncluded Boolean @default(true) // Certificat d'authenticité fourni
+    certificateType     String? // Type : artiste, galerie, expert
+    certificateNumber   String? // Numéro unique du certificat
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([physicalItemId])
+    @@index([isOriginalArtwork])
+    @@index([condition])
+    @@index([isSigned])
+    @@schema("backoffice")
+}
+
+// Informations logistiques et stockage
+model PhysicalItemShipping {
+    id             BigInt       @id @default(autoincrement())
+    physicalItemId BigInt       @unique
+    physicalItem   PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+
+    // === EXPÉDITION ET DISPONIBILITÉ ===
+    // Information précontractuelle obligatoire (Art. L111-1 Code conso)
+    shippingDelay       Int     @default(3) // Délai en jours ouvrés avant expédition
+    readyToShip         Boolean @default(true) // Œuvre disponible immédiatement
+    requiresCustomCrate Boolean @default(false) // Nécessite caisse bois sur-mesure
+
+    // === ASSURANCE ET TRANSPORT ===
+    // Recommandations pour œuvres de valeur (> 1000€)
+    insuranceRecommended    Boolean  @default(false) // Assurance transport recommandée
+    estimatedInsuranceValue Decimal? @db.Decimal(10, 2) // Valeur estimée assurance
+
+    // === STOCKAGE ET LOCALISATION ===
+    // Gestion multi-sites (ateliers, entrepôts, galeries)
+    storageLocation     String? // Lieu stockage actuel
+    storageType         StorageType? // Type stockage (atelier, entrepôt, galerie)
+    availableForViewing Boolean      @default(false) // Visite possible sur RDV
+    viewingLocation     String? // Lieu où l'œuvre peut être vue
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([physicalItemId])
+    @@index([readyToShip])
+    @@index([storageType])
+    @@schema("backoffice")
+}
+
+// Provenance et expertise (marché haut de gamme)
+model PhysicalItemProvenance {
+    id             BigInt       @id @default(autoincrement())
+    physicalItemId BigInt       @unique
+    physicalItem   PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+
+    // === PROVENANCE ET HISTORIQUE ===
+    // Traçabilité et valorisation œuvre (marché haut de gamme)
+    provenance   String? // Historique propriétaires/galeries/expositions
+    exhibitions  String? // Liste expositions où l'œuvre a été présentée
+    publications String? // Catalogues/livres mentionnant l'œuvre
+
+    // === EXPERTISE ET AUTHENTIFICATION ===
+    // Pour œuvres de valeur nécessitant expertise professionnelle
+    expertisedBy   String? // Nom expert ayant authentifié l'œuvre
+    expertiseDate  DateTime? // Date expertise
+    expertiseValue Decimal?  @db.Decimal(10, 2) // Valeur estimée par expert
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([physicalItemId])
+    @@schema("backoffice")
 }
 
 enum NftItemStatus {
-  created
-  pending
-  minted
-  listed
-  sold
+    created
+    pending
+    minted
+    listed
+    sold
 
-  @@schema("backoffice")
+    @@schema("backoffice")
 }
 
 enum PhysicalItemStatus {
-  created
-  pending
-  listed
-  sold
+    created
+    pending
+    listed
+    sold
 
-  @@schema("backoffice")
+    @@schema("backoffice")
 }
 
 enum PhysicalItemCommercialStatus {
-  AVAILABLE      // Disponible à la vente
-  UNAVAILABLE    // Indisponible
+    AVAILABLE // Disponible à la vente
+    UNAVAILABLE // Indisponible
 
-  @@schema("backoffice")
+    @@schema("backoffice")
 }
 
 enum PhysicalItemImageType {
-  CLOSE_UP        // Gros plan
-  SIGNATURE       // Signature
-  SIDE_VIEW       // Vue latérale
-  BACK_VIEW      // Vue de derrière
-  IN_SITU        // In situ
-  OTHER          // Autres
+    CLOSE_UP // Gros plan
+    SIGNATURE // Signature
+    SIDE_VIEW // Vue latérale
+    BACK_VIEW // Vue de derrière
+    IN_SITU // In situ
+    OTHER // Autres
 
-  @@schema("backoffice")
+    @@schema("backoffice")
 }
 
 enum ItemStatus {
-  created
-  pending
-  minted
-  listed
+    created
+    pending
+    minted
+    listed
 
-  @@schema("backoffice")
+    @@schema("backoffice")
 }
 
 model AuthCertificatePhysicalArtwork {
-  id             Int          @id @default(autoincrement())
-  physicalItemId BigInt       @unique
-  physicalItem   PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
-  file           Bytes
+    id             Int          @id @default(autoincrement())
+    physicalItemId BigInt       @unique
+    physicalItem   PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+    file           Bytes
 
-  @@index([physicalItemId])
-  @@schema("backoffice")
+    @@index([physicalItemId])
+    @@schema("backoffice")
 }
 
 model PhysicalItemImage {
-  id             BigInt                @id @default(autoincrement())
-  physicalItemId BigInt
-  physicalItem   PhysicalItem          @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
-  imageUrl       String                // URL de l'image uploadée
-  imageType      PhysicalItemImageType  // Type d'image
-  order          Int?                  @default(0) // Ordre d'affichage pour un même type
-  alt            String?               // Texte alternatif pour l'accessibilité
-  createdAt      DateTime              @default(now())
+    id             BigInt                @id @default(autoincrement())
+    physicalItemId BigInt
+    physicalItem   PhysicalItem          @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+    imageUrl       String // URL de l'image uploadée
+    imageType      PhysicalItemImageType // Type d'image
+    order          Int?                  @default(0) // Ordre d'affichage pour un même type
+    alt            String? // Texte alternatif pour l'accessibilité
+    createdAt      DateTime              @default(now())
 
-  @@index([physicalItemId])
-  @@index([physicalItemId, imageType])
-  @@index([physicalItemId, imageType, order])
-  @@schema("backoffice")
+    @@index([physicalItemId])
+    @@index([physicalItemId, imageType])
+    @@index([physicalItemId, imageType, order])
+    @@schema("backoffice")
 }
 
 model SmartContract {
-  id                 Int             @id @default(autoincrement())
-  factoryAddress     String
-  royaltiesAddress   String
-  marketplaceAddress String
-  active             Boolean
-  network            NetworkType
-  collections        NftCollection[]
+    id                 Int             @id @default(autoincrement())
+    factoryAddress     String
+    royaltiesAddress   String
+    marketplaceAddress String
+    active             Boolean
+    network            NetworkType
+    collections        NftCollection[]
 
-  @@schema("blockchain")
+    @@schema("blockchain")
 }
 
 enum NetworkType {
-  mainnet
-  sepolia
-  polygon
-  polygonAmoy
-  arbitrum
-  base
-  sepoliaBase
+    mainnet
+    sepolia
+    polygon
+    polygonAmoy
+    arbitrum
+    base
+    sepoliaBase
 
-  @@schema("blockchain")
+    @@schema("blockchain")
 }
 
 model RoyaltyBeneficiary {
-  id              Int         @id @default(autoincrement())
-  wallet          String
-  percentage      Int
-  totalPercentage Int
-  txHash          String?
-  nftResourceId   Int
-  nftResource     NftResource @relation(fields: [nftResourceId], references: [id])
+    id              Int         @id @default(autoincrement())
+    wallet          String
+    percentage      Int
+    totalPercentage Int
+    txHash          String?
+    nftResourceId   Int
+    nftResource     NftResource @relation(fields: [nftResourceId], references: [id])
 
-  @@index([nftResourceId])
-  @@schema("blockchain")
+    @@index([nftResourceId])
+    @@schema("blockchain")
 }
 
 model MarketPlaceTransaction {
-  id              Int         @id @default(autoincrement())
-  nftResourceId   Int
-  nftResource     NftResource @relation(fields: [nftResourceId], references: [id])
-  functionName    String?
-  transactionHash String?     @unique(map: "MarketPlaceTransaction_txHash_key")
-  from            String
-  to              String
-  created_at      DateTime?   @default(now()) @db.Timestamptz(6)
-  price           Decimal?    @db.Decimal
-  transferFrom    String?
-  transferTo      String?
-  contractAddress String?
+    id              Int         @id @default(autoincrement())
+    nftResourceId   Int
+    nftResource     NftResource @relation(fields: [nftResourceId], references: [id])
+    functionName    String?
+    transactionHash String?     @unique(map: "MarketPlaceTransaction_txHash_key")
+    from            String
+    to              String
+    created_at      DateTime?   @default(now()) @db.Timestamptz(6)
+    price           Decimal?    @db.Decimal
+    transferFrom    String?
+    transferTo      String?
+    contractAddress String?
 
-  @@index([nftResourceId])
-  @@schema("blockchain")
+    @@index([nftResourceId])
+    @@schema("blockchain")
 }
 
-/**
- * *****  SCHEMA LANDING ******
- */
+// *****  SCHEMA LANDING ******
 
 // Définition des langues disponibles
 model Language {
-  id           Int           @id @default(autoincrement())
-  code         String        @unique // ex: fr, en, es
-  name         String // ex: Français, English, Español
-  isDefault    Boolean       @default(false)
-  translations Translation[]
-  seoPosts     SeoPost[] // Nouvelle relation
+    id           Int           @id @default(autoincrement())
+    code         String        @unique // ex: fr, en, es
+    name         String // ex: Français, English, Español
+    isDefault    Boolean       @default(false)
+    translations Translation[]
+    seoPosts     SeoPost[] // Nouvelle relation
 
-  @@schema("landing")
+    @@schema("landing")
 }
 
 // Table de traduction générique
 model Translation {
-  id         Int      @id @default(autoincrement())
-  entityType String // Le type d'entité (ex: "Team")
-  entityId   Int // L'ID de l'entité (ex: ID du membre de l'équipe)
-  field      String // Le champ à traduire (ex: "intro", "description")
-  value      String?
-  languageId Int
-  language   Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+    id         Int      @id @default(autoincrement())
+    entityType String // Le type d'entité (ex: "Team")
+    entityId   Int // L'ID de l'entité (ex: ID du membre de l'équipe)
+    field      String // Le champ à traduire (ex: "intro", "description")
+    value      String?
+    languageId Int
+    language   Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
 
-  @@unique([entityType, entityId, field, languageId])
-  @@index([entityType, entityId])
-  @@index([languageId])
-  @@schema("landing")
+    @@unique([entityType, entityId, field, languageId])
+    @@index([entityType, entityId])
+    @@index([languageId])
+    @@schema("landing")
 }
 
 // Modèle Utilisateur
 model Team {
-  id           Int     @id @default(autoincrement())
-  firstName    String
-  lastName     String
-  email        String
-  role         String
-  order        Int?
-  intro        String?
-  description  String?
-  photoUrl1    String?
-  photoUrl2    String?
-  linkedinUrl  String?
-  instagramUrl String?
-  facebookUrl  String?
-  githubUrl    String?
-  twitterUrl   String?
-  websiteUrl   String?
+    id           Int     @id @default(autoincrement())
+    firstName    String
+    lastName     String
+    email        String
+    role         String
+    order        Int?
+    intro        String?
+    description  String?
+    photoUrl1    String?
+    photoUrl2    String?
+    linkedinUrl  String?
+    instagramUrl String?
+    facebookUrl  String?
+    githubUrl    String?
+    twitterUrl   String?
+    websiteUrl   String?
 
-  @@schema("landing")
+    @@schema("landing")
 }
 
 // Modèle FAQ
 model Faq {
-  id       Int    @id @default(autoincrement())
-  question String
-  answer   String
-  order    Int?
+    id       Int    @id @default(autoincrement())
+    question String
+    answer   String
+    order    Int?
 
-  @@schema("landing")
+    @@schema("landing")
 }
 
 // Modèle pour l'en-tête de FAQ détaillée
 model DetailedFaqHeader {
-  id       Int               @id @default(autoincrement())
-  name     String
-  faqItems DetailedFaqItem[]
+    id       Int               @id @default(autoincrement())
+    name     String
+    faqItems DetailedFaqItem[]
 
-  @@schema("landing")
+    @@schema("landing")
 }
 
 // Modèle pour les éléments de FAQ détaillée
 model DetailedFaqItem {
-  id            Int               @id @default(autoincrement())
-  question      String
-  answer        String
-  detailedFaqId Int
-  header        DetailedFaqHeader @relation(fields: [detailedFaqId], references: [id])
+    id            Int               @id @default(autoincrement())
+    question      String
+    answer        String
+    detailedFaqId Int
+    header        DetailedFaqHeader @relation(fields: [detailedFaqId], references: [id])
 
-  @@index([detailedFaqId])
-  @@schema("landing")
+    @@index([detailedFaqId])
+    @@schema("landing")
 }
 
 model DetailedFaqPage {
-  id       Int                   @id @default(autoincrement())
-  name     LandingPage
-  faqItems DetailedFaqPageItem[]
+    id       Int                   @id @default(autoincrement())
+    name     LandingPage
+    faqItems DetailedFaqPageItem[]
 
-  @@schema("landing")
+    @@schema("landing")
 }
 
 // Modèle pour les éléments de FAQ détaillée
 model DetailedFaqPageItem {
-  id                Int             @id @default(autoincrement())
-  question          String
-  answer            String
-  detailedFaqPageId Int
-  order             Int             @default(1)
-  page              DetailedFaqPage @relation(fields: [detailedFaqPageId], references: [id])
+    id                Int             @id @default(autoincrement())
+    question          String
+    answer            String
+    detailedFaqPageId Int
+    order             Int             @default(1)
+    page              DetailedFaqPage @relation(fields: [detailedFaqPageId], references: [id])
 
-  @@index([detailedFaqPageId])
-  @@schema("landing")
+    @@index([detailedFaqPageId])
+    @@schema("landing")
 }
 
 enum LandingPage {
-  root                               @map("/")
-  artists                            @map("/artists")
-  marketplace                        @map("/marketplace")
-  token                              @map("/token")
-  usecase                            @map("/usecase")
-  usecaseLeasing                     @map("/usecase/leasing")
-  usecaseLending                     @map("/usecase/lending")
-  usecaseFractionate                 @map("/usecase/fractionate")
-  usecaseCompanies                   @map("/usecase/companies")
-  roadmap                            @map("/roadmap")
-  presale                            @map("/presale")
-  team                               @map("/team")
-  loa_simulator                      @map("/loa-simulator")
-  heritage_art_simulator             @map("/heritage-art-simulator")
-  art_salon_simulator_artbasel_paris @map("/art-salon-simulator/artbasel-paris")
-  art_salon_simulator_artgeneve      @map("/art-salon-simulator/artgeneve")
-  joinInRealArt                      @map("/joinInRealArt")
-  joinInRealArt_artists              @map("/joinInRealArt/artists")
-  joinInRealArt_galleries            @map("/joinInRealArt/galleries")
-  faq                                @map("/faq")
-  faq_translated                     @map("/faq/translated")
-  glossary                           @map("/glossary")
-  contact                            @map("/contact")
-  terms                              @map("/terms")
-  terms_nft                          @map("/terms-nft")
-  legal                              @map("/legal")
+    root                               @map("/")
+    artists                            @map("/artists")
+    marketplace                        @map("/marketplace")
+    token                              @map("/token")
+    usecase                            @map("/usecase")
+    usecaseLeasing                     @map("/usecase/leasing")
+    usecaseLending                     @map("/usecase/lending")
+    usecaseFractionate                 @map("/usecase/fractionate")
+    usecaseCompanies                   @map("/usecase/companies")
+    roadmap                            @map("/roadmap")
+    presale                            @map("/presale")
+    team                               @map("/team")
+    loa_simulator                      @map("/loa-simulator")
+    heritage_art_simulator             @map("/heritage-art-simulator")
+    art_salon_simulator_artbasel_paris @map("/art-salon-simulator/artbasel-paris")
+    art_salon_simulator_artgeneve      @map("/art-salon-simulator/artgeneve")
+    joinInRealArt                      @map("/joinInRealArt")
+    joinInRealArt_artists              @map("/joinInRealArt/artists")
+    joinInRealArt_galleries            @map("/joinInRealArt/galleries")
+    faq                                @map("/faq")
+    faq_translated                     @map("/faq/translated")
+    glossary                           @map("/glossary")
+    contact                            @map("/contact")
+    terms                              @map("/terms")
+    terms_nft                          @map("/terms-nft")
+    legal                              @map("/legal")
 
-  @@schema("landing")
+    @@schema("landing")
 }
 
 // Modèle pour l'en-tête de FAQ détaillée
 model DetailedGlossaryHeader {
-  id            Int                    @id @default(autoincrement())
-  name          String
-  glossaryItems DetailedGlossaryItem[]
+    id            Int                    @id @default(autoincrement())
+    name          String
+    glossaryItems DetailedGlossaryItem[]
 
-  @@schema("landing")
+    @@schema("landing")
 }
 
 // Modèle pour les éléments de FAQ détaillée
 model DetailedGlossaryItem {
-  id                 Int                    @id @default(autoincrement())
-  question           String
-  answer             String
-  detailedGlossaryId Int
-  header             DetailedGlossaryHeader @relation(fields: [detailedGlossaryId], references: [id])
+    id                 Int                    @id @default(autoincrement())
+    question           String
+    answer             String
+    detailedGlossaryId Int
+    header             DetailedGlossaryHeader @relation(fields: [detailedGlossaryId], references: [id])
 
-  @@index([detailedGlossaryId])
-  @@schema("landing")
+    @@index([detailedGlossaryId])
+    @@schema("landing")
 }
 
 model PresaleArtwork {
-  id           Int      @id @default(autoincrement())
-  name         String
-  description  String?
-  order        Int?
-  displayOrder Int? // Ordre d'affichage pour une autre application (différent de order)
-  artistId     Int
-  width        Int? //In centimeters
-  height       Int? //In centimeters
-  price        Int?
-  imageUrl     String   @unique
-  mockupUrls   Json     @default("[]")
-  isSold       Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  artist       Artist   @relation(fields: [artistId], references: [id])
+    id           Int      @id @default(autoincrement())
+    name         String
+    description  String?
+    order        Int?
+    displayOrder Int? // Ordre d'affichage pour une autre application (différent de order)
+    artistId     Int
+    width        Int? //In centimeters
+    height       Int? //In centimeters
+    price        Int?
+    imageUrl     String   @unique
+    mockupUrls   Json     @default("[]")
+    isSold       Boolean  @default(false)
+    createdAt    DateTime @default(now())
+    artist       Artist   @relation(fields: [artistId], references: [id])
 
-  @@index([artistId])
-  @@index([displayOrder])
-  @@schema("landing")
+    @@index([artistId])
+    @@index([displayOrder])
+    @@schema("landing")
 }
 
 model SeoCategory {
-  id               Int       @id @default(autoincrement())
-  name             String    @unique
-  url              String?
-  color            String?
-  shortDescription String?
-  longDescription  String?
-  textCTA          String?
-  linkCTA          String?
-  posts            SeoPost[]
+    id               Int       @id @default(autoincrement())
+    name             String    @unique
+    url              String?
+    color            String?
+    shortDescription String?
+    longDescription  String?
+    textCTA          String?
+    linkCTA          String?
+    posts            SeoPost[]
 
-  @@schema("landing")
+    @@schema("landing")
 }
 
 model SeoPost {
-  id                   Int        @id @default(autoincrement())
-  languageId           Int // Nouvelle relation vers Language
-  originalPostId       Int? // Référence vers le post original (null pour l'original)
-  title                String
-  mainImageUrl         String?
-  mainImageAlt         String?
-  mainImageCaption     String?
-  metaDescription      String
-  metaKeywords         String[]
-  content              String
-  slug                 String
-  excerpt              String?
-  status               PostStatus @default(DRAFT)
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
-  author               String
-  authorLink           String?
-  viewsCount           Int        @default(0)
-  estimatedReadTime    Int?
-  generatedHtml        String?
-  generatedArticleHtml String?
-  jsonLd               String?
-  pinned               Boolean    @default(false)
-  categoryId           Int
-  listTags             String[]
+    id                   Int        @id @default(autoincrement())
+    languageId           Int // Nouvelle relation vers Language
+    originalPostId       Int? // Référence vers le post original (null pour l'original)
+    title                String
+    mainImageUrl         String?
+    mainImageAlt         String?
+    mainImageCaption     String?
+    metaDescription      String
+    metaKeywords         String[]
+    content              String
+    slug                 String
+    excerpt              String?
+    status               PostStatus @default(DRAFT)
+    createdAt            DateTime   @default(now())
+    updatedAt            DateTime   @updatedAt
+    author               String
+    authorLink           String?
+    viewsCount           Int        @default(0)
+    estimatedReadTime    Int?
+    generatedHtml        String?
+    generatedArticleHtml String?
+    jsonLd               String?
+    pinned               Boolean    @default(false)
+    categoryId           Int
+    listTags             String[]
 
-  // Relations
-  language     Language     @relation(fields: [languageId], references: [id])
-  category     SeoCategory  @relation(fields: [categoryId], references: [id])
-  tags         SeoPostTag[] // Relation pour la logique relationnelle
-  originalPost SeoPost?     @relation("PostTranslations", fields: [originalPostId], references: [id])
-  translations SeoPost[]    @relation("PostTranslations")
+    // Relations
+    language     Language     @relation(fields: [languageId], references: [id])
+    category     SeoCategory  @relation(fields: [categoryId], references: [id])
+    tags         SeoPostTag[] // Relation pour la logique relationnelle
+    originalPost SeoPost?     @relation("PostTranslations", fields: [originalPostId], references: [id])
+    translations SeoPost[]    @relation("PostTranslations")
 
-  @@unique([slug, languageId]) // Slug unique par langue
-  @@index([languageId])
-  @@index([originalPostId])
-  @@index([categoryId])
-  @@schema("landing")
+    @@unique([slug, languageId]) // Slug unique par langue
+    @@index([languageId])
+    @@index([originalPostId])
+    @@index([categoryId])
+    @@schema("landing")
 }
 
 model SeoTag {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
-  slug        String       @unique
-  description String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  posts       SeoPostTag[]
+    id          Int          @id @default(autoincrement())
+    name        String       @unique
+    slug        String       @unique
+    description String?
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+    posts       SeoPostTag[]
 
-  @@schema("landing")
+    @@schema("landing")
 }
 
 model SeoPostTag {
-  post      SeoPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    Int
-  tag       SeoTag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  tagId     Int
-  createdAt DateTime @default(now())
+    post      SeoPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+    postId    Int
+    tag       SeoTag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+    tagId     Int
+    createdAt DateTime @default(now())
 
-  @@id([postId, tagId])
-  @@schema("landing")
+    @@id([postId, tagId])
+    @@schema("landing")
 }
 
 model StickyFooter {
-  id                    Int       @id @default(autoincrement())
-  activeOnAllPages      Boolean   @default(false)
-  activeOnSpecificPages Boolean   @default(false)
-  specificPages         String[]
-  endValidityDate       DateTime? @db.Date
-  title                 String?
-  text                  String?
-  textButton            String?
-  buttonUrl             String?
+    id                    Int       @id @default(autoincrement())
+    activeOnAllPages      Boolean   @default(false)
+    activeOnSpecificPages Boolean   @default(false)
+    specificPages         String[]
+    endValidityDate       DateTime? @db.Date
+    title                 String?
+    text                  String?
+    textButton            String?
+    buttonUrl             String?
 
-  @@schema("landingUi")
+    @@schema("landingUi")
 }
 
 enum PostStatus {
-  DRAFT
-  PUBLISHED
+    DRAFT
+    PUBLISHED
 
-  @@schema("landing")
+    @@schema("landing")
 }
 
 model ArtworkMedium {
-  id            Int            @id @default(autoincrement())
-  name          String
-  physicalItems PhysicalItem[]
+    id                   Int            @id @default(autoincrement())
+    name                 String
+    // === CONFORMITÉ FISCALE - TVA ===
+    // Art. 278 septies CGI : Certains mediums éligibles TVA 5,5%
+    isEligibleReducedVat Boolean        @default(true) // Éligible TVA réduite si œuvre originale
+    physicalItems        PhysicalItem[]
 
-  @@schema("backoffice")
+    @@schema("backoffice")
 }
 
 model ArtworkStyle {
-  id         Int         @id @default(autoincrement())
-  name       String
-  itemStyles ItemStyle[]
+    id         Int         @id @default(autoincrement())
+    name       String
+    itemStyles ItemStyle[]
 
-  @@schema("backoffice")
+    @@schema("backoffice")
 }
 
 model ArtistSpecialty {
-  id                Int                    @id @default(autoincrement())
-  name              String                 @unique
-  artistSpecialties ArtistSpecialtyArtist[]
+    id                Int                     @id @default(autoincrement())
+    name              String                  @unique
+    artistSpecialties ArtistSpecialtyArtist[]
 
-  @@schema("public")
+    @@schema("public")
 }
 
 // Table de jointure pour la relation many-to-many Artist <-> ArtistSpecialty
 model ArtistSpecialtyArtist {
-  id                Int            @id @default(autoincrement())
-  artistId          Int
-  artistSpecialtyId Int
-  createdAt         DateTime       @default(now())
+    id                Int      @id @default(autoincrement())
+    artistId          Int
+    artistSpecialtyId Int
+    createdAt         DateTime @default(now())
 
-  artist          Artist          @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  artistSpecialty ArtistSpecialty @relation(fields: [artistSpecialtyId], references: [id], onDelete: Cascade)
+    artist          Artist          @relation(fields: [artistId], references: [id], onDelete: Cascade)
+    artistSpecialty ArtistSpecialty @relation(fields: [artistSpecialtyId], references: [id], onDelete: Cascade)
 
-  @@unique([artistId, artistSpecialtyId])
-  @@index([artistId])
-  @@index([artistSpecialtyId])
-  @@map("ArtistSpecialtyArtist")
-  @@schema("public")
+    @@unique([artistId, artistSpecialtyId])
+    @@index([artistId])
+    @@index([artistSpecialtyId])
+    @@map("ArtistSpecialtyArtist")
+    @@schema("public")
 }
 
 // Table de jointure pour la relation many-to-many PhysicalItem <-> ArtworkStyle
 model ItemStyle {
-  id             Int      @id @default(autoincrement())
-  physicalItemId BigInt
-  styleId        Int
-  createdAt      DateTime @default(now())
+    id             Int      @id @default(autoincrement())
+    physicalItemId BigInt
+    styleId        Int
+    createdAt      DateTime @default(now())
 
-  physicalItem PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
-  style        ArtworkStyle @relation(fields: [styleId], references: [id], onDelete: Cascade)
+    physicalItem PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+    style        ArtworkStyle @relation(fields: [styleId], references: [id], onDelete: Cascade)
 
-  @@unique([physicalItemId, styleId])
-  @@index([physicalItemId])
-  @@index([styleId])
-  @@map("ItemStyle")
-  @@schema("backoffice")
+    @@unique([physicalItemId, styleId])
+    @@index([physicalItemId])
+    @@index([styleId])
+    @@map("ItemStyle")
+    @@schema("backoffice")
 }
 
 // Table de jointure pour la relation many-to-many PhysicalItem <-> ArtworkTechnique
 model ItemTechnique {
-  id             Int      @id @default(autoincrement())
-  physicalItemId BigInt
-  techniqueId    Int
-  createdAt      DateTime @default(now())
+    id             Int      @id @default(autoincrement())
+    physicalItemId BigInt
+    techniqueId    Int
+    createdAt      DateTime @default(now())
 
-  physicalItem PhysicalItem     @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
-  technique    ArtworkTechnique @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+    physicalItem PhysicalItem     @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+    technique    ArtworkTechnique @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
 
-  @@unique([physicalItemId, techniqueId])
-  @@index([physicalItemId])
-  @@index([techniqueId])
-  @@map("ItemTechnique")
-  @@schema("backoffice")
+    @@unique([physicalItemId, techniqueId])
+    @@index([physicalItemId])
+    @@index([techniqueId])
+    @@map("ItemTechnique")
+    @@schema("backoffice")
 }
 
 // Table de jointure pour la relation many-to-many PhysicalItem <-> ArtworkTheme
 model ItemTheme {
-  id             Int      @id @default(autoincrement())
-  physicalItemId BigInt
-  themeId        Int
-  createdAt      DateTime @default(now())
+    id             Int      @id @default(autoincrement())
+    physicalItemId BigInt
+    themeId        Int
+    createdAt      DateTime @default(now())
 
-  physicalItem PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
-  theme        ArtworkTheme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+    physicalItem PhysicalItem @relation(fields: [physicalItemId], references: [id], onDelete: Cascade)
+    theme        ArtworkTheme @relation(fields: [themeId], references: [id], onDelete: Cascade)
 
-  @@unique([physicalItemId, themeId])
-  @@index([physicalItemId])
-  @@index([themeId])
-  @@map("ItemTheme")
-  @@schema("backoffice")
+    @@unique([physicalItemId, themeId])
+    @@index([physicalItemId])
+    @@index([themeId])
+    @@map("ItemTheme")
+    @@schema("backoffice")
 }
 
 model ArtworkTechnique {
-  id             Int             @id @default(autoincrement())
-  name           String
-  itemTechniques ItemTechnique[]
+    id             Int             @id @default(autoincrement())
+    name           String
+    itemTechniques ItemTechnique[]
 
-  @@schema("backoffice")
+    @@schema("backoffice")
 }
 
 model ArtworkSupport {
-  id   Int    @id @default(autoincrement())
-  name String
+    id   Int    @id @default(autoincrement())
+    name String
 
-  physicalItems PhysicalItem[]
-  @@schema("backoffice")
+    physicalItems PhysicalItem[]
+
+    @@schema("backoffice")
 }
 
 model ArtworkTheme {
-  id         Int         @id @default(autoincrement())
-  name       String
-  itemThemes ItemTheme[]
+    id         Int         @id @default(autoincrement())
+    name       String
+    itemThemes ItemTheme[]
 
-  @@schema("backoffice")
+    @@schema("backoffice")
 }
 
 model Country {
-  code              String            @id // Code ISO (ex: FR, US, GB)
-  name              String // Nom du pays (ex: France, United States, United Kingdom)
-  artistAddresses   ArtistAddress[]
-  customerAddresses CustomerAddress[]
-  artists           Artist[]
+    code              String            @id // Code ISO (ex: FR, US, GB)
+    name              String // Nom du pays (ex: France, United States, United Kingdom)
+    artistAddresses   ArtistAddress[]
+    customerAddresses CustomerAddress[]
+    artists           Artist[]
 
-  @@schema("public")
+    @@schema("public")
 }
 
 model PhysicalCollection {
-  id              Int            @id @default(autoincrement())
-  name            String
-  description     String
-  landingArtistId Int
-  landingArtist   LandingArtist  @relation(fields: [landingArtistId], references: [id], onDelete: Cascade)
-  physicalItems   PhysicalItem[]
+    id              Int            @id @default(autoincrement())
+    name            String
+    description     String
+    landingArtistId Int
+    landingArtist   LandingArtist  @relation(fields: [landingArtistId], references: [id], onDelete: Cascade)
+    physicalItems   PhysicalItem[]
 
-  @@index([landingArtistId])
-  @@schema("backoffice")
+    @@index([landingArtistId])
+    @@schema("backoffice")
 }
 
 model WhiteListedUser {
-  id       Int                  @id @default(autoincrement())
-  email    String               @unique
-  role     BackofficeUserRoles?
-  artistId Int?
-  artist   Artist?              @relation(fields: [artistId], references: [id], onDelete: SetNull)
+    id       Int                  @id @default(autoincrement())
+    email    String               @unique
+    role     BackofficeUserRoles?
+    artistId Int?
+    artist   Artist?              @relation(fields: [artistId], references: [id], onDelete: SetNull)
 
-  @@index([artistId])
-  @@schema("backoffice")
+    @@index([artistId])
+    @@schema("backoffice")
 }
 
 /// =============================
@@ -1154,142 +1519,142 @@ model WhiteListedUser {
 /// =============================
 
 model BackofficeAuthUser {
-  id              String                  @id
-  name            String?
-  email           String                  @unique
-  emailVerified   Boolean                 @default(false)
-  image           String?
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
-  role            BackofficeUserRoles?
-  artistId        Int?
-  artist          Artist?                 @relation(fields: [artistId], references: [id])
-  artistAddresses ArtistAddress[]
-  // relations
-  sessions        BackofficeAuthSession[]
-  accounts        BackofficeAuthAccount[]
-  Item            Item[]
+    id              String                  @id
+    name            String?
+    email           String                  @unique
+    emailVerified   Boolean                 @default(false)
+    image           String?
+    createdAt       DateTime                @default(now())
+    updatedAt       DateTime                @updatedAt
+    role            BackofficeUserRoles?
+    artistId        Int?
+    artist          Artist?                 @relation(fields: [artistId], references: [id])
+    artistAddresses ArtistAddress[]
+    // relations
+    sessions        BackofficeAuthSession[]
+    accounts        BackofficeAuthAccount[]
+    Item            Item[]
 
-  @@index([artistId])
-  @@map("user")
-  @@schema("backoffice")
+    @@index([artistId])
+    @@map("user")
+    @@schema("backoffice")
 }
 
 model ArtistAddress {
-  id            Int    @id @default(autoincrement())
-  name          String // Name for the address
-  // Champs minimums obligatoires pour facturation valide
-  firstName     String
-  lastName      String
-  streetAddress String
-  postalCode    String
-  city          String
-  country       String // Country name (for VAT rules)
-  countryCode   String // Country code (for VAT rules)
+    id            Int    @id @default(autoincrement())
+    name          String // Name for the address
+    // Champs minimums obligatoires pour facturation valide
+    firstName     String
+    lastName      String
+    streetAddress String
+    postalCode    String
+    city          String
+    country       String // Country name (for VAT rules)
+    countryCode   String // Country code (for VAT rules)
 
-  // Relations BackofficeAuthUser (1..N : un utilisateur peut avoir plusieurs adresses)
-  backofficeAuthUser   BackofficeAuthUser @relation(fields: [backofficeAuthUserId], references: [id], onDelete: Cascade)
-  Country              Country?           @relation(fields: [countryCode], references: [code])
-  backofficeAuthUserId String
+    // Relations BackofficeAuthUser (1..N : un utilisateur peut avoir plusieurs adresses)
+    backofficeAuthUser   BackofficeAuthUser @relation(fields: [backofficeAuthUserId], references: [id], onDelete: Cascade)
+    Country              Country?           @relation(fields: [countryCode], references: [code])
+    backofficeAuthUserId String
 
-  // Relations
-  physicalItems       PhysicalItem[]
-  thirdPartyAddresses ThirdPartyArtistAddress[]
+    // Relations
+    physicalItems       PhysicalItem[]
+    thirdPartyAddresses ThirdPartyArtistAddress[]
 
-  @@index([backofficeAuthUserId])
-  @@map("ArtistAddress")
-  @@schema("backoffice")
+    @@index([backofficeAuthUserId])
+    @@map("ArtistAddress")
+    @@schema("backoffice")
 }
 
 model ThirdPartyArtistAddress {
-  id String @id
+    id String @id
 
-  // Relations Artist (adresse d'un artiste dans le backoffice)
-  address   ArtistAddress? @relation(fields: [addressId], references: [id])
-  addressId Int?
+    // Relations Artist (adresse d'un artiste dans le backoffice)
+    address   ArtistAddress? @relation(fields: [addressId], references: [id])
+    addressId Int?
 
-  @@schema("backoffice")
+    @@schema("backoffice")
 }
 
 model BackofficeAuthSession {
-  id        String             @id
-  expiresAt DateTime
-  token     String             @unique
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      BackofficeAuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id        String             @id
+    expiresAt DateTime
+    token     String             @unique
+    createdAt DateTime           @default(now())
+    updatedAt DateTime           @updatedAt
+    ipAddress String?
+    userAgent String?
+    userId    String
+    user      BackofficeAuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("session")
-  @@schema("backoffice")
+    @@map("session")
+    @@schema("backoffice")
 }
 
 model BackofficeAuthAccount {
-  id                    String             @id
-  accountId             String
-  providerId            String
-  userId                String
-  user                  BackofficeAuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
+    id                    String             @id
+    accountId             String
+    providerId            String
+    userId                String
+    user                  BackofficeAuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+    accessToken           String?
+    refreshToken          String?
+    idToken               String?
+    accessTokenExpiresAt  DateTime?
+    refreshTokenExpiresAt DateTime?
+    scope                 String?
+    password              String?
+    createdAt             DateTime           @default(now())
+    updatedAt             DateTime           @updatedAt
 
-  @@map("account")
-  @@schema("backoffice")
+    @@map("account")
+    @@schema("backoffice")
 }
 
 model BackofficeAuthVerification {
-  id         String   @id
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+    id         String   @id
+    identifier String
+    value      String
+    expiresAt  DateTime
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
 
-  @@map("verification")
-  @@schema("backoffice")
+    @@map("verification")
+    @@schema("backoffice")
 }
 
 // Schéma statistiques
 
 model PhysicalArtworkView {
-  id        BigInt   @id @default(autoincrement())
-  artworkId BigInt
-  viewerId  BigInt?  // ID utilisateur si connecté (optionnel)
-  viewedAt  DateTime @default(now())
-  ipAddress String?  @db.Inet
-  userAgent String?
+    id        BigInt   @id @default(autoincrement())
+    artworkId BigInt
+    viewerId  BigInt? // ID utilisateur si connecté (optionnel)
+    viewedAt  DateTime @default(now())
+    ipAddress String?  @db.Inet
+    userAgent String?
 
-  // Relations
-  artwork PhysicalItem @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+    // Relations
+    artwork PhysicalItem @relation(fields: [artworkId], references: [id], onDelete: Cascade)
 
-  // Index pour requêtes d'agrégation et nettoyage
-  @@index([artworkId, viewedAt], name: "idx_artworkViews_artworkId_viewedAt")
-  @@index([viewedAt], name: "idx_artworkViews_viewedAt") // Pour nettoyage par date
-  @@map("PhysicalArtworkView")
-  @@schema("statistics")
+    // Index pour requêtes d'agrégation et nettoyage
+    @@index([artworkId, viewedAt], name: "idx_artworkViews_artworkId_viewedAt")
+    @@index([viewedAt], name: "idx_artworkViews_viewedAt") // Pour nettoyage par date
+    @@map("PhysicalArtworkView")
+    @@schema("statistics")
 }
 
 model PhysicalArtworkViewStat {
-  id        BigInt @id @default(autoincrement())
-  artworkId BigInt
-  year      Int
-  month     Int
-  viewCount Int    @default(0)
+    id        BigInt @id @default(autoincrement())
+    artworkId BigInt
+    year      Int
+    month     Int
+    viewCount Int    @default(0)
 
-  // Relations
-  artwork PhysicalItem @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+    // Relations
+    artwork PhysicalItem @relation(fields: [artworkId], references: [id], onDelete: Cascade)
 
-  @@unique([artworkId, year, month], name: "unique_artwork_month")
-  @@index([artworkId, year, month], name: "idx_artworkViewStats_artworkId_year_month")
-  @@map("PhysicalArtworkViewStat")
-  @@schema("statistics")
+    @@unique([artworkId, year, month], name: "unique_artwork_month")
+    @@index([artworkId, year, month], name: "idx_artworkViewStats_artworkId_year_month")
+    @@map("PhysicalArtworkViewStat")
+    @@schema("statistics")
 }

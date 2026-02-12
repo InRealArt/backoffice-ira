@@ -14,6 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 // Schéma de validation
 const formSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
+  isEligibleReducedVat: z.boolean()
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -36,6 +37,7 @@ export default function ArtworkMediumForm({ artworkMedium }: ArtworkMediumFormPr
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: artworkMedium?.name || '',
+      isEligibleReducedVat: artworkMedium?.isEligibleReducedVat ?? true
     }
   })
 
@@ -48,11 +50,17 @@ export default function ArtworkMediumForm({ artworkMedium }: ArtworkMediumFormPr
       
       if (isEditing && artworkMedium) {
         // Mise à jour
-        result = await updateArtworkMedium(artworkMedium.id, data)
+        result = await updateArtworkMedium(artworkMedium.id, {
+          name: data.name,
+          isEligibleReducedVat: data.isEligibleReducedVat
+        })
         mediumId = artworkMedium.id
       } else {
         // Création
-        result = await createArtworkMedium(data)
+        result = await createArtworkMedium({
+          name: data.name,
+          isEligibleReducedVat: data.isEligibleReducedVat
+        })
         mediumId = result.id
       }
       
@@ -124,6 +132,20 @@ export default function ArtworkMediumForm({ artworkMedium }: ArtworkMediumFormPr
                 placeholder="ex: Huile sur toile, Aquarelle, Sculpture bronze..."
               />
             </TranslationField>
+
+            <div className="form-control">
+              <label className="label cursor-pointer justify-start gap-2">
+                <input
+                  type="checkbox"
+                  {...register('isEligibleReducedVat')}
+                  className="checkbox checkbox-sm"
+                />
+                <span className="label-text">Éligible TVA réduite (5,5 %)</span>
+              </label>
+              <p className="text-sm text-base-content/70 mt-1">
+                Art. 278 septies CGI : œuvres originales éligibles à la TVA réduite
+              </p>
+            </div>
           </div>
         </div>
 
