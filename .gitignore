@@ -45,3 +45,9 @@ next-env.d.ts
 
 # Divers
 email-introduction-artistes.md
+
+#Claude Files
+.agent*
+.claude/*
+.continue/*
+.cursor/*

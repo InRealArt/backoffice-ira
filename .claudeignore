@@ -1,0 +1,70 @@
+# Build & cache
+.next/
+out/
+build/
+*.tsbuildinfo
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment & secrets
+.env
+.env.*
+
+# IDE & tool configs
+.vscode/
+.cursor/
+.cursor.json
+.continue/
+.agent/
+.agents/
+.qodo/
+.claude/
+.history/
+
+# Git internals
+.git/
+
+# Static assets (not useful for code context)
+public/img/
+public/*.png
+public/*.svg
+public/*.ico
+
+# Docker
+docker/
+
+# SQL migrations (large, rarement besoin de contexte complet)
+migrations/
+
+# Fichiers de debug / notes Prisma (historique, non pertinents)
+ANALYSE_ERREUR_PRISMA.md
+CORRECTION_TIMEOUT_PRISMA.md
+PRISMA_VERCEL_CONFIG.md
+QUICK_FIX_PRISMA.md
+README_PRISMA.md
+RECAP_FINAL_MIGRATION.md
+RECAP_SOLUTION_PRISMA.md
+SOLUTION_DEFINITIVE_PRISMA.md
+SOLUTION_FINALE_PRISMA.md
+SOLUTION_FINALE_PRISMA_VERCEL.md
+SOLUTION_MIDDLEWARE_PRISMA.md
+SOLUTION_PROBLEME_INTERMITTENT_PRISMA.md
+MIGRATION_SERVER_ACTIONS.md
+DEPLOIEMENT_VERCEL.md
+RECAP_MIGRATION_I18N.md
+email-introduction-artistes.md
+shipments_paris.http
+
+# Scripts de test one-off
+scripts/test-*.ts
+scripts/seed-*.ts
+scripts/get-umami-stats.ts
+scripts/check-*.ts
+scripts/analyze-css.js
+scripts/clean-css.js
+
+# Coverage / logs
+coverage/
+*.log
