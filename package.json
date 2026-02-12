@@ -22,6 +22,7 @@
     "install:safe": "dotenv-cli -e .env -- npm install --legacy-peer-deps",
     "install:safe:prisma:inrealart": "npx dotenv-cli -e .env -- npm install @InRealArt/prisma-schema",
     "prisma:copy-schema": "cp node_modules/@InRealArt/prisma-schema/schema.prisma prisma/schema.prisma",
+    "update:schema:inrealart": "npm run install:safe:prisma:inrealart && npm run prisma:copy-schema",
     "umami-stats": "tsx scripts/get-umami-stats.ts",
     "postinstall": "bash scripts/postinstall.sh"
   },
@@ -36,7 +37,7 @@
     "@googlemaps/extended-component-library": "^0.6.14",
     "@googlemaps/js-api-loader": "^1.16.8",
     "@hookform/resolvers": "^4.1.3",
-    "@InRealArt/prisma-schema": "^1.1.0",
+    "@InRealArt/prisma-schema": "^1.1.1",
     "@prisma/client": "^6.19.0",
     "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-label": "^2.1.7",

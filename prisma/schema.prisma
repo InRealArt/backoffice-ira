@@ -508,7 +508,7 @@ model ArtistAward {
     @@schema("public")
 }
 
-// Modèle LandingArtist : données affichées sur la landing
+// Modèle LandingArtist : données affichées sur la landing (visibles / éditables côté artiste ou communs)
 model LandingArtist {
     id                  Int                    @id @default(autoincrement())
     slug                String                 @unique
@@ -533,11 +533,41 @@ model LandingArtist {
     biographyText4      String?
     imageArtistStudio   String?
     onboardingBo        DateTime?
+    seo                 LandingArtistSeo?      // Données SEO réservées à l'admin (table dédiée pour l'IHM backoffice)
     artistCategories    ArtistCategoryArtist[]
     artist              Artist                 @relation(fields: [artistId], references: [id], onDelete: Cascade)
     physicalCollections PhysicalCollection[]
 
     @@index([artistId])
+    @@schema("landing")
+}
+
+// Données SEO de la page artiste landing — réservées aux admins, table dédiée pour simplifier l'IHM backoffice
+model LandingArtistSeo {
+    id                  Int                    @id @default(autoincrement())
+    landingArtistId     Int                    @unique
+    seoTitle            String?                // Titre dédié SEO (title/h1)
+    stylesInfluences    String?                // Styles et influences (texte libre)
+    artisticApproach    String?                // Démarche artistique
+    artitudeUrl         String?                // Lien vers la fiche Artitude
+    keyWorks            LandingArtistKeyWork[]
+    landingArtist       LandingArtist          @relation(fields: [landingArtistId], references: [id], onDelete: Cascade)
+
+    @@schema("landing")
+}
+
+// Œuvres phares de l'artiste (landing SEO) — sélection parmi PresaleArtwork, ordre défini par l'admin
+model LandingArtistKeyWork {
+    id                  Int                @id @default(autoincrement())
+    landingArtistSeoId  Int
+    presaleArtworkId    Int
+    order               Int                @default(0) // Ordre d'affichage
+    landingArtistSeo   LandingArtistSeo    @relation(fields: [landingArtistSeoId], references: [id], onDelete: Cascade)
+    presaleArtwork      PresaleArtwork     @relation(fields: [presaleArtworkId], references: [id], onDelete: Cascade)
+
+    @@unique([landingArtistSeoId, presaleArtworkId])
+    @@index([landingArtistSeoId])
+    @@index([presaleArtworkId])
     @@schema("landing")
 }
 
@@ -1242,20 +1272,21 @@ model DetailedGlossaryItem {
 }
 
 model PresaleArtwork {
-    id           Int      @id @default(autoincrement())
-    name         String
-    description  String?
-    order        Int?
-    displayOrder Int? // Ordre d'affichage pour une autre application (différent de order)
-    artistId     Int
-    width        Int? //In centimeters
-    height       Int? //In centimeters
-    price        Int?
-    imageUrl     String   @unique
-    mockupUrls   Json     @default("[]")
-    isSold       Boolean  @default(false)
-    createdAt    DateTime @default(now())
-    artist       Artist   @relation(fields: [artistId], references: [id])
+    id                   Int                    @id @default(autoincrement())
+    name                 String
+    description          String?
+    order                Int?
+    displayOrder         Int? // Ordre d'affichage pour une autre application (différent de order)
+    artistId             Int
+    width                Int? //In centimeters
+    height               Int? //In centimeters
+    price                Int?
+    imageUrl             String                 @unique
+    mockupUrls           Json                   @default("[]")
+    isSold               Boolean                @default(false)
+    createdAt            DateTime               @default(now())
+    artist               Artist                 @relation(fields: [artistId], references: [id])
+    landingArtistKeyWorks LandingArtistKeyWork[]
 
     @@index([artistId])
     @@index([displayOrder])
