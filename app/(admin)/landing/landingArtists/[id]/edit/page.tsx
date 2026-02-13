@@ -51,6 +51,7 @@ export default async function EditLandingArtistPage({ params }: { params: Promis
             stylesInfluences: seo.stylesInfluences,
             artisticApproach: seo.artisticApproach,
             artitudeUrl: seo.artitudeUrl,
+            interviewUrl: seo.interviewUrl,
             keyWorks: seo.keyWorks.map(kw => ({
               presaleArtworkId: kw.presaleArtworkId,
               order: kw.order,

@@ -550,6 +550,7 @@ model LandingArtistSeo {
     stylesInfluences    String?                // Styles et influences (texte libre)
     artisticApproach    String?                // Démarche artistique
     artitudeUrl         String?                // Lien vers la fiche Artitude
+    interviewUrl        String?                // Lien vers l'interview de l'artiste
     keyWorks            LandingArtistKeyWork[]
     landingArtist       LandingArtist          @relation(fields: [landingArtistId], references: [id], onDelete: Cascade)
 

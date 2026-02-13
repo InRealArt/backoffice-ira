@@ -7,6 +7,7 @@ export interface LandingArtistSeoData {
     stylesInfluences?: string | null
     artisticApproach?: string | null
     artitudeUrl?: string | null
+    interviewUrl?: string | null
     keyWorkIds?: number[] // presaleArtworkId[] dans l'ordre voulu
 }
 

@@ -17,6 +17,7 @@ const seoSchema = z.object({
   stylesInfluences: z.string().nullable().optional(),
   artisticApproach: z.string().nullable().optional(),
   artitudeUrl: z.string().nullable().optional(),
+  interviewUrl: z.string().nullable().optional(),
 })
 
 type SeoFormValues = z.infer<typeof seoSchema>
@@ -43,6 +44,7 @@ interface ArtistSeoFormProps {
     stylesInfluences: string | null
     artisticApproach: string | null
     artitudeUrl: string | null
+    interviewUrl: string | null
     keyWorks: KeyWork[]
   } | null
   presaleArtworks: PresaleArtworkOption[]
@@ -76,6 +78,7 @@ export default function ArtistSeoForm({
       stylesInfluences: initialSeo?.stylesInfluences ?? '',
       artisticApproach: initialSeo?.artisticApproach ?? '',
       artitudeUrl: initialSeo?.artitudeUrl ?? '',
+      interviewUrl: initialSeo?.interviewUrl ?? '',
     },
   })
 
@@ -123,6 +126,7 @@ export default function ArtistSeoForm({
         stylesInfluences: data.stylesInfluences || null,
         artisticApproach: data.artisticApproach || null,
         artitudeUrl: data.artitudeUrl || null,
+        interviewUrl: data.interviewUrl || null,
         keyWorkIds: selectedKeyWorks.map((kw) => kw.id),
       })
 
@@ -174,6 +178,22 @@ export default function ArtistSeoForm({
             className="form-input"
             placeholder="https://artitude.fr/artiste/…"
           />
+        </div>
+
+        <div className="form-group mt-md">
+          <label htmlFor="interviewUrl" className="form-label">
+            URL de l'interview
+          </label>
+          <input
+            id="interviewUrl"
+            type="text"
+            {...register('interviewUrl')}
+            className="form-input"
+            placeholder="https://…"
+          />
+          <p className="form-hint mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Indiquer l'URL absolue (ex : https://www.exemple.com/interview-artiste)
+          </p>
         </div>
 
         <div className="d-flex gap-md mt-md" style={{ flexWrap: 'wrap' }}>
