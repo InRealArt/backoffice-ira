@@ -17,10 +17,12 @@ import ArtistImageUpload from "@/app/components/art/ArtistImageUpload";
 import Modal from "@/app/components/Common/Modal";
 
 // Schéma de validation
-const formSchema = z.object({
-  name: z.string().min(1, "Le prénom est requis"),
-  surname: z.string().min(1, "Le nom est requis"),
-  pseudo: z.string().min(1, "Le pseudo est requis"),
+// Règle : pseudo seul OU (prénom + nom) sont requis. Les deux ensembles sont aussi valides.
+const formSchema = z
+  .object({
+  name: z.string().optional().or(z.literal("")),
+  surname: z.string().optional().or(z.literal("")),
+  pseudo: z.string().optional().or(z.literal("")),
   description: z
     .string()
     .min(10, "La description doit contenir au moins 10 caractères"),
@@ -84,6 +86,35 @@ const formSchema = z.object({
     .nullable()
     .optional()
     .or(z.literal("")),
+}).superRefine((data, ctx) => {
+  const hasPseudo = data.pseudo && data.pseudo.trim().length > 0;
+  const hasName = data.name && data.name.trim().length > 0;
+  const hasSurname = data.surname && data.surname.trim().length > 0;
+
+  if (!hasPseudo && !hasName && !hasSurname) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Renseignez un pseudo ou un prénom et un nom",
+      path: ["pseudo"],
+    });
+  }
+
+  if (!hasPseudo && (hasName || hasSurname) && !(hasName && hasSurname)) {
+    if (!hasName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le prénom est requis avec le nom",
+        path: ["name"],
+      });
+    }
+    if (!hasSurname) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le nom est requis avec le prénom",
+        path: ["surname"],
+      });
+    }
+  }
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -113,9 +144,9 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: artist.name,
-      surname: artist.surname,
-      pseudo: artist.pseudo,
+      name: artist.name ?? "",
+      surname: artist.surname ?? "",
+      pseudo: artist.pseudo ?? "",
       description: artist.description,
       publicKey: artist.publicKey,
       imageUrl: artist.imageUrl,
@@ -139,18 +170,24 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   const imageUrl = watch("imageUrl");
   const watchedName = watch("name");
   const watchedSurname = watch("surname");
+  const watchedPseudo = watch("pseudo");
   const currentSlug = watch("slug");
   const countryCode = watch("countryCode");
 
-  // Génération automatique du slug
+  // Génération automatique du slug depuis prénom+nom, ou depuis pseudo si pas de prénom/nom
   useEffect(() => {
-    if (watchedName && watchedSurname) {
-      const newSlug = generateSlug(watchedName + " " + watchedSurname);
+    const hasNameSurname = watchedName?.trim() && watchedSurname?.trim();
+    const slugSource = hasNameSurname
+      ? watchedName + " " + watchedSurname
+      : watchedPseudo?.trim() || "";
+
+    if (slugSource) {
+      const newSlug = generateSlug(slugSource);
       if (newSlug !== currentSlug) {
         setValue("slug", newSlug, { shouldValidate: true });
       }
     }
-  }, [watchedName, watchedSurname, setValue, currentSlug]);
+  }, [watchedName, watchedSurname, watchedPseudo, setValue, currentSlug]);
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
@@ -173,8 +210,8 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
           );
 
           finalImageUrl = await uploadArtistImageWithWebP(selectedImageFile, {
-            name: data.name,
-            surname: data.surname,
+            name: data.name || data.pseudo || "",
+            surname: data.surname || "",
             imageType: "profile",
             normalizeFolderName: false,
           });
@@ -300,7 +337,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
           <h1 className="page-title">Modifier l'artiste</h1>
         </div>
         <p className="page-subtitle">
-          Modifier les informations de {artist.name} {artist.surname}
+          Modifier les informations de {artist.name || artist.pseudo} {artist.surname}
         </p>
       </div>
 
@@ -415,6 +452,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                       className={`form-input ${
                         errors.name ? "input-error" : ""
                       }`}
+                      placeholder="Optionnel si pseudo renseigné"
                     />
                     {errors.name && (
                       <p className="form-error">{errors.name.message}</p>
@@ -431,6 +469,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                       className={`form-input ${
                         errors.surname ? "input-error" : ""
                       }`}
+                      placeholder="Optionnel si pseudo renseigné"
                     />
                     {errors.surname && (
                       <p className="form-error">{errors.surname.message}</p>
@@ -527,7 +566,15 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                 <input
                   id="birthYear"
                   type="number"
-                  {...register("birthYear", { valueAsNumber: true })}
+                  {...register("birthYear", {
+                    setValueAs: (value) => {
+                      if (value === "" || value === null || value === undefined) {
+                        return null;
+                      }
+                      const numValue = Number(value);
+                      return isNaN(numValue) ? null : numValue;
+                    },
+                  })}
                   className={`form-input ${
                     errors.birthYear ? "input-error" : ""
                   }`}
@@ -708,11 +755,10 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
         <div className="flex flex-col gap-4">
           <p className="text-base leading-relaxed">
             Êtes-vous sûr de vouloir dupliquer l&apos;artiste &quot;
-            {artist.name} {artist.surname}&quot; ?
+            {artist.pseudo || `${artist.name} ${artist.surname}`.trim()}&quot; ?
             <br />
             <span className="text-sm text-gray-600 mt-2 block">
-              Un nouvel artiste sera créé avec le nom &quot;{artist.name}{" "}
-              {artist.surname} TEST&quot;.
+              Un nouvel artiste sera créé avec le nom &quot;{artist.pseudo || `${artist.name} ${artist.surname}`.trim()} TEST&quot;.
             </span>
           </p>
 

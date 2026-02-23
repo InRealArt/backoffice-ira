@@ -14,10 +14,12 @@ import OptionalImageUpload from "@/app/components/art/OptionalImageUpload";
 import ProgressModal from "@/app/components/art/ProgressModal";
 
 // Schéma de validation
-const formSchema = z.object({
-  name: z.string().min(1, "Le prénom est requis"),
-  surname: z.string().min(1, "Le nom est requis"),
-  pseudo: z.string().min(1, "Le pseudo est requis"),
+// Règle : pseudo seul OU (prénom + nom) sont requis. Les deux ensembles sont aussi valides.
+const formSchema = z
+  .object({
+  name: z.string().optional().or(z.literal("")),
+  surname: z.string().optional().or(z.literal("")),
+  pseudo: z.string().optional().or(z.literal("")),
   description: z
     .string()
     .min(10, "La description doit contenir au moins 10 caractères"),
@@ -77,6 +79,35 @@ const formSchema = z.object({
     .nullable()
     .optional()
     .or(z.literal("")),
+}).superRefine((data, ctx) => {
+  const hasPseudo = data.pseudo && data.pseudo.trim().length > 0;
+  const hasName = data.name && data.name.trim().length > 0;
+  const hasSurname = data.surname && data.surname.trim().length > 0;
+
+  if (!hasPseudo && !hasName && !hasSurname) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Renseignez un pseudo ou un prénom et un nom",
+      path: ["pseudo"],
+    });
+  }
+
+  if (!hasPseudo && (hasName || hasSurname) && !(hasName && hasSurname)) {
+    if (!hasName) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le prénom est requis avec le nom",
+        path: ["name"],
+      });
+    }
+    if (!hasSurname) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Le nom est requis avec le prénom",
+        path: ["surname"],
+      });
+    }
+  }
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -139,17 +170,6 @@ export default function CreateArtistForm() {
   const imageUrl = watch("imageUrl");
   const isGallery = watch("isGallery");
   const countryCode = watch("countryCode");
-  const name = watch("name");
-  const surname = watch("surname");
-  const pseudo = watch("pseudo");
-
-  // Génération automatique du pseudo à partir du prénom et du nom en temps réel
-  useEffect(() => {
-    const generatedPseudo = `${name || ""} ${surname || ""}`.trim();
-    if (generatedPseudo !== pseudo) {
-      setValue("pseudo", generatedPseudo, { shouldValidate: true });
-    }
-  }, [name, surname, setValue, pseudo]);
 
   // Debug: Surveiller toutes les données du formulaire
   const allFormData = watch();
@@ -321,11 +341,11 @@ export default function CreateArtistForm() {
       let finalImageUrl: string;
 
       try {
-        // Upload de l'image principale
+        // Upload de l'image principale — utilise pseudo comme fallback si pas de nom/prénom
         finalImageUrl = await handleUpload(
           selectedImageFile,
-          data.name,
-          data.surname
+          data.name || data.pseudo || "",
+          data.surname || ""
         );
       } catch (uploadError: any) {
         // Détecter si c'est une erreur de conversion ou d'upload
@@ -567,6 +587,7 @@ export default function CreateArtistForm() {
                         className={`${styles["form-input"]} ${
                           errors.name ? styles["input-error"] : ""
                         }`}
+                        placeholder="Optionnel si pseudo renseigné"
                       />
                       {errors.name && (
                         <p className={styles["form-error"]}>
@@ -585,6 +606,7 @@ export default function CreateArtistForm() {
                         className={`${styles["form-input"]} ${
                           errors.surname ? styles["input-error"] : ""
                         }`}
+                        placeholder="Optionnel si pseudo renseigné"
                       />
                       {errors.surname && (
                         <p className={styles["form-error"]}>
@@ -596,37 +618,20 @@ export default function CreateArtistForm() {
 
                   <div className={styles["form-group"]}>
                     <label htmlFor="pseudo" className={styles["form-label"]}>
-                      Pseudo (généré automatiquement)
+                      Pseudo
                     </label>
                     <input
                       id="pseudo"
                       type="text"
                       {...register("pseudo")}
-                      readOnly
-                      className={`${styles["form-input"]} ${
-                        styles["form-readonly"]
-                      } ${errors.pseudo ? styles["input-error"] : ""}`}
-                      style={{
-                        backgroundColor: "#f5f5f5",
-                        cursor: "not-allowed",
-                      }}
+                      className={`${styles["form-input"]} ${errors.pseudo ? styles["input-error"] : ""}`}
+                      placeholder="Optionnel si prénom et nom renseignés"
                     />
                     {errors.pseudo && (
                       <p className={styles["form-error"]}>
                         {errors.pseudo.message}
                       </p>
                     )}
-                    <p
-                      className={styles["form-help"]}
-                      style={{
-                        marginTop: "0.5rem",
-                        fontSize: "0.875rem",
-                        color: "#666",
-                      }}
-                    >
-                      Le pseudo est généré automatiquement à partir du prénom et
-                      du nom
-                    </p>
                   </div>
                 </div>
               </div>

@@ -124,9 +124,9 @@ export async function updateArtist(
 }
 
 export interface CreateArtistData {
-    name: string
-    surname: string
-    pseudo: string
+    name?: string
+    surname?: string
+    pseudo?: string
     description: string
     artistsPage?: boolean
     publicKey?: string

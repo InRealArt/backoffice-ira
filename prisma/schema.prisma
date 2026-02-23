@@ -8,7 +8,7 @@ datasource db {
     provider  = "postgresql"
     url       = env("DATABASE_URL")
     directUrl = env("DIRECT_URL")
-    schemas   = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "backoffice", "statistics"]
+    schemas   = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "landingUgc", "backoffice", "statistics"]
 }
 
 // Orders in the Marketplace
@@ -459,9 +459,9 @@ model ArtistCategory {
 // Données intrinsèques à l'artiste
 model Artist {
     id                 Int                     @id @default(autoincrement())
-    name               String
-    surname            String
-    pseudo             String                  @unique
+    name               String?
+    surname            String?
+    pseudo             String?                  @unique
     description        String                  @unique
     publicKey          String                  @unique
     imageUrl           String                  @unique
@@ -537,6 +537,7 @@ model LandingArtist {
     artistCategories    ArtistCategoryArtist[]
     artist              Artist                 @relation(fields: [artistId], references: [id], onDelete: Cascade)
     physicalCollections PhysicalCollection[]
+    ugcTopArtist        LandingUgcTopArtists?
 
     @@index([artistId])
     @@schema("landing")
@@ -1689,4 +1690,18 @@ model PhysicalArtworkViewStat {
     @@index([artworkId, year, month], name: "idx_artworkViewStats_artworkId_year_month")
     @@map("PhysicalArtworkViewStat")
     @@schema("statistics")
+}
+
+// *****  SCHEMA LANDING UGC ******
+
+// Sélection d'artistes mis en avant dans la section "Top Artists" de la landing
+// Géré par le backoffice — liste premium ordonnée
+model LandingUgcTopArtists {
+    id              Int           @id @default(autoincrement())
+    landingArtistId Int
+    landingArtist   LandingArtist @relation(fields: [landingArtistId], references: [id], onDelete: Cascade)
+    order           Int           @default(0) // Ordre d'affichage dans la liste premium
+    
+    @@unique([landingArtistId]) // Un artiste ne peut apparaître qu'une seule fois
+    @@schema("landingUgc")
 }
