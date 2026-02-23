@@ -10,7 +10,8 @@ import { X, Plus } from "lucide-react";
 import { createLandingArtistAction } from "@/lib/actions/landing-artist-actions";
 import TranslationField from "@/app/components/TranslationField";
 import { handleEntityTranslations } from "@/lib/actions/translation-actions";
-import { generateSlug, validateUrl } from "@/lib/utils";
+import { generateSlug, validateUrl, getArtistFullName } from "@/lib/utils";
+import type { ArtistName } from "@/lib/types/artist";
 import MediumMultiSelect from "@/app/components/Common/MediumMultiSelect";
 import type { ArtistCategory } from "@prisma/client";
 import CategoryMultiSelect from "@/app/components/Common/CategoryMultiSelect";
@@ -79,17 +80,8 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface Artist {
-  id: number;
-  name: string;
-  surname: string;
-  pseudo: string;
-  imageUrl: string;
-  description: string;
-}
-
 interface CreateLandingArtistFormProps {
-  artists: Artist[];
+  artists: (ArtistName & { id: number; imageUrl: string; description: string })[];
   mediums: string[];
   categories: ArtistCategory[];
 }
@@ -107,7 +99,7 @@ export default function CreateLandingArtistForm({
   >([]);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [newImageName, setNewImageName] = useState("");
-  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+  const [selectedArtist, setSelectedArtist] = useState<CreateLandingArtistFormProps['artists'][number] | null>(null);
   const [slug, setSlug] = useState("");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [secondaryImageFile, setSecondaryImageFile] = useState<File | null>(
@@ -189,7 +181,7 @@ export default function CreateLandingArtistForm({
 
     // Générer et mettre à jour le slug
     if (artist) {
-      const generatedSlug = generateSlug(artist.name + " " + artist.surname);
+      const generatedSlug = generateSlug(getArtistFullName(artist));
       setSlug(generatedSlug);
       setValue("slug", generatedSlug);
       // Pré-remplir la description avec celle de l'artiste
@@ -295,8 +287,7 @@ export default function CreateLandingArtistForm({
 
       // Vérifier que le répertoire Firebase existe (doit être fait en premier)
       const { checkFolderExists } = await import("@/lib/firebase/storage");
-      const folderName = `${selectedArtist.name} ${selectedArtist.surname}`;
-      const folderPath = `artists/${folderName}`;
+      const folderPath = `artists/${getArtistFullName(selectedArtist)}`;
 
       try {
         const folderExists = await checkFolderExists(folderPath);
@@ -328,14 +319,16 @@ export default function CreateLandingArtistForm({
       let imageUrl: string;
       let secondaryImageUrl: string | null = null;
       let studioImageUrl: string | null = null;
+      const artistName = selectedArtist.name ?? ""
+      const artistSurname = selectedArtist.surname ?? ""
 
       try {
         // Upload de l'image principale si un nouveau fichier a été sélectionné
         if (selectedImageFile) {
           imageUrl = await handleUpload(
             selectedImageFile,
-            selectedArtist.name,
-            selectedArtist.surname,
+            artistName,
+            artistSurname,
             "profile"
           );
         } else {
@@ -351,8 +344,8 @@ export default function CreateLandingArtistForm({
           try {
             secondaryImageUrl = await handleUpload(
               secondaryImageFile,
-              selectedArtist.name,
-              selectedArtist.surname,
+              artistName,
+              artistSurname,
               "secondary"
             );
           } catch (err: any) {
@@ -373,8 +366,8 @@ export default function CreateLandingArtistForm({
           try {
             studioImageUrl = await handleUpload(
               studioImageFile,
-              selectedArtist.name,
-              selectedArtist.surname,
+              artistName,
+              artistSurname,
               "studio"
             );
           } catch (err: any) {
@@ -631,7 +624,7 @@ export default function CreateLandingArtistForm({
                 <option value="">-- Sélectionner un artiste --</option>
                 {artists.map((artist) => (
                   <option key={artist.id} value={artist.id}>
-                    {artist.name} {artist.surname} ({artist.pseudo})
+                    {getArtistFullName(artist)}
                   </option>
                 ))}
               </select>

@@ -2,23 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Artist } from "@prisma/client";
 import { ArrowLeft, ArrowUpDown, BarChart3 } from "lucide-react";
 import { useTranslations } from "next-intl";
-
-// Type pour les artistes du filtre (retourné par getAllArtists)
-type FilterArtist = {
-  id: number;
-  name: string;
-  surname: string;
-  pseudo: string;
-  description: string;
-  publicKey: string;
-  imageUrl: string;
-  isGallery: boolean;
-  backgroundImage: string | null;
-  idUser: string | null;
-};
+import type { ArtistListItem, ArtistListItemBase } from "@/lib/types/artist";
+import { getArtistFullName } from "@/lib/utils";
 import Image from "next/image";
 import LoadingSpinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 import { useToast } from "@/app/components/Toast/ToastContext";
@@ -64,7 +51,7 @@ interface PresaleArtwork {
   width: number | null;
   height: number | null;
   artistId: number;
-  artist: Artist;
+  artist: ArtistListItemBase;
   imageUrl: string;
 }
 
@@ -76,7 +63,7 @@ interface PresaleArtworksClientProps {
   selectedArtistId: number | null;
   sortColumn: string;
   sortDirection: "asc" | "desc";
-  allArtists: FilterArtist[];
+  allArtists: ArtistListItem[];
   /**
    * Mode artiste : masque les actions admin et adapte les routes
    */
@@ -166,10 +153,10 @@ export default function PresaleArtworksClient({
           "@/lib/firebase/storage"
         );
         await deletePresaleArtworkImage(
-          artwork.artist.name,
-          artwork.artist.surname,
+          artwork.artist.name ?? '',
+          artwork.artist.surname ?? '',
           artwork.name
-        );
+        );  // name/surname passés séparément car Firebase construit le chemin depuis ces 2 champs
         console.log("Image Firebase supprimée avec succès");
       } catch (firebaseError) {
         // Ne pas bloquer la suppression si l'image n'existe pas ou ne peut pas être supprimée
@@ -302,7 +289,7 @@ export default function PresaleArtworksClient({
     {
       key: "artist",
       header: t("columns.artist"),
-      render: (artwork) => `${artwork.artist.name} ${artwork.artist.surname}`,
+      render: (artwork) => getArtistFullName(artwork.artist),
     },
     {
       key: "dimensions",
@@ -413,7 +400,7 @@ export default function PresaleArtworksClient({
               { value: "", label: t("allArtists") },
               ...artists.map((artist) => ({
                 value: artist.id.toString(),
-                label: `${artist.name} ${artist.surname}${
+                label: `${getArtistFullName(artist)}${
                   artist.isGallery ? ` (${t("gallery")})` : ` (${t("artist")})`
                 }`,
               })),

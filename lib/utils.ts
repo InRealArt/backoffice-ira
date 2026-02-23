@@ -1,8 +1,48 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import type { ArtistName } from "@/lib/types/artist"
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
+}
+
+/**
+ * Retourne le nom complet d'un artiste (prénom + nom).
+ * Fallback : pseudo → 'Artiste sans nom'.
+ *
+ * Utiliser cette fonction partout où on affiche name + surname d'un artiste.
+ *
+ * @example
+ * getArtistFullName({ name: 'Jean', surname: 'Dupont', pseudo: null })
+ * // => 'Jean Dupont'
+ *
+ * getArtistFullName({ name: null, surname: null, pseudo: 'jd_art' })
+ * // => 'jd_art'
+ *
+ * getArtistFullName({ name: null, surname: null, pseudo: null })
+ * // => 'Artiste sans nom'
+ */
+export function getArtistFullName(artist: ArtistName): string {
+    const fullName = [artist.name, artist.surname].filter(Boolean).join(' ')
+    return fullName || artist.pseudo || 'Artiste sans nom'
+}
+
+/**
+ * Retourne le nom d'affichage d'un artiste, en privilégiant le pseudo.
+ * Fallback : nom complet → 'Artiste sans nom'.
+ *
+ * Utiliser cette fonction dans les dropdowns et listes où le pseudo est préféré.
+ *
+ * @example
+ * getArtistDisplayName({ name: 'Jean', surname: 'Dupont', pseudo: 'jd_art' })
+ * // => 'jd_art'
+ *
+ * getArtistDisplayName({ name: 'Jean', surname: 'Dupont', pseudo: null })
+ * // => 'Jean Dupont'
+ */
+export function getArtistDisplayName(artist: ArtistName): string {
+    if (artist.pseudo) return artist.pseudo
+    return getArtistFullName(artist)
 }
 
 /**

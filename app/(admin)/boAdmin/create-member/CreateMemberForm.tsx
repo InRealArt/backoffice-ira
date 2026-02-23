@@ -9,26 +9,14 @@ import { useToast } from '@/app/components/Toast/ToastContext'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Button from '@/app/components/Button/Button'
 import { useRouter } from 'next/navigation'
-import { Artist } from '@prisma/client'
-
-// Type spécifique pour les artistes/galeries retournés par getAllArtists/getAllGalleries
-type ArtistSelectData = {
-  id: number
-  name: string
-  surname: string
-  pseudo: string
-  description: string
-  publicKey: string
-  imageUrl: string
-  isGallery: boolean
-  backgroundImage: string | null
-}
+import type { ArtistListItemBase } from '@/lib/types/artist'
+import { getArtistFullName } from '@/lib/utils'
 
 export default function CreateMemberForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uniqueError, setUniqueError] = useState<string | null>(null)
-  const [artists, setArtists] = useState<ArtistSelectData[]>([])
-  const [galleries, setGalleries] = useState<ArtistSelectData[]>([])
+  const [artists, setArtists] = useState<ArtistListItemBase[]>([])
+  const [galleries, setGalleries] = useState<ArtistListItemBase[]>([])
   const [isLoadingArtists, setIsLoadingArtists] = useState(true)
   const [isLoadingGalleries, setIsLoadingGalleries] = useState(true)
   const router = useRouter()
@@ -209,7 +197,7 @@ export default function CreateMemberForm() {
                       <option value="">Aucun artiste (l'utilisateur créera son profil plus tard)</option>
                       {artists.map((artist) => (
                         <option key={artist.id} value={artist.id}>
-                          {artist.name} {artist.surname} ({artist.pseudo})
+                          {getArtistFullName(artist)}
                         </option>
                       ))}
                     </select>
@@ -247,7 +235,7 @@ export default function CreateMemberForm() {
                       <option value="">Sélectionnez une galerie</option>
                       {galleries.map((gallery) => (
                         <option key={gallery.id} value={gallery.id}>
-                          {gallery.name} {gallery.surname} ({gallery.pseudo})
+                          {getArtistFullName(gallery)}
                         </option>
                       ))}
                     </select>

@@ -12,7 +12,8 @@ import {
   getLandingArtistByArtistId,
 } from "@/lib/actions/artist-actions";
 import CountrySelect from "@/app/components/Common/CountrySelect";
-import { getCountries } from "@/lib/utils";
+import { getCountries, getArtistFullName } from "@/lib/utils";
+import type { ArtistName } from "@/lib/types/artist";
 import Button from "@/app/components/Button/Button";
 import ArtistImageUpload from "../create-artist-profile/ArtistImageUpload";
 import OptionalImageUpload from "../create-artist-profile/OptionalImageUpload";
@@ -88,11 +89,8 @@ const createFormSchema = (t: (key: string) => string) => z.object({
 type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 interface EditArtistProfileFormProps {
-  artist: {
+  artist: ArtistName & {
     id: number;
-    name: string;
-    surname: string;
-    pseudo: string;
     description: string;
     imageUrl: string;
     birthYear: number | null;
@@ -201,7 +199,7 @@ export default function EditArtistProfileForm({
   } = useForm<FormValues>({
     resolver: zodResolver(createFormSchema(t)),
     defaultValues: {
-      pseudo: artist.pseudo,
+      pseudo: artist.pseudo ?? "",
       description: artist.description,
       artistsPage: landingArtist?.artistsPage || false,
       birthYear: artist.birthYear ?? null,
@@ -229,7 +227,7 @@ export default function EditArtistProfileForm({
   // Forcer la mise à jour des valeurs birthYear et countryCode après le montage
   useEffect(() => {
     reset({
-      pseudo: artist.pseudo,
+      pseudo: artist.pseudo ?? "",
       description: artist.description,
       artistsPage: landingArtist?.artistsPage || false,
       birthYear: artist.birthYear ?? null,
@@ -373,13 +371,16 @@ export default function EditArtistProfileForm({
         shouldDeleteSecondaryImage && !secondaryImageFile;
       const shouldDeleteStudio = shouldDeleteStudioImage && !studioImageFile;
 
+      const artistName = artist.name ?? ""
+      const artistSurname = artist.surname ?? ""
+
       // Upload de la nouvelle image principale si fournie
       if (selectedImageFile) {
         try {
           imageUrl = await handleUpload(
             selectedImageFile,
-            artist.name,
-            artist.surname,
+            artistName,
+            artistSurname,
             "profile"
           );
         } catch (uploadError: any) {
@@ -406,8 +407,8 @@ export default function EditArtistProfileForm({
         try {
           secondaryImageUrl = await handleUpload(
             secondaryImageFile,
-            artist.name,
-            artist.surname,
+            artistName,
+            artistSurname,
             "secondary"
           );
         } catch (err) {
@@ -420,8 +421,8 @@ export default function EditArtistProfileForm({
         try {
           studioImageUrl = await handleUpload(
             studioImageFile,
-            artist.name,
-            artist.surname,
+            artistName,
+            artistSurname,
             "studio"
           );
         } catch (err) {
@@ -640,7 +641,7 @@ export default function EditArtistProfileForm({
                   <input
                     id="name"
                     type="text"
-                    value={artist.name}
+                    value={artist.name ?? ""}
                     readOnly
                     className="form-input"
                     style={{
@@ -662,7 +663,7 @@ export default function EditArtistProfileForm({
                   <input
                     id="surname"
                     type="text"
-                    value={artist.surname}
+                    value={artist.surname ?? ""}
                     readOnly
                     className="form-input"
                     style={{

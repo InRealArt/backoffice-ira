@@ -11,7 +11,8 @@ import { X, Plus } from "lucide-react";
 import { updateLandingArtistAction } from "@/lib/actions/landing-artist-actions";
 import TranslationField from "@/app/components/TranslationField";
 import { handleEntityTranslations } from "@/lib/actions/translation-actions";
-import { generateSlug, validateUrl } from "@/lib/utils";
+import { generateSlug, validateUrl, getArtistFullName } from "@/lib/utils";
+import type { ArtistName } from "@/lib/types/artist";
 import MediumMultiSelect from "@/app/components/Common/MediumMultiSelect";
 import MultiSelect from "@/app/components/Forms/MultiSelect";
 import type { ArtistCategory, ArtistSpecialty } from "@prisma/client";
@@ -103,11 +104,8 @@ interface LandingArtistWithArtist {
   biographyText4?: string | null;
   mediumTags?: string[];
   imageArtistStudio?: string | null;
-  artist: {
+  artist: ArtistName & {
     id: number;
-    name: string;
-    surname: string;
-    pseudo: string;
     websiteUrl: string | null;
     facebookUrl: string | null;
     instagramUrl: string | null;
@@ -274,9 +272,7 @@ export default function LandingArtistEditForm({
 
   useEffect(() => {
     // Générer le slug à partir des informations de l'artiste
-    const generatedSlug = generateSlug(
-      landingArtist.artist.name + " " + landingArtist.artist.surname
-    );
+    const generatedSlug = generateSlug(getArtistFullName(landingArtist.artist));
     setSlug(generatedSlug);
     setValue("slug", generatedSlug);
   }, [landingArtist.artist.name, landingArtist.artist.surname, setValue]);
@@ -431,8 +427,7 @@ export default function LandingArtistEditForm({
 
       // Vérifier que le répertoire Firebase existe (doit être fait en premier)
       const { checkFolderExists } = await import("@/lib/firebase/storage");
-      const folderName = `${landingArtist.artist.name} ${landingArtist.artist.surname}`;
-      const folderPath = `artists/${folderName}`;
+      const folderPath = `artists/${getArtistFullName(landingArtist.artist)}`;
 
       try {
         const folderExists = await checkFolderExists(folderPath);
@@ -471,13 +466,16 @@ export default function LandingArtistEditForm({
         ? null
         : landingArtist.imageArtistStudio || null;
 
+      const artistName = landingArtist.artist.name ?? ""
+      const artistSurname = landingArtist.artist.surname ?? ""
+
       try {
         // Upload de l'image principale si un nouveau fichier a été sélectionné
         if (selectedImageFile) {
           imageUrl = await handleUpload(
             selectedImageFile,
-            landingArtist.artist.name,
-            landingArtist.artist.surname,
+            artistName,
+            artistSurname,
             "profile"
           );
         } else if (!deletedMainImage && landingArtist.imageUrl) {
@@ -497,8 +495,8 @@ export default function LandingArtistEditForm({
           try {
             secondaryImageUrl = await handleUpload(
               secondaryImageFile,
-              landingArtist.artist.name,
-              landingArtist.artist.surname,
+              artistName,
+              artistSurname,
               "secondary"
             );
           } catch (err: any) {
@@ -522,8 +520,8 @@ export default function LandingArtistEditForm({
           try {
             studioImageUrl = await handleUpload(
               studioImageFile,
-              landingArtist.artist.name,
-              landingArtist.artist.surname,
+              artistName,
+              artistSurname,
               "studio"
             );
           } catch (err: any) {
@@ -748,8 +746,7 @@ export default function LandingArtistEditForm({
           <h1 className="page-title">Modifier l'artiste de la landing page</h1>
         </div>
         <p className="page-subtitle">
-          Modifier les informations de {landingArtist.artist.name}{" "}
-          {landingArtist.artist.surname} pour le site corpo et la marketplace
+          Modifier les informations de {getArtistFullName(landingArtist.artist)} pour le site corpo et la marketplace
         </p>
       </div>
 

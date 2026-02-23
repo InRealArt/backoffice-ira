@@ -7,24 +7,14 @@ import { useRouter } from 'next/navigation'
 import { Address } from '@/app/components/art/ArtworkForm/types'
 import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from '@prisma/client'
 import { getAddressesByArtistId } from '@/lib/actions/address-actions'
-
-interface Artist {
-  id: number
-  name: string
-  surname: string
-  pseudo: string | null
-  description: string | null
-  publicKey: string | null
-  imageUrl: string | null
-  isGallery: boolean
-  backgroundImage: string | null
-}
+import type { ArtistListItem } from '@/lib/types/artist'
+import { getArtistFullName } from '@/lib/utils'
 
 interface CreateArtworkAdminClientProps {
   mediums: ArtworkMedium[]
   styles: ArtworkStyle[]
   techniques: ArtworkTechnique[]
-  artists: Artist[]
+  artists: ArtistListItem[]
 }
 
 export default function CreateArtworkAdminClient({ 
@@ -34,7 +24,7 @@ export default function CreateArtworkAdminClient({
   artists 
 }: CreateArtworkAdminClientProps) {
   const [isMobile, setIsMobile] = useState(false)
-  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null)
+  const [selectedArtist, setSelectedArtist] = useState<ArtistListItem | null>(null)
   const [addresses, setAddresses] = useState<Address[]>([])
   const [isLoadingAddresses, setIsLoadingAddresses] = useState(false)
   const [artistSearchTerm, setArtistSearchTerm] = useState('')
@@ -55,11 +45,8 @@ export default function CreateArtworkAdminClient({
   
   // Filtrer les artistes en fonction du terme de recherche
   const filteredArtists = artists.filter(artist => {
-    const fullName = `${artist.name} ${artist.surname}`.toLowerCase()
-    const pseudo = artist.pseudo?.toLowerCase() || ''
     const searchTerm = artistSearchTerm.toLowerCase()
-    
-    return fullName.includes(searchTerm) || pseudo.includes(searchTerm)
+    return getArtistFullName(artist).toLowerCase().includes(searchTerm)
   })
   
   const handleArtistChange = async (artistId: number) => {
@@ -136,7 +123,7 @@ export default function CreateArtworkAdminClient({
             <option value="">-- Choisir un artiste --</option>
             {filteredArtists.map((artist) => (
               <option key={artist.id} value={artist.id}>
-                {artist.name} {artist.surname} {artist.pseudo && `(${artist.pseudo})`}
+                {getArtistFullName(artist)}
               </option>
             ))}
           </select>
@@ -149,12 +136,12 @@ export default function CreateArtworkAdminClient({
               {selectedArtist.imageUrl && (
                 <img 
                   src={selectedArtist.imageUrl} 
-                  alt={`${selectedArtist.name} ${selectedArtist.surname}`}
+                  alt={getArtistFullName(selectedArtist)}
                   className={styles.artistAvatar}
                 />
               )}
               <div className={styles.artistDetails}>
-                <h4>{selectedArtist.name} {selectedArtist.surname}</h4>
+                <h4>{getArtistFullName(selectedArtist)}</h4>
                 {selectedArtist.pseudo && <p className={styles.artistPseudo}>({selectedArtist.pseudo})</p>}
                 {selectedArtist.description && (
                   <p className={styles.artistDescription}>{selectedArtist.description}</p>

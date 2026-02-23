@@ -14,6 +14,7 @@ import { resetDisplayOrderForArtist } from "@/lib/actions/display-order-actions"
 import Modal from "@/app/components/Common/Modal";
 import { useTranslations } from "next-intl";
 import styles from "./DisplayOrderManager.module.scss";
+import type { ArtistName } from "@/lib/types/artist";
 
 interface PresaleArtwork {
   id: number;
@@ -24,10 +25,7 @@ interface PresaleArtwork {
   height: number | null;
   displayOrder: number | null;
   artistId: number;
-  artist?: {
-    name: string;
-    surname: string;
-  };
+  artist?: ArtistName;
 }
 
 interface DisplayOrderManagerProps {

@@ -7,6 +7,8 @@ import { GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import styles from "./SortableArtworkItem.module.scss";
+import type { ArtistName } from "@/lib/types/artist";
+import { getArtistFullName } from "@/lib/utils";
 
 interface PresaleArtwork {
   id: number;
@@ -16,10 +18,7 @@ interface PresaleArtwork {
   width: number | null;
   height: number | null;
   displayOrder: number | null;
-  artist?: {
-    name: string;
-    surname: string;
-  };
+  artist?: ArtistName;
 }
 
 interface SortableArtworkItemProps {
@@ -110,7 +109,7 @@ export default function SortableArtworkItem({
             <div className={styles.detailItem}>
               <span className={styles.label}>{t("artist")}:</span>
               <span className={styles.value}>
-                {artwork.artist.name} {artwork.artist.surname}
+                {getArtistFullName(artwork.artist)}
               </span>
             </div>
           )}

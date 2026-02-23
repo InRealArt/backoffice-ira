@@ -17,6 +17,8 @@ import {
 } from '../../../components/PageLayout/index'
 import styles from '../../../styles/list-components.module.scss'
 import { LandingArtistFilter } from './LandingArtistFilter'
+import type { ArtistName } from '@/lib/types/artist'
+import { getArtistFullName } from '@/lib/utils'
 
 interface LandingArtistWithArtist {
   id: number
@@ -26,12 +28,7 @@ interface LandingArtistWithArtist {
   artistsPage: boolean | null
   imageUrl: string
   artistId: number
-  artist: {
-    id: number
-    name: string
-    surname: string
-    pseudo: string
-  }
+  artist: { id: number } & ArtistName
 }
 
 interface LandingArtistsClientProps {
@@ -89,7 +86,7 @@ export default function LandingArtistsClient({ landingArtists }: LandingArtistsC
         <div className="d-flex align-items-center gap-sm">
           {loadingArtistId === landingArtist.id && <LoadingSpinner size="small" message="" inline />}
           <span className={loadingArtistId === landingArtist.id ? 'text-muted' : ''}>
-            {landingArtist.artist.name} {landingArtist.artist.surname}
+            {getArtistFullName(landingArtist.artist)}
           </span>
         </div>
       )
@@ -97,7 +94,7 @@ export default function LandingArtistsClient({ landingArtists }: LandingArtistsC
     {
       key: 'pseudo',
       header: 'Pseudo',
-      render: (landingArtist) => landingArtist.artist.pseudo
+      render: (landingArtist) => landingArtist.artist.pseudo ?? '-'
     },
     {
       key: 'visibility',
@@ -117,7 +114,7 @@ export default function LandingArtistsClient({ landingArtists }: LandingArtistsC
           <div className={styles.thumbnailContainer}>
             <Image
               src={landingArtist.imageUrl}
-              alt={`${landingArtist.artist.name} ${landingArtist.artist.surname}`}
+              alt={getArtistFullName(landingArtist.artist)}
               fill
               style={{ objectFit: 'cover' }}
             />

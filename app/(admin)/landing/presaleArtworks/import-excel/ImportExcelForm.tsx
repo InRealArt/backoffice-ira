@@ -9,6 +9,8 @@ import { useToast } from '@/app/components/Toast/ToastContext'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { processExcelImport } from '@/lib/actions/presale-artwork-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
+import type { ArtistName } from '@/lib/types/artist'
+import { getArtistFullName } from '@/lib/utils'
 
 // Schéma de validation pour le formulaire
 const importExcelSchema = z.object({
@@ -17,14 +19,8 @@ const importExcelSchema = z.object({
 
 type ImportExcelFormValues = z.infer<typeof importExcelSchema>
 
-interface Artist {
-  id: number
-  name: string
-  surname: string
-}
-
 interface ImportExcelFormProps {
-  artists: Artist[]
+  artists: (ArtistName & { id: number })[]
 }
 
 export default function ImportExcelForm({ artists }: ImportExcelFormProps) {
@@ -104,7 +100,7 @@ export default function ImportExcelForm({ artists }: ImportExcelFormProps) {
         return
       }
 
-      console.log('👤 Artiste sélectionné:', artist.name, artist.surname, 'ID:', artist.id)
+      console.log('👤 Artiste sélectionné:', getArtistFullName(artist), 'ID:', artist.id)
 
       // Nouvelle approche : utiliser arrayBuffer() directement sur le File object
       console.log('📋 Lecture du fichier avec arrayBuffer()...')
@@ -204,7 +200,7 @@ export default function ImportExcelForm({ artists }: ImportExcelFormProps) {
                 <option value="">Sélectionnez un artiste</option>
                 {artists.map(artist => (
                   <option key={artist.id} value={artist.id.toString()}>
-                    {artist.name} {artist.surname}
+                    {getArtistFullName(artist)}
                   </option>
                 ))}
               </select>

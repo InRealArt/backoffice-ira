@@ -16,7 +16,8 @@ import {
   ensureFolderExists,
   uploadImageToLandingFolder,
 } from "@/lib/firebase/storage";
-import { normalizeString } from "@/lib/utils";
+import { normalizeString, getArtistFullName } from "@/lib/utils";
+import type { ArtistName } from "@/lib/types/artist";
 
 // Fonction pour créer le schéma de validation avec traductions
 const createBulkAddSchema = (t: (key: string) => string) =>
@@ -68,14 +69,8 @@ export type ArtworkData = {
   imageUrl?: string;
 };
 
-interface Artist {
-  id: number;
-  name: string;
-  surname: string;
-}
-
 interface BulkAddFormProps {
-  artists: Artist[];
+  artists: (ArtistName & { id: number })[];
   /**
    * ID de l'artiste à pré-sélectionner (pour les artistes connectés)
    * Si fourni, le champ artiste sera en lecture seule
@@ -103,7 +98,7 @@ export default function BulkAddForm({
   const tProgress = useTranslations("art.progressModal");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showTable, setShowTable] = useState(false);
-  const [selectedArtist, setSelectedArtist] = useState<Artist | null>(null);
+  const [selectedArtist, setSelectedArtist] = useState<BulkAddFormProps['artists'][number] | null>(null);
   const [numberOfArtworks, setNumberOfArtworks] = useState(0);
   const [artworksData, setArtworksData] = useState<ArtworkData[]>([]);
   const [showProgressModal, setShowProgressModal] = useState(false);
@@ -256,7 +251,9 @@ export default function BulkAddForm({
 
     try {
       // Préparer le nom du répertoire Firebase
-      const folderName = `${selectedArtist.name} ${selectedArtist.surname}`;
+      const artistName = selectedArtist.name ?? ''
+      const artistSurname = selectedArtist.surname ?? ''
+      const folderName = getArtistFullName(selectedArtist)
       const folderPath = `artists/${folderName}/landing`;
 
       // Vérifier/créer le répertoire Firebase
@@ -279,8 +276,8 @@ export default function BulkAddForm({
 
       const folderExists = await ensureFolderExists(
         folderPath,
-        selectedArtist.name,
-        selectedArtist.surname
+        artistName,
+        artistSurname
       );
 
       if (!folderExists) {
@@ -484,7 +481,7 @@ export default function BulkAddForm({
         <div className="page-header">
           <h1 className="page-title">
             {t("dataEntryTitle", {
-              artistName: `${selectedArtist.name} ${selectedArtist.surname}`,
+              artistName: getArtistFullName(selectedArtist),
             })}
           </h1>
           <p className="page-subtitle">
@@ -578,7 +575,7 @@ export default function BulkAddForm({
                 <option value="">{t("selectArtist")}</option>
                 {artists.map((artist) => (
                   <option key={artist.id} value={artist.id.toString()}>
-                    {artist.name} {artist.surname}
+                    {getArtistFullName(artist)}
                   </option>
                 ))}
               </select>

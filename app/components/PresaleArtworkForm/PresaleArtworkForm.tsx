@@ -26,7 +26,8 @@ import {
   ensureFolderExists,
 } from "@/lib/firebase/storage";
 import { convertToWebPIfNeeded } from "@/lib/utils/webp-converter";
-import { normalizeString } from "@/lib/utils";
+import { normalizeString, getArtistFullName } from "@/lib/utils";
+import type { ArtistName } from "@/lib/types/artist";
 import ProgressModal from "@/app/components/art/ProgressModal";
 
 // Fonction pour créer le schéma de validation avec traductions
@@ -46,11 +47,7 @@ type PresaleArtworkFormValues = z.infer<
   ReturnType<typeof createPresaleArtworkSchema>
 >;
 
-interface Artist {
-  id: number;
-  name: string;
-  surname: string;
-}
+type Artist = ArtistName & { id: number };
 
 export interface PresaleArtworkFormProps {
   mode: "create" | "edit";
@@ -292,9 +289,12 @@ export default function PresaleArtworkForm({
       let finalImageUrl = data.imageUrl || "";
 
       // Upload de l'image principale si un fichier a été sélectionné
+      const artistName = selectedArtist.name ?? ""
+      const artistSurname = selectedArtist.surname ?? ""
+
       if (mainImageFile) {
         // Préparer le nom du répertoire Firebase
-        const folderName = `${selectedArtist.name} ${selectedArtist.surname}`;
+        const folderName = getArtistFullName(selectedArtist)
         const folderPath = `artists/${folderName}/landing`;
 
         // Initialiser la modale de progression
@@ -322,8 +322,8 @@ export default function PresaleArtworkForm({
           // Vérifier/créer le répertoire Firebase
           const folderExists = await ensureFolderExists(
             folderPath,
-            selectedArtist.name,
-            selectedArtist.surname
+            artistName,
+            artistSurname
           );
 
           if (!folderExists) {
@@ -446,8 +446,8 @@ export default function PresaleArtworkForm({
               );
               const mockupUrl = await uploadMockupToFirebase(
                 mockup.file,
-                selectedArtist.name,
-                selectedArtist.surname,
+                artistName,
+                artistSurname,
                 mockup.name || undefined
               );
               finalMockupUrls.push({ name: mockup.name, url: mockupUrl });
@@ -765,7 +765,7 @@ export default function PresaleArtworkForm({
               <option value="">{t("fields.selectArtist")}</option>
               {artists.map((artist) => (
                 <option key={artist.id} value={artist.id.toString()}>
-                  {artist.name} {artist.surname}
+                  {getArtistFullName(artist)}
                 </option>
               ))}
             </select>

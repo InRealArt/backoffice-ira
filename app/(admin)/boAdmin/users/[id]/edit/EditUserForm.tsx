@@ -7,9 +7,11 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { updateBackofficeUser, getAllArtists } from '@/lib/actions/prisma-actions'
-import { WhiteListedUser, Artist } from '@prisma/client'
+import { WhiteListedUser } from '@prisma/client'
 import styles from './EditUserForm.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
+import type { ArtistListItem } from '@/lib/types/artist'
+import { getArtistFullName } from '@/lib/utils'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -39,23 +41,10 @@ interface EditUserFormProps {
   user: WhiteListedUser
 }
 
-// Type spécifique pour les artistes retournés par getAllArtists
-type ArtistSelectData = {
-  id: number
-  name: string
-  surname: string
-  pseudo: string
-  description: string
-  publicKey: string
-  imageUrl: string
-  isGallery: boolean
-  backgroundImage: string | null
-}
-
 export default function EditUserForm({ user }: EditUserFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [artists, setArtists] = useState<ArtistSelectData[]>([])
+  const [artists, setArtists] = useState<ArtistListItem[]>([])
   const [isLoadingArtists, setIsLoadingArtists] = useState(true)
   const { success, error } = useToast()
   // Déterminer si l'utilisateur est un administrateur
@@ -212,7 +201,7 @@ export default function EditUserForm({ user }: EditUserFormProps) {
                   <option value="">Aucun artiste (désassocier)</option>
                   {artists.map((artist) => (
                     <option key={artist.id} value={artist.id}>
-                      {artist.name} {artist.surname} ({artist.pseudo})
+                      {getArtistFullName(artist)}
                     </option>
                   ))}
                 </select>

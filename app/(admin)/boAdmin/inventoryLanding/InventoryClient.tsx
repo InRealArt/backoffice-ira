@@ -14,17 +14,8 @@ import {
 } from "../../../components/PageLayout/index";
 import { updateLandingArtistOnboardingBo } from "@/lib/actions/landing-artist-actions";
 import { InventoryFilter } from "./InventoryFilter";
-
-type ArtistWithCount = {
-  id: number;
-  name: string;
-  surname: string;
-  pseudo: string;
-  imageUrl: string;
-  presaleArtworkCount: number;
-  landingArtistId: number | null;
-  onboardingBo: Date | null;
-};
+import type { ArtistWithCount } from "@/lib/types/artist";
+import { getArtistFullName } from "@/lib/utils";
 
 interface InventoryClientProps {
   artists: ArtistWithCount[];
@@ -174,12 +165,12 @@ export default function InventoryClient({ artists }: InventoryClientProps) {
             <div className="mask mask-squircle w-10 h-10">
               <img
                 src={artist.imageUrl}
-                alt={`${artist.name} ${artist.surname}`}
+                alt={getArtistFullName(artist)}
               />
             </div>
           </div>
           <span>
-            {artist.name} {artist.surname}
+            {getArtistFullName(artist)}
           </span>
         </div>
       ),
