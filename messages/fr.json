@@ -505,7 +505,9 @@
       "artistsPage": "Page artistes",
       "presaleArtworks": "Œuvres en prévente",
       "blogArticles": "Articles de blog",
-      "stickyFooter": "Paramétrage Sticky Footer"
+      "stickyFooter": "Paramétrage Sticky Footer",
+      "ugcTitle": "LANDING UGC",
+      "ugcTopArtists": "Top Artistes UGC"
     },
     "dataAdmin": {
       "title": "DATA ADMINISTRATION",

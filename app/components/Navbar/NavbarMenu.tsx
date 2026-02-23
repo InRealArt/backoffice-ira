@@ -726,6 +726,40 @@ export default function NavbarMenu() {
             </ul>
           </li>
           <li className="divider my-1"></li>
+          {/* Bloc Landing UGC */}
+          <li>
+            <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
+              <Sparkles size={16} />
+              {t("landing.ugcTitle")}
+            </a>
+            <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
+              <li>
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/landing/ugc/top-artists",
+                      "ugcTopArtists"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("ugcTopArtists") ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      <Sparkles size={18} />
+                      <span>{t("landing.ugcTopArtists")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={18} />
+                      <span>{t("landing.ugcTopArtists")}</span>
+                    </>
+                  )}
+                </a>
+              </li>
+            </ul>
+          </li>
+          <li className="divider my-1"></li>
           <li>
             <a className="menu-title text-base-content/60 text-xs font-semibold tracking-widest flex items-center gap-2">
               <Database size={16} />
@@ -1497,6 +1531,31 @@ export default function NavbarMenu() {
                     >
                       <Layout size={18} />
                       Paramétrage Sticky Footer
+                    </a>
+                  </li>
+                </ul>
+              </details>
+            </li>
+            {/* Landing UGC */}
+            <li>
+              <details>
+                <summary className="flex items-center gap-2">
+                  <Sparkles size={18} />
+                  Landing UGC
+                </summary>
+                <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60">
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleDesktopNavigation(
+                          "/landing/ugc/top-artists",
+                          "ugcTopArtists"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Sparkles size={18} />
+                      Top Artistes UGC
                     </a>
                   </li>
                 </ul>
