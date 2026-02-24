@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { WhiteListedUser, Artist } from "@prisma/client";
+import { WhiteListedUser, Artist } from "@/src/generated/prisma/client";
 import LoadingSpinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 import {
   PageContainer,

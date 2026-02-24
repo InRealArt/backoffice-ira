@@ -5,7 +5,7 @@ import { MediaFilesSectionProps } from '../types'
 import FormSection from '../FormSection'
 import FirebaseImageUpload from '../components/FirebaseImageUpload'
 import FirebaseImageUploadByType from '../components/FirebaseImageUploadByType'
-import { PhysicalItemImageType } from '@prisma/client'
+import { PhysicalItemImageType } from '@/src/generated/prisma/browser'
 import { savePhysicalItemImage } from '@/lib/actions/prisma-actions'
 import Tabs from '@/app/components/Tabs/Tabs'
 

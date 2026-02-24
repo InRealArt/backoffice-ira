@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { getAddressById, updateAddress } from '@/lib/actions/address-actions'
 import AddressForm from '../../components/AddressForm'
-import type { ArtistAddress } from '@prisma/client'
+import type { ArtistAddress } from '@/src/generated/prisma/browser'
 
 interface EditAddressPageProps {
   params: Promise<{

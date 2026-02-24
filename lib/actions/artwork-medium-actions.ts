@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { ArtworkMedium } from '@prisma/client'
+import { ArtworkMedium } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getArtworkMediumById(id: number): Promise<ArtworkMedium | null> {

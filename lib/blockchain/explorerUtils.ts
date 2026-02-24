@@ -1,4 +1,4 @@
-import { NetworkType } from '@prisma/client'
+import { NetworkType } from '@/src/generated/prisma/client'
 
 /**
  * Génère une URL vers l'explorateur de blocs approprié en fonction du réseau

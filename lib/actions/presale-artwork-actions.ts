@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { PresaleArtwork } from '@prisma/client'
+import { PresaleArtwork } from '@/src/generated/prisma/client'
 
 /**
  * Récupère toutes les œuvres en prévente

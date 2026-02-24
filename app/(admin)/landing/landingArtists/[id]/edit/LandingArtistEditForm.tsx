@@ -15,7 +15,7 @@ import { generateSlug, validateUrl, getArtistFullName } from "@/lib/utils";
 import type { ArtistName } from "@/lib/types/artist";
 import MediumMultiSelect from "@/app/components/Common/MediumMultiSelect";
 import MultiSelect from "@/app/components/Forms/MultiSelect";
-import type { ArtistCategory, ArtistSpecialty } from "@prisma/client";
+import type { ArtistCategory, ArtistSpecialty } from "@/src/generated/prisma/client";
 import ArtistImageUpload from "@/app/components/art/ArtistImageUpload";
 import OptionalImageUpload from "@/app/components/art/OptionalImageUpload";
 import ProgressModal from "@/app/components/art/ProgressModal";

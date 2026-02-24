@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Language } from '@prisma/client'
+import { Language } from '@/src/generated/prisma/browser'
 import { updateLanguage } from '@/lib/actions/language-actions'
 import { useToast } from '@/app/components/Toast/ToastContext' 
 import { z } from 'zod'

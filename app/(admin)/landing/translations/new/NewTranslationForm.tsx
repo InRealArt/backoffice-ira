@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Language } from '@prisma/client'
+import { Language } from '@/src/generated/prisma/browser'
 import { useToast } from '@/app/components/Toast/ToastContext' 
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'

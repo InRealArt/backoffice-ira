@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { ArtworkTheme } from '@prisma/client'
+import { ArtworkTheme } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getArtworkThemeById(id: number): Promise<ArtworkTheme | null> {

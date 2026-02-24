@@ -17,7 +17,7 @@ import {
   ArtworkTechnique,
   ArtworkTheme,
   ArtworkSupport,
-} from "@prisma/client";
+} from "@/src/generated/prisma/client";
 
 interface CreatePhysicalArtworkClientProps {
   mediums: ArtworkMedium[];

@@ -3,10 +3,10 @@
 import { memberSchema } from "@/app/(admin)/boAdmin/create-member/schema";
 import { MemberFormData } from "@/app/(admin)/boAdmin/create-member/schema";
 import { prisma } from "@/lib/prisma"
-import { BackofficeUser, WhiteListedUser, Artist, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType, PhysicalItemStatus, NftItemStatus, PhysicalItemCommercialStatus } from "@prisma/client"
+import { BackofficeUser, WhiteListedUser, Artist, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType, PhysicalItemStatus, NftItemStatus, PhysicalItemCommercialStatus } from "@/src/generated/prisma/client"
 import { revalidatePath } from "next/cache";
-import { PrismaClient } from '@prisma/client'
-import { Decimal } from '@prisma/client/runtime/library'
+import { PrismaClient } from '@/src/generated/prisma/client'
+import { Prisma } from '@/src/generated/prisma/client'
 import { artistNftCollectionAbi } from "@/lib/contracts/ArtistNftCollectionAbi";
 import { decodeEventLog } from "viem";
 import { serverPublicClient } from "@/lib/server-providers";
@@ -79,7 +79,7 @@ function serializeData(data: any): any {
   }
 
   // Vérifier si c'est un Decimal (instanceof ou par la présence de propriétés spécifiques aux Decimal de Prisma)
-  if (data instanceof Decimal || (typeof data === 'object' && data !== null && 'd' in data && 'e' in data && 's' in data && typeof data.toString === 'function')) {
+  if (data instanceof Prisma.Decimal || (typeof data === 'object' && data !== null && 'd' in data && 'e' in data && 's' in data && typeof data.toString === 'function')) {
     return parseFloat(data.toString())
   }
 
@@ -552,9 +552,9 @@ export async function createItemRecord(
             price: physicalItemData.price || 0,
             initialQty: physicalItemData.initialQty || 1,
             stockQty: physicalItemData.initialQty || 1, // Initialiser le stock avec la quantité initiale
-            height: physicalItemData.height ? new Decimal(physicalItemData.height) : null,
-            width: physicalItemData.width ? new Decimal(physicalItemData.width) : null,
-            weight: physicalItemData.weight ? new Decimal(physicalItemData.weight) : null,
+            height: physicalItemData.height ? new Prisma.Decimal(physicalItemData.height) : null,
+            width: physicalItemData.width ? new Prisma.Decimal(physicalItemData.width) : null,
+            weight: physicalItemData.weight ? new Prisma.Decimal(physicalItemData.weight) : null,
             creationYear: physicalItemData.creationYear || null,
             shippingAddressId: physicalItemData.shippingAddressId || null,
             physicalCollectionId: physicalItemData.physicalCollectionId || null,
@@ -1815,7 +1815,7 @@ export async function createMarketPlaceTransaction(params: {
     let priceDecimal = null;
     if (params.price !== undefined) {
       try {
-        priceDecimal = new Decimal(params.price.toString());
+        priceDecimal = new Prisma.Decimal(params.price.toString());
       } catch (error) {
         console.error('Erreur lors de la conversion du prix en Decimal:', error);
         return {
@@ -2260,9 +2260,9 @@ export async function updateItemRecord(
           physicalUpdateData.initialQty = physicalData.initialQty
           physicalUpdateData.stockQty = physicalData.initialQty // Mettre à jour le stock si la quantité initiale a changé
         }
-        if (physicalData.height !== undefined) physicalUpdateData.height = new Decimal(physicalData.height)
-        if (physicalData.width !== undefined) physicalUpdateData.width = new Decimal(physicalData.width)
-        if (physicalData.weight !== undefined) physicalUpdateData.weight = new Decimal(physicalData.weight)
+        if (physicalData.height !== undefined) physicalUpdateData.height = new Prisma.Decimal(physicalData.height)
+        if (physicalData.width !== undefined) physicalUpdateData.width = new Prisma.Decimal(physicalData.width)
+        if (physicalData.weight !== undefined) physicalUpdateData.weight = new Prisma.Decimal(physicalData.weight)
         if (physicalData.creationYear !== undefined) physicalUpdateData.creationYear = physicalData.creationYear
         if (physicalData.shippingAddressId !== undefined) physicalUpdateData.shippingAddressId = physicalData.shippingAddressId
         if (physicalData.physicalCollectionId !== undefined) physicalUpdateData.physicalCollectionId = physicalData.physicalCollectionId
@@ -2353,9 +2353,9 @@ export async function updateItemRecord(
               price: physicalData.price || 0,
               initialQty: physicalData.initialQty || 1,
               stockQty: physicalData.initialQty || 1,
-              height: physicalData.height ? new Decimal(physicalData.height) : null,
-              width: physicalData.width ? new Decimal(physicalData.width) : null,
-              weight: physicalData.weight ? new Decimal(physicalData.weight) : null,
+              height: physicalData.height ? new Prisma.Decimal(physicalData.height) : null,
+              width: physicalData.width ? new Prisma.Decimal(physicalData.width) : null,
+              weight: physicalData.weight ? new Prisma.Decimal(physicalData.weight) : null,
               creationYear: physicalData.creationYear || null,
               shippingAddressId: physicalData.shippingAddressId || null,
               physicalCollectionId: physicalData.physicalCollectionId || null,

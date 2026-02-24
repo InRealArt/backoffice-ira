@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { DetailedFaqHeader } from '@prisma/client'
+import { DetailedFaqHeader } from '@/src/generated/prisma/browser'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import { deleteDetailedFaqHeader } from '@/lib/actions/faq-actions'

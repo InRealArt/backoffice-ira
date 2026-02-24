@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import RoyaltyBeneficiariesClient from './RoyaltyBeneficiariesClient'
-import { SmartContract } from '@prisma/client'
+import { SmartContract } from '@/src/generated/prisma/client'
 
 
 export const metadata = {

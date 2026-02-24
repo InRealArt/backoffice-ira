@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { ItemStatus, ResourceNftStatuses } from '@prisma/client'
+import { ItemStatus, ResourceNftStatuses } from '@/src/generated/prisma/browser'
 
 /**
  * Types de badges supportés

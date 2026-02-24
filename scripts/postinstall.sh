@@ -1,16 +1,6 @@
 #!/bin/bash
+set -e
 
-# Script postinstall pour Prisma sur Vercel
 echo "🔧 Génération du client Prisma..."
-
-# Vérifier si nous sommes sur Vercel
-if [ -n "$VERCEL" ]; then
-  echo "📦 Déploiement Vercel détecté"
-  npx prisma generate
-else
-  echo "💻 Environnement local détecté"
-  npx prisma generate
-fi
-
+npx prisma generate
 echo "✅ Client Prisma généré avec succès"
-

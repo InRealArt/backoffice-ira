@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { NetworkType } from '@prisma/client'
+import { NetworkType } from '@/src/generated/prisma/client'
 
 const smartContractSchema = z.object({
     factoryAddress: z.string()

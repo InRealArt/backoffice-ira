@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import FaqClient from './FaqClient'
-import { Faq } from '@prisma/client'
+import { Faq } from '@/src/generated/prisma/client'
 
 export const metadata = {
   title: 'Liste des FAQs | Administration',

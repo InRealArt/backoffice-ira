@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { SeoPost } from '@prisma/client'
+import { SeoPost } from '@/src/generated/prisma/client'
 import { generateSeoJsonLd, generateSeoHtml, generateArticleHtml, SeoPostData } from '@/lib/utils/seo-generators'
 import { BlogContent } from '@/app/components/BlogEditor/types'
 import { translateSeoPostFields, getLanguageByCode, checkTranslationExists, handleSeoPostTranslationsOnUpdate } from '@/lib/services/translation-service'

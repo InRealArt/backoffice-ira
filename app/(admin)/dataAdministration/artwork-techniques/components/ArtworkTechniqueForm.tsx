@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArtworkTechnique } from '@prisma/client'
+import { ArtworkTechnique } from '@/src/generated/prisma/browser'
 import { createArtworkTechnique, updateArtworkTechnique } from '@/lib/actions/artwork-technique-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { useToast } from '@/app/components/Toast/ToastContext'

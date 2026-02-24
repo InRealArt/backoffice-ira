@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { createDetailedFaqPage } from '@/lib/actions/faq-page-actions'
-import { LandingPage } from '@prisma/client'
+import { LandingPage } from '@/src/generated/prisma/browser'
 import { getAvailableLandingPages } from '@/lib/actions/faq-page-actions'
 
 // Schéma de validation pour le formulaire principal

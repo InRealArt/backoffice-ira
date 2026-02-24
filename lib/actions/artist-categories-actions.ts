@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { generateSlug } from '@/lib/utils'
-import { ArtistCategory } from '@prisma/client'
+import { ArtistCategory } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getArtistCategoryById(id: number): Promise<ArtistCategory | null> {

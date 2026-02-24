@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { decodeJwtToken } from '../utils';
-import { BackofficeUserRoles } from '@prisma/client';
+import { BackofficeUserRoles } from '@/src/generated/prisma/client';
 
 export async function POST(request: Request) {
   try {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { NftCollection, Artist, SmartContract } from '@prisma/client'
+import { NftCollection, Artist, SmartContract } from '@/src/generated/prisma/browser'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import { Filters, FilterItem } from '@/app/components/Common'

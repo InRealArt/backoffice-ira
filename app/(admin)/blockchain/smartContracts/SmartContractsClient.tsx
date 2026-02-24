@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import type { SmartContract } from '@/src/generated/prisma/browser'
 import { useRouter } from 'next/navigation'
-import { SmartContract } from '@prisma/client'
+
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'

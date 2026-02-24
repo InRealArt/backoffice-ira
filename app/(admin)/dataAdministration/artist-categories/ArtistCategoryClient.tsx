@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArtistCategory } from '@prisma/client'
+import { ArtistCategory } from '@/src/generated/prisma/browser'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import { deleteArtistCategory } from '@/lib/actions/artist-categories-actions'

@@ -7,7 +7,7 @@ import {
   ArtworkStyle,
   ArtworkTechnique,
   ArtworkTheme,
-} from "@prisma/client";
+} from "@/src/generated/prisma/client";
 import MultiSelect from "@/app/components/Forms/MultiSelect";
 import { Controller } from "react-hook-form";
 

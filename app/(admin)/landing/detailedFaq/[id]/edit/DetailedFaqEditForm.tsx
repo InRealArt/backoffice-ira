@@ -13,7 +13,7 @@ import {
   deleteDetailedFaqItem 
 } from '@/lib/actions/faq-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
-import { DetailedFaqHeader, DetailedFaqItem } from '@prisma/client'
+import { DetailedFaqHeader, DetailedFaqItem } from '@/src/generated/prisma/browser'
 import TranslationField from '@/app/components/TranslationField'
 import TranslationIcon from '@/app/components/TranslationIcon'
 

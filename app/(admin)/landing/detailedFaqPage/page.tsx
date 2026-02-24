@@ -1,5 +1,5 @@
 import DetailedFaqPageClient from './DetailedFaqPageClient'
-import { DetailedFaqPage, DetailedFaqPageItem } from '@prisma/client'
+import { DetailedFaqPage, DetailedFaqPageItem } from '@/src/generated/prisma/client'
 import { getDetailedFaqPages } from '@/lib/actions/faq-page-actions'
 
 // Définir l'interface pour les données incluant faqItems

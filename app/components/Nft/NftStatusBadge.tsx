@@ -1,6 +1,6 @@
 'use client'
 
-import { ResourceNftStatuses } from '@prisma/client'
+import { ResourceNftStatuses } from '@/src/generated/prisma/browser'
 import { getNftStatusBadge } from '@/app/components/StatusBadge'
 
 interface NftStatusBadgeProps {

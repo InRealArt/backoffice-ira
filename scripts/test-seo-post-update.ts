@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@/src/generated/prisma/client'
 import { updateSeoPost } from '../lib/actions/seo-post-actions'
 
 const prisma = new PrismaClient()

@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useToast } from '@/app/components/Toast/ToastContext'
-import { SmartContract } from '@prisma/client'
+import { SmartContract } from '@/src/generated/prisma/browser'
 import { updateSmartContract } from '@/lib/actions/smartContract-actions'
 
 const formSchema = z.object({

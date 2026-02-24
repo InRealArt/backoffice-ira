@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getDetailedFaqPageById } from '@/lib/actions/faq-page-actions'
 import DetailedFaqPageEditForm from './DetailedFaqPageEditForm'
-import { DetailedFaqPage, DetailedFaqPageItem } from '@prisma/client'
+import { DetailedFaqPage, DetailedFaqPageItem } from '@/src/generated/prisma/client'
 
 interface DetailedFaqPageWithItems extends DetailedFaqPage {
   faqItems: DetailedFaqPageItem[]

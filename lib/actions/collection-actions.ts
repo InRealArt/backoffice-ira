@@ -5,8 +5,8 @@ import { z } from 'zod'
 import { serverPublicClient } from '@/lib/server-providers'
 import { factoryABI } from '@/lib/contracts/factoryABI'
 import { Address, decodeEventLog } from 'viem'
-import { CollectionStatus, NftCollection } from '@prisma/client'
-import { Prisma } from '@prisma/client'
+import { CollectionStatus, NftCollection } from '@/src/generated/prisma/client'
+import { Prisma } from '@/src/generated/prisma/client'
 import { redirect } from 'next/navigation'
 
 const collectionSchema = z.object({

@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { Team } from '@prisma/client'
+import { Team } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getTeamMemberById(id: number): Promise<Team | null> {

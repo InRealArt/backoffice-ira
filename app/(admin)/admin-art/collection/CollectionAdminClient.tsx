@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Image from 'next/image'
-import { ItemStatus, PhysicalItemStatus, NftItemStatus } from '@prisma/client'
+import { ItemStatus, PhysicalItemStatus, NftItemStatus } from '@/src/generated/prisma/browser'
 import {
   PageContainer,
   PageHeader,

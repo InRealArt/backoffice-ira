@@ -1,4 +1,4 @@
-import { NetworkType } from '@prisma/client'
+import { NetworkType } from '@/src/generated/prisma/client'
 import { Chain, polygonAmoy, polygon, sepolia, mainnet } from 'viem/chains'
 
 interface NetworkConfig {

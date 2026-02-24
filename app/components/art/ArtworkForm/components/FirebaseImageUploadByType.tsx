@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Camera, X } from 'lucide-react'
 // Les imports pour l'upload seront utilisés lors de la soumission du formulaire
 import { useToast } from '@/app/components/Toast/ToastContext'
-import { PhysicalItemImageType } from '@prisma/client'
+import { PhysicalItemImageType } from '@/src/generated/prisma/browser'
 
 interface ImageItem {
   id: string // Identifiant unique

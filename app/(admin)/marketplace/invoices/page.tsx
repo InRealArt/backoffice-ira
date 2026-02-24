@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import InvoicesClient from './InvoicesClient'
-import { Invoice, InvoiceItem } from '@prisma/client'
+import { Invoice, InvoiceItem } from '@/src/generated/prisma/client'
 
 export const metadata = {
   title: 'Liste des factures | Administration',

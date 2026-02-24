@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { StickyFooter } from '@prisma/client'
+import { StickyFooter } from '@/src/generated/prisma/client'
 
 /**
  * Récupère tous les sticky footers

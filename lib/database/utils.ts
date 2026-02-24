@@ -1,4 +1,4 @@
-import { BackofficeUserRoles } from '@prisma/client'
+import { BackofficeUserRoles } from '@/src/generated/prisma/client'
 import { prisma } from '../prisma'
 
 /**

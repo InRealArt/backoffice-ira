@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { Invoice, InvoiceType } from '@prisma/client'
+import { Invoice, InvoiceType } from '@/src/generated/prisma/client'
 
 /**
  * Récupère une facture par son ID

@@ -9,7 +9,7 @@ import { getAllAddressesForAdmin } from "@/lib/actions/address-actions";
 import styles from "./editArtworkAdmin.module.scss";
 import { normalizeString } from "@/lib/utils";
 import FormSection from "@/app/components/art/ArtworkForm/FormSection";
-import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from "@prisma/client";
+import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from "@/src/generated/prisma/client";
 
 interface EditArtworkAdminClientProps {
   mediums: ArtworkMedium[];

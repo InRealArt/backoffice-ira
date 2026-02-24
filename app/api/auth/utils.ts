@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { getUserByEmail } from '@/lib/database/utils'
-import { BackofficeUser } from '@prisma/client'
+import { BackofficeUser } from '@/src/generated/prisma/client'
 
 export const decodeJwtToken = async (authToken: string): Promise<{ user: BackofficeUser | null, message: string }> => {
     const decodedToken = jwt.decode(authToken)

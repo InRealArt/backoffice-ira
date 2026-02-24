@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQueryStates } from 'nuqs'
-import { SeoPost, SeoCategory, PostStatus, Language } from '@prisma/client'
+import { SeoPost, SeoCategory, PostStatus, Language } from '@/src/generated/prisma/browser'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Image from 'next/image'
 import {

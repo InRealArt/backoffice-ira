@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Team } from '@prisma/client'
+import { Team } from '@/src/generated/prisma/browser'
 import { updateTeamMember } from '@/lib/actions/team-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { useToast } from '@/app/components/Toast/ToastContext' 

@@ -1,7 +1,7 @@
 // Types pour les formulaires et composants d'artwork
 import { PhysicalArtworkFormData } from '../schema'
 import { Control, FieldErrors, UseFormRegister, UseFormSetValue, UseFormGetValues } from 'react-hook-form'
-import { ArtworkMedium, ArtworkStyle, ArtworkTechnique, ArtworkTheme, ArtworkSupport } from '@prisma/client'
+import { ArtworkMedium, ArtworkStyle, ArtworkTechnique, ArtworkTheme, ArtworkSupport } from '@/src/generated/prisma/client'
 
 // Alias pour maintenir la compatibilité avec le code existant
 export type ArtworkFormData = PhysicalArtworkFormData

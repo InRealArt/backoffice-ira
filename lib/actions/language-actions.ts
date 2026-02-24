@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { Language } from '@prisma/client'
+import { Language } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getLanguageById(id: number): Promise<Language | null> {

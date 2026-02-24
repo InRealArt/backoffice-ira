@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { DetailedFaqPage, DetailedFaqPageItem, LandingPage } from '@prisma/client'
+import { DetailedFaqPage, DetailedFaqPageItem, LandingPage } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 import { unstable_noStore } from 'next/cache'
 

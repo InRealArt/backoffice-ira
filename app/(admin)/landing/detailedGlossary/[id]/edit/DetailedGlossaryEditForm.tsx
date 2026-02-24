@@ -12,7 +12,7 @@ import {
   createDetailedGlossaryItem, 
   deleteDetailedGlossaryItem 
 } from '@/lib/actions/glossary-actions'
-import { DetailedGlossaryHeader, DetailedGlossaryItem } from '@prisma/client'
+import { DetailedGlossaryHeader, DetailedGlossaryItem } from '@/src/generated/prisma/browser'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import TranslationField from '@/app/components/TranslationField'
 import TranslationIcon from '@/app/components/TranslationIcon'

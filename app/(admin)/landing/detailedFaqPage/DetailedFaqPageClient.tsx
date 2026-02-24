@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { DetailedFaqPage } from '@prisma/client'
+import { DetailedFaqPage } from '@/src/generated/prisma/browser'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { deleteDetailedFaqPage } from '@/lib/actions/faq-page-actions'
 import { ChevronDown, ChevronUp } from 'lucide-react'

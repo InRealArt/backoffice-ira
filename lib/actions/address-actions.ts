@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
-import { ArtistAddress } from '@prisma/client'
+import { ArtistAddress } from '@/src/generated/prisma/client'
 
 // Récupérer les adresses d'un utilisateur BackofficeAuthUser (schéma backoffice)
 export async function getAddresses(backofficeAuthUserId: string) {

@@ -23,7 +23,7 @@ import { getNetwork } from '@/lib/blockchain/networkConfig'
 import { isValidEthereumAddress } from '@/lib/blockchain/utils'
 import { useRoyaltySettings } from '@/app/(admin)/marketplace/hooks/useRoyaltySettings'
 import IpfsUriField from '@/app/components/Marketplace/IpfsUriField'
-import { NetworkType } from '@prisma/client'
+import { NetworkType } from '@/src/generated/prisma/browser'
 import { getBlockExplorerUrl } from '@/lib/blockchain/explorerUtils'
 
 

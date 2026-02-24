@@ -7,7 +7,7 @@
  */
 
 import 'dotenv/config'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@/src/generated/prisma/client'
 
 // Créer une instance Prisma avec la bonne configuration
 // Utiliser DIRECT_URL si USE_DIRECT_PRISMA est défini (recommandé pour Supabase)

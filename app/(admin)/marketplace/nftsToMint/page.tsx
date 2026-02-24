@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import NftsToMintClient from './NftsToMintClient'
-import { Decimal } from '@prisma/client/runtime/library'
+import { Prisma } from '@/src/generated/prisma/client'
 
 // Force la route à être dynamique
 export const dynamic = 'force-dynamic'
@@ -31,7 +31,7 @@ export default async function NftsToMintPage() {
         return obj.toISOString()
       }
       
-      if (obj instanceof Decimal) {
+      if (obj instanceof Prisma.Decimal) {
         return obj.toString()
       }
       

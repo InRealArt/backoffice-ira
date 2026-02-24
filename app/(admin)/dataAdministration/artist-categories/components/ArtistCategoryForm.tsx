@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArtistCategory } from '@prisma/client'
+import { ArtistCategory } from '@/src/generated/prisma/browser'
 import { createArtistCategory, updateArtistCategory } from '@/lib/actions/artist-categories-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { useToast } from '@/app/components/Toast/ToastContext'

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Artist } from "@prisma/client";
+import { Artist } from "@/src/generated/prisma/client";
 import { updateArtist, duplicateArtist } from "@/lib/actions/artist-actions";
 import { useToast } from "@/app/components/Toast/ToastContext";
 import Image from "next/image";

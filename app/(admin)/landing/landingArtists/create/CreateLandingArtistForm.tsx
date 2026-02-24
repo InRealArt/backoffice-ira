@@ -13,7 +13,7 @@ import { handleEntityTranslations } from "@/lib/actions/translation-actions";
 import { generateSlug, validateUrl, getArtistFullName } from "@/lib/utils";
 import type { ArtistName } from "@/lib/types/artist";
 import MediumMultiSelect from "@/app/components/Common/MediumMultiSelect";
-import type { ArtistCategory } from "@prisma/client";
+import type { ArtistCategory } from "@/src/generated/prisma/client";
 import CategoryMultiSelect from "@/app/components/Common/CategoryMultiSelect";
 import ArtistImageUpload from "@/app/components/art/ArtistImageUpload";
 import OptionalImageUpload from "@/app/components/art/OptionalImageUpload";

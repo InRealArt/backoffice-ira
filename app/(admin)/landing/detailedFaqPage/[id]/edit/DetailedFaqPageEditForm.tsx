@@ -14,7 +14,7 @@ import {
   getMaxOrderForPage
 } from '@/lib/actions/faq-page-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
-import { DetailedFaqPage, DetailedFaqPageItem } from '@prisma/client'
+import { DetailedFaqPage, DetailedFaqPageItem } from '@/src/generated/prisma/browser'
 import TranslationField from '@/app/components/TranslationField'
 import TranslationIcon from '@/app/components/TranslationIcon'
 

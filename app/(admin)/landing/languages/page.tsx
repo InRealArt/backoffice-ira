@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import LanguagesClient from './LanguagesClient'
-import { Language } from '@prisma/client'
+import { Language } from '@/src/generated/prisma/client'
 
 export const metadata = {
   title: 'Liste des langues | Administration',

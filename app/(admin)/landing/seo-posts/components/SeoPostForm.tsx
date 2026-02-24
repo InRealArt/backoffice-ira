@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { SeoCategory, SeoPost, Language } from '@prisma/client'
+import { SeoCategory, SeoPost, Language } from '@/src/generated/prisma/browser'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'

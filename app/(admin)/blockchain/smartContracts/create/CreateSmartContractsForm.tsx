@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useToast } from '@/app/components/Toast/ToastContext'
-import { NetworkType } from '@prisma/client'
+import { NetworkType } from '@/src/generated/prisma/browser'
 import { createSmartContracts } from '@/lib/actions/smartContract-actions'
 
 // Schéma de validation

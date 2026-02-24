@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import LoadingSpinner from "@/app/components/LoadingSpinner/LoadingSpinner";
-import { ArtistAddress } from "@prisma/client";
+import { ArtistAddress } from "@/src/generated/prisma/client";
 import { getBackofficeUserByEmail } from "@/lib/actions/prisma-actions";
 import { getAddresses } from "@/lib/actions/address-actions";
 import Link from "next/link";

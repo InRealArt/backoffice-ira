@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
-import { ArtworkStyle } from '@prisma/client'
-import { Prisma } from '@prisma/client'
+import { ArtworkStyle } from '@/src/generated/prisma/client'
+import { Prisma } from '@/src/generated/prisma/client'
 
 export interface ArtworkStyleFormData {
     name: string

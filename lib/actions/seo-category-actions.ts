@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { SeoCategory } from '@prisma/client'
+import { SeoCategory } from '@/src/generated/prisma/client'
 
 /**
  * Récupère toutes les catégories d'articles SEO

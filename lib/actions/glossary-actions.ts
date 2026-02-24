@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { Faq } from '@prisma/client'
+import { Faq } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 

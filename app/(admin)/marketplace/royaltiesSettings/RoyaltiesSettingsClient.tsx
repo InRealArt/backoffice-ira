@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { Item, ResourceNftStatuses, ResourceTypes, SmartContract } from '@prisma/client'
+import { Item, ResourceNftStatuses, ResourceTypes, SmartContract } from '@/src/generated/prisma/browser'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import NftStatusBadge from '@/app/components/Nft/NftStatusBadge'
 import { getActiveBadge } from '@/app/components/StatusBadge'

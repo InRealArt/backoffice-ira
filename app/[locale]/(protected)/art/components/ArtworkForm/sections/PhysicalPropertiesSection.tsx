@@ -1,6 +1,6 @@
 import { FormFields } from "../types";
 import FormSection from "../FormSection";
-import { ArtworkSupport } from "@prisma/client";
+import { ArtworkSupport } from "@/src/generated/prisma/client";
 
 interface PhysicalPropertiesSectionProps extends FormFields {
   isFormReadOnly?: boolean;

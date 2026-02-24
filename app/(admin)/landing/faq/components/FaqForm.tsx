@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Faq } from '@prisma/client'
+import { Faq } from '@/src/generated/prisma/browser'
 import { createFaq, updateFaq } from '@/lib/actions/faq-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { useToast } from '@/app/components/Toast/ToastContext' 

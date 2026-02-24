@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { ArtworkSupport } from '@prisma/client'
+import { ArtworkSupport } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getArtworkSupportById(id: number): Promise<ArtworkSupport | null> {

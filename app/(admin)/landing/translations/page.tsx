@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import TranslationsClient from './TranslationsClient'
-import { Translation } from '@prisma/client'
+import { Translation } from '@/src/generated/prisma/client'
 
 // Définir l'interface pour correspondre à celle du composant client
 interface TranslationWithLanguage extends Translation {

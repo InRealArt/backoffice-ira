@@ -24,7 +24,7 @@ import {
   ArtworkTechnique,
   ArtworkTheme,
   ArtworkSupport,
-} from "@prisma/client";
+} from "@/src/generated/prisma/client";
 
 interface EditPhysicalArtworkClientProps {
   params: Promise<{ id: string }>;

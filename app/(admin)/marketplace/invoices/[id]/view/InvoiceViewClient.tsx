@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Invoice, InvoiceType, InvoiceItem } from '@prisma/client'
+import { Invoice, InvoiceType, InvoiceItem } from '@/src/generated/prisma/browser'
 import { formatDate } from '@/lib/utils'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { updateInvoicePaymentStatus, downloadInvoice } from '../../actions'

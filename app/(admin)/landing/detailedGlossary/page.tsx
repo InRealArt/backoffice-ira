@@ -1,5 +1,5 @@
 import DetailedGlossaryClient from './DetailedGlossaryClient'
-import { DetailedFaqHeader, DetailedGlossaryHeader, DetailedGlossaryItem } from '@prisma/client'
+import { DetailedFaqHeader, DetailedGlossaryHeader, DetailedGlossaryItem } from '@/src/generated/prisma/client'
 import { getDetailedGlossaryHeaders } from '@/lib/actions/glossary-actions'
 
 // Définir l'interface pour les données incluant faqItems

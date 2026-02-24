@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArtistAddress } from '@prisma/client'
+import { ArtistAddress } from '@/src/generated/prisma/browser'
 import { getCountries, Country } from '@/lib/utils'
 import InputField from '@/app/components/Forms/InputField'
 import styles from '@/app/components/Forms/forms.module.css'

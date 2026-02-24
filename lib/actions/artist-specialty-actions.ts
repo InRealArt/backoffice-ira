@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import type { ArtistSpecialty } from '@prisma/client'
+import type { ArtistSpecialty } from '@/src/generated/prisma/client'
 
 /**
  * Récupère une spécialité d'artiste par son ID

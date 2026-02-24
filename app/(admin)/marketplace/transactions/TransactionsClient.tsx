@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { MarketPlaceTransaction, NftCollection, ResourceNftStatuses, SmartContract } from '@prisma/client'
+import { MarketPlaceTransaction, NftCollection, ResourceNftStatuses, SmartContract } from '@/src/generated/prisma/browser'
 import { formatChainName } from '@/lib/blockchain/chainUtils'
 import BlockchainAddress from '@/app/components/blockchain/BlockchainAddress'
 import { truncateAddress } from '@/lib/blockchain/utils'
