@@ -8,16 +8,14 @@ import { getArtistFullName } from "@/lib/utils";
 
 export interface TopArtistSortableItem {
   id: number; // LandingUgcTopArtists.id
-  landingArtistId: number;
+  ugcArtistProfileId: number;
   order: number;
-  landingArtist: {
+  ugcArtistProfile: {
     id: number;
-    imageUrl: string;
-    artist: {
-      name: string | null;
-      surname: string | null;
-      pseudo: string | null;
-    };
+    profileImageUrl: string | null;
+    name: string | null;
+    surname: string | null;
+    pseudo: string | null;
   };
 }
 
@@ -25,7 +23,7 @@ interface SortableTopArtistItemProps {
   item: TopArtistSortableItem;
   isDragging: boolean;
   disabled?: boolean;
-  onRemove: (landingArtistId: number) => void;
+  onRemove: (ugcArtistProfileId: number) => void;
   isRemoving?: boolean;
 }
 
@@ -51,8 +49,12 @@ export default function SortableTopArtistItem({
     opacity: isSortableDragging ? 0.4 : 1,
   };
 
-  const artistName = getArtistFullName(item.landingArtist.artist);
-  const pseudo = item.landingArtist.artist.pseudo;
+  const artistName = getArtistFullName({
+    name: item.ugcArtistProfile.name,
+    surname: item.ugcArtistProfile.surname,
+    pseudo: item.ugcArtistProfile.pseudo,
+  });
+  const pseudo = item.ugcArtistProfile.pseudo;
 
   return (
     <div
@@ -75,16 +77,18 @@ export default function SortableTopArtistItem({
 
       {/* Artist image */}
       <div className="relative w-14 h-14 flex-shrink-0 rounded-md overflow-hidden bg-base-200">
-        <Image
-          src={item.landingArtist.imageUrl}
-          alt={artistName}
-          fill
-          className="object-cover"
-          sizes="56px"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-        />
+        {item.ugcArtistProfile.profileImageUrl ? (
+          <Image
+            src={item.ugcArtistProfile.profileImageUrl}
+            alt={artistName}
+            fill
+            className="object-cover"
+            sizes="56px"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        ) : null}
       </div>
 
       {/* Info */}
@@ -105,7 +109,7 @@ export default function SortableTopArtistItem({
       {/* Remove button */}
       <button
         type="button"
-        onClick={() => onRemove(item.landingArtistId)}
+        onClick={() => onRemove(item.ugcArtistProfileId)}
         disabled={disabled || isRemoving}
         className="btn btn-ghost btn-sm btn-square text-error hover:bg-error/10 flex-shrink-0"
         aria-label="Retirer des top artistes"

@@ -12,62 +12,52 @@ export async function getTopArtists() {
     return prisma.landingUgcTopArtists.findMany({
         orderBy: { order: 'asc' },
         include: {
-            landingArtist: {
-                include: {
-                    artist: {
-                        select: {
-                            name: true,
-                            surname: true,
-                            pseudo: true,
-                        },
-                    },
-                },
-            },
+            landingUgcArtistProfile: true,
         },
     })
 }
 
 /**
- * Récupère tous les LandingArtists avec leur statut top artiste UGC
+ * Récupère tous les profils UGC artiste avec leur statut top artiste
  */
-export async function getAllLandingArtistsWithTopStatus() {
-    return prisma.landingArtist.findMany({
-        where: {
-            artistsPage: true,
-        },
-        orderBy: {
-            artist: { name: 'asc' },
-        },
-        include: {
-            artist: {
-                select: {
-                    name: true,
-                    surname: true,
-                    pseudo: true,
-                },
-            },
-            ugcTopArtist: true,
-        },
-    })
+export async function getAllUgcArtistProfilesWithTopStatus() {
+    const [profiles, topArtists] = await Promise.all([
+        prisma.landingUgcArtistProfile.findMany({
+            orderBy: [{ surname: 'asc' }, { name: 'asc' }],
+        }),
+        prisma.landingUgcTopArtists.findMany({
+            select: { landingUgcArtistProfileId: true },
+        }),
+    ])
+    const topProfileIds = new Set(
+        topArtists.map((t) => t.landingUgcArtistProfileId)
+    )
+    return { profiles, topProfileIds }
 }
 
 /**
- * Ajoute un artiste dans les top artistes UGC
- * L'artiste est ajouté en fin de liste (order = max + 1)
+ * Ajoute un profil UGC artiste dans les top artistes UGC
+ * Le profil est ajouté en fin de liste (order = max + 1)
  */
 export async function addTopArtist(
-    landingArtistId: number
+    ugcArtistProfileId: number
 ): Promise<{ success: boolean; message?: string }> {
     try {
+        // Vérifier que ce profil n'est pas déjà dans les top artistes
+        const existing = await prisma.landingUgcTopArtists.findFirst({
+            where: { landingUgcArtistProfileId: ugcArtistProfileId },
+        })
+        if (existing) {
+            return { success: false, message: 'Ce profil est déjà dans les top artistes' }
+        }
+
         const maxOrderResult = await prisma.landingUgcTopArtists.aggregate({
             _max: { order: true },
         })
         const nextOrder = (maxOrderResult._max.order ?? 0) + 1
 
-        await prisma.landingUgcTopArtists.upsert({
-            where: { landingArtistId },
-            create: { landingArtistId, order: nextOrder },
-            update: {},
+        await prisma.landingUgcTopArtists.create({
+            data: { landingUgcArtistProfileId: ugcArtistProfileId, order: nextOrder },
         })
 
         REVALIDATE_PATHS.forEach((path) => revalidatePath(path))
@@ -82,14 +72,14 @@ export async function addTopArtist(
 }
 
 /**
- * Retire un artiste des top artistes UGC
+ * Retire un profil UGC artiste des top artistes UGC
  */
 export async function removeTopArtist(
-    landingArtistId: number
+    ugcArtistProfileId: number
 ): Promise<{ success: boolean; message?: string }> {
     try {
-        await prisma.landingUgcTopArtists.delete({
-            where: { landingArtistId },
+        await prisma.landingUgcTopArtists.deleteMany({
+            where: { landingUgcArtistProfileId: ugcArtistProfileId },
         })
 
         REVALIDATE_PATHS.forEach((path) => revalidatePath(path))

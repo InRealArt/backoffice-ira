@@ -15,31 +15,27 @@ import {
 } from "@/lib/actions/landing-ugc-actions";
 import { getArtistFullName } from "@/lib/utils";
 
-interface ArtistInfo {
+interface AvailableUgcProfile {
+  id: number;
+  profileImageUrl: string | null;
   name: string | null;
   surname: string | null;
   pseudo: string | null;
 }
 
-interface AvailableLandingArtist {
-  id: number;
-  imageUrl: string;
-  artist: ArtistInfo;
-}
-
 interface TopArtistsClientProps {
   initialTopArtists: TopArtistSortableItem[];
-  availableArtists: AvailableLandingArtist[];
+  availableProfiles: AvailableUgcProfile[];
 }
 
 export default function TopArtistsClient({
   initialTopArtists,
-  availableArtists: initialAvailable,
+  availableProfiles: initialAvailable,
 }: TopArtistsClientProps) {
   const [topArtists, setTopArtists] =
     useState<TopArtistSortableItem[]>(initialTopArtists);
   const [available, setAvailable] =
-    useState<AvailableLandingArtist[]>(initialAvailable);
+    useState<AvailableUgcProfile[]>(initialAvailable);
   const [removingId, setRemovingId] = useState<number | null>(null);
   const [addingId, setAddingId] = useState<number | null>(null);
   const [isSaving, startSavingTransition] = useTransition();
@@ -57,7 +53,7 @@ export default function TopArtistsClient({
     setTopArtists(withNewOrder);
 
     // Ne mettre à jour en base que les entrées déjà persistées (id > 0).
-    // Les id temporaires sont négatifs (ex. -landingArtistId) pour les ajouts récents.
+    // Les id temporaires sont négatifs (ex. -ugcArtistProfileId) pour les ajouts récents.
     const updates = withNewOrder
       .filter((item) => item.id > 0)
       .map((item) => ({
@@ -78,25 +74,27 @@ export default function TopArtistsClient({
   }
 
   // ── Add ───────────────────────────────────────────────────────────────────
-  const handleAdd = async (landingArtist: AvailableLandingArtist) => {
-    setAddingId(landingArtist.id);
-    const result = await addTopArtist(landingArtist.id);
+  const handleAdd = async (profile: AvailableUgcProfile) => {
+    setAddingId(profile.id);
+    const result = await addTopArtist(profile.id);
     if (result.success) {
       const nextOrder = topArtists.length + 1;
       const newItem: TopArtistSortableItem = {
-        id: -landingArtist.id, // id temporaire (négatif), vrai id après rechargement
-        landingArtistId: landingArtist.id,
+        id: -profile.id, // id temporaire (négatif), vrai id après rechargement
+        ugcArtistProfileId: profile.id,
         order: nextOrder,
-        landingArtist: {
-          id: landingArtist.id,
-          imageUrl: landingArtist.imageUrl,
-          artist: landingArtist.artist,
+        ugcArtistProfile: {
+          id: profile.id,
+          profileImageUrl: profile.profileImageUrl,
+          name: profile.name,
+          surname: profile.surname,
+          pseudo: profile.pseudo,
         },
       };
       setTopArtists((prev) => [...prev, newItem]);
-      setAvailable((prev) => prev.filter((a) => a.id !== landingArtist.id));
+      setAvailable((prev) => prev.filter((p) => p.id !== profile.id));
       success(
-        `${getArtistFullName(landingArtist.artist)} ajouté aux top artistes`
+        `${getArtistFullName(profile)} ajouté aux top artistes`
       );
     } else {
       error(result.message ?? "Erreur lors de l'ajout");
@@ -105,16 +103,16 @@ export default function TopArtistsClient({
   };
 
   // ── Remove ────────────────────────────────────────────────────────────────
-  const handleRemove = async (landingArtistId: number) => {
-    setRemovingId(landingArtistId);
-    const result = await removeTopArtist(landingArtistId);
+  const handleRemove = async (ugcArtistProfileId: number) => {
+    setRemovingId(ugcArtistProfileId);
+    const result = await removeTopArtist(ugcArtistProfileId);
     if (result.success) {
       const removed = topArtists.find(
-        (t) => t.landingArtistId === landingArtistId
+        (t) => t.ugcArtistProfileId === ugcArtistProfileId
       );
       setTopArtists((prev) =>
         prev
-          .filter((t) => t.landingArtistId !== landingArtistId)
+          .filter((t) => t.ugcArtistProfileId !== ugcArtistProfileId)
           .map((t, idx) => ({ ...t, order: idx + 1 }))
       );
       if (removed) {
@@ -122,18 +120,18 @@ export default function TopArtistsClient({
           [
             ...prev,
             {
-              id: removed.landingArtistId,
-              imageUrl: removed.landingArtist.imageUrl,
-              artist: removed.landingArtist.artist,
+              id: removed.ugcArtistProfileId,
+              profileImageUrl: removed.ugcArtistProfile.profileImageUrl,
+              name: removed.ugcArtistProfile.name,
+              surname: removed.ugcArtistProfile.surname,
+              pseudo: removed.ugcArtistProfile.pseudo,
             },
           ].sort((a, b) =>
-            getArtistFullName(a.artist).localeCompare(
-              getArtistFullName(b.artist)
-            )
+            getArtistFullName(a).localeCompare(getArtistFullName(b))
           )
         );
         success(
-          `${getArtistFullName(removed.landingArtist.artist)} retiré`
+          `${getArtistFullName(removed.ugcArtistProfile)} retiré`
         );
       }
     } else {
@@ -194,7 +192,7 @@ export default function TopArtistsClient({
                 isDragging={isDragging}
                 disabled={isSaving || removingId !== null}
                 onRemove={handleRemove}
-                isRemoving={removingId === item.landingArtistId}
+                isRemoving={removingId === item.ugcArtistProfileId}
               />
             )}
           />
@@ -203,12 +201,12 @@ export default function TopArtistsClient({
 
       <div className="divider" />
 
-      {/* Section 2 : artistes disponibles */}
+      {/* Section 2 : profils UGC disponibles */}
       <section className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <Plus size={18} className="text-primary" />
-            Artistes disponibles
+            Profils UGC disponibles
           </h2>
           <span className="inline-flex items-center justify-center min-w-[2rem] h-7 px-2 rounded-full bg-primary/10 text-primary text-sm font-bold border border-primary/20">
             {available.length}
@@ -217,31 +215,33 @@ export default function TopArtistsClient({
 
         {available.length === 0 ? (
           <div className="border-2 border-dashed border-base-300 rounded-xl p-10 text-center text-base-content/40">
-            <p className="text-sm">Tous les artistes landing sont sélectionnés</p>
+            <p className="text-sm">Tous les profils UGC sont sélectionnés</p>
           </div>
         ) : (
           <ul className="flex flex-col gap-2">
-            {available.map((artist) => {
-              const name = getArtistFullName(artist.artist);
-              const pseudo = artist.artist.pseudo;
-              const isAdding = addingId === artist.id;
+            {available.map((profile) => {
+              const name = getArtistFullName(profile);
+              const pseudo = profile.pseudo;
+              const isAdding = addingId === profile.id;
               return (
                 <li
-                  key={artist.id}
+                  key={profile.id}
                   className="flex items-center gap-3 p-3 bg-base-100 border border-base-300 rounded-lg shadow-sm"
                 >
                   {/* Image */}
                   <div className="relative w-14 h-14 flex-shrink-0 rounded-md overflow-hidden bg-base-200">
-                    <Image
-                      src={artist.imageUrl}
-                      alt={name}
-                      fill
-                      className="object-cover"
-                      sizes="56px"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
+                    {profile.profileImageUrl ? (
+                      <Image
+                        src={profile.profileImageUrl}
+                        alt={name}
+                        fill
+                        className="object-cover"
+                        sizes="56px"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : null}
                   </div>
 
                   {/* Info */}
@@ -259,7 +259,7 @@ export default function TopArtistsClient({
                   {/* Add button */}
                   <button
                     type="button"
-                    onClick={() => handleAdd(artist)}
+                    onClick={() => handleAdd(profile)}
                     disabled={isAdding || addingId !== null || removingId !== null}
                     className="btn btn-primary btn-small flex-shrink-0"
                   >
