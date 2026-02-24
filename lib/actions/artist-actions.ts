@@ -1,7 +1,7 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { Artist, Prisma } from '@prisma/client'
+import { Artist, Prisma } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 import { generateSlug, toCamelCase, getCountries } from '@/lib/utils'
 
