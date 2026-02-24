@@ -87,6 +87,7 @@ export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, 
             src={displayPreview}
             alt="Aperçu de la photo"
             fill
+            sizes="200px"
             style={{ objectFit: 'cover' }}
           />
           <button

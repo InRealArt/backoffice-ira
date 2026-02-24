@@ -507,7 +507,8 @@
       "blogArticles": "Blog articles",
       "stickyFooter": "Sticky Footer settings",
       "ugcTitle": "LANDING UGC",
-      "ugcTopArtists": "Top UGC Artists"
+      "ugcTopArtists": "Top UGC Artists",
+      "ugcArtistProfiles": "UGC Artist Profiles"
     },
     "dataAdmin": {
       "title": "DATA ADMINISTRATION",

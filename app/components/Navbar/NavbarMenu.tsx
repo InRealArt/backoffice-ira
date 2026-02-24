@@ -757,6 +757,30 @@ export default function NavbarMenu() {
                   )}
                 </a>
               </li>
+              <li>
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      '/landing/ugc/artist-profiles',
+                      'ugcArtistProfiles'
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating('ugcArtistProfiles') ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      <Users size={18} />
+                      <span>{t('landing.ugcArtistProfiles')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Users size={18} />
+                      <span>{t('landing.ugcArtistProfiles')}</span>
+                    </>
+                  )}
+                </a>
+              </li>
             </ul>
           </li>
           <li className="divider my-1"></li>
@@ -1556,6 +1580,20 @@ export default function NavbarMenu() {
                     >
                       <Sparkles size={18} />
                       Top Artistes UGC
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleDesktopNavigation(
+                          '/landing/ugc/artist-profiles',
+                          'ugcArtistProfiles'
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Users size={18} />
+                      Profils Artistes UGC
                     </a>
                   </li>
                 </ul>

@@ -1,6 +1,6 @@
 generator client {
-    provider        = "prisma-client-js"
-    previewFeatures = ["multiSchema"]
+    provider        = "prisma-client"
+    output          = "../src/generated/prisma"
     binaryTargets   = ["native", "rhel-openssl-3.0.x"]
 }
 
@@ -537,8 +537,7 @@ model LandingArtist {
     artistCategories    ArtistCategoryArtist[]
     artist              Artist                 @relation(fields: [artistId], references: [id], onDelete: Cascade)
     physicalCollections PhysicalCollection[]
-    ugcTopArtist        LandingUgcTopArtists?
-
+    ugcArtistProfile    LandingUgcArtistProfile?
     @@index([artistId])
     @@schema("landing")
 }
@@ -1698,10 +1697,26 @@ model PhysicalArtworkViewStat {
 // Géré par le backoffice — liste premium ordonnée
 model LandingUgcTopArtists {
     id              Int           @id @default(autoincrement())
-    landingArtistId Int
-    landingArtist   LandingArtist @relation(fields: [landingArtistId], references: [id], onDelete: Cascade)
-    order           Int           @default(0) // Ordre d'affichage dans la liste premium
+    landingUgcArtistProfileId Int?
+    landingUgcArtistProfile   LandingUgcArtistProfile? @relation(fields: [landingUgcArtistProfileId], references: [id], onDelete: Cascade)
+    order           Int      @default(0) // Ordre d'affichage dans la liste premium
     
-    @@unique([landingArtistId]) // Un artiste ne peut apparaître qu'une seule fois
+    @@unique([order])
+    @@schema("landingUgc")
+}
+
+//Fiche artiste Landing Ugc : peut être un artiste du catalogue IRA ou pas
+model LandingUgcArtistProfile {
+    id              Int           @id @default(autoincrement())
+    landingArtistId Int?          @unique
+    landingArtist   LandingArtist? @relation(fields: [landingArtistId], references: [id], onDelete: Cascade)
+    name            String?
+    surname         String?
+    pseudo          String?
+    profileImageUrl String?
+    title           String?
+    description     String?
+    mediaUrls        String[] @default([]) // URL des médias 
+    topArtists       LandingUgcTopArtists[]
     @@schema("landingUgc")
 }

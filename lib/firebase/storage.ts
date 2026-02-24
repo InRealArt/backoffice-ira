@@ -836,8 +836,115 @@ export async function uploadImageToMarketplaceFolderByType(
 }
 
 /**
+ * Upload une image vers Firebase Storage dans le répertoire artistsUGC
+ *
+ * @param imageFile - Le fichier image à uploader
+ * @param folderName - Nom du répertoire (ex: "Jean Dupont" ou pseudo)
+ * @param fileName - Nom du fichier (sans extension)
+ * @param onConversionStatus - Callback statut conversion
+ * @param onUploadStatus - Callback statut upload
+ * @returns URL de l'image uploadée
+ */
+export async function uploadImageToUgcFolder(
+    imageFile: File,
+    folderName: string,
+    fileName: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        const { getAuth, signInAnonymously } = await import('firebase/auth')
+        const { app } = await import('./config')
+        const auth = getAuth(app)
+        await signInAnonymously(auth)
+
+        onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+        if (!conversionResult.success) {
+            const errorMessage = conversionResult.error || "Erreur lors de la conversion de l'image en WebP"
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+        onConversionStatus?.('completed')
+
+        onUploadStatus?.('in-progress')
+        const storagePath = `artistsUGC/${folderName}/${fileName}.webp`
+        const storageRef = ref(storage, storagePath)
+        await uploadBytes(storageRef, conversionResult.file)
+        const imageUrl = await getDownloadURL(storageRef)
+        onUploadStatus?.('completed')
+
+        return imageUrl
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image UGC:", error)
+        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
+        onUploadStatus?.('error', errorMessage)
+        throw new Error(errorMessage)
+    }
+}
+
+/**
+ * Upload un média (image ou vidéo) vers Firebase Storage dans le répertoire artistsUGC
+ * - Images : conversion WebP automatique
+ * - Vidéos : upload direct sans conversion
+ *
+ * @param mediaFile - Le fichier à uploader (image ou vidéo)
+ * @param folderName - Nom du répertoire (ex: "Jean Dupont" ou pseudo)
+ * @param fileName - Nom du fichier (sans extension)
+ * @param onUploadStatus - Callback statut upload
+ * @returns URL du média uploadé
+ */
+export async function uploadMediaToUgcFolder(
+    mediaFile: File,
+    folderName: string,
+    fileName: string,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        const { getAuth, signInAnonymously } = await import('firebase/auth')
+        const { app } = await import('./config')
+        const auth = getAuth(app)
+        await signInAnonymously(auth)
+
+        onUploadStatus?.('in-progress')
+
+        const isVideo = mediaFile.type.startsWith('video/')
+
+        if (isVideo) {
+            // Upload direct pour les vidéos
+            const ext = mediaFile.name.split('.').pop() || 'mp4'
+            const storagePath = `artistsUGC/${folderName}/${fileName}.${ext}`
+            const storageRef = ref(storage, storagePath)
+            await uploadBytes(storageRef, mediaFile)
+            const mediaUrl = await getDownloadURL(storageRef)
+            onUploadStatus?.('completed')
+            return mediaUrl
+        } else {
+            // Conversion WebP pour les images
+            const conversionResult = await convertToWebPIfNeeded(mediaFile)
+            if (!conversionResult.success) {
+                const errorMessage = conversionResult.error || "Erreur lors de la conversion de l'image en WebP"
+                onUploadStatus?.('error', errorMessage)
+                throw new Error(errorMessage)
+            }
+            const storagePath = `artistsUGC/${folderName}/${fileName}.webp`
+            const storageRef = ref(storage, storagePath)
+            await uploadBytes(storageRef, conversionResult.file)
+            const mediaUrl = await getDownloadURL(storageRef)
+            onUploadStatus?.('completed')
+            return mediaUrl
+        }
+    } catch (error) {
+        console.error("Erreur lors de l'upload du média UGC:", error)
+        const errorMessage = error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
+        onUploadStatus?.('error', errorMessage)
+        throw new Error(errorMessage)
+    }
+}
+
+/**
  * Upload une image de mockup vers Firebase Storage dans le répertoire /artists/{Prenom Nom}/mockups
- * 
+ *
  * @param imageFile - Le fichier image à uploader
  * @param name - Prénom de l'artiste
  * @param surname - Nom de l'artiste

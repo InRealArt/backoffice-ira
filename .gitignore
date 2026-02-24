@@ -51,3 +51,6 @@ email-introduction-artistes.md
 .claude/*
 .continue/*
 .cursor/*
+
+# Prisma Files  
+src/generated/prisma/*
