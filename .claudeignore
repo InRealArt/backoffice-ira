@@ -68,3 +68,7 @@ scripts/clean-css.js
 # Coverage / logs
 coverage/
 *.log
+
+# Prisma 
+prisma/generated/
+
