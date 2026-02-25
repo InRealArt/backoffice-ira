@@ -6,7 +6,8 @@ export enum ElementType {
     VIDEO = 'video',
     LIST = 'list',
     ORDERED_LIST = 'ordered_list',
-    ACCORDION = 'accordion'
+    ACCORDION = 'accordion',
+    RELATED_ARTICLES = 'related_articles'
 }
 
 // Types pour le contenu riche avec liens
@@ -89,7 +90,21 @@ export interface AccordionElement extends BaseElement {
     items: AccordionItemData[]
 }
 
-export type ContentElement = H2Element | H3Element | ParagraphElement | ImageElement | VideoElement | ListElement | OrderedListElement | AccordionElement
+export interface RelatedArticleItem {
+    id: number
+    title: string
+    slug: string
+    categoryName: string
+    mainImageUrl?: string | null
+}
+
+export interface RelatedArticlesElement extends BaseElement {
+    type: ElementType.RELATED_ARTICLES
+    postIds: number[]
+    posts: RelatedArticleItem[]
+}
+
+export type ContentElement = H2Element | H3Element | ParagraphElement | ImageElement | VideoElement | ListElement | OrderedListElement | AccordionElement | RelatedArticlesElement
 
 export interface BlogSection {
     id: string

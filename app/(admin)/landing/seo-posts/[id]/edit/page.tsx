@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { getAllSeoCategories } from '@/lib/actions/seo-category-actions'
-import { getSeoPostById } from '@/lib/actions/seo-post-actions'
+import { getSeoPostById, getSeoPostsForRelatedSelector } from '@/lib/actions/seo-post-actions'
 import SeoPostForm from '../../components/SeoPostForm'
 import PageHeader from '../../components/PageHeader'
 import { notFound } from 'next/navigation'
@@ -19,9 +19,10 @@ export default async function EditSeoPostPage({ params }: EditSeoPostPageProps) 
     return notFound()
   }
   
-  const [seoPost, categoriesResult] = await Promise.all([
+  const [seoPost, categoriesResult, availablePosts] = await Promise.all([
     getSeoPostById(seoPostId),
-    getAllSeoCategories()
+    getAllSeoCategories(),
+    getSeoPostsForRelatedSelector(seoPostId)
   ])
   
   if (!seoPost) {
@@ -68,10 +69,11 @@ export default async function EditSeoPostPage({ params }: EditSeoPostPageProps) 
       </div>
       
       <Suspense fallback={<div>Chargement...</div>}>
-        <SeoPostForm 
-          categories={categories} 
-          seoPost={seoPost} 
-          isEditing={true} 
+        <SeoPostForm
+          categories={categories}
+          seoPost={seoPost}
+          isEditing={true}
+          availablePosts={availablePosts}
         />
       </Suspense>
     </div>

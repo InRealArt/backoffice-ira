@@ -738,6 +738,39 @@ export async function createSeoPostTranslation(
     }
 }
 
+// Récupérer les posts FR pour le sélecteur d'articles liés
+export async function getSeoPostsForRelatedSelector(excludeId?: number) {
+    try {
+        const posts = await prisma.seoPost.findMany({
+            where: {
+                language: { code: 'fr' },
+                ...(excludeId ? { id: { not: excludeId } } : {})
+            },
+            select: {
+                id: true,
+                title: true,
+                slug: true,
+                mainImageUrl: true,
+                category: {
+                    select: { name: true }
+                }
+            },
+            orderBy: { title: 'asc' }
+        })
+
+        return posts.map(p => ({
+            id: p.id,
+            title: p.title,
+            slug: p.slug,
+            categoryName: p.category.name,
+            mainImageUrl: p.mainImageUrl
+        }))
+    } catch (error) {
+        console.error('Erreur lors de la récupération des posts pour le sélecteur:', error)
+        return []
+    }
+}
+
 // Nouvelle fonction pour récupérer les posts par langue
 export async function getSeoPostsByLanguage(languageCode: string = 'fr') {
     try {

@@ -13,7 +13,7 @@ import TextareaField from '@/app/components/Forms/TextareaField'
 import TagInput from '@/app/components/Forms/TagInput'
 import DatePickerField from '@/app/components/Forms/DatePickerField'
 import BlogContentEditor from '@/app/components/BlogEditor/BlogContentEditor'
-import { BlogContent } from '@/app/components/BlogEditor/types'
+import { BlogContent, ElementType, RelatedArticleItem } from '@/app/components/BlogEditor/types'
 import { SEOAssistantButton, SEOAssistantModal, FormData } from '@/app/components/SEOAssistant'
 import { createSeoPost, updateSeoPost, pinSeoPost } from '@/lib/actions/seo-post-actions'
 import { getAllLanguages } from '@/lib/services/translation-service'
@@ -46,6 +46,7 @@ interface SeoPostFormProps {
   categories: SeoCategory[]
   seoPost?: SeoPost | null
   isEditing?: boolean
+  availablePosts?: RelatedArticleItem[]
 }
 
 // Définition des sections d'accordéon pour la gestion des erreurs
@@ -56,7 +57,8 @@ enum AccordionSections {
   TAGS = 'tags',
   HEADER = 'header',
   MAIN_IMAGE = 'main_image',
-  CONTENT = 'content'
+  CONTENT = 'content',
+  RELATED_ARTICLES = 'related_articles'
 }
 
 // Mappage des champs de formulaire aux sections d'accordéon
@@ -75,10 +77,11 @@ const fieldToAccordionMap: Record<string, AccordionSections> = {
   content: AccordionSections.CONTENT
 }
 
-export default function SeoPostForm({ 
-  categories, 
-  seoPost, 
-  isEditing = false 
+export default function SeoPostForm({
+  categories,
+  seoPost,
+  isEditing = false,
+  availablePosts = []
 }: SeoPostFormProps) {
   const router = useRouter()
   const { success: successToast, error: errorToast } = useToast()
@@ -89,6 +92,7 @@ export default function SeoPostForm({
   const [keywords, setKeywords] = useState<string[]>([])
   const [tags, setTags] = useState<string[]>([])
   const [blogContent, setBlogContent] = useState<BlogContent>([])
+  const [selectedRelatedPosts, setSelectedRelatedPosts] = useState<RelatedArticleItem[]>([])
   
   // État pour le SEO Assistant
   const [isSEOAssistantOpen, setIsSEOAssistantOpen] = useState(false)
@@ -104,6 +108,7 @@ export default function SeoPostForm({
   const [headerOpen, setHeaderOpen] = useState(false)
   const [mainImageOpen, setMainImageOpen] = useState(false)
   const [contentOpen, setContentOpen] = useState(false)
+  const [relatedArticlesOpen, setRelatedArticlesOpen] = useState(false)
 
   // Initialisation des données en mode édition
   useEffect(() => {
@@ -112,17 +117,27 @@ export default function SeoPostForm({
       if (seoPost.metaKeywords && Array.isArray(seoPost.metaKeywords)) {
         setKeywords(seoPost.metaKeywords)
       }
-      
+
       // Initialiser les tags depuis listTags
       if (seoPost.listTags && Array.isArray(seoPost.listTags)) {
         setTags(seoPost.listTags)
       }
-      
-      // Initialiser le contenu du blog
+
+      // Initialiser le contenu du blog + articles liés
       if (seoPost.content) {
         try {
           const parsedContent = JSON.parse(seoPost.content)
           if (Array.isArray(parsedContent)) {
+            // Extraire les articles liés depuis le BlogContent (dernier élément de type RELATED_ARTICLES)
+            const relatedElement = parsedContent
+              .flatMap((section: any) => section.elements || [])
+              .find((el: any) => el.type === ElementType.RELATED_ARTICLES)
+            if (relatedElement?.posts && availablePosts.length > 0) {
+              const ids: number[] = relatedElement.postIds || []
+              setSelectedRelatedPosts(
+                ids.map((id: number) => availablePosts.find(p => p.id === id)).filter(Boolean) as RelatedArticleItem[]
+              )
+            }
             setBlogContent(parsedContent)
           }
         } catch (error) {
@@ -131,7 +146,7 @@ export default function SeoPostForm({
         }
       }
     }
-  }, [seoPost])
+  }, [seoPost, availablePosts])
 
   // Chargement des langues disponibles
   useEffect(() => {
@@ -271,11 +286,56 @@ export default function SeoPostForm({
     }
   }, [errors, isSubmitted])
 
+  // Injecte ou retire l'élément RELATED_ARTICLES dans une section virtuelle
+  const buildContentWithRelated = useCallback((content: BlogContent, related: RelatedArticleItem[]): BlogContent => {
+    // Retirer toute section related_articles existante dans toutes les sections
+    const cleanContent: BlogContent = content.map(section => ({
+      ...section,
+      elements: section.elements.filter((el: any) => el.type !== ElementType.RELATED_ARTICLES)
+    }))
+
+    if (related.length === 0) return cleanContent
+
+    // Ajouter dans une section dédiée (ou la dernière section existante)
+    const relatedElement = {
+      id: 'related-articles',
+      type: ElementType.RELATED_ARTICLES,
+      postIds: related.map(p => p.id),
+      posts: related
+    }
+
+    if (cleanContent.length === 0) {
+      return [{
+        id: 'related-section',
+        title: '',
+        elements: [relatedElement as any]
+      }]
+    }
+
+    // Ajouter à la dernière section
+    const last = cleanContent[cleanContent.length - 1]
+    return [
+      ...cleanContent.slice(0, -1),
+      { ...last, elements: [...last.elements, relatedElement as any] }
+    ]
+  }, [])
+
   // Gérer les changements dans l'éditeur de contenu
   const handleBlogContentChange = (newContent: BlogContent) => {
     setBlogContent(newContent)
-    // Convertir en JSON et mettre à jour le champ content du formulaire
-    setValue('content', JSON.stringify(newContent))
+    const withRelated = buildContentWithRelated(newContent, selectedRelatedPosts)
+    setValue('content', JSON.stringify(withRelated))
+  }
+
+  // Gérer la sélection d'un article lié
+  const handleToggleRelatedPost = (post: RelatedArticleItem) => {
+    setSelectedRelatedPosts(prev => {
+      const isSelected = prev.some(p => p.id === post.id)
+      const next = isSelected ? prev.filter(p => p.id !== post.id) : [...prev, post]
+      const withRelated = buildContentWithRelated(blogContent, next)
+      setValue('content', JSON.stringify(withRelated))
+      return next
+    })
   }
 
   // Fonction pour préparer les données du formulaire pour le SEO Assistant
@@ -391,9 +451,13 @@ export default function SeoPostForm({
         return
       }
       
+      // Injecter les articles liés dans le contenu final avant envoi
+      const contentWithRelated = buildContentWithRelated(blogContent, selectedRelatedPosts)
+
       // Formatage des données
       const formattedData = {
         ...data,
+        content: JSON.stringify(contentWithRelated),
         categoryId: parseInt(data.categoryId),
         metaKeywords: keywords, // Utiliser le tableau de keywords pour metaKeywords
         listTags: tags, // Utiliser le tableau de tags pour listTags
@@ -641,17 +705,72 @@ export default function SeoPostForm({
             isOpen={contentOpen}
             onOpenChange={setContentOpen}
           >
-            <BlogContentEditor 
+            <BlogContentEditor
               initialContent={blogContent}
               onChange={handleBlogContentChange}
             />
-            <input 
-              type="hidden" 
-              {...register('content')} 
+            <input
+              type="hidden"
+              {...register('content')}
             />
             {errors.content && (
               <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
             )}
+          </AccordionItem>
+
+          <AccordionItem
+            title={`Articles liés${selectedRelatedPosts.length > 0 ? ` (${selectedRelatedPosts.length})` : ''}`}
+            isOpen={relatedArticlesOpen}
+            onOpenChange={setRelatedArticlesOpen}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
+                Sélectionnez les articles à afficher en bas de cet article.
+              </p>
+              {availablePosts.length === 0 ? (
+                <p style={{ fontSize: '0.875rem', color: '#9ca3af', fontStyle: 'italic' }}>
+                  Aucun autre article disponible.
+                </p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '360px', overflowY: 'auto' }}>
+                  {[...availablePosts].sort((a, b) => a.categoryName.localeCompare(b.categoryName, 'fr')).map(post => {
+                    const isSelected = selectedRelatedPosts.some(p => p.id === post.id)
+                    return (
+                      <label
+                        key={post.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                          padding: '0.625rem 0.875rem',
+                          borderRadius: '8px',
+                          border: `1px solid ${isSelected ? '#6366f1' : '#e5e7eb'}`,
+                          background: isSelected ? '#eef2ff' : '#ffffff',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          userSelect: 'none'
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleRelatedPost(post)}
+                          style={{ accentColor: '#6366f1', width: '16px', height: '16px', flexShrink: 0 }}
+                        />
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 600, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {post.categoryName}
+                          </p>
+                          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {post.title}
+                          </p>
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </AccordionItem>
         </Accordion>
         

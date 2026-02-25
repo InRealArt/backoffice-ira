@@ -1,4 +1,4 @@
-import { BlogContent, BlogSection, ElementType } from '@/app/components/BlogEditor/types'
+import { BlogContent, BlogSection, ElementType, RelatedArticleItem } from '@/app/components/BlogEditor/types'
 
 export interface SeoPostData {
   title: string
@@ -130,6 +130,70 @@ export function generateSeoHtml(postData: SeoPostData): string {
     .tag-badge:hover {
       background-color: #e5e7eb;
     }
+    .related-articles-section {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 2px solid #e5e7eb;
+    }
+    .related-articles-section h3 {
+      margin: 0 0 1.5rem 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .related-articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+    .related-article-card {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+      background: #ffffff;
+    }
+    .related-article-card:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+    .related-article-card-image {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background: #f3f4f6;
+    }
+    .related-article-card-image-placeholder {
+      width: 100%;
+      height: 160px;
+      background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .related-article-card-body {
+      padding: 1rem;
+      flex: 1;
+    }
+    .related-article-card-category {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6366f1;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+    .related-article-card-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #111827;
+      line-height: 1.4;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
@@ -245,6 +309,28 @@ ${listItems}
               return `${accordionTitle}
       <div class="accordion">
 ${accordionItems}
+      </div>`
+            }
+            return ''
+          case ElementType.RELATED_ARTICLES:
+            if (element.posts && element.posts.length > 0) {
+              const cards = element.posts.map(post => {
+                const imageHtml = post.mainImageUrl
+                  ? `<img class="related-article-card-image" src="${validateImageUrl(post.mainImageUrl) || ''}" alt="${post.title}" loading="lazy">`
+                  : `<div class="related-article-card-image-placeholder"></div>`
+                return `        <a class="related-article-card" href="/${post.categoryName.toLowerCase()}/${post.slug}">
+          ${imageHtml}
+          <div class="related-article-card-body">
+            <p class="related-article-card-category">${post.categoryName}</p>
+            <p class="related-article-card-title">${post.title}</p>
+          </div>
+        </a>`
+              }).join('\n')
+              return `      <div class="related-articles-section">
+        <h3>Articles liés</h3>
+        <div class="related-articles-grid">
+${cards}
+        </div>
       </div>`
             }
             return ''
