@@ -935,4 +935,78 @@ body.dark {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* ========================================
+     DOCX TABLE IMPORT
+     ======================================== */
+
+  .docx-table-preview {
+    @apply w-full overflow-x-auto my-4;
+  }
+
+  .docx-table-preview table {
+    @apply w-full border-collapse text-sm;
+    border: 1px solid theme('colors.gray.200');
+  }
+
+  /* En-tête : première ligne (cellules avec <strong>) */
+  .docx-table-preview tr:first-child td {
+    @apply font-semibold text-white text-xs uppercase tracking-wide;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+    padding: 0.625rem 0.875rem;
+  }
+
+  /* Lignes de données */
+  .docx-table-preview tr:not(:first-child) td {
+    @apply text-gray-700 align-top;
+    border: 1px solid theme('colors.gray.200');
+    padding: 0.5rem 0.875rem;
+  }
+
+  /* Alternance de couleur des lignes */
+  .docx-table-preview tr:nth-child(even) td {
+    @apply bg-gray-50;
+  }
+
+  .docx-table-preview tr:nth-child(odd):not(:first-child) td {
+    @apply bg-white;
+  }
+
+  /* Première colonne en gras (labels) */
+  .docx-table-preview tr:not(:first-child) td:first-child {
+    @apply font-medium text-gray-900;
+    background-color: #f8fafc;
+  }
+
+  /* Supprime le margin des <p> à l'intérieur des cellules */
+  .docx-table-preview td p {
+    @apply m-0;
+  }
+
+  /* Dark mode */
+  .dark .docx-table-preview table {
+    border-color: theme('colors.gray.700');
+  }
+
+  .dark .docx-table-preview tr:first-child td {
+    background-color: #0f172a;
+    border-color: #1e293b;
+  }
+
+  .dark .docx-table-preview tr:not(:first-child) td {
+    @apply text-gray-300 border-gray-700;
+  }
+
+  .dark .docx-table-preview tr:nth-child(even) td {
+    @apply bg-gray-800;
+  }
+
+  .dark .docx-table-preview tr:nth-child(odd):not(:first-child) td {
+    @apply bg-gray-900;
+  }
+
+  .dark .docx-table-preview tr:not(:first-child) td:first-child {
+    @apply text-gray-100 bg-gray-800;
+  }
 }

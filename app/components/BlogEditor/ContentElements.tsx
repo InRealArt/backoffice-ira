@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { ElementType, ContentElement, H2Element, H3Element, ParagraphElement, ImageElement, VideoElement, ListElement, OrderedListElement, AccordionElement, AccordionItemData, RichContent } from './types'
 import { v4 as uuidv4 } from 'uuid'
 import RichTextEditor from './RichTextEditor'
@@ -13,7 +13,7 @@ interface ElementProps {
 
 export function H2ElementComponent({ element, onUpdate, onDelete }: ElementProps) {
   const h2Element = element as H2Element
-  
+
   return (
     <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <input
@@ -23,8 +23,8 @@ export function H2ElementComponent({ element, onUpdate, onDelete }: ElementProps
         placeholder="Titre H2"
         className="form-input w-full"
       />
-      <button 
-        type="button" 
+      <button
+        type="button"
         onClick={onDelete}
         className="text-red-500 mt-2"
       >
@@ -36,7 +36,7 @@ export function H2ElementComponent({ element, onUpdate, onDelete }: ElementProps
 
 export function H3ElementComponent({ element, onUpdate, onDelete }: ElementProps) {
   const h3Element = element as H3Element
-  
+
   return (
     <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <input
@@ -46,8 +46,8 @@ export function H3ElementComponent({ element, onUpdate, onDelete }: ElementProps
         placeholder="Titre H3"
         className="form-input w-full"
       />
-      <button 
-        type="button" 
+      <button
+        type="button"
         onClick={onDelete}
         className="text-red-500 mt-2"
       >
@@ -57,28 +57,46 @@ export function H3ElementComponent({ element, onUpdate, onDelete }: ElementProps
   )
 }
 
+// Composant pour afficher un tableau HTML importé depuis DOCX
+// Source : fichier DOCX uploadé par l'équipe backoffice (contexte interne, non public)
+export function HtmlTablePreview({ html }: { html: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (ref.current) {
+      // eslint-disable-next-line no-unsanitized/property
+      ref.current.innerHTML = html
+    }
+  }, [html])
+  return <div ref={ref} className="docx-table-preview" />
+}
+
 export function ParagraphElementComponent({ element, onUpdate, onDelete }: ElementProps) {
   const paragraphElement = element as ParagraphElement
-  
+  const isHtmlTable = paragraphElement.content?.startsWith('<table')
+
   const handleRichContentChange = (content: string, richContent: RichContent) => {
-    onUpdate({ 
-      ...paragraphElement, 
+    onUpdate({
+      ...paragraphElement,
       content,
-      richContent 
+      richContent
     })
   }
-  
+
   return (
     <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
-      <RichTextEditor
-        content={paragraphElement.content}
-        richContent={paragraphElement.richContent}
-        onChange={handleRichContentChange}
-        placeholder="Contenu du paragraphe"
-        rows={4}
-      />
-      <button 
-        type="button" 
+      {isHtmlTable ? (
+        <HtmlTablePreview html={paragraphElement.content} />
+      ) : (
+        <RichTextEditor
+          content={paragraphElement.content}
+          richContent={paragraphElement.richContent}
+          onChange={handleRichContentChange}
+          placeholder="Contenu du paragraphe"
+          rows={4}
+        />
+      )}
+      <button
+        type="button"
         onClick={onDelete}
         className="text-red-500 mt-2"
       >
@@ -90,7 +108,7 @@ export function ParagraphElementComponent({ element, onUpdate, onDelete }: Eleme
 
 export function ImageElementComponent({ element, onUpdate, onDelete }: ElementProps) {
   const imageElement = element as ImageElement
-  
+
   return (
     <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <input
@@ -116,15 +134,15 @@ export function ImageElementComponent({ element, onUpdate, onDelete }: ElementPr
       />
       {imageElement.url && (
         <div className="mt-3 p-2 border border-gray-200 rounded">
-          <img 
-            src={imageElement.url} 
-            alt={imageElement.alt || "Aperçu"} 
+          <img
+            src={imageElement.url}
+            alt={imageElement.alt || "Aperçu"}
             className="max-w-full h-auto"
           />
         </div>
       )}
-      <button 
-        type="button" 
+      <button
+        type="button"
         onClick={onDelete}
         className="text-red-500 mt-2"
       >
@@ -136,7 +154,7 @@ export function ImageElementComponent({ element, onUpdate, onDelete }: ElementPr
 
 export function VideoElementComponent({ element, onUpdate, onDelete }: ElementProps) {
   const videoElement = element as VideoElement
-  
+
   return (
     <div className="mb-4 p-4 border border-gray-200 rounded bg-white last:mb-0">
       <input
@@ -153,8 +171,8 @@ export function VideoElementComponent({ element, onUpdate, onDelete }: ElementPr
         placeholder="Légende (optionnel)"
         className="form-input w-full"
       />
-      <button 
-        type="button" 
+      <button
+        type="button"
         onClick={onDelete}
         className="text-red-500 mt-2"
       >
@@ -225,7 +243,7 @@ export function ListElementComponent({ element, onUpdate, onDelete }: ElementPro
           </ul>
         )}
       </div>
-      
+
       <div className="flex gap-2 mb-2">
         <input
           type="text"
@@ -248,9 +266,9 @@ export function ListElementComponent({ element, onUpdate, onDelete }: ElementPro
           Ajouter
         </button>
       </div>
-      
-      <button 
-        type="button" 
+
+      <button
+        type="button"
         onClick={onDelete}
         className="text-red-500 mt-4"
       >
@@ -321,7 +339,7 @@ export function OrderedListElementComponent({ element, onUpdate, onDelete }: Ele
           </ol>
         )}
       </div>
-      
+
       <div className="flex gap-2 mb-2">
         <input
           type="text"
@@ -344,9 +362,9 @@ export function OrderedListElementComponent({ element, onUpdate, onDelete }: Ele
           Ajouter
         </button>
       </div>
-      
-      <button 
-        type="button" 
+
+      <button
+        type="button"
         onClick={onDelete}
         className="text-red-500 mt-4"
       >
@@ -369,22 +387,22 @@ export function AccordionElementComponent({ element, onUpdate, onDelete }: Eleme
         title: newItemTitle.trim(),
         content: newItemContent.trim()
       }
-      
+
       onUpdate({
         ...accordionElement,
         items: [...accordionElement.items, newItem]
       })
-      
+
       setNewItemTitle('')
       setNewItemContent('')
     }
   }
 
   const updateItem = (id: string, updates: Partial<AccordionItemData>) => {
-    const newItems = accordionElement.items.map(item => 
+    const newItems = accordionElement.items.map(item =>
       item.id === id ? { ...item, ...updates } : item
     )
-    
+
     onUpdate({
       ...accordionElement,
       items: newItems
@@ -413,7 +431,7 @@ export function AccordionElementComponent({ element, onUpdate, onDelete }: Eleme
           placeholder="Titre de l'accordéon (optionnel)"
           className="form-input w-full mb-4"
         />
-        
+
         {accordionElement.items.length === 0 ? (
           <p className="text-gray-500 italic mb-4">Aucun élément dans l'accordéon</p>
         ) : (
@@ -421,7 +439,7 @@ export function AccordionElementComponent({ element, onUpdate, onDelete }: Eleme
             {accordionElement.items.map((item) => (
               <div key={item.id} className="p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <div 
+                  <div
                     className="font-medium cursor-pointer flex items-center"
                     onClick={() => toggleItemExpand(item.id)}
                   >
@@ -436,7 +454,7 @@ export function AccordionElementComponent({ element, onUpdate, onDelete }: Eleme
                     Supprimer
                   </button>
                 </div>
-                
+
                 {expandedItemId === item.id && (
                   <div className="mt-2 pl-5">
                     <input
@@ -459,7 +477,7 @@ export function AccordionElementComponent({ element, onUpdate, onDelete }: Eleme
             ))}
           </div>
         )}
-        
+
         <div className="border rounded-md p-3 bg-gray-50">
           <h5 className="font-medium mb-2">Ajouter un nouvel élément</h5>
           <input
@@ -486,9 +504,9 @@ export function AccordionElementComponent({ element, onUpdate, onDelete }: Eleme
           </button>
         </div>
       </div>
-      
-      <button 
-        type="button" 
+
+      <button
+        type="button"
         onClick={onDelete}
         className="text-red-500 mt-2"
       >
@@ -519,4 +537,4 @@ export function ContentElementComponent({ element, onUpdate, onDelete }: Element
     default:
       return null
   }
-} 
+}

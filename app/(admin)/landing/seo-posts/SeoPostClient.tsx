@@ -94,6 +94,10 @@ export default function SeoPostClient({ seoPosts, languages, categories }: SeoPo
   const handleCreatePost = () => {
     router.push('/landing/seo-posts/create')
   }
+
+  const handleImportDocx = () => {
+    router.push('/landing/seo-posts/import')
+  }
   
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -230,11 +234,19 @@ export default function SeoPostClient({ seoPosts, languages, categories }: SeoPo
         title="Articles SEO"
         subtitle="Liste des articles du blog SEO affichés sur le site"
         actions={
-          <ActionButton 
-            label="Créer un article"
-            onClick={handleCreatePost}
-            size="small"
-          />
+          <div className="d-flex gap-sm">
+            <ActionButton
+              label="Importer DOCX"
+              onClick={handleImportDocx}
+              size="small"
+              variant="secondary"
+            />
+            <ActionButton
+              label="Créer un article"
+              onClick={handleCreatePost}
+              size="small"
+            />
+          </div>
         }
       />
       

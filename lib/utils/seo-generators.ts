@@ -175,6 +175,10 @@ export function generateArticleHtml(postData: SeoPostData): string {
           case ElementType.H3:
             return `      <h3>${element.content || ''}</h3>`
           case ElementType.PARAGRAPH:
+            // Tableau importé depuis DOCX : HTML brut sans wrapper <p>
+            if (element.content?.startsWith('<table')) {
+              return `      ${element.content}`
+            }
             // Gérer le contenu riche avec liens hypertextes
             if (element.richContent && element.richContent.segments && element.richContent.segments.length > 0) {
               const formattedContent = element.richContent.segments.map(segment => {

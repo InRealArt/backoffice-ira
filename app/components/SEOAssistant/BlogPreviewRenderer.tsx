@@ -3,6 +3,7 @@
 import { BlogContent, ElementType } from '../BlogEditor/types'
 import { FormData } from './htmlGenerator'
 import RichContentRenderer from '../BlogEditor/RichContentRenderer'
+import { HtmlTablePreview } from '../BlogEditor/ContentElements'
 import { calculateReadingTimeFromBlogContent } from '@/lib/utils/reading-time-calculator'
 
 interface BlogPreviewRendererProps {
@@ -49,9 +50,12 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
                 </h3>
               )
             case ElementType.PARAGRAPH:
+              if (element.content?.startsWith('<table')) {
+                return <HtmlTablePreview key={element.id || elementIndex} html={element.content} />
+              }
               return (
                 <p key={element.id || elementIndex} className="text-gray-700 leading-relaxed mb-4">
-                  <RichContentRenderer 
+                  <RichContentRenderer
                     content={element.content || 'Contenu du paragraphe...'}
                     richContent={element.richContent}
                   />
