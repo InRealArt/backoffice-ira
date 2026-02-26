@@ -1,6 +1,8 @@
 import { getAllSeoCategories } from '@/lib/actions/seo-category-actions'
 import DocxImportForm from './DocxImportForm'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ImportDocxPage() {
     const { categories = [] } = await getAllSeoCategories()
 
