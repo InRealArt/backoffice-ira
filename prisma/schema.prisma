@@ -1713,6 +1713,8 @@ model LandingUgcArtistProfile {
     profileImageUrl String?
     title           String?
     description     String?
+    presentation    String?
+    tags            String[] @default([]) // Tags de l'artiste
     mediaUrls        String[] @default([]) // URL des médias 
     topArtists       LandingUgcTopArtists[]
     @@schema("landingUgc")

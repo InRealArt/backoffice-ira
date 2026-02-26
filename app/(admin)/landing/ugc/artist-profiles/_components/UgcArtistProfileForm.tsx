@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { z } from 'zod'
@@ -17,6 +17,7 @@ import {
     fetchImageForUgcUpload,
 } from '@/lib/actions/ugc-artist-profile-actions'
 import type { UgcArtistProfileWithRelations } from '@/lib/actions/ugc-artist-profile-actions'
+import TiptapEditor from '@/app/components/Forms/TiptapEditor'
 
 const formSchema = z
     .object({
@@ -26,7 +27,9 @@ const formSchema = z
         profileImageUrl: z.string().optional(),
         title: z.string().optional().nullable(),
         description: z.string().optional().nullable(),
+        presentation: z.string().optional().nullable(),
         mediaUrls: z.array(z.string()).default([]),
+        tags: z.array(z.string()).default([]),
         landingArtistId: z.number().optional().nullable(),
         creationMode: z.enum(['from_artist', 'from_scratch']).default('from_scratch'),
     })
@@ -132,6 +135,9 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
         profile?.mediaUrls ?? []
     )
 
+    const [tagInput, setTagInput] = useState('')
+    const tagInputRef = useRef<HTMLInputElement>(null)
+
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [formError, setFormError] = useState<string | null>(null)
     const [showProgressModal, setShowProgressModal] = useState(false)
@@ -174,7 +180,9 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
             profileImageUrl: profile?.profileImageUrl ?? '',
             title: profile?.title ?? '',
             description: profile?.description ?? '',
+            presentation: profile?.presentation ?? '',
             mediaUrls: profile?.mediaUrls ?? [],
+            tags: profile?.tags ?? [],
             landingArtistId: profile?.landingArtistId ?? null,
             creationMode: 'from_scratch',
         },
@@ -266,6 +274,31 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
             // Non-blocking
         }
         setExistingMediaUrls((prev) => prev.filter((u) => u !== url))
+    }
+
+    const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault()
+            const value = tagInput.trim().replace(/,$/, '')
+            if (!value) return
+            const current = watch('tags') ?? []
+            if (current.includes(value)) {
+                setTagInput('')
+                return
+            }
+            setValue('tags', [...current, value], { shouldDirty: true })
+            setTagInput('')
+        } else if (e.key === 'Backspace' && tagInput === '') {
+            const current = watch('tags') ?? []
+            if (current.length > 0) {
+                setValue('tags', current.slice(0, -1), { shouldDirty: true })
+            }
+        }
+    }
+
+    const handleRemoveTag = (tag: string) => {
+        const current = watch('tags') ?? []
+        setValue('tags', current.filter((t) => t !== tag), { shouldDirty: true })
     }
 
     const onSubmit = async (data: FormValues) => {
@@ -379,7 +412,9 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                 profileImageUrl: finalProfileUrl,
                 title: data.title?.trim() || null,
                 description: data.description?.trim() || null,
+                presentation: data.presentation?.trim() || null,
                 mediaUrls: uploadedMediaUrls,
+                tags: data.tags ?? [],
                 ...(isEditMode ? {} : { landingArtistId: data.landingArtistId ?? null }),
             }
 
@@ -603,6 +638,89 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                                     rows={5}
                                     placeholder="Description de l'artiste"
                                 />
+                            </div>
+
+                            <div className="form-group mt-md">
+                                <label className="form-label">Présentation</label>
+                                <TiptapEditor
+                                    value={watch('presentation') ?? ''}
+                                    onChange={(html) => setValue('presentation', html, { shouldDirty: true })}
+                                    placeholder="Présentation détaillée de l'artiste (supporte le formatage riche)"
+                                />
+                            </div>
+
+                            <div className="form-group mt-md">
+                                <label className="form-label">Tags</label>
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        gap: '6px',
+                                        alignItems: 'center',
+                                        border: '1px solid #d1d5db',
+                                        borderRadius: '6px',
+                                        padding: '6px 10px',
+                                        minHeight: '42px',
+                                        cursor: 'text',
+                                        backgroundColor: '#fff',
+                                    }}
+                                    onClick={() => tagInputRef.current?.focus()}
+                                >
+                                    {(watch('tags') ?? []).map((tag) => (
+                                        <span
+                                            key={tag}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                backgroundColor: '#e0e7ff',
+                                                color: '#3730a3',
+                                                borderRadius: '4px',
+                                                padding: '2px 8px',
+                                                fontSize: '0.8rem',
+                                                fontWeight: 500,
+                                            }}
+                                        >
+                                            {tag}
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); handleRemoveTag(tag) }}
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    padding: 0,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    color: '#6366f1',
+                                                }}
+                                                aria-label={`Supprimer le tag ${tag}`}
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </span>
+                                    ))}
+                                    <input
+                                        ref={tagInputRef}
+                                        type="text"
+                                        value={tagInput}
+                                        onChange={(e) => setTagInput(e.target.value)}
+                                        onKeyDown={handleTagKeyDown}
+                                        placeholder={(watch('tags') ?? []).length === 0 ? 'Tapez un tag et appuyez sur Entrée ou virgule' : ''}
+                                        style={{
+                                            border: 'none',
+                                            outline: 'none',
+                                            flex: 1,
+                                            minWidth: '150px',
+                                            fontSize: '0.875rem',
+                                            padding: '2px 0',
+                                            backgroundColor: 'transparent',
+                                        }}
+                                    />
+                                </div>
+                                <p className="text-muted" style={{ fontSize: '0.8rem', marginTop: '4px' }}>
+                                    Appuyez sur <kbd>Entrée</kbd> ou <kbd>,</kbd> pour ajouter un tag. <kbd>Backspace</kbd> pour supprimer le dernier.
+                                </p>
                             </div>
                         </div>
 

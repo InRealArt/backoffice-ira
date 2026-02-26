@@ -84,12 +84,15 @@ export async function createUgcArtistProfile(data: {
     profileImageUrl: string
     title?: string | null
     description?: string | null
+    presentation?: string | null
     mediaUrls?: string[]
+    tags?: string[]
 }): Promise<{ success: boolean; id?: number; message?: string }> {
     try {
         const payload = {
             ...data,
-            mediaUrls: data.mediaUrls ?? [],
+            mediaUrls: Array.from(data.mediaUrls ?? []),
+            tags: Array.from(data.tags ?? []),
         }
         const profile = await prisma.landingUgcArtistProfile.create({ data: payload })
         REVALIDATE_PATHS.forEach((p) => revalidatePath(p))
@@ -109,11 +112,21 @@ export async function updateUgcArtistProfile(
         profileImageUrl?: string
         title?: string | null
         description?: string | null
+        presentation?: string | null
         mediaUrls?: string[]
+        tags?: string[]
     }
 ): Promise<{ success: boolean; message?: string }> {
     try {
-        await prisma.landingUgcArtistProfile.update({ where: { id }, data })
+        const { mediaUrls, tags, ...rest } = data
+        await prisma.landingUgcArtistProfile.update({
+            where: { id },
+            data: {
+                ...rest,
+                ...(mediaUrls !== undefined ? { mediaUrls: Array.from(mediaUrls) } : {}),
+                ...(tags !== undefined ? { tags: Array.from(tags) } : {}),
+            },
+        })
         REVALIDATE_PATHS.forEach((p) => revalidatePath(p))
         return { success: true }
     } catch (error) {
