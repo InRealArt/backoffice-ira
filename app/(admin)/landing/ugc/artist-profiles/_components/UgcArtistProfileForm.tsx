@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useDropzone } from 'react-dropzone'
-import { X, Upload, Film, ImageIcon } from 'lucide-react'
+import { X, Upload, Film, ImageIcon, Instagram, Youtube, Facebook, Linkedin, Twitter, Globe } from 'lucide-react'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import ArtistImageUpload from '@/app/components/art/ArtistImageUpload'
 import ProgressModal from '@/app/components/art/ProgressModal'
@@ -17,6 +17,7 @@ import {
     fetchImageForUgcUpload,
 } from '@/lib/actions/ugc-artist-profile-actions'
 import type { UgcArtistProfileWithRelations } from '@/lib/actions/ugc-artist-profile-actions'
+import type { SocialNetwork } from '@/src/generated/prisma/client'
 import TiptapEditor from '@/app/components/Forms/TiptapEditor'
 
 const formSchema = z
@@ -32,6 +33,10 @@ const formSchema = z
         tags: z.array(z.string()).default([]),
         landingArtistId: z.number().optional().nullable(),
         creationMode: z.enum(['from_artist', 'from_scratch']).default('from_scratch'),
+        totalAudience: z.string().optional().nullable(),
+        averageEngagement: z.string().optional().nullable(),
+        totalConsumption: z.string().optional().nullable(),
+        socialNetworks: z.array(z.string()).default([]),
     })
     .superRefine((data, ctx) => {
         const hasName = data.name && data.name.trim() !== ''
@@ -61,6 +66,25 @@ interface UgcArtistProfileFormProps {
     profile?: UgcArtistProfileWithRelations
     landingArtists: LandingArtistOption[]
 }
+
+const SOCIAL_NETWORK_OPTIONS = [
+    { value: 'INSTAGRAM',   label: 'Instagram',   icon: Instagram, color: '#E1306C' },
+    { value: 'TIKTOK',      label: 'TikTok',      icon: Globe,     color: '#010101' },
+    { value: 'YOUTUBE',     label: 'YouTube',     icon: Youtube,   color: '#FF0000' },
+    { value: 'FACEBOOK',    label: 'Facebook',    icon: Facebook,  color: '#1877F2' },
+    { value: 'TWITTER_X',   label: 'Twitter / X', icon: Twitter,   color: '#1DA1F2' },
+    { value: 'LINKEDIN',    label: 'LinkedIn',    icon: Linkedin,  color: '#0A66C2' },
+    { value: 'PINTEREST',   label: 'Pinterest',   icon: Globe,     color: '#E60023' },
+    { value: 'SNAPCHAT',    label: 'Snapchat',    icon: Globe,     color: '#FFFC00' },
+    { value: 'TWITCH',      label: 'Twitch',      icon: Globe,     color: '#9146FF' },
+    { value: 'REDDIT',      label: 'Reddit',      icon: Globe,     color: '#FF4500' },
+    { value: 'DISCORD',     label: 'Discord',     icon: Globe,     color: '#5865F2' },
+    { value: 'TELEGRAM',    label: 'Telegram',    icon: Globe,     color: '#26A5E4' },
+    { value: 'THREADS',     label: 'Threads',     icon: Globe,     color: '#101010' },
+    { value: 'BEHANCE',     label: 'Behance',     icon: Globe,     color: '#1769FF' },
+    { value: 'DEVIANTART',  label: 'DeviantArt',  icon: Globe,     color: '#05CC47' },
+    { value: 'ARTSTATION',  label: 'ArtStation',  icon: Globe,     color: '#13AFF0' },
+] as const
 
 const VIDEO_MAX_SIZE_MB = 25
 const VIDEO_MAX_DURATION_S = 60
@@ -185,6 +209,10 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
             tags: profile?.tags ?? [],
             landingArtistId: profile?.landingArtistId ?? null,
             creationMode: 'from_scratch',
+            totalAudience: profile?.socialMetrics?.totalAudience != null ? String(profile.socialMetrics.totalAudience) : '',
+            averageEngagement: profile?.socialMetrics?.averageEngagement != null ? String(profile.socialMetrics.averageEngagement) : '',
+            totalConsumption: profile?.socialMetrics?.totalConsumption != null ? String(profile.socialMetrics.totalConsumption) : '',
+            socialNetworks: (profile?.socialMetrics?.socialNetworks ?? []) as string[],
         },
     })
 
@@ -405,6 +433,13 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
             // Step 4: Save
             updateStepStatus('save', 'in-progress')
 
+            const parsedTotalAudience = data.totalAudience && data.totalAudience.trim() !== '' ? parseInt(data.totalAudience, 10) : null
+            const parsedAverageEngagement = data.averageEngagement && data.averageEngagement.trim() !== '' ? parseInt(data.averageEngagement, 10) : null
+            const parsedTotalConsumption = data.totalConsumption && data.totalConsumption.trim() !== '' ? BigInt(data.totalConsumption) : null
+            const selectedSocialNetworks = (data.socialNetworks ?? []) as SocialNetwork[]
+
+            const hasSocialMetrics = parsedTotalAudience !== null || parsedAverageEngagement !== null || parsedTotalConsumption !== null || selectedSocialNetworks.length > 0
+
             const saveData = {
                 name: data.name?.trim() || null,
                 surname: data.surname?.trim() || null,
@@ -416,6 +451,12 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                 mediaUrls: uploadedMediaUrls,
                 tags: data.tags ?? [],
                 ...(isEditMode ? {} : { landingArtistId: data.landingArtistId ?? null }),
+                socialMetrics: hasSocialMetrics || isEditMode ? {
+                    totalAudience: parsedTotalAudience,
+                    averageEngagement: parsedAverageEngagement,
+                    totalConsumption: parsedTotalConsumption,
+                    socialNetworks: selectedSocialNetworks,
+                } : null,
             }
 
             let result: { success: boolean; message?: string }
@@ -721,6 +762,104 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                                 <p className="text-muted" style={{ fontSize: '0.8rem', marginTop: '4px' }}>
                                     Appuyez sur <kbd>Entrée</kbd> ou <kbd>,</kbd> pour ajouter un tag. <kbd>Backspace</kbd> pour supprimer le dernier.
                                 </p>
+                            </div>
+                        </div>
+
+                        {/* Social metrics section */}
+                        <div className="form-section mt-lg">
+                            <h2 className="section-title">Métriques sociales</h2>
+                            <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>
+                                Données saisies manuellement. Audience totale et engagement agrégés sur tous les réseaux sociaux.
+                            </p>
+
+                            <div className="d-flex gap-md">
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label htmlFor="totalAudience" className="form-label">Audience totale</label>
+                                    <input
+                                        id="totalAudience"
+                                        type="number"
+                                        min="0"
+                                        {...register('totalAudience')}
+                                        className="form-input"
+                                        placeholder="Ex: 150000"
+                                    />
+                                    <p className="text-muted" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
+                                        Somme des followers sur tous les réseaux (Instagram, TikTok, YouTube…)
+                                    </p>
+                                </div>
+                                <div className="form-group" style={{ flex: 1 }}>
+                                    <label htmlFor="averageEngagement" className="form-label">Engagement moyen</label>
+                                    <input
+                                        id="averageEngagement"
+                                        type="number"
+                                        min="0"
+                                        {...register('averageEngagement')}
+                                        className="form-input"
+                                        placeholder="Ex: 3500"
+                                    />
+                                    <p className="text-muted" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
+                                        Interactions moyennes par publication (likes + commentaires + partages)
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="form-group mt-md">
+                                <label htmlFor="totalConsumption" className="form-label">Consommation totale</label>
+                                <input
+                                    id="totalConsumption"
+                                    type="number"
+                                    min="0"
+                                    {...register('totalConsumption')}
+                                    className="form-input"
+                                    placeholder="Ex: 5000000"
+                                />
+                                <p className="text-muted" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
+                                    Vues, streams et lectures cumulés sur toutes les plateformes (YouTube, Twitch, TikTok…)
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Social networks section */}
+                        <div className="form-section mt-lg">
+                            <h2 className="section-title">Réseaux sociaux</h2>
+                            <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1rem' }}>
+                                Sélectionnez les réseaux sur lesquels l&apos;artiste est présent.
+                            </p>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                {SOCIAL_NETWORK_OPTIONS.map(({ value, label, icon: Icon, color }) => {
+                                    const selected = (watch('socialNetworks') ?? []).includes(value)
+                                    return (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            onClick={() => {
+                                                const current = watch('socialNetworks') ?? []
+                                                setValue(
+                                                    'socialNetworks',
+                                                    selected ? current.filter((n) => n !== value) : [...current, value],
+                                                    { shouldDirty: true }
+                                                )
+                                            }}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                padding: '6px 14px',
+                                                borderRadius: '20px',
+                                                border: `2px solid ${selected ? color : '#d1d5db'}`,
+                                                backgroundColor: selected ? color + '18' : '#fff',
+                                                color: selected ? color : '#6b7280',
+                                                fontWeight: selected ? 600 : 400,
+                                                fontSize: '0.8rem',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.15s ease',
+                                            }}
+                                        >
+                                            <Icon size={15} />
+                                            {label}
+                                        </button>
+                                    )
+                                })}
                             </div>
                         </div>
 

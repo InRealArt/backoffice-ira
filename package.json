@@ -37,7 +37,7 @@
     "@googlemaps/extended-component-library": "^0.6.14",
     "@googlemaps/js-api-loader": "^1.16.8",
     "@hookform/resolvers": "^4.1.3",
-    "@InRealArt/prisma-schema": "^1.2.7",
+    "@InRealArt/prisma-schema": "^1.2.9",
     "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
     "@radix-ui/react-icons": "^1.3.2",

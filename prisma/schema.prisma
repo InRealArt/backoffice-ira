@@ -1715,7 +1715,60 @@ model LandingUgcArtistProfile {
     description     String?
     presentation    String?
     tags            String[] @default([]) // Tags de l'artiste
-    mediaUrls        String[] @default([]) // URL des médias 
+    mediaUrls        String[] @default([]) // URL des médias
     topArtists       LandingUgcTopArtists[]
+    socialMetrics    LandingUgcArtistSocialMetrics?
+    @@schema("landingUgc")
+}
+
+enum SocialNetwork {
+    INSTAGRAM
+    TIKTOK
+    YOUTUBE
+    FACEBOOK
+    TWITTER_X
+    LINKEDIN
+    PINTEREST
+    SNAPCHAT
+    TWITCH
+    REDDIT
+    DISCORD
+    TELEGRAM
+    WHATSAPP
+    THREADS
+    BEHANCE
+    DEVIANTART
+    ARTSTATION
+
+    @@schema("landingUgc")
+}
+
+// Métriques sociales agrégées de l'artiste — données saisies manuellement ou via scraping
+// Permet une vision synthétique de la présence et de l'influence de l'artiste en ligne
+model LandingUgcArtistSocialMetrics {
+    id                        Int                     @id @default(autoincrement())
+    landingUgcArtistProfileId Int                     @unique
+    landingUgcArtistProfile   LandingUgcArtistProfile @relation(fields: [landingUgcArtistProfileId], references: [id], onDelete: Cascade)
+
+    // Audience totale : somme des followers/abonnés sur tous les réseaux sociaux
+    // (Instagram + Twitter/X + TikTok + Facebook + Twitch + YouTube + autres)
+    totalAudience             Int?
+
+    // Engagement moyen global : moyenne des interactions par publication sur toutes les plateformes
+    // (likes + commentaires + partages + réactions) / nombre de publications
+    averageEngagement         Int?
+
+    // Consommation totale : somme cumulée des vues, streams et téléchargements sur toutes les sources
+    // (vues YouTube + streams Twitch + lectures TikTok + etc.)
+    // BigInt car peut dépasser 2 milliards pour les artistes viraux
+    totalConsumption          BigInt?
+
+    // Réseaux sociaux sur lesquels l'artiste est présent
+    socialNetworks            SocialNetwork[]
+
+    // Date de la dernière mise à jour des métriques (pour indiquer la fraîcheur des données)
+    updatedAt                 DateTime @updatedAt
+
+    @@index([landingUgcArtistProfileId])
     @@schema("landingUgc")
 }

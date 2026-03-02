@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { SocialNetwork } from '@/src/generated/prisma/client'
 
 /**
  * Récupère une image par URL côté serveur (évite CORS) et la retourne en base64.
@@ -61,6 +62,7 @@ export async function getUgcArtistProfileById(id: number) {
                     },
                 },
             },
+            socialMetrics: true,
         },
     })
 }
@@ -87,12 +89,29 @@ export async function createUgcArtistProfile(data: {
     presentation?: string | null
     mediaUrls?: string[]
     tags?: string[]
+    socialMetrics?: {
+        totalAudience?: number | null
+        averageEngagement?: number | null
+        totalConsumption?: bigint | null
+        socialNetworks?: SocialNetwork[]
+    } | null
 }): Promise<{ success: boolean; id?: number; message?: string }> {
     try {
+        const { socialMetrics, ...profileData } = data
         const payload = {
-            ...data,
-            mediaUrls: Array.from(data.mediaUrls ?? []),
-            tags: Array.from(data.tags ?? []),
+            ...profileData,
+            mediaUrls: Array.from(profileData.mediaUrls ?? []),
+            tags: Array.from(profileData.tags ?? []),
+            ...(socialMetrics ? {
+                socialMetrics: {
+                    create: {
+                        totalAudience: socialMetrics.totalAudience ?? null,
+                        averageEngagement: socialMetrics.averageEngagement ?? null,
+                        totalConsumption: socialMetrics.totalConsumption ?? null,
+                        socialNetworks: socialMetrics.socialNetworks ?? [],
+                    },
+                },
+            } : {}),
         }
         const profile = await prisma.landingUgcArtistProfile.create({ data: payload })
         REVALIDATE_PATHS.forEach((p) => revalidatePath(p))
@@ -115,16 +134,40 @@ export async function updateUgcArtistProfile(
         presentation?: string | null
         mediaUrls?: string[]
         tags?: string[]
+        socialMetrics?: {
+            totalAudience?: number | null
+            averageEngagement?: number | null
+            totalConsumption?: bigint | null
+            socialNetworks?: SocialNetwork[]
+        } | null
     }
 ): Promise<{ success: boolean; message?: string }> {
     try {
-        const { mediaUrls, tags, ...rest } = data
+        const { mediaUrls, tags, socialMetrics, ...rest } = data
         await prisma.landingUgcArtistProfile.update({
             where: { id },
             data: {
                 ...rest,
                 ...(mediaUrls !== undefined ? { mediaUrls: Array.from(mediaUrls) } : {}),
                 ...(tags !== undefined ? { tags: Array.from(tags) } : {}),
+                ...(socialMetrics !== undefined ? {
+                    socialMetrics: {
+                        upsert: {
+                            create: {
+                                totalAudience: socialMetrics?.totalAudience ?? null,
+                                averageEngagement: socialMetrics?.averageEngagement ?? null,
+                                totalConsumption: socialMetrics?.totalConsumption ?? null,
+                                socialNetworks: socialMetrics?.socialNetworks ?? [],
+                            },
+                            update: {
+                                totalAudience: socialMetrics?.totalAudience ?? null,
+                                averageEngagement: socialMetrics?.averageEngagement ?? null,
+                                totalConsumption: socialMetrics?.totalConsumption ?? null,
+                                socialNetworks: socialMetrics?.socialNetworks ?? [],
+                            },
+                        },
+                    },
+                } : {}),
             },
         })
         REVALIDATE_PATHS.forEach((p) => revalidatePath(p))
