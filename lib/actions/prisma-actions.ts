@@ -5,11 +5,7 @@ import { MemberFormData } from "@/app/(admin)/boAdmin/create-member/schema";
 import { prisma } from "@/lib/prisma"
 import { BackofficeUser, WhiteListedUser, Artist, ResourceTypes, ResourceNftStatuses, CollectionStatus, ItemStatus, NetworkType, PhysicalItemStatus, NftItemStatus, PhysicalItemCommercialStatus } from "@/src/generated/prisma/client"
 import { revalidatePath } from "next/cache";
-import { PrismaClient } from '@/src/generated/prisma/client'
 import { Prisma } from '@/src/generated/prisma/client'
-import { artistNftCollectionAbi } from "@/lib/contracts/ArtistNftCollectionAbi";
-import { decodeEventLog } from "viem";
-import { serverPublicClient } from "@/lib/server-providers";
 import { getLandingArtistByArtistId } from "./artist-actions";
 import { getAuthenticatedUserEmail } from "@/lib/auth-helpers";
 
@@ -1513,123 +1509,6 @@ export async function updateNftResourceStatusToListed(id: number): Promise<Updat
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Une erreur inconnue est survenue lors de la mise à jour du statut'
-    }
-  }
-}
-
-/**
- * Extrait le tokenId des logs de transaction et met à jour la ressource NFT
- * @param id - L'ID de la ressource NFT à mettre à jour
- * @param transactionHash - Le hash de la transaction de minting
- * @param minterWallet - L'adresse du wallet qui a minté le NFT
- * @param contractAddress - L'adresse du smart contract de la collection NFT
- * @returns Un objet indiquant le succès ou l'échec de l'opération avec le tokenId extrait
- */
-export async function updateNftResourceTokenId(
-  id: number,
-  transactionHash: string,
-  minterWallet?: string,
-  contractAddress?: string
-): Promise<UpdateTokenIdResult> {
-  try {
-    // Vérifier si la ressource existe
-    const existingResource = await prisma.nftResource.findUnique({
-      where: { id }
-    })
-
-    if (!existingResource) {
-      return {
-        success: false,
-        message: 'Ressource NFT non trouvée'
-      }
-    }
-
-    // Récupérer les logs de transaction pour extraire le tokenId
-    const receipt = await serverPublicClient.getTransactionReceipt({
-      hash: transactionHash as `0x${string}`
-    })
-
-    if (!receipt) {
-      return {
-        success: false,
-        message: 'Transaction toujours en attente de confirmation'
-      }
-    }
-
-    if (receipt.status !== 'success') {
-      return {
-        success: false,
-        message: 'La transaction a échoué'
-      }
-    }
-
-    // Chercher l'événement NftMinted dans les logs
-    let tokenId: bigint | undefined
-
-    for (const log of receipt.logs) {
-      try {
-        const event = decodeEventLog({
-          abi: artistNftCollectionAbi,
-          data: log.data,
-          topics: log.topics,
-          eventName: 'NftMinted'
-        })
-
-        if (event.eventName === 'NftMinted') {
-          const args = event.args as any
-          tokenId = args.tokenId
-          break
-        }
-      } catch (e) {
-        // Ignorer les erreurs de décodage, continuer à vérifier les autres logs
-        continue
-      }
-    }
-
-    if (!tokenId) {
-      return {
-        success: false,
-        message: 'Impossible de trouver le tokenId dans les logs de la transaction'
-      }
-    }
-
-    // Convertir le tokenId en string pour le stockage
-    const tokenIdString = tokenId.toString()
-
-    // Préparer les données de mise à jour
-    const updateData: any = {
-      tokenId: parseInt(tokenIdString)
-    }
-
-    // Ajouter le minter s'il est fourni
-    if (minterWallet) {
-      updateData.minter = minterWallet
-    }
-
-    // Ajouter l'owner (adresse du contrat) s'il est fourni
-    if (contractAddress) {
-      updateData.owner = contractAddress
-    }
-
-    // Mettre à jour la ressource NFT avec toutes les données
-    await prisma.nftResource.update({
-      where: { id },
-      data: updateData
-    })
-
-    // Revalider les chemins potentiels où cette donnée pourrait être affichée
-    revalidatePath('/marketplace/nftsToMint')
-
-    return {
-      success: true,
-      tokenId: tokenIdString,
-      message: 'TokenId, minter et owner de la ressource NFT mis à jour avec succès'
-    }
-  } catch (error) {
-    console.error('Erreur lors de la mise à jour des données de la ressource NFT:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Une erreur inconnue est survenue lors de la mise à jour des données'
     }
   }
 }

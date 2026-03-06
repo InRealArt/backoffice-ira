@@ -5,7 +5,6 @@ import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import Navbar from "../components/Navbar/Navbar";
 import AuthObserver from "../components/Auth/AuthObserver";
-import UnauthorizedMessage from "../components/Auth/UnauthorizedMessage";
 import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner";
 import { authClient } from "@/lib/auth-client";
 import { useAuthorization } from "../hooks/useAuthorization";
@@ -52,15 +51,6 @@ export default function Main() {
       <>
         <Navbar />
         <LoadingSpinner message={t("checkingAccess")} />
-      </>
-    );
-  }
-
-  if (isLoggedIn && isAuthorized === false) {
-    return (
-      <>
-        <Navbar />
-        <UnauthorizedMessage />
       </>
     );
   }

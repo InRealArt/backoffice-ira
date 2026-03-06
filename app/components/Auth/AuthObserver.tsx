@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/app/components/Toast/ToastContext";
-import WalletEventListener from "./WalletEventListener";
 import { useAuthorization } from "@/app/hooks/useAuthorization";
 
 export default function AuthObserver() {
@@ -46,5 +45,5 @@ export default function AuthObserver() {
     setPreviousLoginState(isLoggedIn);
   }, [isLoggedIn, previousLoginState, isSessionPending]);
 
-  return <>{isLoggedIn && <WalletEventListener />}</>;
+  return <>{isLoggedIn}</>;
 }
