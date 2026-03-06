@@ -65,7 +65,6 @@
     "class-variance-authority": "^0.7.1",
     "date-fns": "^4.1.0",
     "dotenv": "^16.6.1",
-    "excel": "^1.0.1",
     "exceljs": "^4.4.0",
     "firebase": "^11.6.0",
     "js-cookie": "^3.0.5",
