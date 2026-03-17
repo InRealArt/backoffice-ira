@@ -134,6 +134,7 @@ export async function createPresaleArtwork(data: {
     order?: number
     mockupUrls?: string
     isSold?: boolean
+    isTopArtwork?: boolean
 }) {
     try {
         // Si aucun ordre n'est fourni, utiliser l'ordre maximum + 1
@@ -155,7 +156,8 @@ export async function createPresaleArtwork(data: {
                 height: data.height,
                 order: orderToUse,
                 mockupUrls: data.mockupUrls || "[]",
-                isSold: data.isSold ?? false
+                isSold: data.isSold ?? false,
+                isTopArtwork: data.isTopArtwork ?? false
             },
             include: {
                 artist: true
@@ -190,6 +192,7 @@ export async function updatePresaleArtwork(id: number, data: {
     order?: number
     mockupUrls?: string
     isSold?: boolean
+    isTopArtwork?: boolean
 }) {
     try {
         // Gérer l'échange d'ordre si nécessaire

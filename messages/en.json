@@ -129,6 +129,7 @@
         "isSold": "Sale status",
         "notSold": "Not sold",
         "sold": "Sold",
+        "isTopArtwork": "Featured artwork / highlight",
         "mockupName": "Mockup name (optional)",
         "mockupNamePlaceholder": "Mockup name",
         "mockups": "Mockup URLs",

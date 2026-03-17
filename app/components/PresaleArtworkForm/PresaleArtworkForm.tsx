@@ -41,6 +41,7 @@ const createPresaleArtworkSchema = (t: (key: string) => string) =>
     width: z.string().optional(),
     height: z.string().optional(),
     isSold: z.boolean().optional().default(false),
+    isTopArtwork: z.boolean().optional().default(false),
   });
 
 type PresaleArtworkFormValues = z.infer<
@@ -158,6 +159,7 @@ export default function PresaleArtworkForm({
       width: "",
       height: "",
       isSold: false,
+      isTopArtwork: false,
     },
   });
 
@@ -216,6 +218,7 @@ export default function PresaleArtworkForm({
             setValue("width", presaleArtwork.width?.toString() || "");
             setValue("height", presaleArtwork.height?.toString() || "");
             setValue("isSold", presaleArtwork.isSold ?? false);
+            setValue("isTopArtwork", presaleArtwork.isTopArtwork ?? false);
             setImagePreview(presaleArtwork.imageUrl);
 
             // Initialiser les URLs de mockups
@@ -498,6 +501,7 @@ export default function PresaleArtworkForm({
           height: formattedHeight,
           mockupUrls: JSON.stringify(finalMockupUrls),
           isSold: data.isSold ?? false,
+          isTopArtwork: data.isTopArtwork ?? false,
         });
 
         if (result.success) {
@@ -543,6 +547,7 @@ export default function PresaleArtworkForm({
           height: formattedHeight,
           mockupUrls: JSON.stringify(finalMockupUrls),
           isSold: data.isSold ?? false,
+          isTopArtwork: data.isTopArtwork ?? false,
         });
 
         if (result.success) {
@@ -706,11 +711,81 @@ export default function PresaleArtworkForm({
 
   // Surveiller la valeur de isSold pour le toggle switch
   const isSold = watch("isSold") ?? false;
+  const isTopArtwork = watch("isTopArtwork") ?? false;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="form-container">
       <div className="form-card">
         <div className="card-content">
+          {/* isTopArtwork toggle - placed at the top of all fields */}
+          <div className="form-group mb-lg">
+            <label className="form-label">
+              {t("fields.isTopArtwork") || "Œuvre phare / mise en avant"}
+            </label>
+            <div className="d-flex align-items-center gap-md">
+              <span
+                className={!isTopArtwork ? "text-primary" : "text-muted"}
+                style={{ fontWeight: !isTopArtwork ? "bold" : "normal" }}
+              >
+                Non mis en avant
+              </span>
+              <label
+                style={{
+                  position: "relative",
+                  display: "inline-block",
+                  width: "60px",
+                  height: "30px",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  {...register("isTopArtwork")}
+                  disabled={isSubmitting}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    cursor: "pointer",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: isTopArtwork ? "#4f46e5" : "#ccc",
+                    borderRadius: "34px",
+                    transition: "0.4s",
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      content: '""',
+                      height: "22px",
+                      width: "22px",
+                      left: "4px",
+                      bottom: "4px",
+                      backgroundColor: "white",
+                      borderRadius: "50%",
+                      transition: "0.4s",
+                      transform: isTopArtwork
+                        ? "translateX(30px)"
+                        : "translateX(0)",
+                    }}
+                  ></span>
+                </span>
+              </label>
+              <span
+                className={isTopArtwork ? "text-primary" : "text-muted"}
+                style={{ fontWeight: isTopArtwork ? "bold" : "normal" }}
+              >
+                Œuvre phare / mise en avant
+              </span>
+            </div>
+            <p className="form-hint mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Activer pour afficher cette œuvre dans la section "Œuvres phares" sur la page de l'artiste
+            </p>
+          </div>
+
           <TranslationField
             entityType="PresaleArtwork"
             entityId={mode === "edit" ? presaleArtworkId || null : null}

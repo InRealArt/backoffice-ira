@@ -129,6 +129,7 @@
         "isSold": "Statut de vente",
         "notSold": "Non vendu",
         "sold": "Vendu",
+        "isTopArtwork": "Œuvre phare / mise en avant",
         "mockupName": "Nom du mockup (optionnel)",
         "mockupNamePlaceholder": "Nom du mockup",
         "mockups": "URLs des mockups",
