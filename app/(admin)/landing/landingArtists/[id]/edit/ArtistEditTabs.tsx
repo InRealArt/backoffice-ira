@@ -6,6 +6,7 @@ import { User, Search } from 'lucide-react'
 interface ArtistEditTabsProps {
   profileForm: React.ReactNode
   seoForm: React.ReactNode
+  artistName?: string | null
 }
 
 const TABS = [
@@ -15,7 +16,7 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id']
 
-export default function ArtistEditTabs({ profileForm, seoForm }: ArtistEditTabsProps) {
+export default function ArtistEditTabs({ profileForm, seoForm, artistName }: ArtistEditTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>('profile')
 
   return (
@@ -84,6 +85,14 @@ export default function ArtistEditTabs({ profileForm, seoForm }: ArtistEditTabsP
               <p className="page-subtitle">
                 Données de référencement et sélection des œuvres à mettre en avant
               </p>
+              {artistName && (
+                <div className="mt-md d-inline-flex align-items-center gap-sm px-md py-sm rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Artiste en cours d'édition</p>
+                    <p className="text-base font-semibold text-gray-900 dark:text-gray-100">{artistName}</p>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="form-container">
               <div className="form-card">

@@ -517,6 +517,7 @@ model LandingArtist {
     imageUrl            String                 @unique
     secondaryImageUrl   String?
     artistId            Int
+    isTopArtist         Boolean                @default(false)
     //Champs pour le descriptif détaillé de l'artiste sur la landing
     mediumTags          String[]               @default([])
     quoteFromInRealArt  String?
@@ -1282,6 +1283,7 @@ model PresaleArtwork {
     imageUrl             String                 @unique
     mockupUrls           Json                   @default("[]")
     isSold               Boolean                @default(false)
+    isTopArtwork         Boolean                @default(false)
     createdAt            DateTime               @default(now())
     artist               Artist                 @relation(fields: [artistId], references: [id])
     landingArtistKeyWorks LandingArtistKeyWork[]

@@ -35,6 +35,7 @@ export default async function EditLandingArtistPage({ params }: { params: Promis
 
   return (
     <ArtistEditTabs
+      artistName={landingArtist.artist.name}
       profileForm={
         <LandingArtistEditForm
           landingArtist={landingArtist}
@@ -46,6 +47,7 @@ export default async function EditLandingArtistPage({ params }: { params: Promis
       seoForm={
         <ArtistSeoForm
           landingArtistId={landingArtistId}
+          landingArtistImageUrl={landingArtist.imageUrl}
           initialSeo={seo ? {
             seoTitle: seo.seoTitle,
             stylesInfluences: seo.stylesInfluences,
@@ -65,6 +67,7 @@ export default async function EditLandingArtistPage({ params }: { params: Promis
               }
             }))
           } : null}
+          isTopArtist={landingArtist.isTopArtist ?? false}
           presaleArtworks={presaleArtworks}
         />
       }

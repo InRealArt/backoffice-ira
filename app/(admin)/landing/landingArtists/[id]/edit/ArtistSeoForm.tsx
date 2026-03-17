@@ -9,10 +9,12 @@ import Image from 'next/image'
 import { GripVertical, X, Plus, Search } from 'lucide-react'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import { upsertLandingArtistSeoAction } from '@/lib/actions/landing-artist-seo-actions'
+import { updateLandingArtistAction } from '@/lib/actions/landing-artist-actions'
 
 const MAX_KEY_WORKS = 3
 
 const seoSchema = z.object({
+  isTopArtist: z.boolean().default(false),
   seoTitle: z.string().nullable().optional(),
   stylesInfluences: z.string().nullable().optional(),
   artisticApproach: z.string().nullable().optional(),
@@ -39,6 +41,7 @@ interface KeyWork {
 
 interface ArtistSeoFormProps {
   landingArtistId: number
+  landingArtistImageUrl: string
   initialSeo: {
     seoTitle: string | null
     stylesInfluences: string | null
@@ -47,12 +50,15 @@ interface ArtistSeoFormProps {
     interviewUrl: string | null
     keyWorks: KeyWork[]
   } | null
+  isTopArtist: boolean
   presaleArtworks: PresaleArtworkOption[]
 }
 
 export default function ArtistSeoForm({
   landingArtistId,
+  landingArtistImageUrl,
   initialSeo,
+  isTopArtist: initialIsTopArtist,
   presaleArtworks,
 }: ArtistSeoFormProps) {
   const router = useRouter()
@@ -71,9 +77,11 @@ export default function ArtistSeoForm({
     register,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm<SeoFormValues>({
     resolver: zodResolver(seoSchema),
     defaultValues: {
+      isTopArtist: initialIsTopArtist,
       seoTitle: initialSeo?.seoTitle ?? '',
       stylesInfluences: initialSeo?.stylesInfluences ?? '',
       artisticApproach: initialSeo?.artisticApproach ?? '',
@@ -81,6 +89,8 @@ export default function ArtistSeoForm({
       interviewUrl: initialSeo?.interviewUrl ?? '',
     },
   })
+
+  const isTopArtist = watch('isTopArtist')
 
   // --- KeyWorks helpers ---
 
@@ -121,7 +131,8 @@ export default function ArtistSeoForm({
   const onSubmit = async (data: SeoFormValues) => {
     setIsSaving(true)
     try {
-      const result = await upsertLandingArtistSeoAction(landingArtistId, {
+      // Mettre à jour les données SEO
+      const seoResult = await upsertLandingArtistSeoAction(landingArtistId, {
         seoTitle: data.seoTitle || null,
         stylesInfluences: data.stylesInfluences || null,
         artisticApproach: data.artisticApproach || null,
@@ -130,10 +141,16 @@ export default function ArtistSeoForm({
         keyWorkIds: selectedKeyWorks.map((kw) => kw.id),
       })
 
-      if (result.success) {
+      // Mettre à jour isTopArtist sur LandingArtist
+      const artistResult = await updateLandingArtistAction(landingArtistId, {
+        imageUrl: landingArtistImageUrl, // Conserve l'image existante
+        isTopArtist: data.isTopArtist,
+      })
+
+      if (seoResult.success && artistResult.success) {
         success('Données SEO enregistrées')
       } else {
-        error(result.message ?? 'Erreur lors de la sauvegarde')
+        error(artistResult.message ?? seoResult.message ?? 'Erreur lors de la sauvegarde')
       }
     } catch (err) {
       error('Une erreur inattendue est survenue')
@@ -153,6 +170,79 @@ export default function ArtistSeoForm({
         <p className="section-subtitle">
           Données utilisées pour le référencement naturel de la page artiste
         </p>
+
+        {/* isTopArtist toggle - placed at the top of all fields */}
+        <div className="form-group mt-md">
+          <div
+            className="d-flex align-items-center gap-md"
+            style={{ marginBottom: "20px" }}
+          >
+            <span
+              className={!isTopArtist ? "text-primary" : "text-muted"}
+              style={{
+                fontWeight: !isTopArtist ? "bold" : "normal",
+              }}
+            >
+              Non mis en avant
+            </span>
+            <label
+              className="d-flex align-items-center"
+              style={{
+                position: "relative",
+                display: "inline-block",
+                width: "60px",
+                height: "30px",
+              }}
+            >
+              <input
+                type="checkbox"
+                {...register('isTopArtist')}
+                style={{ opacity: 0, width: 0, height: 0 }}
+              />
+              <span
+                style={{
+                  position: "absolute",
+                  cursor: "pointer",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: isTopArtist ? "#4f46e5" : "#ccc",
+                  borderRadius: "34px",
+                  transition: "0.4s",
+                }}
+              >
+                <span
+                  style={{
+                    position: "absolute",
+                    content: '""',
+                    height: "22px",
+                    width: "22px",
+                    left: "4px",
+                    bottom: "4px",
+                    backgroundColor: "white",
+                    borderRadius: "50%",
+                    transition: "0.4s",
+                    transform: isTopArtist
+                      ? "translateX(30px)"
+                      : "translateX(0)",
+                  }}
+                ></span>
+              </span>
+            </label>
+            <span
+              className={isTopArtist ? "text-primary" : "text-muted"}
+              style={{
+                fontWeight: isTopArtist ? "bold" : "normal",
+              }}
+            >
+              Artiste top / mis en avant
+            </span>
+          </div>
+          <p className="form-hint mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Activer pour afficher cet artiste dans la section "Artistes top" sur la page d'accueil
+          </p>
+        </div>
 
         <div className="form-group mt-md">
           <label htmlFor="seoTitle" className="form-label">

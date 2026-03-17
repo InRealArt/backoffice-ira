@@ -28,6 +28,7 @@ export interface LandingArtistData {
     mediumTags?: string[]
     imageArtistStudio?: string | null
     onboardingBo?: Date | null
+    isTopArtist?: boolean
 }
 
 /**
@@ -156,6 +157,7 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 biographyText4: data.biographyText4,
                 imageArtistStudio: data.imageArtistStudio,
                 onboardingBo: data.onboardingBo,
+                isTopArtist: data.isTopArtist,
             },
         })
 
