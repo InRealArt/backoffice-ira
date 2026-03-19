@@ -368,7 +368,7 @@ export default function PresaleArtworkForm({
             )
           );
 
-          // Upload vers Firebase
+          // Upload vers Cloudflare
           setProgressSteps((prev) =>
             prev.map((s) =>
               s.id === "upload" ? { ...s, status: "in-progress" } : s

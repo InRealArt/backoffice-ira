@@ -162,7 +162,7 @@ export default function LandingArtistEditForm({
       label: "Conversion de l'image en WebP",
       status: "pending",
     },
-    { id: "upload", label: "Upload vers Firebase", status: "pending" },
+    { id: "upload", label: "Upload vers Cloudflare", status: "pending" },
     {
       id: "update",
       label: "Mise à jour de l'artiste landing",
@@ -397,7 +397,7 @@ export default function LandingArtistEditForm({
         label: "Conversion de l'image en WebP",
         status: "pending",
       },
-      { id: "upload", label: "Upload vers Firebase", status: "pending" },
+      { id: "upload", label: "Upload vers Cloudflare", status: "pending" },
       {
         id: "update",
         label: "Mise à jour de l'artiste landing",

@@ -167,7 +167,7 @@
         "loading": "Chargement des données...",
         "checkingFolder": "Vérification du répertoire Firebase",
         "converting": "Conversion de l'image en WebP",
-        "uploading": "Upload vers Firebase",
+        "uploading": "Upload vers Cloudflare",
         "creating": "Création de l'œuvre en prévente",
         "uploadingMockup": "Upload du mockup {current}/{total}..."
       },
@@ -262,7 +262,7 @@
       "progress": {
         "validation": "Validation des données",
         "conversion": "Conversion de l'image en WebP",
-        "upload": "Upload vers Firebase",
+        "upload": "Upload vers Cloudflare",
         "update": "Mise à jour du profil artiste",
         "finalization": "Finalisation"
       },

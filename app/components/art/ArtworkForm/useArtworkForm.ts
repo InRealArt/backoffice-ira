@@ -568,7 +568,7 @@ export function useArtworkForm({
                     // Normaliser le nom de l'œuvre pour le nom de fichier
                     const fileName = normalizeString(data.name || `artwork-${Date.now()}`)
 
-                    // Upload vers Firebase avec les callbacks de progression
+                    // Upload vers Cloudflare avec les callbacks de progression
                     progressCallbacks?.onProgressUpdate?.('upload', 'in-progress')
                     mainImageUrl = await uploadImageToMarketplaceFolder(
                         fileInputRef.current.files[0],

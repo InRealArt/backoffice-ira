@@ -121,7 +121,7 @@ export default function CreateLandingArtistForm({
       label: "Conversion de l'image en WebP",
       status: "pending",
     },
-    { id: "upload", label: "Upload vers Firebase", status: "pending" },
+    { id: "upload", label: "Upload vers Cloudflare", status: "pending" },
     {
       id: "creation",
       label: "Création de l'artiste landing",
@@ -247,7 +247,7 @@ export default function CreateLandingArtistForm({
         label: "Conversion de l'image en WebP",
         status: "pending",
       },
-      { id: "upload", label: "Upload vers Firebase", status: "pending" },
+      { id: "upload", label: "Upload vers Cloudflare", status: "pending" },
       {
         id: "creation",
         label: "Création de l'artiste landing",

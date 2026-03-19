@@ -114,7 +114,7 @@ export default function CreateArtistProfileForm({
       label: "Conversion de l'image en WebP",
       status: "pending",
     },
-    { id: "upload", label: "Upload vers Firebase", status: "pending" },
+    { id: "upload", label: "Upload vers Cloudflare", status: "pending" },
     { id: "creation", label: "Création du profil artiste", status: "pending" },
     { id: "finalization", label: "Finalisation", status: "pending" },
   ]);
@@ -225,7 +225,7 @@ export default function CreateArtistProfileForm({
         label: "Conversion de l'image en WebP",
         status: "pending",
       },
-      { id: "upload", label: "Upload vers Firebase", status: "pending" },
+      { id: "upload", label: "Upload vers Cloudflare", status: "pending" },
       {
         id: "creation",
         label: "Création du profil artiste",
