@@ -20,6 +20,7 @@ import {
 import { getPresaleArtworkCountByArtist } from "@/lib/actions/presale-artwork-actions";
 import { useIsAdmin } from "@/app/hooks/useIsAdmin";
 import { DashboardStats } from "./DashboardStats";
+import { getImageUrl } from "@/lib/r2/url";
 
 export default function Dashboard() {
   const t = useTranslations("dashboard");
@@ -258,10 +259,10 @@ export default function Dashboard() {
                     <strong>{t("userInfo.associatedArtist")}</strong>{" "}
                     {associatedArtist.name} {associatedArtist.surname}
                   </p>
-                  {associatedArtist.imageUrl && (
+                  {getImageUrl(associatedArtist.imageUrl) && (
                     <div className="artist-image-container">
                       <Image
-                        src={associatedArtist.imageUrl}
+                        src={getImageUrl(associatedArtist.imageUrl)!}
                         alt={`${associatedArtist.name} ${associatedArtist.surname}`}
                         width={150}
                         height={150}

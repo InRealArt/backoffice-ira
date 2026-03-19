@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { PutObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
-import { r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from "@/lib/r2/client"
+import { r2Client, R2_BUCKET_NAME } from "@/lib/r2/client"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 
@@ -32,9 +32,8 @@ export async function POST(request: Request) {
     })
 
     const uploadUrl = await getSignedUrl(r2Client, command, { expiresIn: 300 })
-    const publicUrl = `${R2_PUBLIC_URL}/${storagePath}`
 
-    return NextResponse.json({ uploadUrl, publicUrl })
+    return NextResponse.json({ uploadUrl, relativePath: storagePath })
   } catch (error) {
     console.error("Erreur lors de la génération de la presigned URL:", error)
     return NextResponse.json(

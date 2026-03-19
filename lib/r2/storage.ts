@@ -15,12 +15,12 @@ interface UploadOptions {
 }
 
 /**
- * Obtient une presigned PUT URL depuis la Route Handler et retourne {uploadUrl, publicUrl}
+ * Obtient une presigned PUT URL depuis la Route Handler et retourne {uploadUrl, relativePath}
  */
 async function getPresignedUploadUrl(
     storagePath: string,
     contentType: string
-): Promise<{ uploadUrl: string; publicUrl: string }> {
+): Promise<{ uploadUrl: string; relativePath: string }> {
     const response = await fetch('/api/r2/presign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,11 +36,12 @@ async function getPresignedUploadUrl(
 }
 
 /**
- * Upload un fichier vers R2 via presigned PUT URL et retourne l'URL publique
+ * Upload un fichier vers R2 via presigned PUT URL et retourne le chemin relatif (ex: "artists/Jean Dupont/profile.webp")
+ * L'URL absolue est construite à la volée avec getImageUrl() depuis lib/r2/url.ts
  */
 async function uploadFileToR2(file: File | Blob, storagePath: string): Promise<string> {
     const contentType = file instanceof File ? file.type : (file as Blob).type || 'application/octet-stream'
-    const { uploadUrl, publicUrl } = await getPresignedUploadUrl(storagePath, contentType)
+    const { uploadUrl, relativePath } = await getPresignedUploadUrl(storagePath, contentType)
 
     const uploadResponse = await fetch(uploadUrl, {
         method: 'PUT',
@@ -52,7 +53,7 @@ async function uploadFileToR2(file: File | Blob, storagePath: string): Promise<s
         throw new Error(`Échec de l'upload vers R2: HTTP ${uploadResponse.status}`)
     }
 
-    return publicUrl
+    return relativePath
 }
 
 /**
@@ -433,14 +434,19 @@ export async function deleteImageFromFirebase(imageUrl: string): Promise<boolean
 
         let storagePath: string | null = null
 
-        // Déterminer si c'est une URL R2 ou Firebase
-        const r2PublicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? ''
-        if (r2PublicUrl && imageUrl.startsWith(r2PublicUrl)) {
-            // URL R2: extraire la clé en retirant l'URL de base
-            storagePath = imageUrl.replace(r2PublicUrl + '/', '')
+        // Chemin relatif (nouveau format BDD) : utiliser directement
+        if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+            storagePath = imageUrl
         } else {
-            // URL Firebase: utiliser l'extracteur existant
-            storagePath = extractFirebaseStoragePath(imageUrl)
+            // Déterminer si c'est une URL R2 ou Firebase
+            const r2PublicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? ''
+            if (r2PublicUrl && imageUrl.startsWith(r2PublicUrl)) {
+                // URL R2 absolue: extraire la clé en retirant l'URL de base
+                storagePath = imageUrl.replace(r2PublicUrl + '/', '')
+            } else {
+                // URL Firebase: utiliser l'extracteur existant
+                storagePath = extractFirebaseStoragePath(imageUrl)
+            }
         }
 
         if (!storagePath) {

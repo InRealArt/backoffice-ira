@@ -7,6 +7,7 @@ import { Camera, X, Loader2 } from "lucide-react";
 import { uploadImageToMarketplaceFolder } from "@/lib/r2/storage";
 import { normalizeString } from "@/lib/utils";
 import { useToast } from "@/app/components/Toast/ToastContext";
+import { getImageUrl } from "@/lib/r2/url";
 
 interface FirebaseImageUploadProps {
   onImageUploaded: (imageUrl: string) => void;
@@ -28,7 +29,7 @@ export default function FirebaseImageUpload({
   artworkName,
 }: FirebaseImageUploadProps) {
   const [localPreview, setLocalPreview] = useState<string | null>(
-    previewUrl || null
+    getImageUrl(previewUrl) || previewUrl || null
   );
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -77,7 +78,7 @@ export default function FirebaseImageUpload({
           artworkName || `artwork-${Date.now()}`
         );
 
-        // Upload vers Firebase
+        // Upload vers Cloudflare
         const imageUrl = await uploadImageToMarketplaceFolder(
           file,
           folderName,
@@ -94,7 +95,7 @@ export default function FirebaseImageUpload({
           }
         );
 
-        setLocalPreview(imageUrl);
+        setLocalPreview(getImageUrl(imageUrl) || imageUrl);
         onImageUploaded(imageUrl);
       } catch (uploadErr: any) {
         const errorMsg =
@@ -124,7 +125,7 @@ export default function FirebaseImageUpload({
     onImageUploaded("");
   };
 
-  const displayPreview = localPreview || previewUrl;
+  const displayPreview = localPreview || getImageUrl(previewUrl) || previewUrl;
 
   return (
     <div className="flex flex-col gap-2">

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { updateItemStatus } from '@/lib/actions/prisma-actions'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import styles from './ProductCard.module.scss'
+import { getImageUrl } from '@/lib/r2/url'
 
 
 type ProductCardProps = {
@@ -101,7 +102,7 @@ export default function ProductCard({
       
       <div className="product-image-container">
         <Image
-          src={mainImageUrl || '/images/no-image.jpg'}
+          src={getImageUrl(mainImageUrl) || '/images/no-image.jpg'}
           alt={name}
           width={300}
           height={300}

@@ -9,6 +9,7 @@ import { ArtworkMedium, ArtworkStyle, ArtworkTechnique } from '@/src/generated/p
 import { getAddressesByArtistId } from '@/lib/actions/address-actions'
 import type { ArtistListItem } from '@/lib/types/artist'
 import { getArtistFullName } from '@/lib/utils'
+import { getImageUrl } from '@/lib/r2/url'
 
 interface CreateArtworkAdminClientProps {
   mediums: ArtworkMedium[]
@@ -133,9 +134,9 @@ export default function CreateArtworkAdminClient({
           <div className={styles.selectedArtistInfo}>
             <h3>Artiste sélectionné :</h3>
             <div className={styles.artistCard}>
-              {selectedArtist.imageUrl && (
-                <img 
-                  src={selectedArtist.imageUrl} 
+              {getImageUrl(selectedArtist.imageUrl) && (
+                <img
+                  src={getImageUrl(selectedArtist.imageUrl)!}
                   alt={getArtistFullName(selectedArtist)}
                   className={styles.artistAvatar}
                 />

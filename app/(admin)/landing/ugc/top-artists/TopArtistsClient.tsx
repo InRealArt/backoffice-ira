@@ -14,6 +14,7 @@ import {
   updateTopArtistsOrder,
 } from "@/lib/actions/landing-ugc-actions";
 import { getArtistFullName } from "@/lib/utils";
+import { getImageUrl } from "@/lib/r2/url";
 
 interface AvailableUgcProfile {
   id: number;
@@ -230,9 +231,9 @@ export default function TopArtistsClient({
                 >
                   {/* Image */}
                   <div className="relative w-14 h-14 flex-shrink-0 rounded-md overflow-hidden bg-base-200">
-                    {profile.profileImageUrl ? (
+                    {getImageUrl(profile.profileImageUrl) ? (
                       <Image
-                        src={profile.profileImageUrl}
+                        src={getImageUrl(profile.profileImageUrl)!}
                         alt={name}
                         fill
                         className="object-cover"

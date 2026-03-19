@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import Image from 'next/image'
 import { Camera } from 'lucide-react'
+import { getImageUrl } from '@/lib/r2/url'
 
 interface ArtistImageUploadProps {
   onFileSelect: (file: File | null) => void
@@ -14,14 +15,15 @@ interface ArtistImageUploadProps {
 }
 
 export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, error, allowDelete = false }: ArtistImageUploadProps) {
-  const [localPreview, setLocalPreview] = useState<string | null>(previewUrl || null)
+  const resolvedPreviewUrl = getImageUrl(previewUrl) || previewUrl || null
+  const [localPreview, setLocalPreview] = useState<string | null>(resolvedPreviewUrl)
   const [localError, setLocalError] = useState<string | null>(null)
   const [hasLocalFile, setHasLocalFile] = useState(false)
 
   // Mettre à jour localPreview quand previewUrl change (seulement si aucun fichier local n'est sélectionné)
   useEffect(() => {
     if (!hasLocalFile) {
-      setLocalPreview(previewUrl || null)
+      setLocalPreview(getImageUrl(previewUrl) || previewUrl || null)
     }
   }, [previewUrl, hasLocalFile])
 
@@ -75,7 +77,7 @@ export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, 
     }
   }
 
-  const displayPreview = localPreview || previewUrl
+  const displayPreview = localPreview || resolvedPreviewUrl
 
   return (
     <div className="form-group">

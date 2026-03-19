@@ -10,6 +10,7 @@ import { GripVertical, X, Plus, Search } from 'lucide-react'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import { upsertLandingArtistSeoAction } from '@/lib/actions/landing-artist-seo-actions'
 import { updateLandingArtistAction } from '@/lib/actions/landing-artist-actions'
+import { getImageUrl } from '@/lib/r2/url'
 
 const MAX_KEY_WORKS = 3
 
@@ -365,7 +366,7 @@ export default function ArtistSeoForm({
                   style={{ width: 56, height: 56 }}
                 >
                   <Image
-                    src={kw.imageUrl}
+                    src={getImageUrl(kw.imageUrl) ?? ''}
                     alt={kw.name}
                     fill
                     style={{ objectFit: 'cover' }}
@@ -456,7 +457,7 @@ export default function ArtistSeoForm({
                       style={{ width: 44, height: 44 }}
                     >
                       <Image
-                        src={artwork.imageUrl}
+                        src={getImageUrl(artwork.imageUrl) ?? ''}
                         alt={artwork.name}
                         fill
                         style={{ objectFit: 'cover' }}

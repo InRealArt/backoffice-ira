@@ -27,14 +27,7 @@ const formSchema = z
     .string()
     .min(10, "La description doit contenir au moins 10 caractères"),
   publicKey: z.string().min(1, "La clé publique est requise"),
-  imageUrl: z
-    .union([
-      z.string().url("URL d'image invalide"),
-      z.string().length(0),
-      z.null(),
-      z.undefined(),
-    ])
-    .optional(),
+  imageUrl: z.string().optional().nullable(),
   isGallery: z.boolean().default(false),
   backgroundImage: z.string().optional().or(z.literal("")).nullable(),
   slug: z.string().min(1, "Le slug est requis"),

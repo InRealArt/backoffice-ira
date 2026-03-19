@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import Image from "next/image";
 import { GripVertical, X } from "lucide-react";
 import { getArtistFullName } from "@/lib/utils";
+import { getImageUrl } from "@/lib/r2/url";
 
 export interface TopArtistSortableItem {
   id: number; // LandingUgcTopArtists.id
@@ -77,9 +78,9 @@ export default function SortableTopArtistItem({
 
       {/* Artist image */}
       <div className="relative w-14 h-14 flex-shrink-0 rounded-md overflow-hidden bg-base-200">
-        {item.ugcArtistProfile.profileImageUrl ? (
+        {getImageUrl(item.ugcArtistProfile.profileImageUrl) ? (
           <Image
-            src={item.ugcArtistProfile.profileImageUrl}
+            src={getImageUrl(item.ugcArtistProfile.profileImageUrl)!}
             alt={artistName}
             fill
             className="object-cover"

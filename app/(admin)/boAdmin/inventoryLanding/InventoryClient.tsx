@@ -16,6 +16,7 @@ import { updateLandingArtistOnboardingBo } from "@/lib/actions/landing-artist-ac
 import { InventoryFilter } from "./InventoryFilter";
 import type { ArtistWithCount } from "@/lib/types/artist";
 import { getArtistFullName } from "@/lib/utils";
+import { getImageUrl } from "@/lib/r2/url";
 
 interface InventoryClientProps {
   artists: ArtistWithCount[];
@@ -164,7 +165,7 @@ export default function InventoryClient({ artists }: InventoryClientProps) {
           <div className="avatar">
             <div className="mask mask-squircle w-10 h-10">
               <img
-                src={artist.imageUrl}
+                src={getImageUrl(artist.imageUrl) ?? undefined}
                 alt={getArtistFullName(artist)}
               />
             </div>

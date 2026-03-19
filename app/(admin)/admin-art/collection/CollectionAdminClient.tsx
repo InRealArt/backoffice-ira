@@ -14,6 +14,7 @@ import {
   ActionButton,
   Column
 } from '../../../components/PageLayout/index'
+import { getImageUrl } from '@/lib/r2/url'
 
 export interface ItemWithRelations {
   id: number
@@ -153,10 +154,10 @@ export default function CollectionAdminClient({ items }: CollectionAdminClientPr
         <div className="d-flex align-items-center gap-sm">
           {loadingItemId === item.id && <LoadingSpinner size="small" message="" inline />}
           <div className="d-flex align-items-center gap-md">
-            {item.mainImageUrl && (
+            {getImageUrl(item.mainImageUrl) && (
               <div style={{ width: '32px', height: '32px', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
                 <Image
-                  src={item.mainImageUrl}
+                  src={getImageUrl(item.mainImageUrl)!}
                   alt={item.name}
                   fill
                   style={{ objectFit: 'cover' }}
@@ -176,10 +177,10 @@ export default function CollectionAdminClient({ items }: CollectionAdminClientPr
       header: 'Artiste',
       render: (item) => (
         <div className="d-flex align-items-center gap-sm">
-          {item.artist?.imageUrl && (
+          {item.artist && getImageUrl(item.artist.imageUrl) && (
             <div style={{ width: '24px', height: '24px', borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
               <Image
-                src={item.artist.imageUrl}
+                src={getImageUrl(item.artist.imageUrl)!}
                 alt={`${item.artist.name} ${item.artist.surname}`}
                 fill
                 style={{ objectFit: 'cover' }}

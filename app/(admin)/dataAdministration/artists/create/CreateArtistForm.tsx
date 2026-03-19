@@ -25,7 +25,7 @@ const formSchema = z
     .min(10, "La description doit contenir au moins 10 caractères"),
   artistsPage: z.boolean().default(false),
   publicKey: z.string().optional().or(z.literal("")),
-  imageUrl: z.string().url("URL d'image invalide").optional().or(z.literal("")),
+  imageUrl: z.string().optional().nullable(),
   isGallery: z.boolean().default(false),
   backgroundImage: z.string().optional().or(z.literal("")).nullable(),
   // Nouveaux champs biographie
@@ -131,7 +131,7 @@ export default function CreateArtistForm() {
       label: "Conversion de l'image en WebP",
       status: "pending",
     },
-    { id: "upload", label: "Upload vers Firebase", status: "pending" },
+    { id: "upload", label: "Upload vers Cloudflare", status: "pending" },
     { id: "creation", label: "Création de l'artiste", status: "pending" },
     { id: "finalization", label: "Finalisation", status: "pending" },
   ]);
@@ -316,7 +316,7 @@ export default function CreateArtistForm() {
         label: "Conversion de l'image en WebP",
         status: "pending",
       },
-      { id: "upload", label: "Upload vers Firebase", status: "pending" },
+      { id: "upload", label: "Upload vers Cloudflare", status: "pending" },
       { id: "creation", label: "Création de l'artiste", status: "pending" },
       { id: "finalization", label: "Finalisation", status: "pending" },
     ]);

@@ -16,6 +16,7 @@ import {
 import type { Column } from '@/app/components/PageLayout/index'
 import styles from '../../../../styles/list-components.module.scss'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
+import { getImageUrl } from '@/lib/r2/url'
 
 type UgcProfile = {
     id: number
@@ -96,10 +97,10 @@ export default function UgcArtistProfilesClient({ profiles }: Props) {
             header: 'Photo',
             className: 'hidden-mobile',
             render: (profile) =>
-                profile.profileImageUrl ? (
+                getImageUrl(profile.profileImageUrl) ? (
                     <div className={styles.thumbnailContainer}>
                         <Image
-                            src={profile.profileImageUrl}
+                            src={getImageUrl(profile.profileImageUrl)!}
                             alt={getDisplayName(profile)}
                             fill
                             style={{ objectFit: 'cover' }}

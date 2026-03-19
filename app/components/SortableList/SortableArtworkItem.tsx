@@ -9,6 +9,7 @@ import { useParams } from "next/navigation";
 import styles from "./SortableArtworkItem.module.scss";
 import type { ArtistName } from "@/lib/types/artist";
 import { getArtistFullName } from "@/lib/utils";
+import { getImageUrl } from "@/lib/r2/url";
 
 interface PresaleArtwork {
   id: number;
@@ -83,7 +84,7 @@ export default function SortableArtworkItem({
 
       <div className={styles.thumbnail}>
         <Image
-          src={artwork.imageUrl}
+          src={getImageUrl(artwork.imageUrl) ?? ''}
           alt={artwork.name}
           fill
           className={styles.image}

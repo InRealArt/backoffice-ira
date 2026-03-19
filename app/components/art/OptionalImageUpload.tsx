@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import { Camera, X } from "lucide-react";
+import { getImageUrl } from "@/lib/r2/url";
 
 interface OptionalImageUploadProps {
   onFileSelect: (file: File | null) => void;
@@ -24,8 +25,9 @@ export default function OptionalImageUpload({
   error,
   allowDelete = false,
 }: OptionalImageUploadProps) {
+  const resolvedPreviewUrl = getImageUrl(previewUrl) || previewUrl || null;
   const [localPreview, setLocalPreview] = useState<string | null>(
-    previewUrl || null
+    resolvedPreviewUrl
   );
   const [localError, setLocalError] = useState<string | null>(null);
   const [hasLocalFile, setHasLocalFile] = useState(false);
@@ -33,7 +35,7 @@ export default function OptionalImageUpload({
   // Mettre à jour localPreview quand previewUrl change (seulement si aucun fichier local n'est sélectionné)
   useEffect(() => {
     if (!hasLocalFile) {
-      setLocalPreview(previewUrl || null);
+      setLocalPreview(getImageUrl(previewUrl) || previewUrl || null);
     }
   }, [previewUrl, hasLocalFile]);
 
@@ -98,7 +100,7 @@ export default function OptionalImageUpload({
     }
   };
 
-  const displayPreview = localPreview || previewUrl;
+  const displayPreview = localPreview || resolvedPreviewUrl;
 
   return (
     <div className="form-group">

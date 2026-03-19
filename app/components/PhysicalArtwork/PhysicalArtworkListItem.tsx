@@ -6,6 +6,7 @@ import { Eye, Heart, ExternalLink, FolderOpen, BarChart3 } from "lucide-react";
 import NavigationButton from "@/app/components/NavigationButton";
 import Badge from "@/app/components/PageLayout/Badge";
 import ArtworkStatsModal from "./ArtworkStatsModal";
+import { getImageUrl } from "@/lib/r2/url";
 
 export interface PhysicalArtworkListItemProps {
   id: number;
@@ -69,7 +70,7 @@ export default function PhysicalArtworkListItem({
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
 
   const displayName = name || "Sans titre";
-  const imageUrl = mainImageUrl || "/images/no-image.jpg";
+  const imageUrl = getImageUrl(mainImageUrl) || "/images/no-image.jpg";
   const formattedPrice = formatPrice(price);
   const formattedDate = formatDateFR(createdAt);
   const displayViews = views || 0;

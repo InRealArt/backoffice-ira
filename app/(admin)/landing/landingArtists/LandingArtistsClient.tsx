@@ -19,6 +19,7 @@ import styles from '../../../styles/list-components.module.scss'
 import { LandingArtistFilter } from './LandingArtistFilter'
 import type { ArtistName } from '@/lib/types/artist'
 import { getArtistFullName } from '@/lib/utils'
+import { getImageUrl } from '@/lib/r2/url'
 
 interface LandingArtistWithArtist {
   id: number
@@ -110,10 +111,10 @@ export default function LandingArtistsClient({ landingArtists }: LandingArtistsC
       header: 'Image',
       className: 'hidden-mobile',
       render: (landingArtist) => (
-        landingArtist.imageUrl ? (
+        getImageUrl(landingArtist.imageUrl) ? (
           <div className={styles.thumbnailContainer}>
             <Image
-              src={landingArtist.imageUrl}
+              src={getImageUrl(landingArtist.imageUrl)!}
               alt={getArtistFullName(landingArtist.artist)}
               fill
               style={{ objectFit: 'cover' }}
