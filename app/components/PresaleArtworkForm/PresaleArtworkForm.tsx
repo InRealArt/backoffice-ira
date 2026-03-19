@@ -19,12 +19,12 @@ import {
 import { getAllArtistsAndGalleries } from "@/lib/actions/artist-actions";
 import { handleEntityTranslations } from "@/lib/actions/translation-actions";
 import TranslationField from "@/app/components/TranslationField";
-import { uploadImageToFirebase } from "@/lib/firebase/storage";
-import { uploadMockupToFirebase } from "@/lib/firebase/storage";
+import { uploadImageToFirebase } from "@/lib/r2/storage";
+import { uploadMockupToFirebase } from "@/lib/r2/storage";
 import {
   uploadImageToLandingFolder,
   ensureFolderExists,
-} from "@/lib/firebase/storage";
+} from "@/lib/r2/storage";
 import { convertToWebPIfNeeded } from "@/lib/utils/webp-converter";
 import { normalizeString, getArtistFullName } from "@/lib/utils";
 import type { ArtistName } from "@/lib/types/artist";
@@ -432,12 +432,6 @@ export default function PresaleArtworkForm({
       if (mockupFiles.length > 0) {
         setUploadingMockups(mockupFiles.map((_, index) => index));
         try {
-          const { getAuth, signInAnonymously } = await import("firebase/auth");
-          const { app } = await import("@/lib/firebase/config");
-
-          const auth = getAuth(app);
-          await signInAnonymously(auth);
-
           for (let i = 0; i < mockupFiles.length; i++) {
             const mockup = mockupFiles[i];
             try {

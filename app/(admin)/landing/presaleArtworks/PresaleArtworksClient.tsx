@@ -150,7 +150,7 @@ export default function PresaleArtworksClient({
       // Supprimer l'image depuis Firebase Storage (côté client)
       try {
         const { deletePresaleArtworkImage } = await import(
-          "@/lib/firebase/storage"
+          "@/lib/r2/storage"
         );
         await deletePresaleArtworkImage(
           artwork.artist.name ?? '',

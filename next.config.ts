@@ -98,7 +98,11 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '**.googleusercontent.com',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'pub-d7df68395d644bd3bc80d24168d6d8be.r2.dev',
+      },
     ],
     minimumCacheTTL: 14400,
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],

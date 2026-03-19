@@ -212,7 +212,7 @@ export default function CreateLandingArtistForm({
     imageType: "profile" | "secondary" | "studio" = "profile"
   ): Promise<string> => {
     const { uploadArtistImageWithWebP } = await import(
-      "@/lib/firebase/storage"
+      "@/lib/r2/storage"
     );
 
     try {
@@ -286,7 +286,7 @@ export default function CreateLandingArtistForm({
       }
 
       // Vérifier que le répertoire Firebase existe (doit être fait en premier)
-      const { checkFolderExists } = await import("@/lib/firebase/storage");
+      const { checkFolderExists } = await import("@/lib/r2/storage");
       const folderPath = `artists/${getArtistFullName(selectedArtist)}`;
 
       try {

@@ -1,7 +1,5 @@
 "use client"
 
-import { ref, uploadBytes, getDownloadURL, deleteObject, listAll, getMetadata } from 'firebase/storage'
-import { storage } from './config'
 import { normalizeString } from '@/lib/utils'
 import { convertToWebPIfNeeded } from '@/lib/utils/webp-converter'
 
@@ -17,8 +15,49 @@ interface UploadOptions {
 }
 
 /**
- * Upload une image vers Firebase Storage et retourne son URL
- * 
+ * Obtient une presigned PUT URL depuis la Route Handler et retourne {uploadUrl, publicUrl}
+ */
+async function getPresignedUploadUrl(
+    storagePath: string,
+    contentType: string
+): Promise<{ uploadUrl: string; publicUrl: string }> {
+    const response = await fetch('/api/r2/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storagePath, contentType }),
+    })
+
+    if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || `Erreur HTTP ${response.status} lors de la génération de la presigned URL`)
+    }
+
+    return response.json()
+}
+
+/**
+ * Upload un fichier vers R2 via presigned PUT URL et retourne l'URL publique
+ */
+async function uploadFileToR2(file: File | Blob, storagePath: string): Promise<string> {
+    const contentType = file instanceof File ? file.type : (file as Blob).type || 'application/octet-stream'
+    const { uploadUrl, publicUrl } = await getPresignedUploadUrl(storagePath, contentType)
+
+    const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': contentType },
+    })
+
+    if (!uploadResponse.ok) {
+        throw new Error(`Échec de l'upload vers R2: HTTP ${uploadResponse.status}`)
+    }
+
+    return publicUrl
+}
+
+/**
+ * Upload une image vers R2 et retourne son URL
+ *
  * @param file - Le fichier à uploader
  * @param options - Options de configuration
  * @returns URL de l'image uploadée
@@ -46,25 +85,16 @@ export async function uploadImageToFirebase(
         const storagePath = `marketplace/${artistPath}/${itemPath}/${filePrefix}-${normalizedFileName}`
         console.log('✓ Chemin complet de stockage :', storagePath);
 
-        // Créer une référence au fichier dans Firebase Storage
-        const storageRef = ref(storage, storagePath)
-
-        // Upload du fichier
-        const snapshot = await uploadBytes(storageRef, file)
-
-        // Récupérer l'URL de téléchargement
-        const downloadURL = await getDownloadURL(snapshot.ref)
-
-        return downloadURL
+        return await uploadFileToR2(file, storagePath)
     } catch (error) {
-        console.error('Erreur lors de l\'upload de l\'image vers Firebase:', error)
-        throw new Error(`Échec de l'upload vers Firebase: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+        console.error('Erreur lors de l\'upload de l\'image vers R2:', error)
+        throw new Error(`Échec de l'upload vers R2: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
     }
 }
 
 /**
- * Upload plusieurs images vers Firebase Storage
- * 
+ * Upload plusieurs images vers R2
+ *
  * @param files - Liste des fichiers à uploader
  * @param options - Options de configuration
  * @returns Tableau des URLs des images uploadées
@@ -94,14 +124,14 @@ export async function uploadMultipleImagesToFirebase(
         console.log(`${urls.length} fichiers uploadés avec succès:`, urls);
         return urls;
     } catch (error) {
-        console.error('Erreur lors de l\'upload multiple d\'images vers Firebase:', error);
-        throw new Error(`Échec de l'upload multiple vers Firebase: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+        console.error('Erreur lors de l\'upload multiple d\'images vers R2:', error);
+        throw new Error(`Échec de l'upload multiple vers R2: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
 }
 
 /**
  * Upload une image principale et des images secondaires
- * 
+ *
  * @param mainImage - Image principale
  * @param secondaryImages - Images secondaires (optionnel)
  * @param options - Options de configuration
@@ -130,15 +160,16 @@ export async function uploadArtworkImages(
             secondaryImageUrls
         }
     } catch (error) {
-        console.error('Erreur lors de l\'upload des images d\'œuvre vers Firebase:', error)
+        console.error('Erreur lors de l\'upload des images d\'œuvre vers R2:', error)
         throw new Error(`Échec de l'upload des images d'œuvre: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
     }
 }
 
 /**
  * Extrait le chemin de stockage à partir d'une URL Firebase
- * 
- * @param url - URL Firebase Storage
+ * Conservée pour la future migration BDD (les URLs existantes sont encore Firebase)
+ *
+ * @param url - URL Firebase Storage ou R2
  * @returns Le chemin de stockage extrait ou null si non trouvé
  */
 export function extractFirebaseStoragePath(url: string): string | null {
@@ -150,7 +181,7 @@ export function extractFirebaseStoragePath(url: string): string | null {
         // Le PATH peut être encodé (ex: artists%2FJean%20Dupont%2Fmarketplace%2Fclose_up%2F...)
 
         // Essayer plusieurs patterns pour être plus robuste
-        let match = url.match(/firebasestorage\.googleapis\.com\/v0\/b\/[^\/]+\/o\/([^?]+)/);
+        let match = url.match(/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/([^?]+)/);
 
         if (!match) {
             // Essayer un autre format possible
@@ -160,7 +191,7 @@ export function extractFirebaseStoragePath(url: string): string | null {
         if (!match) {
             // Essayer avec le format gs://
             if (url.startsWith('gs://')) {
-                const gsMatch = url.match(/gs:\/\/[^\/]+\/(.+)/);
+                const gsMatch = url.match(/gs:\/\/[^/]+\/(.+)/);
                 if (gsMatch && gsMatch[1]) {
                     const decodedPath = decodeURIComponent(gsMatch[1]);
                     console.log('✅ [extractFirebaseStoragePath] Chemin extrait (gs://):', decodedPath);
@@ -171,7 +202,6 @@ export function extractFirebaseStoragePath(url: string): string | null {
 
         if (match && match[1]) {
             // Décoder l'URL (Firebase encode les '/' en '%2F' et les espaces en '%20')
-            // Essayer de décoder plusieurs fois au cas où il y aurait un double encodage
             let decodedPath = match[1];
             try {
                 decodedPath = decodeURIComponent(decodedPath);
@@ -180,7 +210,6 @@ export function extractFirebaseStoragePath(url: string): string | null {
                     decodedPath = decodeURIComponent(decodedPath);
                 }
             } catch (decodeError) {
-                // Si le décodage échoue, utiliser le chemin tel quel
                 console.warn('⚠️ [extractFirebaseStoragePath] Erreur lors du décodage, utilisation du chemin brut:', decodeError);
             }
 
@@ -198,8 +227,8 @@ export function extractFirebaseStoragePath(url: string): string | null {
 }
 
 /**
- * Upload une image d'artiste vers Firebase Storage dans le répertoire /artists/{artistName}
- * 
+ * Upload une image d'artiste vers R2 dans le répertoire /artists/{artistName}
+ *
  * @param file - Le fichier à uploader
  * @param fileName - Le nom du fichier (en camelCase, sans extension) - utilisé comme nom de répertoire
  * @returns URL de l'image uploadée
@@ -216,20 +245,13 @@ export async function uploadArtistImageToFirebase(
 
         console.log('✓ Upload de l\'image artiste vers:', storagePath)
 
-        // Créer une référence au fichier dans Firebase Storage
-        const storageRef = ref(storage, storagePath)
-
-        // Upload du fichier
-        const snapshot = await uploadBytes(storageRef, file)
-
-        // Récupérer l'URL de téléchargement
-        const downloadURL = await getDownloadURL(snapshot.ref)
+        const downloadURL = await uploadFileToR2(file, storagePath)
 
         console.log('✓ Image artiste uploadée avec succès:', downloadURL)
         return downloadURL
     } catch (error) {
-        console.error('Erreur lors de l\'upload de l\'image artiste vers Firebase:', error)
-        throw new Error(`Échec de l'upload vers Firebase: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+        console.error('Erreur lors de l\'upload de l\'image artiste vers R2:', error)
+        throw new Error(`Échec de l'upload vers R2: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
     }
 }
 
@@ -252,42 +274,18 @@ export interface UploadArtistImageOptions {
 }
 
 /**
- * Upload une image d'artiste vers Firebase Storage avec conversion WebP automatique
- * 
- * Cette fonction gère :
- * - L'authentification Firebase anonyme
- * - La conversion automatique en WebP
- * - L'upload vers le répertoire /artists/{nom-artiste}/
- * - Les callbacks de progression pour l'UI
- * 
+ * Upload une image d'artiste vers R2 avec conversion WebP automatique
+ *
  * @param imageFile - Le fichier image à uploader
  * @param options - Options de configuration
  * @returns URL de l'image uploadée
- * 
- * @example
- * ```typescript
- * const imageUrl = await uploadArtistImageWithWebP(file, {
- *   name: 'Jean',
- *   surname: 'Dupont',
- *   imageType: 'profile',
- *   onConversionStatus: (status) => console.log('Conversion:', status),
- *   onUploadStatus: (status) => console.log('Upload:', status)
- * })
- * ```
  */
 export async function uploadArtistImageWithWebP(
     imageFile: File,
     options: UploadArtistImageOptions
 ): Promise<string> {
     try {
-        // Étape 1: Authentification Firebase côté client
-        const { getAuth, signInAnonymously } = await import('firebase/auth')
-        const { app } = await import('./config')
-
-        const auth = getAuth(app)
-        await signInAnonymously(auth)
-
-        // Étape 2: Conversion WebP
+        // Étape 1: Conversion WebP
         options.onConversionStatus?.('in-progress')
         const conversionResult = await convertToWebPIfNeeded(imageFile)
 
@@ -301,11 +299,10 @@ export async function uploadArtistImageWithWebP(
 
         options.onConversionStatus?.('completed')
 
-        // Étape 3: Préparation du chemin de stockage
+        // Étape 2: Préparation du chemin de stockage
         const { name, surname, imageType = 'profile', normalizeFolderName = false } = options
 
         // Créer le nom du répertoire
-        // Si normalizeFolderName est false, on préserve la casse exacte et tous les caractères (y compris les cédilles comme "ç")
         const folderName = normalizeFolderName
             ? normalizeString(`${name} ${surname}`)
             : `${name} ${surname}`.trim()
@@ -321,12 +318,9 @@ export async function uploadArtistImageWithWebP(
         const fileExtension = 'webp'
         const storagePath = `artists/${folderName}/${filePrefix}.${fileExtension}`
 
-        // Étape 4: Upload vers Firebase
+        // Étape 3: Upload vers R2
         options.onUploadStatus?.('in-progress')
-        const storageRef = ref(storage, storagePath)
-
-        await uploadBytes(storageRef, conversionResult.file)
-        const imageUrl = await getDownloadURL(storageRef)
+        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
 
         options.onUploadStatus?.('completed')
 
@@ -351,25 +345,21 @@ export async function uploadArtistImageWithWebP(
 }
 
 /**
- * Vérifie si un répertoire existe dans Firebase Storage
- * 
- * @param folderPath - Chemin du répertoire (ex: "artists/Jean Dupont")
- * @returns Promise<boolean> - true si le répertoire existe, false sinon
+ * checkFolderExists — R2 n'a pas de notion de dossier vide.
+ * Retourne toujours true pour maintenir la compatibilité avec les composants existants.
+ *
+ * @param _folderPath - Chemin du répertoire (ignoré)
+ * @returns Promise<true>
  */
-export async function checkFolderExists(folderPath: string): Promise<boolean> {
-    try {
-        const folderRef = ref(storage, folderPath)
-        await listAll(folderRef)
-        return true
-    } catch (error: any) {
-        // Si on ne peut pas lister le dossier, il n'existe pas
-        return false
-    }
+export async function checkFolderExists(_folderPath: string): Promise<boolean> {
+    // R2 n'a pas de notion de dossier vide : les "dossiers" sont implicites
+    // dans les clés. On retourne toujours true.
+    return true
 }
 
 /**
  * Upload une image secondaire ou studio dans un répertoire existant avec la casse exacte
- * 
+ *
  * @param imageFile - Le fichier image à uploader
  * @param folderName - Nom du répertoire avec la casse exacte (ex: "Jean Dupont")
  * @param fileName - Nom du fichier (ex: "Jean Dupont_secondary" ou "Jean Dupont_studio")
@@ -385,17 +375,7 @@ export async function uploadImageToExistingFolder(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        // Étape 1: Authentification Firebase côté client
-        const { getAuth, signInAnonymously } = await import('firebase/auth')
-        const { app } = await import('./config')
-
-        const auth = getAuth(app)
-        await signInAnonymously(auth)
-
-        // Note: La vérification du répertoire doit être faite avant d'appeler cette fonction
-        // Cette fonction assume que le répertoire existe déjà
-
-        // Étape 2: Conversion WebP
+        // Étape 1: Conversion WebP
         onConversionStatus?.('in-progress')
         const conversionResult = await convertToWebPIfNeeded(imageFile)
 
@@ -409,15 +389,13 @@ export async function uploadImageToExistingFolder(
 
         onConversionStatus?.('completed')
 
-        // Étape 3: Upload vers Firebase dans le répertoire existant
+        // Étape 2: Upload vers R2
         onUploadStatus?.('in-progress')
         const folderPath = `artists/${folderName}`
         const fileExtension = 'webp'
         const storagePath = `${folderPath}/${fileName}.${fileExtension}`
-        const storageRef = ref(storage, storagePath)
 
-        await uploadBytes(storageRef, conversionResult.file)
-        const imageUrl = await getDownloadURL(storageRef)
+        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
 
         onUploadStatus?.('completed')
 
@@ -442,66 +420,65 @@ export async function uploadImageToExistingFolder(
 }
 
 /**
- * Supprime une image de Firebase Storage
- * 
+ * Supprime une image de R2
+ * Pour les URLs Firebase existantes, extrait le chemin et tente la suppression sur R2.
+ * Pour les URLs R2, extrait directement la clé.
+ *
  * @param imageUrl - URL de l'image à supprimer
  * @returns Promise<boolean> - true si la suppression a réussi, false sinon
  */
 export async function deleteImageFromFirebase(imageUrl: string): Promise<boolean> {
     try {
-        console.log('🗑️ [deleteImageFromFirebase] Début de la suppression pour:', imageUrl);
+        console.log('🗑️ [deleteImageFromR2] Début de la suppression pour:', imageUrl);
 
-        // Étape 1: Authentification Firebase côté client
-        const { getAuth, signInAnonymously } = await import('firebase/auth')
-        const { app } = await import('./config')
+        let storagePath: string | null = null
 
-        const auth = getAuth(app)
-        console.log('🔐 [deleteImageFromFirebase] Authentification Firebase...');
-        await signInAnonymously(auth)
-        console.log('✅ [deleteImageFromFirebase] Authentification réussie');
-
-        // Étape 2: Extraire le chemin de stockage à partir de l'URL
-        const storagePath = extractFirebaseStoragePath(imageUrl);
+        // Déterminer si c'est une URL R2 ou Firebase
+        const r2PublicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? ''
+        if (r2PublicUrl && imageUrl.startsWith(r2PublicUrl)) {
+            // URL R2: extraire la clé en retirant l'URL de base
+            storagePath = imageUrl.replace(r2PublicUrl + '/', '')
+        } else {
+            // URL Firebase: utiliser l'extracteur existant
+            storagePath = extractFirebaseStoragePath(imageUrl)
+        }
 
         if (!storagePath) {
-            console.error('❌ [deleteImageFromFirebase] Impossible d\'extraire le chemin de stockage depuis:', imageUrl);
-            console.error('❌ [deleteImageFromFirebase] Format d\'URL attendu: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?alt=media&token=TOKEN');
+            console.error('❌ [deleteImageFromR2] Impossible d\'extraire le chemin de stockage depuis:', imageUrl);
             return false;
         }
 
-        console.log(`📁 [deleteImageFromFirebase] Chemin de stockage extrait: ${storagePath}`);
+        console.log(`📁 [deleteImageFromR2] Chemin de stockage extrait: ${storagePath}`);
 
-        // Étape 3: Créer une référence à l'image
-        const imageRef = ref(storage, storagePath);
-        console.log('📎 [deleteImageFromFirebase] Référence créée');
+        // Appel à la route API de suppression
+        const response = await fetch('/api/r2/delete', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ storagePath }),
+        })
 
-        // Étape 4: Supprimer l'image
-        console.log('🗑️ [deleteImageFromFirebase] Tentative de suppression...');
-        await deleteObject(imageRef);
+        if (response.ok) {
+            console.log(`✅ [deleteImageFromR2] Image supprimée avec succès: ${storagePath}`);
+            return true;
+        }
 
-        console.log(`✅ [deleteImageFromFirebase] Image supprimée avec succès: ${storagePath}`);
-        return true;
-    } catch (error: any) {
-        // Si le fichier n'existe pas (erreur 404), on considère que c'est OK
-        if (error?.code === 'storage/object-not-found') {
-            console.log(`ℹ️ [deleteImageFromFirebase] Le fichier n'existe pas (déjà supprimé ou jamais créé): ${imageUrl}`)
+        if (response.status === 404) {
+            console.log(`ℹ️ [deleteImageFromR2] Le fichier n'existe pas (déjà supprimé): ${storagePath}`)
             return true
         }
 
-        // Log détaillé de l'erreur
-        console.error('❌ [deleteImageFromFirebase] Erreur lors de la suppression de l\'image:', error);
-        console.error('❌ [deleteImageFromFirebase] Code d\'erreur:', error?.code);
-        console.error('❌ [deleteImageFromFirebase] Message d\'erreur:', error?.message);
-        console.error('❌ [deleteImageFromFirebase] Stack:', error?.stack);
-
+        console.error('❌ [deleteImageFromR2] Erreur lors de la suppression:', response.status);
+        return false;
+    } catch (error: any) {
+        console.error('❌ [deleteImageFromR2] Erreur lors de la suppression de l\'image:', error);
         return false;
     }
 }
 
 /**
- * Supprime le fichier WebP d'un presaleArtwork depuis Firebase Storage
+ * Supprime le fichier WebP d'un presaleArtwork depuis R2
  * Le fichier est stocké dans artists/{Prenom Nom}/landing/{nomoeuvre}.webp
- * 
+ *
  * @param artistName - Prénom de l'artiste
  * @param artistSurname - Nom de l'artiste
  * @param artworkName - Nom de l'œuvre
@@ -513,15 +490,7 @@ export async function deletePresaleArtworkImage(
     artworkName: string
 ): Promise<boolean> {
     try {
-        // Authentification Firebase côté client
-        const { getAuth, signInAnonymously } = await import('firebase/auth')
-        const { app } = await import('./config')
-
-        const auth = getAuth(app)
-        await signInAnonymously(auth)
-
         // Construire le nom du répertoire avec la casse exacte (comme dans PresaleArtworkForm)
-        // Le folderName est construit comme `${name} ${surname}` sans normalisation
         const folderName = `${artistName} ${artistSurname}`.trim()
 
         // Normaliser le nom de l'œuvre (comme dans PresaleArtworkForm)
@@ -532,86 +501,47 @@ export async function deletePresaleArtworkImage(
 
         console.log(`Tentative de suppression du fichier presaleArtwork: ${storagePath}`)
 
-        // Créer une référence au fichier
-        const fileRef = ref(storage, storagePath)
+        const response = await fetch('/api/r2/delete', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ storagePath }),
+        })
 
-        // Supprimer le fichier
-        await deleteObject(fileRef)
-
-        console.log(`Fichier presaleArtwork supprimé avec succès: ${storagePath}`)
-        return true
-    } catch (error: any) {
-        // Si le fichier n'existe pas (erreur 404), on considère que c'est OK
-        if (error?.code === 'storage/object-not-found') {
-            const storagePath = `artists/${artistName} ${artistSurname}/landing/${normalizeString(artworkName)}.webp`
-            console.log(`Le fichier n'existe pas (déjà supprimé ou jamais créé): ${storagePath}`)
+        if (response.ok || response.status === 404) {
+            console.log(`Fichier presaleArtwork supprimé avec succès (ou inexistant): ${storagePath}`)
             return true
         }
+
+        console.error('Erreur lors de la suppression du fichier presaleArtwork:', response.status)
+        return false
+    } catch (error: any) {
         console.error('Erreur lors de la suppression du fichier presaleArtwork:', error)
         return false
     }
 }
 
 /**
- * Vérifie si un répertoire existe dans Firebase Storage et le crée si nécessaire
- * Dans Firebase Storage, les répertoires n'existent pas vraiment - ils sont créés automatiquement
- * lors de l'upload d'un fichier. Cette fonction vérifie l'existence en listant le contenu.
- * 
- * @param folderPath - Chemin du répertoire (ex: "artists/Jean Dupont/landing")
- * @param name - Prénom de l'artiste
- * @param surname - Nom de l'artiste
- * @returns Promise<boolean> - true si le répertoire existe ou a été créé, false en cas d'erreur
+ * ensureFolderExists — R2 n'a pas de notion de dossier vide.
+ * Retourne toujours true pour maintenir la compatibilité avec les composants existants.
+ *
+ * @param _folderPath - Chemin du répertoire (ignoré)
+ * @param _name - Prénom de l'artiste (ignoré)
+ * @param _surname - Nom de l'artiste (ignoré)
+ * @returns Promise<true>
  */
 export async function ensureFolderExists(
-    folderPath: string,
-    name: string,
-    surname: string
+    _folderPath: string,
+    _name: string,
+    _surname: string
 ): Promise<boolean> {
-    try {
-        // Authentification Firebase côté client
-        const { getAuth, signInAnonymously } = await import('firebase/auth')
-        const { app } = await import('./config')
-
-        const auth = getAuth(app)
-        await signInAnonymously(auth)
-
-        // Essayer de lister le contenu du répertoire
-        const folderRef = ref(storage, folderPath)
-
-        try {
-            const result = await listAll(folderRef)
-            // Si on peut lister le dossier, il existe
-            console.log(`✓ Répertoire "${folderPath}" existe déjà (${result.items.length} fichier(s))`)
-            return true
-        } catch (listError: any) {
-            // Si le répertoire n'existe pas, on le "crée" en uploadant un fichier placeholder
-            // Note: Firebase Storage crée automatiquement les répertoires lors de l'upload
-            console.log(`📁 Création du répertoire "${folderPath}"...`)
-
-            // Créer un fichier texte minimal pour créer le répertoire
-            const placeholderContent = new Blob([''], { type: 'text/plain' })
-            const placeholderFile = new File([placeholderContent], '.placeholder', { type: 'text/plain' })
-            const placeholderPath = `${folderPath}/.placeholder`
-            const placeholderRef = ref(storage, placeholderPath)
-
-            try {
-                await uploadBytes(placeholderRef, placeholderFile)
-                console.log(`✓ Répertoire "${folderPath}" créé avec succès`)
-                return true
-            } catch (uploadError: any) {
-                console.error(`❌ Erreur lors de la création du répertoire "${folderPath}":`, uploadError)
-                return false
-            }
-        }
-    } catch (error: any) {
-        console.error('Erreur lors de la vérification/création du répertoire:', error)
-        return false
-    }
+    // R2 n'a pas de notion de dossier vide : les "dossiers" sont implicites.
+    // On retourne toujours true pour maintenir la compatibilité.
+    return true
 }
 
 /**
- * Upload une image vers Firebase Storage dans le répertoire landing d'un artiste
- * 
+ * Upload une image vers R2 dans le répertoire landing d'un artiste
+ *
  * @param imageFile - Le fichier image à uploader
  * @param folderName - Nom du répertoire avec la casse exacte (ex: "Jean Dupont")
  * @param fileName - Nom du fichier (sans extension)
@@ -627,14 +557,7 @@ export async function uploadImageToLandingFolder(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        // Étape 1: Authentification Firebase côté client
-        const { getAuth, signInAnonymously } = await import('firebase/auth')
-        const { app } = await import('./config')
-
-        const auth = getAuth(app)
-        await signInAnonymously(auth)
-
-        // Étape 2: Conversion WebP
+        // Étape 1: Conversion WebP
         onConversionStatus?.('in-progress')
         const conversionResult = await convertToWebPIfNeeded(imageFile)
 
@@ -648,15 +571,13 @@ export async function uploadImageToLandingFolder(
 
         onConversionStatus?.('completed')
 
-        // Étape 3: Upload vers Firebase dans le répertoire landing
+        // Étape 2: Upload vers R2 dans le répertoire landing
         onUploadStatus?.('in-progress')
         const folderPath = `artists/${folderName}/landing`
         const fileExtension = 'webp'
         const storagePath = `${folderPath}/${fileName}.${fileExtension}`
-        const storageRef = ref(storage, storagePath)
 
-        await uploadBytes(storageRef, conversionResult.file)
-        const imageUrl = await getDownloadURL(storageRef)
+        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
 
         onUploadStatus?.('completed')
 
@@ -681,8 +602,8 @@ export async function uploadImageToLandingFolder(
 }
 
 /**
- * Upload une image vers Firebase Storage dans le répertoire marketplace d'un artiste
- * 
+ * Upload une image vers R2 dans le répertoire marketplace d'un artiste
+ *
  * @param imageFile - Le fichier image à uploader
  * @param folderName - Nom du répertoire avec la casse exacte (ex: "Jean Dupont")
  * @param fileName - Nom du fichier (sans extension)
@@ -698,14 +619,7 @@ export async function uploadImageToMarketplaceFolder(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        // Étape 1: Authentification Firebase côté client
-        const { getAuth, signInAnonymously } = await import('firebase/auth')
-        const { app } = await import('./config')
-
-        const auth = getAuth(app)
-        await signInAnonymously(auth)
-
-        // Étape 2: Conversion WebP
+        // Étape 1: Conversion WebP
         onConversionStatus?.('in-progress')
         const conversionResult = await convertToWebPIfNeeded(imageFile)
 
@@ -719,15 +633,13 @@ export async function uploadImageToMarketplaceFolder(
 
         onConversionStatus?.('completed')
 
-        // Étape 3: Upload vers Firebase dans le répertoire marketplace
+        // Étape 2: Upload vers R2 dans le répertoire marketplace
         onUploadStatus?.('in-progress')
         const folderPath = `artists/${folderName}/marketplace`
         const fileExtension = 'webp'
         const storagePath = `${folderPath}/${fileName}.${fileExtension}`
-        const storageRef = ref(storage, storagePath)
 
-        await uploadBytes(storageRef, conversionResult.file)
-        const imageUrl = await getDownloadURL(storageRef)
+        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
 
         onUploadStatus?.('completed')
 
@@ -752,9 +664,9 @@ export async function uploadImageToMarketplaceFolder(
 }
 
 /**
- * Upload une image vers Firebase Storage dans le répertoire marketplace d'un artiste selon le type d'image
+ * Upload une image vers R2 dans le répertoire marketplace d'un artiste selon le type d'image
  * Crée le répertoire si nécessaire : /artists/{Prenom Nom}/marketplace/{type}/
- * 
+ *
  * @param imageFile - Le fichier image à uploader
  * @param folderName - Nom du répertoire avec la casse exacte (ex: "Jean Dupont")
  * @param imageType - Type d'image (CLOSE_UP, SIGNATURE, SIDE_VIEW, BACK_VIEW, IN_SITU, OTHER)
@@ -772,14 +684,7 @@ export async function uploadImageToMarketplaceFolderByType(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        // Étape 1: Authentification Firebase côté client
-        const { getAuth, signInAnonymously } = await import('firebase/auth')
-        const { app } = await import('./config')
-
-        const auth = getAuth(app)
-        await signInAnonymously(auth)
-
-        // Étape 2: Conversion WebP
+        // Étape 1: Conversion WebP
         onConversionStatus?.('in-progress')
         const conversionResult = await convertToWebPIfNeeded(imageFile)
 
@@ -793,25 +698,18 @@ export async function uploadImageToMarketplaceFolderByType(
 
         onConversionStatus?.('completed')
 
-        // Étape 3: Convertir le type d'image en nom de répertoire (CLOSE_UP -> close_up)
+        // Étape 2: Convertir le type d'image en nom de répertoire (CLOSE_UP -> close_up)
         const typeFolderName = imageType.toLowerCase()
 
-        // Étape 4: Vérifier/créer le répertoire si nécessaire
-        const folderPath = `artists/${folderName}/marketplace/${typeFolderName}`
-        const nameParts = folderName.split(' ')
-        const firstName = nameParts[0] || ''
-        const lastName = nameParts.slice(1).join(' ') || ''
-        await ensureFolderExists(folderPath, firstName, lastName)
-
-        // Étape 5: Upload vers Firebase dans le répertoire spécifique au type
+        // Étape 3: Upload vers R2 dans le répertoire spécifique au type
+        // R2 n'a pas besoin d'ensureFolderExists — les dossiers sont implicites
         onUploadStatus?.('in-progress')
+        const folderPath = `artists/${folderName}/marketplace/${typeFolderName}`
         const fileExtension = 'webp'
         const timestamp = Date.now()
         const storagePath = `${folderPath}/${fileName}-${timestamp}.${fileExtension}`
-        const storageRef = ref(storage, storagePath)
 
-        await uploadBytes(storageRef, conversionResult.file)
-        const imageUrl = await getDownloadURL(storageRef)
+        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
 
         onUploadStatus?.('completed')
 
@@ -836,7 +734,7 @@ export async function uploadImageToMarketplaceFolderByType(
 }
 
 /**
- * Upload une image vers Firebase Storage dans le répertoire artistsUGC
+ * Upload une image vers R2 dans le répertoire artistsUGC
  *
  * @param imageFile - Le fichier image à uploader
  * @param folderName - Nom du répertoire (ex: "Jean Dupont" ou pseudo)
@@ -853,11 +751,6 @@ export async function uploadImageToUgcFolder(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        const { getAuth, signInAnonymously } = await import('firebase/auth')
-        const { app } = await import('./config')
-        const auth = getAuth(app)
-        await signInAnonymously(auth)
-
         onConversionStatus?.('in-progress')
         const conversionResult = await convertToWebPIfNeeded(imageFile)
         if (!conversionResult.success) {
@@ -869,9 +762,7 @@ export async function uploadImageToUgcFolder(
 
         onUploadStatus?.('in-progress')
         const storagePath = `artistsUGC/${folderName}/${fileName}.webp`
-        const storageRef = ref(storage, storagePath)
-        await uploadBytes(storageRef, conversionResult.file)
-        const imageUrl = await getDownloadURL(storageRef)
+        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
         onUploadStatus?.('completed')
 
         return imageUrl
@@ -884,7 +775,7 @@ export async function uploadImageToUgcFolder(
 }
 
 /**
- * Upload un média (image ou vidéo) vers Firebase Storage dans le répertoire artistsUGC
+ * Upload un média (image ou vidéo) vers R2 dans le répertoire artistsUGC
  * - Images : conversion WebP automatique
  * - Vidéos : upload direct sans conversion
  *
@@ -901,11 +792,6 @@ export async function uploadMediaToUgcFolder(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        const { getAuth, signInAnonymously } = await import('firebase/auth')
-        const { app } = await import('./config')
-        const auth = getAuth(app)
-        await signInAnonymously(auth)
-
         onUploadStatus?.('in-progress')
 
         const isVideo = mediaFile.type.startsWith('video/')
@@ -914,9 +800,7 @@ export async function uploadMediaToUgcFolder(
             // Upload direct pour les vidéos
             const ext = mediaFile.name.split('.').pop() || 'mp4'
             const storagePath = `artistsUGC/${folderName}/${fileName}.${ext}`
-            const storageRef = ref(storage, storagePath)
-            await uploadBytes(storageRef, mediaFile)
-            const mediaUrl = await getDownloadURL(storageRef)
+            const mediaUrl = await uploadFileToR2(mediaFile, storagePath)
             onUploadStatus?.('completed')
             return mediaUrl
         } else {
@@ -928,9 +812,7 @@ export async function uploadMediaToUgcFolder(
                 throw new Error(errorMessage)
             }
             const storagePath = `artistsUGC/${folderName}/${fileName}.webp`
-            const storageRef = ref(storage, storagePath)
-            await uploadBytes(storageRef, conversionResult.file)
-            const mediaUrl = await getDownloadURL(storageRef)
+            const mediaUrl = await uploadFileToR2(conversionResult.file, storagePath)
             onUploadStatus?.('completed')
             return mediaUrl
         }
@@ -943,7 +825,7 @@ export async function uploadMediaToUgcFolder(
 }
 
 /**
- * Upload une image de mockup vers Firebase Storage dans le répertoire /artists/{Prenom Nom}/mockups
+ * Upload une image de mockup vers R2 dans le répertoire /artists/{Prenom Nom}/mockups
  *
  * @param imageFile - Le fichier image à uploader
  * @param name - Prénom de l'artiste
@@ -962,14 +844,7 @@ export async function uploadMockupToFirebase(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        // Étape 1: Authentification Firebase côté client
-        const { getAuth, signInAnonymously } = await import('firebase/auth')
-        const { app } = await import('./config')
-
-        const auth = getAuth(app)
-        await signInAnonymously(auth)
-
-        // Étape 2: Conversion WebP
+        // Étape 1: Conversion WebP
         onConversionStatus?.('in-progress')
         const conversionResult = await convertToWebPIfNeeded(imageFile)
 
@@ -983,8 +858,7 @@ export async function uploadMockupToFirebase(
 
         onConversionStatus?.('completed')
 
-        // Étape 3: Préparation du chemin de stockage
-        // Créer le nom du répertoire avec la casse exacte (Prenom Nom)
+        // Étape 2: Préparation du chemin de stockage
         const folderName = `${name} ${surname}`
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '') // Supprime les accents
@@ -996,12 +870,9 @@ export async function uploadMockupToFirebase(
         const fileExtension = 'webp'
         const storagePath = `artists/${folderName}/mockups/${finalFileName}.${fileExtension}`
 
-        // Étape 4: Upload vers Firebase
+        // Étape 3: Upload vers R2
         onUploadStatus?.('in-progress')
-        const storageRef = ref(storage, storagePath)
-
-        await uploadBytes(storageRef, conversionResult.file)
-        const imageUrl = await getDownloadURL(storageRef)
+        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
 
         onUploadStatus?.('completed')
 
@@ -1023,4 +894,4 @@ export async function uploadMockupToFirebase(
 
         throw error
     }
-} 
+}

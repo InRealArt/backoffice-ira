@@ -458,7 +458,7 @@ export function useArtworkForm({
                     const loadingToast = infoToast('Suppression de l\'image en cours...')
 
                     try {
-                        const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+                        const { deleteImageFromFirebase } = await import('@/lib/r2/storage')
                         const storageDeleted = await deleteImageFromFirebase(imageUrl)
 
                         if (!storageDeleted) {
@@ -542,12 +542,7 @@ export function useArtworkForm({
 
                 const itemSlug = slug || (data.title ? normalizeString(data.title) : '')
 
-                const { getAuth, signInAnonymously } = await import('firebase/auth')
-                const { app } = await import('@/lib/firebase/config')
-                const { uploadImageToFirebase, uploadMultipleImagesToFirebase, deleteImageFromFirebase } = await import('@/lib/firebase/storage')
-
-                const auth = getAuth(app)
-                const userCredential = await signInAnonymously(auth)
+                const { uploadImageToFirebase, uploadMultipleImagesToFirebase, deleteImageFromFirebase } = await import('@/lib/r2/storage')
 
                 if (isRealNewImage && fileInputRef.current && fileInputRef.current.files && fileInputRef.current.files.length > 0) {
                     if (initialData?.imageUrl) {
@@ -561,7 +556,7 @@ export function useArtworkForm({
                     }
 
                     // Utiliser uploadImageToMarketplaceFolder au lieu de uploadImageToFirebase
-                    const { uploadImageToMarketplaceFolder } = await import('@/lib/firebase/storage')
+                    const { uploadImageToMarketplaceFolder } = await import('@/lib/r2/storage')
 
                     // Créer le nom du répertoire avec la casse exacte (Prenom Nom)
                     const folderName = artistName
@@ -799,7 +794,7 @@ export function useArtworkForm({
 
                             console.log(`📤 Début de l'upload des images par type pour physicalItemId: ${physicalItemId}`)
 
-                            const { uploadImageToMarketplaceFolderByType } = await import('@/lib/firebase/storage')
+                            const { uploadImageToMarketplaceFolderByType } = await import('@/lib/r2/storage')
                             const { savePhysicalItemImage, getPhysicalItemImagesByType } = await import('@/lib/actions/prisma-actions')
                             const { normalizeString } = await import('@/lib/utils')
 
@@ -872,7 +867,7 @@ export function useArtworkForm({
 
                             console.log(`🗑️ Début de la suppression des images pour physicalItemId: ${physicalItemId}`)
 
-                            const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+                            const { deleteImageFromFirebase } = await import('@/lib/r2/storage')
                             const { deletePhysicalItemImageByUrl } = await import('@/lib/actions/prisma-actions')
 
                             // Supprimer les images pour chaque type
@@ -1039,7 +1034,7 @@ export function useArtworkForm({
 
                             console.log(`📤 Début de l'upload des images par type pour physicalItemId: ${physicalItemId}`)
 
-                            const { uploadImageToMarketplaceFolderByType } = await import('@/lib/firebase/storage')
+                            const { uploadImageToMarketplaceFolderByType } = await import('@/lib/r2/storage')
                             const { savePhysicalItemImage } = await import('@/lib/actions/prisma-actions')
                             const { normalizeString } = await import('@/lib/utils')
 
@@ -1107,7 +1102,7 @@ export function useArtworkForm({
 
                             console.log(`🗑️ Début de la suppression des images pour physicalItemId: ${physicalItemId}`)
 
-                            const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+                            const { deleteImageFromFirebase } = await import('@/lib/r2/storage')
                             const { deletePhysicalItemImageByUrl } = await import('@/lib/actions/prisma-actions')
 
                             // Supprimer les images pour chaque type

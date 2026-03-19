@@ -188,7 +188,7 @@ export default function CreateArtistProfileForm({
     imageType: "profile" | "secondary" | "studio" = "profile"
   ): Promise<string> => {
     const { uploadArtistImageWithWebP } = await import(
-      "@/lib/firebase/storage"
+      "@/lib/r2/storage"
     );
 
     try {

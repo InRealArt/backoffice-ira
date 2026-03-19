@@ -15,7 +15,7 @@ import ProgressModal from "@/app/components/art/ProgressModal";
 import {
   ensureFolderExists,
   uploadImageToLandingFolder,
-} from "@/lib/firebase/storage";
+} from "@/lib/r2/storage";
 import { normalizeString, getArtistFullName } from "@/lib/utils";
 import type { ArtistName } from "@/lib/types/artist";
 

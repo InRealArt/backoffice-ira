@@ -239,7 +239,7 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
     const handleDeleteProfileImage = useCallback(async () => {
         if (profile?.profileImageUrl) {
             try {
-                const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+                const { deleteImageFromFirebase } = await import('@/lib/r2/storage')
                 await deleteImageFromFirebase(profile.profileImageUrl)
                 success('Image de profil supprimée')
             } catch {
@@ -296,7 +296,7 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
 
     const handleRemoveExistingMedia = async (url: string) => {
         try {
-            const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+            const { deleteImageFromFirebase } = await import('@/lib/r2/storage')
             await deleteImageFromFirebase(url)
         } catch {
             // Non-blocking
@@ -360,7 +360,7 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
 
             if (profileImageFile) {
                 try {
-                    const { uploadImageToUgcFolder } = await import('@/lib/firebase/storage')
+                    const { uploadImageToUgcFolder } = await import('@/lib/r2/storage')
                     finalProfileUrl = await uploadImageToUgcFolder(
                         profileImageFile,
                         folderName,
@@ -390,7 +390,7 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                     const bytes = new Uint8Array(binary.length)
                     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
                     const file = new File([bytes], 'profile', { type: result.mimeType })
-                    const { uploadImageToUgcFolder } = await import('@/lib/firebase/storage')
+                    const { uploadImageToUgcFolder } = await import('@/lib/r2/storage')
                     finalProfileUrl = await uploadImageToUgcFolder(
                         file,
                         folderName,
@@ -416,7 +416,7 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
 
             for (let i = 0; i < newMediaItems.length; i++) {
                 try {
-                    const { uploadMediaToUgcFolder } = await import('@/lib/firebase/storage')
+                    const { uploadMediaToUgcFolder } = await import('@/lib/r2/storage')
                     const mediaUrl = await uploadMediaToUgcFolder(
                         newMediaItems[i].file,
                         folderName,

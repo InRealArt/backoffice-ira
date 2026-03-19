@@ -206,7 +206,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
       else if (selectedImageFile) {
         try {
           const { uploadArtistImageWithWebP } = await import(
-            "@/lib/firebase/storage"
+            "@/lib/r2/storage"
           );
 
           finalImageUrl = await uploadArtistImageWithWebP(selectedImageFile, {

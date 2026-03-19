@@ -299,7 +299,7 @@ export default function LandingArtistEditForm({
       imageType: "profile" | "secondary" | "studio" = "profile"
     ): Promise<string> => {
       const { uploadArtistImageWithWebP } = await import(
-        "@/lib/firebase/storage"
+        "@/lib/r2/storage"
       );
 
       try {
@@ -327,7 +327,7 @@ export default function LandingArtistEditForm({
     if (landingArtist.imageUrl) {
       try {
         const { deleteImageFromFirebase } = await import(
-          "@/lib/firebase/storage"
+          "@/lib/r2/storage"
         );
         await deleteImageFromFirebase(landingArtist.imageUrl);
         setDeletedMainImage(true);
@@ -347,7 +347,7 @@ export default function LandingArtistEditForm({
     if (landingArtist.secondaryImageUrl) {
       try {
         const { deleteImageFromFirebase } = await import(
-          "@/lib/firebase/storage"
+          "@/lib/r2/storage"
         );
         await deleteImageFromFirebase(landingArtist.secondaryImageUrl);
         setDeletedSecondaryImage(true);
@@ -367,7 +367,7 @@ export default function LandingArtistEditForm({
     if (landingArtist.imageArtistStudio) {
       try {
         const { deleteImageFromFirebase } = await import(
-          "@/lib/firebase/storage"
+          "@/lib/r2/storage"
         );
         await deleteImageFromFirebase(landingArtist.imageArtistStudio!);
         setDeletedStudioImage(true);
@@ -426,7 +426,7 @@ export default function LandingArtistEditForm({
       }
 
       // Vérifier que le répertoire Firebase existe (doit être fait en premier)
-      const { checkFolderExists } = await import("@/lib/firebase/storage");
+      const { checkFolderExists } = await import("@/lib/r2/storage");
       const folderPath = `artists/${getArtistFullName(landingArtist.artist)}`;
 
       try {

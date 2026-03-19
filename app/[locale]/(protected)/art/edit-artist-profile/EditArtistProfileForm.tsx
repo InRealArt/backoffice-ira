@@ -265,52 +265,20 @@ export default function EditArtistProfileForm({
     imageType: "profile" | "secondary" | "studio" = "profile"
   ): Promise<string> => {
     try {
-      const { getAuth, signInAnonymously } = await import("firebase/auth");
-      const { app } = await import("@/lib/firebase/config");
-      const { ref, uploadBytes, getDownloadURL } = await import(
-        "firebase/storage"
-      );
-      const { storage } = await import("@/lib/firebase/config");
-      const { convertToWebPIfNeeded } = await import(
-        "@/lib/utils/webp-converter"
-      );
+      const { uploadArtistImageWithWebP } = await import("@/lib/r2/storage");
 
-      const auth = getAuth(app);
-      await signInAnonymously(auth);
-
-      updateStepStatus("conversion", "in-progress");
-      const conversionResult = await convertToWebPIfNeeded(imageFile);
-
-      if (!conversionResult.success) {
-        updateStepStatus("conversion", "error");
-        throw new Error(
-          conversionResult.error ||
-            t("errors.webpConversion")
-        );
-      }
-
-      updateStepStatus("conversion", "completed");
-
-      updateStepStatus("upload", "in-progress");
-      const folderName = `${name} ${surname}`.trim();
-      const fileExtension = "webp";
-
-      let fileName = `${name} ${surname}`;
-      if (imageType === "secondary") {
-        fileName = `${name} ${surname}_secondary`;
-      } else if (imageType === "studio") {
-        fileName = `${name} ${surname}_studio`;
-      }
-
-      const storagePath = `artists/${folderName}/${fileName}.${fileExtension}`;
-      const storageRef = ref(storage, storagePath);
-
-      await uploadBytes(storageRef, conversionResult.file);
-      const imageUrl = await getDownloadURL(storageRef);
-
-      updateStepStatus("upload", "completed");
-
-      return imageUrl;
+      return await uploadArtistImageWithWebP(imageFile, {
+        name,
+        surname,
+        imageType,
+        normalizeFolderName: false,
+        onConversionStatus: (status) => {
+          updateStepStatus("conversion", status);
+        },
+        onUploadStatus: (status) => {
+          updateStepStatus("upload", status);
+        },
+      });
     } catch (error) {
       console.error("Erreur lors de l'upload:", error);
       throw error;
@@ -434,7 +402,7 @@ export default function EditArtistProfileForm({
 
       // Supprimer les images Firebase si nécessaire (côté client)
       try {
-        const { deleteImageFromFirebase } = await import('@/lib/firebase/storage')
+        const { deleteImageFromFirebase } = await import('@/lib/r2/storage')
 
         // Supprimer l'image principale si demandé
         if (shouldDeleteMain && artist.imageUrl) {

@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import { Camera, X, Loader2 } from "lucide-react";
-import { uploadImageToMarketplaceFolder } from "@/lib/firebase/storage";
+import { uploadImageToMarketplaceFolder } from "@/lib/r2/storage";
 import { normalizeString } from "@/lib/utils";
 import { useToast } from "@/app/components/Toast/ToastContext";
 

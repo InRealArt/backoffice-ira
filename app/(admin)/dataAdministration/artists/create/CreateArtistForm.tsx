@@ -228,7 +228,7 @@ export default function CreateArtistForm() {
     surname: string
   ): Promise<string> => {
     const { uploadArtistImageWithWebP } = await import(
-      "@/lib/firebase/storage"
+      "@/lib/r2/storage"
     );
 
     try {
