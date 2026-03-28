@@ -17,14 +17,14 @@ interface ArtistImageUploadProps {
 
 export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, error, allowDelete = false }: ArtistImageUploadProps) {
   const t = useTranslations('art.imageUpload')
-  const [localPreview, setLocalPreview] = useState<string | null>(previewUrl || null)
+  const [localPreview, setLocalPreview] = useState<string | null>(getImageUrl(previewUrl) || previewUrl || null)
   const [localError, setLocalError] = useState<string | null>(null)
   const [hasLocalFile, setHasLocalFile] = useState(false)
 
   // Mettre à jour localPreview quand previewUrl change (seulement si aucun fichier local n'est sélectionné)
   useEffect(() => {
     if (!hasLocalFile) {
-      setLocalPreview(previewUrl || null)
+      setLocalPreview(getImageUrl(previewUrl) || previewUrl || null)
     }
   }, [previewUrl, hasLocalFile])
 

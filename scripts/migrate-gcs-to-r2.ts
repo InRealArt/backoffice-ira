@@ -15,10 +15,16 @@
  *   - R2_SECRET_ACCESS_KEY: Secret Access Key Cloudflare R2
  *   - R2_BUCKET: Nom du bucket Cloudflare R2
  *   - MIGRATION_LIST: Chemin vers le fichier JSON avec la liste d'images (default: scripts/migration-images.json)
+ *   - SKIP_EXISTING: Si "true", skip les fichiers qui existent déjà dans R2 (default: false)
  */
 
 import { Storage } from "@google-cloud/storage";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  HeadObjectCommand,
+  NoSuchKey,
+} from "@aws-sdk/client-s3";
 import * as fs from "fs";
 import * as path from "path";
 import pLimit from "p-limit";
@@ -33,6 +39,7 @@ interface MigrationResult {
   success: boolean;
   error?: string;
   attempt?: number;
+  skipped?: boolean;
 }
 
 interface MigrationStats {
@@ -53,6 +60,7 @@ function validateEnv(): {
   r2SecretAccessKey: string;
   r2Bucket: string;
   listFile: string;
+  skipExisting: boolean;
 } {
   const required = [
     "GOOGLE_PROJECT_ID",
@@ -81,6 +89,7 @@ function validateEnv(): {
     r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
     r2Bucket: process.env.R2_BUCKET!,
     listFile: process.env.MIGRATION_LIST || DEFAULT_LIST_FILE,
+    skipExisting: process.env.SKIP_EXISTING === "true",
   };
 }
 
@@ -92,12 +101,39 @@ function readMigrationList(filePath: string): string[] {
       process.exit(1);
     }
     const content = fs.readFileSync(filePath, "utf-8");
-    const list = JSON.parse(content);
-    if (!Array.isArray(list)) {
+    const data = JSON.parse(content);
+
+    // Déterminer le format : array simple ou rapport Cloudflare R2
+    if (Array.isArray(data)) {
+      // Vérifier si c'est un rapport Cloudflare R2 avec logType
+      if (data.length > 0 && "logType" in data[0]) {
+        // Format rapport Cloudflare R2 - extraire les chemins des erreurs
+        const failedPaths = data
+          .filter((entry: any) => entry.logType === "importErrorRetryExhaustion")
+          .map((entry: any) => entry.objectKey)
+          .filter((path: string | undefined): path is string => Boolean(path));
+
+        if (failedPaths.length === 0) {
+          console.log("⚠️  Aucun fichier échoué trouvé dans le rapport");
+          return [];
+        }
+
+        console.log(`📋 Extraits ${failedPaths.length} fichier(s) échoué(s) du rapport`);
+        return failedPaths;
+      } else {
+        // Format liste simple [chemin1, chemin2, ...]
+        if (!data.every((item: any) => typeof item === "string")) {
+          console.error(
+            "❌ Le fichier doit contenir un array de chemins (strings) ou un rapport Cloudflare R2"
+          );
+          process.exit(1);
+        }
+        return data;
+      }
+    } else {
       console.error("❌ Le fichier doit contenir un array JSON");
       process.exit(1);
     }
-    return list;
   } catch (error) {
     console.error("❌ Erreur lors de la lecture du fichier:", error);
     process.exit(1);
@@ -109,15 +145,56 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Vérifier si un fichier existe déjà dans R2
+async function fileExistsInR2(
+  s3Client: S3Client,
+  r2Bucket: string,
+  key: string
+): Promise<boolean> {
+  try {
+    await s3Client.send(
+      new HeadObjectCommand({
+        Bucket: r2Bucket,
+        Key: key,
+      })
+    );
+    return true;
+  } catch (error: any) {
+    if (error.name === "NotFound" || error.$metadata?.httpStatusCode === 404) {
+      return false;
+    }
+    // En cas d'autre erreur, on considère que le fichier existe (par sécurité)
+    throw error;
+  }
+}
+
 // Migration d'une image avec retry
 async function migrateImage(
   imagePath: string,
   gcsStorage: Storage,
   gcsBucket: string,
   s3Client: S3Client,
-  r2Bucket: string
+  r2Bucket: string,
+  skipExisting: boolean
 ): Promise<MigrationResult> {
   let lastError: Error | null = null;
+
+  // Vérifier si le fichier existe déjà dans R2
+  if (skipExisting) {
+    try {
+      const exists = await fileExistsInR2(s3Client, r2Bucket, imagePath);
+      if (exists) {
+        return {
+          path: imagePath,
+          success: true,
+          skipped: true,
+          attempt: 0,
+        };
+      }
+    } catch (error) {
+      console.warn(`⚠️  Impossible de vérifier l'existence de ${imagePath}, on continue...`);
+    }
+  }
 
   for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
     try {
@@ -237,16 +314,25 @@ async function main() {
         gcsStorage,
         config.gcsBucket,
         s3Client,
-        config.r2Bucket
+        config.r2Bucket,
+        config.skipExisting
       );
 
       if (result.success) {
         stats.success++;
-        printProgress(
-          stats.success + stats.failed,
-          stats.total,
-          `✅ ${imagePath}`
-        );
+        if (result.skipped) {
+          printProgress(
+            stats.success + stats.failed,
+            stats.total,
+            `⏭️  ${imagePath} (déjà existant, skippé)`
+          );
+        } else {
+          printProgress(
+            stats.success + stats.failed,
+            stats.total,
+            `✅ ${imagePath}`
+          );
+        }
       } else {
         stats.failed++;
         printProgress(
@@ -264,8 +350,10 @@ async function main() {
   await Promise.all(promises);
 
   // Afficher le résumé
+  const skipped = stats.results.filter((r) => r.skipped).length;
   console.log("\n📈 Résumé de la migration:");
-  console.log(`  ✅ Succès: ${stats.success}/${stats.total}`);
+  console.log(`  ✅ Succès: ${stats.success - skipped}/${stats.total}`);
+  console.log(`  ⏭️  Skippés (existants): ${skipped}/${stats.total}`);
   console.log(`  ❌ Échecs: ${stats.failed}/${stats.total}`);
 
   if (stats.failed > 0) {

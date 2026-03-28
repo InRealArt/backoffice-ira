@@ -102,7 +102,7 @@ export default function OptionalImageUpload({
     }
   };
 
-  const displayPreview = localPreview || previewUrl;
+  const displayPreview = localPreview || getImageUrl(previewUrl) || null;
 
   return (
     <div className="form-group">

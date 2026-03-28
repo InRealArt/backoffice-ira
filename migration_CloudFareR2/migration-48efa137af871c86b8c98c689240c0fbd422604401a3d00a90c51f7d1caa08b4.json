@@ -1,0 +1,350 @@
+[
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "migrationComplete",
+		"createdAt": "2026-03-19T15:46:27.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/mockups/artist1.9/1.jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:20.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Ninu/Ninu  .webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:15.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "collectionLeloluce/nfts/videos/leloluce36.gif",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:15.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "collectionLeloluce/nfts/videos/leloluce32.gif",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:10.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/mockups/artist2.1/2.jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:03.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Catherine  Sénéchal/landing/rosee-bleue.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Catherine  Sénéchal/landing/trocadero.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Florence AUTELIN/landing/les-piscines-de-barcelone.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Franck Alagna/landing/orange-pixels.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Pascale Defrancq/Pascale Defrancq.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Pierrick Her/landing/rivage-rouge.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "collectionLeloluce/nfts/videos/leloluce79.gif",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "collectionLeloluce/nfts/videos/leloluce84.gif",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/design/artist4.1.jpg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/design/artist4.4.jpg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/design/artist7.3.jpg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/design/artist7.jpg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/mockups/artist1.6/2.jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/mockups/artist1.7/2.jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/mockups/artist1.9/3.jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/mockups/artist2.4/4.jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:02.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Catherine  Sénéchal/landing/subway.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Diane Detalle/landing/90-degrees-above-1.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Dominique Fonteneau/Dominique Fonteneau.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Florence AUTELIN/landing/come-as-your-are.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Florence AUTELIN/landing/le-havre-de-paix.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Florence AUTELIN/landing/mademoiselle-de-paris.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Franck Alagna/landing/mecanic-pixel.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/François Poulat/landing/basquiat.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "blog/Échiquier Patrimonial .png",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "collectionLeloluce/nfts/videos/leloluce25.gif",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "collectionLeloluce/nfts/videos/leloluce42.gif",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "collectionLeloluce/nfts/videos/leloluce57.gif",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "collectionLeloluce/nfts/videos/leloluce81.gif",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "collectionLeloluce/nfts/videos/leloluce98.gif",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "marketplace/alainpontecorvo/sea-world/main-1762449698821-le-selfie-webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "marketplace/cyrilmaccioni/gb2/main-1745316064318-volcannica2-jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "marketplace/cyrilmaccioni/pigcoin/main-1748944830261-cyril-maccioni1-png",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "marketplace/pierrickher/tempest.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/mockups/artist1.1/2.jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/mockups/artist1.2/1.jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/mockups/artist1.3/2.jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/mockups/artist1.3/4.jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "presale/dropPanel/mockups/artist1.8/4.jpeg",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:01.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Diane Detalle/Diane Detalle.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:00.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Jean-Marie Gitard/18 High Notes.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:00.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Nelson  MAZIEZOULA/landing/dechirure-interieure.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:00.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Nicole  Azoulay/landing/emotion.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:00.000Z"
+	},
+	{
+		"job": "48efa137af871c86b8c98c689240c0fbd422604401a3d00a90c51f7d1caa08b4",
+		"logType": "importErrorRetryExhaustion",
+		"objectKey": "artists/Pascale Defrancq/landing/le-secret-de-l-ocean.webp",
+		"message": "Failed to import object",
+		"createdAt": "2026-03-19T15:46:00.000Z"
+	}
+]

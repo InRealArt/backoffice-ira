@@ -19,6 +19,7 @@ import {
 import type { UgcArtistProfileWithRelations } from '@/lib/actions/ugc-artist-profile-actions'
 import type { SocialNetwork } from '@/src/generated/prisma/client'
 import TiptapEditor from '@/app/components/Forms/TiptapEditor'
+import { getImageUrl } from '@/lib/r2/url'
 
 const formSchema = z
     .object({
@@ -894,14 +895,14 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                                                     >
                                                         {isVideo ? (
                                                             <video
-                                                                src={url}
+                                                                src={getImageUrl(url) || url}
                                                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                                 muted
                                                                 playsInline
                                                             />
                                                         ) : (
                                                             <Image
-                                                                src={url}
+                                                                src={getImageUrl(url) || url}
                                                                 alt={`Média ${index + 1}`}
                                                                 fill
                                                                 sizes="150px"
@@ -959,14 +960,14 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                                                 >
                                                     {item.isVideo ? (
                                                         <video
-                                                            src={item.preview}
+                                                            src={getImageUrl(item.preview) || item.preview}
                                                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                             muted
                                                             playsInline
                                                         />
                                                     ) : (
                                                         <Image
-                                                            src={item.preview}
+                                                            src={getImageUrl(item.preview) || item.preview}
                                                             alt={`Nouveau média ${index + 1}`}
                                                             fill
                                                             sizes="150px"
