@@ -106,7 +106,7 @@ function readMigrationList(filePath: string): string[] {
     // Déterminer le format : array simple ou rapport Cloudflare R2
     if (Array.isArray(data)) {
       // Vérifier si c'est un rapport Cloudflare R2 avec logType
-      if (data.length > 0 && "logType" in data[0]) {
+      if (data.length > 0 && typeof data[0] === "object" && data[0] !== null && "logType" in data[0]) {
         // Format rapport Cloudflare R2 - extraire les chemins des erreurs
         const failedPaths = data
           .filter((entry: any) => entry.logType === "importErrorRetryExhaustion")

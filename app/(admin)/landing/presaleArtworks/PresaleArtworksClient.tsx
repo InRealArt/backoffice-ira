@@ -25,12 +25,15 @@ import {
 } from "../../../components/PageLayout/index";
 import PresaleArtworkStatsModal from "@/app/components/PresaleArtwork/PresaleArtworkStatsModal";
 import styles from "../../../styles/list-components.module.scss";
+import { getImageUrl } from "@/lib/r2/url";
 
 function ImageThumbnail({ url, alt }: { url: string; alt: string }) {
+  const resolvedUrl = getImageUrl(url);
+  if (!resolvedUrl) return <div className={styles.thumbnailContainer} />;
   return (
     <div className={styles.thumbnailContainer}>
       <Image
-        src={url}
+        src={resolvedUrl}
         alt={alt}
         fill
         className="object-cover"
