@@ -101,3 +101,40 @@ export function getImageUrl(pathOrUrl: string | null | undefined): string | null
   // Reconstruire l'URL complète avec le base URL actuel (R2)
   return `${R2_BASE_URL}/${relativePath}`.replace(/\/+/g, '/')
 }
+
+/**
+ * Génère un hash 32 bits déterministe à partir d'une chaîne.
+ * Même entrée => même hash. Utilisé comme cache buster stable.
+ */
+function createSimpleHash(str: string): string {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Tronquer à 32 bits
+  }
+  return Math.abs(hash).toString(36)
+}
+
+/**
+ * Construit l'URL publique absolue avec un cache buster stable basé sur le chemin.
+ *
+ * Le paramètre `?t=<hash>` est déterministe : il ne change que si le fichier change de chemin,
+ * ce qui force le rechargement de l'image dans le navigateur après un remplacement de photo
+ * tout en évitant des requêtes inutiles si le chemin n'a pas bougé.
+ *
+ * Réservé aux images issues de la BDD. Ne pas appliquer aux blob: ou data: URLs locales.
+ *
+ * @param pathOrUrl - chemin relatif ou URL absolue legacy (même signature que getImageUrl)
+ * @returns URL absolue avec query string ?t=<hash>, ou null si entrée vide
+ */
+export function getImageUrlWithCacheBuster(pathOrUrl: string | null | undefined): string | null {
+  const url = getImageUrl(pathOrUrl)
+  if (!url) return null
+
+  // Calculer le hash sur le chemin relatif normalisé pour que le hash soit stable
+  // même si le base URL change (changement de bucket, migration future)
+  const relativePath = toRelativePath(pathOrUrl) ?? pathOrUrl ?? ''
+  const hash = createSimpleHash(relativePath)
+  return `${url}?t=${hash}`
+}

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useDropzone } from 'react-dropzone'
 import Image from 'next/image'
 import { Camera } from 'lucide-react'
-import { getImageUrl } from '@/lib/r2/url'
+import { getImageUrlWithCacheBuster } from '@/lib/r2/url'
 
 interface ArtistImageUploadProps {
   onFileSelect: (file: File | null) => void
@@ -17,14 +17,14 @@ interface ArtistImageUploadProps {
 
 export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, error, allowDelete = false }: ArtistImageUploadProps) {
   const t = useTranslations('art.imageUpload')
-  const [localPreview, setLocalPreview] = useState<string | null>(getImageUrl(previewUrl) || previewUrl || null)
+  const [localPreview, setLocalPreview] = useState<string | null>(getImageUrlWithCacheBuster(previewUrl) || previewUrl || null)
   const [localError, setLocalError] = useState<string | null>(null)
   const [hasLocalFile, setHasLocalFile] = useState(false)
 
   // Mettre à jour localPreview quand previewUrl change (seulement si aucun fichier local n'est sélectionné)
   useEffect(() => {
     if (!hasLocalFile) {
-      setLocalPreview(getImageUrl(previewUrl) || previewUrl || null)
+      setLocalPreview(getImageUrlWithCacheBuster(previewUrl) || previewUrl || null)
     }
   }, [previewUrl, hasLocalFile])
 
@@ -78,7 +78,7 @@ export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, 
     }
   }
 
-  const displayPreview = localPreview || getImageUrl(previewUrl) || previewUrl
+  const displayPreview = localPreview || getImageUrlWithCacheBuster(previewUrl) || previewUrl
 
   return (
     <div className="form-group">
