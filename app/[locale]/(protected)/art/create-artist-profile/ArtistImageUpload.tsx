@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useDropzone } from 'react-dropzone'
 import Image from 'next/image'
 import { Camera } from 'lucide-react'
+import { getImageUrl } from '@/lib/r2/url'
 
 interface ArtistImageUploadProps {
   onFileSelect: (file: File | null) => void
@@ -77,7 +78,7 @@ export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, 
     }
   }
 
-  const displayPreview = localPreview || previewUrl
+  const displayPreview = localPreview || getImageUrl(previewUrl) || previewUrl
 
   return (
     <div className="form-group">
