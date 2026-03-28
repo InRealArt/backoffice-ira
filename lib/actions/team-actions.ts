@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { Team } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
+import { toRelativePath } from '@/lib/r2/url'
 
 export async function getTeamMemberById(id: number): Promise<Team | null> {
     try {
@@ -36,7 +37,11 @@ export async function updateTeamMember(
     try {
         await prisma.team.update({
             where: { id },
-            data
+            data: {
+                ...data,
+                photoUrl1: toRelativePath(data.photoUrl1) ?? data.photoUrl1 ?? null,
+                photoUrl2: toRelativePath(data.photoUrl2) ?? data.photoUrl2 ?? null,
+            }
         })
 
         revalidatePath(`/landing/team`)
@@ -66,7 +71,11 @@ export async function createTeamMember(
 ): Promise<{ success: boolean; message?: string; id?: number }> {
     try {
         const newTeamMember = await prisma.team.create({
-            data
+            data: {
+                ...data,
+                photoUrl1: toRelativePath(data.photoUrl1) ?? data.photoUrl1 ?? null,
+                photoUrl2: toRelativePath(data.photoUrl2) ?? data.photoUrl2 ?? null,
+            }
         })
 
         revalidatePath(`/landing/team`)

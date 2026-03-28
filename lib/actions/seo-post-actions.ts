@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { SeoPost } from '@/src/generated/prisma/client'
 import { generateSeoJsonLd, generateSeoHtml, generateArticleHtml, SeoPostData } from '@/lib/utils/seo-generators'
+import { toRelativePath } from '@/lib/r2/url'
 import { BlogContent } from '@/app/components/BlogEditor/types'
 import { translateSeoPostFields, getLanguageByCode, checkTranslationExists, handleSeoPostTranslationsOnUpdate } from '@/lib/services/translation-service'
 import { calculateReadingTime } from '@/lib/utils/reading-time-calculator'
@@ -143,7 +144,7 @@ export async function createSeoPost(data: {
                 estimatedReadTime: calculatedReadingTime, // Utiliser le temps calculé automatiquement
                 status: data.status,
                 pinned: data.pinned || false,
-                mainImageUrl: data.mainImageUrl ?? undefined,
+                mainImageUrl: toRelativePath(data.mainImageUrl) ?? data.mainImageUrl ?? undefined,
                 mainImageAlt: data.mainImageAlt,
                 mainImageCaption: data.mainImageCaption,
                 createdAt: data.creationDate,
@@ -374,7 +375,7 @@ export async function updateSeoPost(id: number, data: {
         if (data.authorLink !== undefined) updateData.authorLink = data.authorLink ?? undefined
         if (data.status !== undefined) updateData.status = data.status
         if (data.pinned !== undefined) updateData.pinned = data.pinned
-        if (data.mainImageUrl !== undefined) updateData.mainImageUrl = data.mainImageUrl ?? undefined
+        if (data.mainImageUrl !== undefined) updateData.mainImageUrl = toRelativePath(data.mainImageUrl) ?? data.mainImageUrl ?? undefined
         if (data.mainImageAlt !== undefined) updateData.mainImageAlt = data.mainImageAlt
         if (data.mainImageCaption !== undefined) updateData.mainImageCaption = data.mainImageCaption
         if (data.creationDate !== undefined) updateData.createdAt = data.creationDate

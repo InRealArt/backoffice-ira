@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { PresaleArtwork } from '@/src/generated/prisma/client'
+import { toRelativePath } from '@/lib/r2/url'
 
 /**
  * Récupère toutes les œuvres en prévente
@@ -150,12 +151,17 @@ export async function createPresaleArtwork(data: {
                 name: data.name,
                 artistId: data.artistId,
                 price: data.price,
-                imageUrl: data.imageUrl,
+                imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
                 description: data.description,
                 width: data.width,
                 height: data.height,
                 order: orderToUse,
-                mockupUrls: data.mockupUrls || "[]",
+                mockupUrls: JSON.stringify(
+                    JSON.parse(data.mockupUrls || '[]').map((item: any) => ({
+                        ...item,
+                        url: toRelativePath(item.url) ?? item.url ?? null
+                    }))
+                ),
                 isSold: data.isSold ?? false,
                 isTopArtwork: data.isTopArtwork ?? false
             },
@@ -216,6 +222,19 @@ export async function updatePresaleArtwork(id: number, data: {
                     delete data.order
                 }
             }
+        }
+
+        // Normaliser les URLs vers des chemins relatifs avant écriture en BD
+        if (data.imageUrl !== undefined) {
+            data.imageUrl = toRelativePath(data.imageUrl) ?? data.imageUrl
+        }
+        if (data.mockupUrls !== undefined) {
+            data.mockupUrls = JSON.stringify(
+                JSON.parse(data.mockupUrls || '[]').map((item: any) => ({
+                    ...item,
+                    url: toRelativePath(item.url) ?? item.url ?? null
+                }))
+            )
         }
 
         // Mettre à jour les autres données

@@ -2,6 +2,7 @@
 
 import { normalizeString } from '@/lib/utils'
 import { convertToWebPIfNeeded } from '@/lib/utils/webp-converter'
+import { getImageUrl } from '@/lib/r2/url'
 
 /**
  * Interface pour les options d'upload
@@ -36,8 +37,10 @@ async function getPresignedUploadUrl(
 }
 
 /**
- * Upload un fichier vers R2 via presigned PUT URL et retourne le chemin relatif (ex: "artists/Jean Dupont/profile.webp")
- * L'URL absolue est construite à la volée avec getImageUrl() depuis lib/r2/url.ts
+ * Upload un fichier vers R2 via presigned PUT URL et retourne le chemin relatif du bucket
+ * (ex: "artists/Jean Dupont/profile.webp")
+ *
+ * Les composants qui ont besoin de l'URL absolue doivent appeler getImageUrl() sur le résultat.
  */
 async function uploadFileToR2(file: File | Blob, storagePath: string): Promise<string> {
     const contentType = file instanceof File ? file.type : (file as Blob).type || 'application/octet-stream'
@@ -53,6 +56,7 @@ async function uploadFileToR2(file: File | Blob, storagePath: string): Promise<s
         throw new Error(`Échec de l'upload vers R2: HTTP ${uploadResponse.status}`)
     }
 
+    // Retourner le chemin relatif pour stockage en DB
     return relativePath
 }
 

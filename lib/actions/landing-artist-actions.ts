@@ -2,6 +2,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { unstable_noStore as noStore } from 'next/cache'
+import { toRelativePath } from '@/lib/r2/url'
 
 export interface LandingArtistData {
     intro?: string | null
@@ -86,8 +87,8 @@ export async function createLandingArtist(data: LandingArtistData) {
                 description: data.description,
                 artworkStyle: data.artworkStyle,
                 artistsPage: data.artistsPage,
-                imageUrl: data.imageUrl,
-                secondaryImageUrl: data.secondaryImageUrl,
+                imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
+                secondaryImageUrl: toRelativePath(data.secondaryImageUrl) ?? data.secondaryImageUrl ?? null,
                 artworkImages: data.artworkImages || '[]',
                 slug: data.slug!,
                 // Nouveaux champs du modèle LandingArtist
@@ -101,7 +102,7 @@ export async function createLandingArtist(data: LandingArtistData) {
                 biographyText3: data.biographyText3,
                 biographyHeader4: data.biographyHeader4,
                 biographyText4: data.biographyText4,
-                imageArtistStudio: data.imageArtistStudio,
+                imageArtistStudio: toRelativePath(data.imageArtistStudio) ?? data.imageArtistStudio ?? null,
             },
         })
 
@@ -140,8 +141,8 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 description: data.description,
                 artworkStyle: data.artworkStyle,
                 artistsPage: data.artistsPage,
-                imageUrl: data.imageUrl,
-                secondaryImageUrl: data.secondaryImageUrl,
+                imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
+                secondaryImageUrl: toRelativePath(data.secondaryImageUrl) ?? data.secondaryImageUrl ?? null,
                 artworkImages: data.artworkImages || '[]',
                 slug: data.slug,
                 // Nouveaux champs du modèle LandingArtist
@@ -155,7 +156,7 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 biographyText3: data.biographyText3,
                 biographyHeader4: data.biographyHeader4,
                 biographyText4: data.biographyText4,
-                imageArtistStudio: data.imageArtistStudio,
+                imageArtistStudio: toRelativePath(data.imageArtistStudio) ?? data.imageArtistStudio ?? null,
                 onboardingBo: data.onboardingBo,
                 isTopArtist: data.isTopArtist,
             },

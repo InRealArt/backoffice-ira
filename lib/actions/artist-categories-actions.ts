@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { generateSlug } from '@/lib/utils'
 import { ArtistCategory } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
+import { toRelativePath } from '@/lib/r2/url'
 
 export async function getArtistCategoryById(id: number): Promise<ArtistCategory | null> {
     try {
@@ -68,7 +69,7 @@ export async function updateArtistCategory(
     try {
         const updateData: any = {
             name: data.name,
-            imageUrl: data.imageUrl,
+            imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
             description: data.description,
             order: data.order
         }
@@ -117,7 +118,7 @@ export async function createArtistCategory(
         const newArtistCategory = await prisma.artistCategory.create({
             data: {
                 name: data.name,
-                imageUrl: data.imageUrl,
+                imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
                 description: data.description,
                 order: data.order,
                 slug: uniqueSlug

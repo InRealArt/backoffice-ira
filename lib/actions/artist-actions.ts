@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { Artist, Prisma } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 import { generateSlug, toCamelCase, getCountries } from '@/lib/utils'
+import { toRelativePath } from '@/lib/r2/url'
 
 export async function getArtistById(id: number): Promise<Artist | null> {
     try {
@@ -74,11 +75,11 @@ export async function updateArtist(
             pseudo: data.pseudo,
             description: data.description,
             publicKey: data.publicKey,
-            imageUrl: data.imageUrl,
+            imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
             isGallery: data.isGallery,
-            backgroundImage: data.backgroundImage,
+            backgroundImage: toRelativePath(data.backgroundImage) ?? data.backgroundImage ?? null,
             slug: data.slug,
-            featuredArtwork: data.featuredArtwork,
+            featuredArtwork: toRelativePath(data.featuredArtwork) ?? data.featuredArtwork ?? null,
             birthYear: data.birthYear,
             countryCode: dataWithCountryCode.countryCode,
             websiteUrl: data.websiteUrl,
@@ -175,9 +176,9 @@ export async function createArtist(data: CreateArtistData): Promise<{ success: b
         const prismaData = {
             ...prismaDataPartial,
             publicKey: data.publicKey || `default-${Date.now()}`,
-            imageUrl: data.imageUrl || '',
+            imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? '',
             isGallery: data.isGallery || false,
-            backgroundImage: data.backgroundImage || null,
+            backgroundImage: toRelativePath(data.backgroundImage) ?? data.backgroundImage ?? null,
             // Nouveaux champs biographie
             birthYear: data.birthYear || null,
             countryCode: data.countryCode || null,
@@ -327,7 +328,7 @@ export async function createUserArtistProfile(
                 surname: surname,
                 pseudo: pseudo,
                 description: description,
-                imageUrl: imageUrl,
+                imageUrl: toRelativePath(imageUrl) ?? imageUrl ?? '',
                 publicKey: `default-${Date.now()}`,
                 isGallery: false,
                 birthYear: birthYear || null,
@@ -347,12 +348,12 @@ export async function createUserArtistProfile(
                 artistId: artist.id,
                 slug: slug,
                 description: description,
-                imageUrl: imageUrl,
+                imageUrl: toRelativePath(imageUrl) ?? imageUrl ?? '',
                 artistsPage: artistsPage,
                 artworkImages: '[]',
                 // Nouveaux champs optionnels
-                secondaryImageUrl: secondaryImageUrl || null,
-                imageArtistStudio: imageArtistStudio || null,
+                secondaryImageUrl: toRelativePath(secondaryImageUrl) ?? secondaryImageUrl ?? null,
+                imageArtistStudio: toRelativePath(imageArtistStudio) ?? imageArtistStudio ?? null,
                 biographyHeader1: biographyHeader1 || null,
                 biographyText1: biographyText1 || null,
                 biographyHeader2: biographyHeader2 || null,

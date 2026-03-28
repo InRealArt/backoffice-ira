@@ -95,7 +95,8 @@ export default function FirebaseImageUpload({
           }
         );
 
-        setLocalPreview(getImageUrl(imageUrl) || imageUrl);
+        // imageUrl est maintenant un chemin relatif depuis uploadFileToR2
+        setLocalPreview(getImageUrl(imageUrl) ?? imageUrl);
         onImageUploaded(imageUrl);
       } catch (uploadErr: any) {
         const errorMsg =

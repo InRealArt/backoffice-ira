@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { SocialNetwork } from '@/src/generated/prisma/client'
+import { toRelativePath } from '@/lib/r2/url'
 
 /**
  * Récupère une image par URL côté serveur (évite CORS) et la retourne en base64.
@@ -100,7 +101,8 @@ export async function createUgcArtistProfile(data: {
         const { socialMetrics, ...profileData } = data
         const payload = {
             ...profileData,
-            mediaUrls: Array.from(profileData.mediaUrls ?? []),
+            profileImageUrl: toRelativePath(profileData.profileImageUrl) ?? profileData.profileImageUrl ?? null,
+            mediaUrls: Array.from(profileData.mediaUrls ?? []).map((url) => toRelativePath(url) ?? url),
             tags: Array.from(profileData.tags ?? []),
             ...(socialMetrics ? {
                 socialMetrics: {
@@ -143,12 +145,15 @@ export async function updateUgcArtistProfile(
     }
 ): Promise<{ success: boolean; message?: string }> {
     try {
-        const { mediaUrls, tags, socialMetrics, ...rest } = data
+        const { mediaUrls, tags, socialMetrics, profileImageUrl, ...rest } = data
         await prisma.landingUgcArtistProfile.update({
             where: { id },
             data: {
                 ...rest,
-                ...(mediaUrls !== undefined ? { mediaUrls: Array.from(mediaUrls) } : {}),
+                ...(profileImageUrl !== undefined ? {
+                    profileImageUrl: toRelativePath(profileImageUrl) ?? profileImageUrl ?? null,
+                } : {}),
+                ...(mediaUrls !== undefined ? { mediaUrls: Array.from(mediaUrls).map((url) => toRelativePath(url) ?? url) } : {}),
                 ...(tags !== undefined ? { tags: Array.from(tags) } : {}),
                 ...(socialMetrics !== undefined ? {
                     socialMetrics: {

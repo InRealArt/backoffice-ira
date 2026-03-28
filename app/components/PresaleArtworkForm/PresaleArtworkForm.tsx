@@ -25,6 +25,7 @@ import {
   uploadImageToLandingFolder,
   ensureFolderExists,
 } from "@/lib/r2/storage";
+import { getImageUrl } from "@/lib/r2/url";
 import { convertToWebPIfNeeded } from "@/lib/utils/webp-converter";
 import { normalizeString, getArtistFullName } from "@/lib/utils";
 import type { ArtistName } from "@/lib/types/artist";
@@ -406,8 +407,9 @@ export default function PresaleArtworkForm({
           );
 
           // Mettre à jour le champ du formulaire
+          // finalImageUrl est maintenant un chemin relatif depuis uploadFileToR2
           setValue("imageUrl", finalImageUrl);
-          setImagePreview(finalImageUrl);
+          setImagePreview(getImageUrl(finalImageUrl) ?? finalImageUrl);
 
           // Fermer la modale après un court délai
           setTimeout(() => {
