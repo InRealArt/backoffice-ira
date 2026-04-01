@@ -24,6 +24,9 @@
     "prisma:copy-schema": "cp node_modules/@InRealArt/prisma-schema/schema.prisma prisma/schema.prisma",
     "update:schema:inrealart": "npm run install:safe:prisma:inrealart && npm run prisma:copy-schema && npx prisma generate",
     "umami-stats": "tsx scripts/get-umami-stats.ts",
+    "sync:audit": "tsx scripts/sync-audit-gcs-to-r2.ts",
+    "sync:copy": "tsx scripts/sync-copy-missing-to-r2.ts",
+    "sync:copy:dry": "tsx scripts/sync-copy-missing-to-r2.ts --dry-run",
     "postinstall": "bash scripts/postinstall.sh"
   },
   "dependencies": {
