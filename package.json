@@ -27,6 +27,9 @@
     "sync:audit": "tsx scripts/sync-audit-gcs-to-r2.ts",
     "sync:copy": "tsx scripts/sync-copy-missing-to-r2.ts",
     "sync:copy:dry": "tsx scripts/sync-copy-missing-to-r2.ts --dry-run",
+    "migrate:db": "tsx scripts/migrate-db.ts",
+    "migrate:db:dry": "tsx scripts/migrate-db.ts --dry-run",
+    "migrate:db:upsert": "tsx scripts/migrate-db.ts --mode=upsert",
     "postinstall": "bash scripts/postinstall.sh"
   },
   "dependencies": {
@@ -76,7 +79,7 @@
     "next-intl": "^4.6.1",
     "next-themes": "^0.4.6",
     "nuqs": "^2.7.0",
-    "pg": "^8.18.0",
+    "pg": "^8.20.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-dropzone": "^14.3.8",

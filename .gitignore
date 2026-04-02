@@ -54,3 +54,8 @@ email-introduction-artistes.md
 
 # Prisma Files  
 src/generated/prisma/*
+
+
+# Backups DB
+backups/
+.env.backup*
