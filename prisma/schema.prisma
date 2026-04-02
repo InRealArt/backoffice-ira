@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
     provider = "postgresql"
-    url  	 = env("DATABASE_URL")
     schemas  = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "landingUgc", "backoffice", "statistics"]
 }
 
@@ -13,7 +12,7 @@ datasource db {
 model Order {
     id          Int      @id @default(autoincrement())
     orderNumber String   @unique // Obligatoire pour traçabilité commerciale
-    createdAt   DateTime @default(now()) // Date de transaction obligatoireack
+    createdAt   DateTime @default(now()) // Date de transaction obligatoire
     updatedAt   DateTime @updatedAt // Dernière mise à jour
 
     // Statut de la commande (OBLIGATOIRE pour gestion cycle de vie)
@@ -537,6 +536,7 @@ model LandingArtist {
     artist              Artist                 @relation(fields: [artistId], references: [id], onDelete: Cascade)
     physicalCollections PhysicalCollection[]
     ugcArtistProfile    LandingUgcArtistProfile?
+    exhibitions         ExhibitionArtist[]
     @@index([artistId])
     @@schema("landing")
 }
@@ -1372,6 +1372,37 @@ model SeoPostTag {
     @@schema("landing")
 }
 
+// Exposition physique ou événement auquel participent des artistes de la landing
+model Exhibition {
+    id        Int      @id @default(autoincrement())
+    name      String                          // Nom de l'exposition
+    startDate DateTime                        // Date de début
+    endDate   DateTime                        // Date de fin
+    address   String                          // Adresse de l'événement
+    imageUrl     String?                         // URL Cloudflare de l'image illustrant l'exposition
+    description  String?                         // Description de l'exposition
+    linkToEvent  String?                         // Lien vers l'événement externe
+    artists      ExhibitionArtist[]
+
+    @@schema("landing")
+}
+
+// Table de jointure pour la relation many-to-many Exhibition <-> LandingArtist
+model ExhibitionArtist {
+    id              Int      @id @default(autoincrement())
+    exhibitionId    Int
+    landingArtistId Int
+
+    exhibition    Exhibition    @relation(fields: [exhibitionId], references: [id], onDelete: Cascade)
+    landingArtist LandingArtist @relation(fields: [landingArtistId], references: [id], onDelete: Cascade)
+
+    @@unique([exhibitionId, landingArtistId])
+    @@index([exhibitionId])
+    @@index([landingArtistId])
+    @@map("ExhibitionArtist")
+    @@schema("landing")
+}
+
 model StickyFooter {
     id                    Int       @id @default(autoincrement())
     activeOnAllPages      Boolean   @default(false)
@@ -1774,4 +1805,48 @@ model LandingUgcArtistSocialMetrics {
 
     @@index([landingUgcArtistProfileId])
     @@schema("landingUgc")
+}
+
+// Réponses au formulaire Google de candidature artiste InRealArt
+// Source : https://docs.google.com/forms/d/1RxKNtLG2XZ7BB2CpzGI4yJZCjSJ3cSXwOHQKgwVC4gA
+model ArtistApplicationForm {
+    id        Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    // Section 1 : Informations personnelles
+    fullName      String // Nom complet
+    artistName    String? // Nom d'artiste (si différent)
+    email         String // Adresse email
+    phone         String // Numéro de téléphone
+    portfolioLinks String // Liens site web, portfolio, réseaux sociaux
+
+    // Section 2 : Présentation artistique
+    careerDescription  String // Événements significatifs (formation, expos, collaborations)
+    stylesAndMediums   String // Styles et médiums utilisés
+    artisticMessage    String // Message ou thème principal de l'œuvre
+
+    // Section 3 : Informations sur les œuvres
+    hasPhysicalWorks        Boolean // Œuvres physiques disponibles à la vente
+    physicalWorksCount      String? // Nombre d'œuvres disponibles si oui
+    canProduceWorks         String? // Capacité à produire si non
+    worksProducedPerYear    String? // Production annuelle moyenne
+    worksSoldLastYear       String? // Œuvres vendues sur 12 derniers mois
+    averageSellingPrice     String? // Prix de vente moyen par œuvre
+    annualRevenue           String? // Chiffre d'affaires annuel issu des ventes
+    worksSoldAnnually       String? // Nombre d'œuvres vendues par an
+    seasonalPatterns        String? // Saisonnalité des ventes
+    directVsGalleryPercent  String? // Part vente directe vs galeries
+    salesChannels           String? // Canaux de vente utilisés
+    marketplacePresence     String? // Présence sur marketplaces
+    newsletterSubscribers   String? // Nombre d'abonnés newsletter
+    socialMediaFollowers    String? // Nombre d'abonnés réseaux sociaux
+    websiteUniqueVisitors   String? // Visiteurs uniques site web
+
+    // Section 4 : Aspects juridiques et droits
+    hasLegalRestrictions    Boolean // Restrictions légales ou contractuelles sur les œuvres
+    willingToPromote        Boolean // Prêt à promouvoir le projet sur ses réseaux
+
+    @@index([email])
+    @@schema("landing")
 }
