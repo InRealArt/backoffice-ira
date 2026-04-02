@@ -5,12 +5,6 @@
 const R2_BASE_URL = process.env.NEXT_PUBLIC_R2_PUBLIC_URL ?? ''
 
 /**
- * Custom domain Cloudflare alias pour R2.
- * Utilisé pour la rétrocompatibilité avec les URLs legacy.
- */
-const R2_CUSTOM_DOMAIN = 'https://images.inrealart.com'
-
-/**
  * Bucket Firebase Storage (ancien système).
  * URL de base pour la rétrocompatibilité.
  */
@@ -26,9 +20,6 @@ const FIREBASE_STORAGE_BASE = 'https://firebasestorage.googleapis.com/v0/b/'
  * // => 'backoffice/artists/foo.webp'
  *
  * toRelativePath('https://pub-xxx.r2.dev/artists/Jean Dupont/profile.webp')
- * // => 'artists/Jean Dupont/profile.webp'
- *
- * toRelativePath('https://images.inrealart.com/artists/Jean Dupont/profile.webp')
  * // => 'artists/Jean Dupont/profile.webp'
  *
  * toRelativePath('artists/Jean Dupont/profile.webp')
@@ -65,11 +56,6 @@ export function toRelativePath(url: string | null | undefined): string | null {
     return url.slice(R2_BASE_URL.length).replace(/^\//, '')
   }
 
-  // R2 custom domain: retirer le prefix
-  if (url.startsWith(R2_CUSTOM_DOMAIN)) {
-    return url.slice(R2_CUSTOM_DOMAIN.length).replace(/^\//, '')
-  }
-
   // URL inconnue: retourner null pour signaler que le format n'est pas reconnu
   return null
 }
@@ -99,7 +85,10 @@ export function getImageUrl(pathOrUrl: string | null | undefined): string | null
   }
 
   // Reconstruire l'URL complète avec le base URL actuel (R2)
-  return `${R2_BASE_URL}/${relativePath}`.replace(/\/+/g, '/')
+  // On normalise uniquement les slashes dans le chemin, pas dans le protocole (https://)
+  const base = R2_BASE_URL.replace(/\/+$/, '') // retirer les slashes finaux du base URL
+  const path = relativePath.replace(/^\/+/, '') // retirer les slashes initiaux du chemin
+  return `${base}/${path}`
 }
 
 /**

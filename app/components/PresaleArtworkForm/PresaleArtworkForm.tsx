@@ -25,7 +25,7 @@ import {
   uploadImageToLandingFolder,
   ensureFolderExists,
 } from "@/lib/r2/storage";
-import { getImageUrl } from "@/lib/r2/url";
+import { getImageUrl, getImageUrlWithCacheBuster } from "@/lib/r2/url";
 import { convertToWebPIfNeeded } from "@/lib/utils/webp-converter";
 import { normalizeString, getArtistFullName } from "@/lib/utils";
 import type { ArtistName } from "@/lib/types/artist";
@@ -220,22 +220,29 @@ export default function PresaleArtworkForm({
             setValue("height", presaleArtwork.height?.toString() || "");
             setValue("isSold", presaleArtwork.isSold ?? false);
             setValue("isTopArtwork", presaleArtwork.isTopArtwork ?? false);
-            setImagePreview(presaleArtwork.imageUrl);
+            setImagePreview(getImageUrlWithCacheBuster(presaleArtwork.imageUrl) ?? "");
 
             // Initialiser les URLs de mockups
-            if (presaleArtwork.mockupUrls) {
+            const rawMockupUrls = presaleArtwork.mockupUrls;
+            if (
+              rawMockupUrls &&
+              (typeof rawMockupUrls !== "string" ||
+                rawMockupUrls.trim() !== "")
+            ) {
               try {
-                const parsedMockups = JSON.parse(
-                  presaleArtwork.mockupUrls as string
-                );
+                const parsedMockups =
+                  typeof rawMockupUrls === "string"
+                    ? JSON.parse(rawMockupUrls)
+                    : rawMockupUrls;
                 // Conversion d'anciens formats (simples URLs) vers le nouveau format {name, url}
+                // + normalisation des URLs legacy (Firebase, custom domain R2) vers R2 absolu
                 if (Array.isArray(parsedMockups)) {
                   setMockupUrls(
                     parsedMockups.map((item) => {
                       if (typeof item === "string") {
-                        return { name: "", url: item };
+                        return { name: "", url: getImageUrl(item) ?? item };
                       } else if (typeof item === "object" && item.url) {
-                        return item;
+                        return { ...item, url: getImageUrl(item.url) ?? item.url };
                       }
                       return { name: "", url: "" };
                     })
@@ -409,7 +416,7 @@ export default function PresaleArtworkForm({
           // Mettre à jour le champ du formulaire
           // finalImageUrl est maintenant un chemin relatif depuis uploadFileToR2
           setValue("imageUrl", finalImageUrl);
-          setImagePreview(getImageUrl(finalImageUrl) ?? finalImageUrl);
+          setImagePreview(getImageUrlWithCacheBuster(finalImageUrl) ?? finalImageUrl);
 
           // Fermer la modale après un court délai
           setTimeout(() => {
@@ -709,6 +716,25 @@ export default function PresaleArtworkForm({
   const isSold = watch("isSold") ?? false;
   const isTopArtwork = watch("isTopArtwork") ?? false;
 
+  const isValidRemoteImageUrl = (url: string): boolean => {
+    if (url.startsWith("data:") || url.startsWith("blob:")) return false;
+    try {
+      const parsed = new URL(url);
+      // Vérifier que le hostname est dans les remotePatterns configurés dans next.config.ts
+      // pour éviter des erreurs 400 de Next.js Image Optimization
+      const allowedHostnames = [
+        "pub-d7df68395d644bd3bc80d24168d6d8be.r2.dev",
+        "images.inrealart.com",
+        "firebasestorage.googleapis.com",
+      ];
+      return allowedHostnames.some(
+        (h) => parsed.hostname === h || parsed.hostname.endsWith(`.${h}`)
+      );
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="form-container">
       <div className="form-card">
@@ -833,7 +859,7 @@ export default function PresaleArtworkForm({
               disabled={isSubmitting || isArtistReadOnly}
               key={`artist-select-${artists.length}-${defaultArtistId || ""}`}
             >
-              <option value="">{t("fields.selectArtist")}</option>
+              <option key="default" value="">{t("fields.selectArtist")}</option>
               {artists.map((artist) => (
                 <option key={artist.id} value={artist.id.toString()}>
                   {getArtistFullName(artist)}
@@ -931,12 +957,25 @@ export default function PresaleArtworkForm({
                     overflow: "hidden",
                   }}
                 >
-                  <Image
-                    src={imagePreview}
-                    alt={t("fields.imagePreview")}
-                    fill
-                    style={{ objectFit: "cover" }}
-                  />
+                  {imagePreview.startsWith("data:") || !isValidRemoteImageUrl(imagePreview) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={imagePreview}
+                      alt={t("fields.imagePreview")}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      src={imagePreview}
+                      alt={t("fields.imagePreview")}
+                      fill
+                      style={{ objectFit: "cover" }}
+                    />
+                  )}
                   <button
                     type="button"
                     onClick={handleRemoveMainImage}
