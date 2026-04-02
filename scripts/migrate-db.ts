@@ -6,7 +6,7 @@
  * table par table, en respectant l'ordre topologique des dépendances FK.
  *
  * Usage:
- *   tsx scripts/migrate-db.ts [--schemas=public,landing,...] [--dry-run] [--batch=500]
+ *   tsx scripts/migrate-db.ts [--schemas=public,landing,...] [--dry-run] [--batch=500] [--exclude-tables=schema.table,...]
  *
  * Variables d'environnement (fichier .env.migration ou export) :
  *   SOURCE_DATABASE_URL   — URL de la DB source (postgresql://...)
@@ -20,6 +20,7 @@
  *   tsx scripts/migrate-db.ts --schemas=public,landing,backoffice
  *   tsx scripts/migrate-db.ts --dry-run
  *   tsx scripts/migrate-db.ts --batch=1000
+ *   tsx scripts/migrate-db.ts --exclude-tables=public.spatial_ref_sys,auth.sessions
  */
 
 import { Pool, PoolClient } from "pg";
@@ -65,6 +66,10 @@ const MODE = "upsert" as const;
 const DRY_RUN = args.includes("--dry-run");
 const BATCH_SIZE = parseInt(getArg("batch") ?? "500", 10);
 const REQUESTED_SCHEMAS = getArg("schemas")?.split(",").map((s) => s.trim());
+const EXCLUDED_TABLES: string[] = getArg("exclude-tables")
+  ?.split(",")
+  .map((s) => s.trim())
+  .filter(Boolean) ?? [];
 
 // ---------------------------------------------------------------------------
 // Config
@@ -238,6 +243,24 @@ async function fetchTables(client: PoolClient, schemas: string[]): Promise<Table
     const primaryKeys = pkRes.rows.map((r) => r.column_name);
 
     // Clés étrangères
+    //
+    // IMPORTANT — FK cross-schéma : le JOIN sur ccu NE DOIT PAS filtrer sur
+    // ccu.table_schema = tc.table_schema.
+    //
+    // Pour une FK cross-schéma (ex: backoffice.user → public.Artist, ou
+    // landing.LandingArtist → public.Artist), ccu.table_schema est le schéma
+    // de la table référencée (ex: "public") tandis que tc.table_schema est le
+    // schéma de la table source (ex: "backoffice" / "landing").
+    // Ajouter ce filtre fait que le JOIN ne retourne aucune ligne → la FK est
+    // silencieusement ignorée dans le tri topologique → violation d'intégrité FK.
+    //
+    // Relations cross-schéma connues dans ce projet (Prisma schema.prisma) :
+    //   backoffice."user"   (BackofficeAuthUser) → public."Artist"  (via artistId)
+    //   backoffice."Item"                        → public."Artist"  (via artistId)
+    //   landing."LandingArtist"                  → public."Artist"  (via artistId)
+    //   landing."LandingArtistKeyWork"           → public."PresaleArtwork" (via presaleArtworkId)
+    //
+    // Fix : supprimer la condition AND ccu.table_schema = tc.table_schema
     const fkRes = await client.query<{
       constraint_name: string;
       column_name: string;
@@ -257,7 +280,8 @@ async function fetchTables(client: PoolClient, schemas: string[]): Promise<Table
         AND tc.table_schema = kcu.table_schema
       JOIN information_schema.constraint_column_usage ccu
         ON ccu.constraint_name = tc.constraint_name
-        AND ccu.table_schema = tc.table_schema
+        -- Pas de filtre AND ccu.table_schema = tc.table_schema ici :
+        -- pour les FK cross-schéma, ccu.table_schema diffère de tc.table_schema.
       WHERE tc.constraint_type = 'FOREIGN KEY'
         AND tc.table_schema = $1
         AND tc.table_name = $2
@@ -625,6 +649,7 @@ async function main(): Promise<void> {
   log(`Mode        : ${BOLD}upsert${RESET}${DRY_RUN ? ` ${YELLOW}(DRY-RUN)${RESET}` : ""}`);
   log(`Batch size  : ${BATCH_SIZE} lignes`);
   log(`Schémas     : ${SCHEMAS_TO_MIGRATE.join(", ")}`);
+  log(`Exclues     : ${EXCLUDED_TABLES.length > 0 ? EXCLUDED_TABLES.join(", ") : "(aucune)"}`);
   log(`Source      : ${maskUrl(SOURCE_URL!)}`);
   log(`Cible       : ${maskUrl(TARGET_URL!)}`);
   log("");
@@ -657,8 +682,14 @@ async function main(): Promise<void> {
 
     // Introspection
     logInfo("Introspection du schéma source...");
-    const tables = await fetchTables(sourceClient, SCHEMAS_TO_MIGRATE);
+    let tables = await fetchTables(sourceClient, SCHEMAS_TO_MIGRATE);
     logSuccess(`${tables.length} tables trouvées dans ${SCHEMAS_TO_MIGRATE.length} schéma(s).`);
+
+    // Exclusion des tables demandées
+    if (EXCLUDED_TABLES.length > 0) {
+      tables = tables.filter((t) => !EXCLUDED_TABLES.includes(`${t.schema}.${t.table}`));
+      logInfo(`Tables exclues: ${EXCLUDED_TABLES.join(", ")} — ${tables.length} tables restantes.`);
+    }
 
     if (tables.length === 0) {
       logWarn("Aucune table trouvée. Vérifiez les noms de schémas.");

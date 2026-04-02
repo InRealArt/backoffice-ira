@@ -117,6 +117,7 @@ Le script utilise exclusivement le mode **upsert** :
 | Option | Valeur | Défaut | Description |
 |---|---|---|---|
 | `--schemas` | `public,landing,...` | tous les schémas | Restreindre à certains schémas |
+| `--exclude-tables` | `schema.table,...` | aucune | Exclure des tables spécifiques (DDL + données) |
 | `--batch` | entier | `500` | Nombre de lignes lues par batch |
 | `--dry-run` | — | off | Affiche les tables sans écrire (pas de DDL) |
 | `--skip-schema` | — | off | Saute l'étape DDL (tables supposées présentes) |
@@ -167,11 +168,17 @@ Pour migrer seulement certains schémas (DDL + données) :
 # 6. Migration avec gros batch (serveurs puissants)
 ./scripts/migrate-db.sh --batch=2000
 
-# 7. Passer les URLs directement sans fichier .env.migration
+# 7. Exclure des tables spécifiques (ex: logs, sessions, données volumineuses)
+./scripts/migrate-db.sh --exclude-tables=public.AuditLog,auth.sessions
+
+# 8. Combiner exclusions et restriction de schémas
+./scripts/migrate-db.sh --schemas=public,marketplace --exclude-tables=public.SpatialRefSys
+
+# 9. Passer les URLs directement sans fichier .env.migration
 SOURCE_DATABASE_URL="postgresql://..." TARGET_DATABASE_URL="postgresql://..." \
   ./scripts/migrate-db.sh --dry-run
 
-# 8. Ré-appliquer uniquement le DDL sans migrer les données (debug schéma)
+# 10. Ré-appliquer uniquement le DDL sans migrer les données (debug schéma)
 SOURCE_DATABASE_URL="postgresql://..." TARGET_DATABASE_URL="postgresql://..." \
   pg_dump --schema-only --no-owner --no-acl --clean --if-exists "$SOURCE_DATABASE_URL" \
   | psql "$TARGET_DATABASE_URL"

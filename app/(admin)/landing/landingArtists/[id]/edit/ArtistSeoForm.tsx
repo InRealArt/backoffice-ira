@@ -12,7 +12,7 @@ import { upsertLandingArtistSeoAction } from '@/lib/actions/landing-artist-seo-a
 import { updateLandingArtistAction } from '@/lib/actions/landing-artist-actions'
 import { getImageUrl } from '@/lib/r2/url'
 
-const MAX_KEY_WORKS = 3
+const MAX_KEY_WORKS = 10
 
 const seoSchema = z.object({
   isTopArtist: z.boolean().default(false),

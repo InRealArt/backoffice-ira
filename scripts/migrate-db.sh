@@ -10,11 +10,12 @@
 #   ./scripts/migrate-db.sh [OPTIONS]
 #
 # Options:
-#   --schemas=a,b,c    Schémas à migrer (défaut: tous les schémas du projet)
-#   --batch=500        Taille des batches de lecture (défaut: 500)
-#   --dry-run          Simule sans écrire en cible
-#   --skip-schema      Ne pas appliquer le schéma DDL (tables déjà créées)
-#   --help             Affiche cette aide
+#   --schemas=a,b,c                    Schémas à migrer (défaut: tous les schémas du projet)
+#   --batch=500                        Taille des batches de lecture (défaut: 500)
+#   --dry-run                          Simule sans écrire en cible
+#   --skip-schema                      Ne pas appliquer le schéma DDL (tables déjà créées)
+#   --exclude-tables=schema.t1,...     Exclure des tables (ni DDL ni données)
+#   --help                             Affiche cette aide
 #
 # Variables d'environnement (dans .env.migration ou exportées) :
 #   SOURCE_DATABASE_URL  — URL postgres de la base source
@@ -30,6 +31,7 @@
 #   ./scripts/migrate-db.sh --dry-run
 #   ./scripts/migrate-db.sh --batch=1000
 #   ./scripts/migrate-db.sh --skip-schema   # tables déjà présentes en cible
+#   ./scripts/migrate-db.sh --exclude-tables=public.spatial_ref_sys,auth.sessions
 #
 #   Passer les URLs directement:
 #   SOURCE_DATABASE_URL="postgresql://..." TARGET_DATABASE_URL="postgresql://..." \
