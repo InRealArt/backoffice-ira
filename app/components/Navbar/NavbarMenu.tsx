@@ -678,6 +678,32 @@ export default function NavbarMenu() {
                   )}
                 </a>
               </li>
+              {isAdmin && (
+                <li>
+                  <a
+                    onClick={() =>
+                      handleMenuNavigation(
+                        "/landing/exhibitions",
+                        "exhibitions"
+                      )
+                    }
+                    className="flex items-center gap-2"
+                  >
+                    {isItemNavigating("exhibitions") ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm"></span>
+                        <MapPin size={18} />
+                        <span>{t("landing.exhibitions")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <MapPin size={18} />
+                        <span>{t("landing.exhibitions")}</span>
+                      </>
+                    )}
+                  </a>
+                </li>
+              )}
               <li>
                 <a
                   onClick={() =>

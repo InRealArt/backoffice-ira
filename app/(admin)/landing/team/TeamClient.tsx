@@ -19,6 +19,15 @@ interface TeamClientProps {
   teamMembers: Team[]
 }
 
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export default function TeamClient({ teamMembers }: TeamClientProps) {
   const [isMobile, setIsMobile] = useState(false)
   const router = useRouter()
@@ -91,7 +100,7 @@ export default function TeamClient({ teamMembers }: TeamClientProps) {
         <div className="d-flex align-items-center gap-sm">
           {loadingMemberId === member.id && <LoadingSpinner size="small" message="" inline />}
           <div className="d-flex align-items-center gap-md">
-            {member.photoUrl1 && (
+            {member.photoUrl1 && isValidUrl(member.photoUrl1) && (
               <div style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', position: 'relative' }}>
                 <Image
                   src={member.photoUrl1}

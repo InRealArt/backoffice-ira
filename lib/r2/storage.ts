@@ -612,6 +612,63 @@ export async function uploadImageToLandingFolder(
 }
 
 /**
+ * Upload une image vers R2 dans le répertoire exhibitions/<Nom exposition>/
+ *
+ * @param imageFile - Le fichier image à uploader
+ * @param exhibitionName - Nom de l'exposition (utilisé comme nom de dossier)
+ * @param fileName - Nom du fichier (sans extension)
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns URL de l'image uploadée
+ */
+export async function uploadImageToExhibitionFolder(
+    imageFile: File,
+    exhibitionName: string,
+    fileName: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+
+        if (!conversionResult.success) {
+            const errorMessage =
+                conversionResult.error ||
+                "Erreur lors de la conversion de l'image en WebP"
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        onUploadStatus?.('in-progress')
+        const storagePath = `exhibitions/${exhibitionName}/${fileName}.webp`
+
+        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
+
+        onUploadStatus?.('completed')
+
+        return imageUrl
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image d'exposition:", error)
+        const errorMessage =
+            error instanceof Error
+                ? error.message
+                : "Erreur inconnue lors de l'upload"
+
+        if (errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp')) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+
+        throw error
+    }
+}
+
+/**
  * Upload une image vers R2 dans le répertoire marketplace d'un artiste
  *
  * @param imageFile - Le fichier image à uploader
