@@ -1,20 +1,16 @@
 import { PrismaClient } from '@/src/generated/prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
-import { Pool } from 'pg'
+import { PrismaNeon } from '@prisma/adapter-neon'
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
 function createPrismaClient(): PrismaClient {
-  const connectionString =
-    (process.env.USE_DIRECT_PRISMA === '1' ? process.env.DIRECT_URL : undefined) ??
-    process.env.DATABASE_URL
+  const connectionString = process.env.DATABASE_URL
 
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set')
   }
 
-  const pool = new Pool({ connectionString })
-  const adapter = new PrismaPg(pool)
+  const adapter = new PrismaNeon({ connectionString })
 
   return new PrismaClient({
     adapter,
