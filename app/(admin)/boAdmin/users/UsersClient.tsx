@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import type { WhiteListedUser, Artist } from '@/src/generated/prisma/browser'
 import {
@@ -14,11 +14,14 @@ import {
   Column,
 } from '../../../components/PageLayout/index'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
+import SortableHeader from './SortableHeader'
 
 type UserWithArtist = WhiteListedUser & { artist: Artist | null }
 
 interface UsersClientProps {
   users: UserWithArtist[]
+  currentSort: string
+  currentOrder: string
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -33,7 +36,7 @@ const ROLE_VARIANTS: Record<string, 'info' | 'success' | 'warning' | 'danger'> =
   galleryManager: 'info',
 }
 
-export default function UsersClient({ users }: UsersClientProps) {
+export default function UsersClient({ users, currentSort, currentOrder }: UsersClientProps) {
   const router = useRouter()
   const [loadingUserId, setLoadingUserId] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
@@ -57,7 +60,16 @@ export default function UsersClient({ users }: UsersClientProps) {
   const columns: Column<UserWithArtist>[] = [
     {
       key: 'email',
-      header: 'Email',
+      header: (
+        <Suspense fallback={<span>Email</span>}>
+          <SortableHeader
+            label="Email"
+            columnKey="email"
+            currentSort={currentSort}
+            currentOrder={currentOrder}
+          />
+        </Suspense>
+      ),
       render: (user) => (
         <div className="d-flex align-items-center gap-sm">
           {loadingUserId === user.id && <LoadingSpinner size="small" message="" inline />}
@@ -69,7 +81,16 @@ export default function UsersClient({ users }: UsersClientProps) {
     },
     {
       key: 'role',
-      header: 'Rôle',
+      header: (
+        <Suspense fallback={<span>Rôle</span>}>
+          <SortableHeader
+            label="Rôle"
+            columnKey="role"
+            currentSort={currentSort}
+            currentOrder={currentOrder}
+          />
+        </Suspense>
+      ),
       width: '180px',
       render: (user) =>
         user.role ? (
@@ -83,7 +104,16 @@ export default function UsersClient({ users }: UsersClientProps) {
     },
     {
       key: 'artist',
-      header: 'Artiste / Galerie associé(e)',
+      header: (
+        <Suspense fallback={<span>Artiste / Galerie associé(e)</span>}>
+          <SortableHeader
+            label="Artiste / Galerie associé(e)"
+            columnKey="artist"
+            currentSort={currentSort}
+            currentOrder={currentOrder}
+          />
+        </Suspense>
+      ),
       render: (user) => {
         if (!user.artist) return <span className="text-muted">—</span>
         const label = user.artist.pseudo

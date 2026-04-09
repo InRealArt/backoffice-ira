@@ -196,15 +196,25 @@ export async function checkUserExists(
   }
 }
 
-export async function getWhiteListedUsers(): Promise<(WhiteListedUser & { artist: Artist | null })[]> {
+export type UsersOrderBy = {
+  field: 'email' | 'id' | 'role' | 'artist'
+  direction: 'asc' | 'desc'
+}
+
+export async function getWhiteListedUsers(
+  orderBy: UsersOrderBy = { field: 'id', direction: 'desc' }
+): Promise<(WhiteListedUser & { artist: Artist | null })[]> {
   try {
+    const prismaOrderBy =
+      orderBy.field === 'artist'
+        ? { artist: { name: orderBy.direction } }
+        : { [orderBy.field]: orderBy.direction }
+
     const users = await prisma.whiteListedUser.findMany({
       include: {
         artist: true
       },
-      orderBy: {
-        id: 'desc'
-      }
+      orderBy: prismaOrderBy
     })
 
     return users

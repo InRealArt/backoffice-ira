@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation'
 import { getWhiteListedUserById } from '@/lib/actions/prisma-actions'
 import UserEditForm from './UserEditForm'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Modifier un utilisateur | Administration',
   description: 'Modifier les informations d\'un utilisateur backoffice',
