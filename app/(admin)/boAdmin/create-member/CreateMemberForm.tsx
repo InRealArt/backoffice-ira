@@ -11,6 +11,7 @@ import Button from '@/app/components/Button/Button'
 import { useRouter } from 'next/navigation'
 import type { ArtistListItemBase } from '@/lib/types/artist'
 import { getArtistFullName } from '@/lib/utils'
+import { BackofficeUserRoles, ROLE_OPTIONS } from '@/lib/types/roles'
 
 export default function CreateMemberForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -161,9 +162,9 @@ export default function CreateMemberForm() {
                 {...register('role')}
                 className="form-select"
               >
-                <option value="artist">Artiste</option>
-                <option value="galleryManager">Responsable de galerie</option>
-                <option value="admin">Administrateur</option>
+                {ROLE_OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
               </select>
               {errors.role && (
                 <p className="form-error text-danger">{errors.role.message}</p>
@@ -171,7 +172,7 @@ export default function CreateMemberForm() {
             </div>
 
             {/* Liste déroulante des artistes si le rôle est "artist" */}
-            {selectedRole === 'artist' && (
+            {selectedRole === BackofficeUserRoles.artist && (
               <div className="form-group">
                 <label htmlFor="artistId" className="form-label">
                   Artiste associé <span className="text-muted">(optionnel)</span>
@@ -212,8 +213,8 @@ export default function CreateMemberForm() {
               </div>
             )}
             
-            {/* Liste déroulante des galeries si le rôle est "galleryManager" */}
-            {selectedRole === 'galleryManager' && (
+            {/* Liste déroulante des galeries si le rôle est "galleryManager" ou "galleryLjManager" */}
+            {(selectedRole === BackofficeUserRoles.galleryManager || selectedRole === BackofficeUserRoles.galleryLjManager) && (
               <div className="form-group">
                 <label htmlFor="artistId" className="form-label">
                   Galerie associée
@@ -227,7 +228,7 @@ export default function CreateMemberForm() {
                     <select
                       id="artistId"
                       {...register('artistId', {
-                        required: selectedRole === 'galleryManager' ? 'Veuillez sélectionner une galerie' : false,
+                        required: (selectedRole === BackofficeUserRoles.galleryManager || selectedRole === BackofficeUserRoles.galleryLjManager) ? 'Veuillez sélectionner une galerie' : false,
                         valueAsNumber: true
                       })}
                       className={`form-select ${errors.artistId ? 'input-error' : ''}`}

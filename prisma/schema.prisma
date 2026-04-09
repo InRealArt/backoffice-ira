@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
     provider = "postgresql"
-    schemas  = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "landingUgc", "backoffice", "statistics"]
+    schemas  = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "landingUgc", "backoffice", "statistics", "gallery_lj"]
 }
 
 // Orders in the Marketplace
@@ -689,6 +689,7 @@ enum BackofficeUserRoles {
     admin
     artist
     galleryManager
+    galleryLjManager
 
     @@schema("backoffice")
 }
@@ -1849,4 +1850,72 @@ model ArtistApplicationForm {
 
     @@index([email])
     @@schema("landing")
+}
+
+// ---------------------------------------------------------------------------
+// Gallery LJ — modèles dédiés à la galerie Lj
+// ---------------------------------------------------------------------------
+
+// Artiste exposé dans la galerie Lj
+model GalleryLjArtist {
+    id        Int      @id @default(autoincrement())
+    firstName String?  // Prénom
+    lastName  String?  // Nom de famille
+    pseudo    String   // Nom d'artiste (obligatoire)
+    imageUrl  String?  // URL de la photo / portrait
+    visible   Boolean  @default(true)
+    createdAt DateTime @default(now())
+
+    artworks GalleryLjArtwork[]
+
+    @@schema("gallery_lj")
+}
+
+// Œuvre d'art référencée dans la galerie Lj
+model GalleryLjArtwork {
+    id           Int      @id @default(autoincrement())
+    name         String   // Nom / titre de l'œuvre
+    price        Decimal? @db.Decimal(10, 2) // Prix de vente (optionnel)
+    dimensions   String?  // Dimensions, ex. "50x70cm"
+    creationYear Int?     // Année de création
+    imageUrl     String   // URL de l'image (obligatoire)
+    visible      Boolean  @default(true)
+    artistId     Int      // FK → GalleryLjArtist
+    createdAt    DateTime @default(now())
+
+    artist      GalleryLjArtist            @relation(fields: [artistId], references: [id])
+    exhibitions GalleryLjExhibitionArtwork[]
+
+    @@index([artistId])
+    @@schema("gallery_lj")
+}
+
+// Exposition organisée par la galerie Lj
+model GalleryLjExhibition {
+    id          Int       @id @default(autoincrement())
+    name        String    // Nom de l'exposition
+    description String?   // Description libre
+    startDate   DateTime? // Date de début
+    endDate     DateTime? // Date de fin
+    location    String?   // Lieu
+    imageUrl    String?   // URL de l'image d'affiche
+    visible     Boolean   @default(true)
+    createdAt   DateTime  @default(now())
+
+    artworks GalleryLjExhibitionArtwork[]
+
+    @@schema("gallery_lj")
+}
+
+// Table de jonction Exposition ↔ Œuvre (many-to-many explicite)
+model GalleryLjExhibitionArtwork {
+    id           Int @id @default(autoincrement())
+    exhibitionId Int // FK → GalleryLjExhibition
+    artworkId    Int // FK → GalleryLjArtwork
+
+    exhibition GalleryLjExhibition @relation(fields: [exhibitionId], references: [id])
+    artwork    GalleryLjArtwork    @relation(fields: [artworkId], references: [id])
+
+    @@unique([exhibitionId, artworkId])
+    @@schema("gallery_lj")
 }

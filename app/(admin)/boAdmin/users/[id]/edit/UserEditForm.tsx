@@ -12,11 +12,12 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import type { WhiteListedUser, Artist } from '@/src/generated/prisma/browser'
 import { getArtistFullName } from '@/lib/utils'
 import type { ArtistListItemBase } from '@/lib/types/artist'
+import { BackofficeUserRoles, roleSchema, ROLE_OPTIONS } from '@/lib/types/roles'
 
 const editUserSchema = z.object({
   id: z.number(),
   email: z.string().email('Format d\'email invalide'),
-  role: z.enum(['artist', 'galleryManager', 'admin']),
+  role: roleSchema,
   artistId: z.number().nullable().optional(),
 })
 
@@ -47,7 +48,7 @@ export default function UserEditForm({ user }: UserEditFormProps) {
     defaultValues: {
       id: user.id,
       email: user.email,
-      role: (user.role as 'artist' | 'galleryManager' | 'admin') ?? 'artist',
+      role: (user.role as BackofficeUserRoles) ?? BackofficeUserRoles.artist,
       artistId: user.artistId ?? null,
     },
   })
@@ -139,9 +140,9 @@ export default function UserEditForm({ user }: UserEditFormProps) {
                 Rôle
               </label>
               <select id="role" {...register('role')} className="form-select">
-                <option value="artist">Artiste</option>
-                <option value="galleryManager">Responsable de galerie</option>
-                <option value="admin">Administrateur</option>
+                {ROLE_OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
               </select>
               {errors.role && (
                 <p className="form-error text-danger">{errors.role.message}</p>
@@ -149,7 +150,7 @@ export default function UserEditForm({ user }: UserEditFormProps) {
             </div>
 
             {/* Artiste associé */}
-            {selectedRole === 'artist' && (
+            {selectedRole === BackofficeUserRoles.artist && (
               <div className="form-group">
                 <label htmlFor="artistId" className="form-label">
                   Artiste associé <span className="text-muted">(optionnel)</span>
@@ -186,7 +187,7 @@ export default function UserEditForm({ user }: UserEditFormProps) {
             )}
 
             {/* Galerie associée */}
-            {selectedRole === 'galleryManager' && (
+            {(selectedRole === BackofficeUserRoles.galleryManager || selectedRole === BackofficeUserRoles.galleryLjManager) && (
               <div className="form-group">
                 <label htmlFor="artistId" className="form-label">
                   Galerie associée
@@ -200,7 +201,7 @@ export default function UserEditForm({ user }: UserEditFormProps) {
                     id="artistId"
                     {...register('artistId', {
                       required:
-                        selectedRole === 'galleryManager'
+                        (selectedRole === BackofficeUserRoles.galleryManager || selectedRole === BackofficeUserRoles.galleryLjManager)
                           ? 'Veuillez sélectionner une galerie'
                           : false,
                       valueAsNumber: true,
