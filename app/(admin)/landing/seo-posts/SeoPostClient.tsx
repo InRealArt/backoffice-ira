@@ -6,6 +6,7 @@ import { useQueryStates } from 'nuqs'
 import { SeoPost, SeoCategory, PostStatus, Language } from '@/src/generated/prisma/browser'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import Image from 'next/image'
+import { getImageUrl } from '@/lib/r2/url'
 import {
   PageContainer,
   PageHeader,
@@ -153,10 +154,10 @@ export default function SeoPostClient({ seoPosts, languages, categories }: SeoPo
         <div className="d-flex align-items-center gap-sm">
           {loadingPostId === post.id && <LoadingSpinner size="small" message="" inline />}
           <div className="d-flex align-items-center gap-md">
-            {post.mainImageUrl && (
+            {getImageUrl(post.mainImageUrl) && (
               <div style={{ width: '48px', height: '32px', overflow: 'hidden', position: 'relative', borderRadius: '4px' }}>
                 <Image
-                  src={post.mainImageUrl}
+                  src={getImageUrl(post.mainImageUrl)!}
                   alt={post.mainImageAlt || post.title}
                   fill
                   style={{ objectFit: 'cover' }}

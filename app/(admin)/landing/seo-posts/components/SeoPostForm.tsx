@@ -19,6 +19,8 @@ import { createSeoPost, updateSeoPost, pinSeoPost } from '@/lib/actions/seo-post
 import { getAllLanguages } from '@/lib/services/translation-service'
 import { generateSlug } from '@/lib/utils'
 import { useToast } from '@/app/components/Toast/ToastContext'
+import Image from 'next/image'
+import { getImageUrl } from '@/lib/r2/url'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -213,6 +215,7 @@ export default function SeoPostForm({
   const watchedValues = {
     categoryId: watch('categoryId'),
     title: watch('title'),
+    mainImageUrl: watch('mainImageUrl'),
   }
 
   // Génération automatique du slug à partir du titre
@@ -676,7 +679,19 @@ export default function SeoPostForm({
               placeholder="https://exemple.com/image.jpg"
               showErrorsOnlyAfterSubmit={false}
             />
-            
+
+            {getImageUrl(watchedValues.mainImageUrl) && (
+              <div style={{ position: 'relative', width: '100%', maxWidth: '320px', aspectRatio: '16/9', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e5e7eb', marginTop: '8px' }}>
+                <Image
+                  src={getImageUrl(watchedValues.mainImageUrl)!}
+                  alt="Aperçu de l'image principale"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  unoptimized
+                />
+              </div>
+            )}
+
             <InputField
               id="mainImageAlt"
               name="mainImageAlt"

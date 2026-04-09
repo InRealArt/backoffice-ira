@@ -5,6 +5,7 @@ import { FormData } from './htmlGenerator'
 import RichContentRenderer from '../BlogEditor/RichContentRenderer'
 import { HtmlTablePreview } from '../BlogEditor/ContentElements'
 import { calculateReadingTimeFromBlogContent } from '@/lib/utils/reading-time-calculator'
+import { getImageUrl } from '@/lib/r2/url'
 
 interface BlogPreviewRendererProps {
   formData: FormData
@@ -195,11 +196,11 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
       </div>
       
       <div className="prose prose-lg max-w-none">
-        {mainImageUrl && (
+        {getImageUrl(mainImageUrl) && (
           <>
-            <img 
-              src={mainImageUrl}
-              alt={mainImageAlt || 'Image principale'} 
+            <img
+              src={getImageUrl(mainImageUrl)!}
+              alt={mainImageAlt || 'Image principale'}
               className="w-full h-auto rounded-lg shadow-lg mb-4"
               onError={(e) => {
                 e.currentTarget.src = "";
