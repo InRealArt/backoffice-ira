@@ -212,7 +212,7 @@ export async function updateUserAfterSignup(
 
         // Valider role
         if (role !== undefined && role !== null) {
-            const validRoles = ['admin', 'artist', 'galleryManager']
+            const validRoles = ['admin', 'artist', 'galleryManager', 'galleryLjManager']
             if (validRoles.includes(role)) {
                 finalRole = role as any
             }
@@ -291,7 +291,7 @@ export async function updateUserAfterSignup(
 
                 // Valider role
                 if (role !== undefined && role !== null) {
-                    const validRoles = ['admin', 'artist', 'galleryManager']
+                    const validRoles = ['admin', 'artist', 'galleryManager', 'galleryLjManager']
                     if (validRoles.includes(role)) {
                         finalRole = role as any
                     }

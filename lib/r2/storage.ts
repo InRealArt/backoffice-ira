@@ -962,3 +962,56 @@ export async function uploadMockupToFirebase(
         throw error
     }
 }
+
+/**
+ * Upload une image d'artiste vers R2 dans le répertoire galleryLj/<artistSlug>/
+ *
+ * @param imageFile - Le fichier image à uploader
+ * @param artistSlug - Slug de l'artiste (slugifié, sans espaces ni accents)
+ * @param fileName - Nom du fichier (sans extension)
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns Chemin relatif du fichier uploadé
+ */
+export async function uploadGalleryLjArtistImage(
+    imageFile: File,
+    artistSlug: string,
+    fileName: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+
+        if (!conversionResult.success) {
+            const errorMessage =
+                conversionResult.error || "Erreur lors de la conversion de l'image en WebP"
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        onUploadStatus?.('in-progress')
+        // Le artistSlug est déjà construit par le formulaire (firstName + lastName ou pseudo)
+        const storagePath = `galleryLj/${artistSlug}/${fileName}.webp`
+        const relativePath = await uploadFileToR2(conversionResult.file, storagePath)
+        onUploadStatus?.('completed')
+
+        return relativePath
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image artiste galerie LJ:", error)
+        const errorMessage =
+            error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
+        if (
+            errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp')
+        ) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+        throw error
+    }
+}

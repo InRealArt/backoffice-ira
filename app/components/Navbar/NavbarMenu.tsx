@@ -49,6 +49,7 @@ export default function NavbarMenu() {
     activeItem,
     canAccessCollection,
     isAdmin,
+    isGalleryLjManager,
     isLoading,
     isNavigating,
     navigatingItem,
@@ -167,7 +168,7 @@ export default function NavbarMenu() {
     const fetchAssociatedArtist = async () => {
       const userEmail = user?.email;
 
-      if (!isAdmin && userEmail && canAccessCollection) {
+      if (!isAdmin && !isGalleryLjManager && userEmail && canAccessCollection) {
         setIsLoadingArtist(true);
         try {
           const backofficeUser = await getBackofficeUserByEmail(userEmail);
@@ -219,7 +220,7 @@ export default function NavbarMenu() {
     return () => {
       isMounted = false;
     };
-  }, [isAdmin, user?.email, canAccessCollection, pathname]);
+  }, [isAdmin, isGalleryLjManager, user?.email, canAccessCollection, pathname]);
 
   // Fermer le menu dropdown quand la page est chargée (pathname change)
   useEffect(() => {
@@ -239,6 +240,7 @@ export default function NavbarMenu() {
     if (
       canAccessCollection &&
       !isAdmin &&
+      !isGalleryLjManager &&
       !isLoadingArtist &&
       !associatedArtist
     ) {
@@ -272,7 +274,7 @@ export default function NavbarMenu() {
       );
     }
 
-    if (canAccessCollection && !isAdmin) {
+    if (canAccessCollection && !isAdmin && !isGalleryLjManager) {
       return (
         <>
           <li>
@@ -445,6 +447,34 @@ export default function NavbarMenu() {
               </li>
             </>
           )}
+        </>
+      );
+    }
+
+    if (isGalleryLjManager) {
+      return (
+        <>
+          <li>
+            <a
+              onClick={() =>
+                handleMenuNavigation("/fr/galleryLj/artists", "galleryLjArtists")
+              }
+              className="flex items-center gap-2"
+            >
+              {isItemNavigating("galleryLjArtists") ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  <Users size={18} />
+                  <span>Artistes Gallery LJ</span>
+                </>
+              ) : (
+                <>
+                  <Users size={18} />
+                  <span>Artistes Gallery LJ</span>
+                </>
+              )}
+            </a>
+          </li>
         </>
       );
     }
@@ -1266,6 +1296,7 @@ export default function NavbarMenu() {
         {/* Si l'utilisateur n'a pas d'artiste associé, afficher uniquement "Créer mon profil artiste" */}
         {canAccessCollection &&
           !isAdmin &&
+          !isGalleryLjManager &&
           !isLoadingArtist &&
           !associatedArtist && (
             <ul className="menu menu-horizontal px-1">
@@ -1291,6 +1322,7 @@ export default function NavbarMenu() {
         {/* Menu utilisateur normal */}
         {canAccessCollection &&
           !isAdmin &&
+          !isGalleryLjManager &&
           !isLoadingArtist &&
           associatedArtist && (
             <ul className="menu menu-horizontal px-1">
@@ -1414,6 +1446,28 @@ export default function NavbarMenu() {
               )}
             </ul>
           )}
+
+        {/* Menu Gallery LJ Manager */}
+        {isGalleryLjManager && (
+          <ul className="menu menu-horizontal px-1">
+            <li>
+              <a
+                onClick={() =>
+                  handleDesktopNavigation(
+                    "/fr/galleryLj/artists",
+                    "galleryLjArtists"
+                  )
+                }
+                className={`flex items-center gap-2 ${
+                  activeItem === "galleryLjArtists" ? "active" : ""
+                }`}
+              >
+                <Users size={18} />
+                Artistes Gallery LJ
+              </a>
+            </li>
+          </ul>
+        )}
 
         {/* Menu administrateur */}
         {isAdmin && (

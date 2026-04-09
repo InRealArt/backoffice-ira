@@ -9,7 +9,7 @@ import MarketplaceSubMenu from './MarketplaceSubMenu'
 import DataAdministrationSubMenu from './DataAdministrationSubMenu'
 import LandingSubMenu from './LandingSubMenu'
 import ToolsSubMenu from './ToolsSubMenu'
-import { LayoutDashboard, Image, MapPin, PlusCircle } from 'lucide-react'
+import { LayoutDashboard, Image, MapPin, PlusCircle, Users } from 'lucide-react'
 
 // Composant de fallback pour le chargement
 function SideMenuSkeleton({ isMenuCollapsed }: { isMenuCollapsed: boolean }) {
@@ -40,6 +40,7 @@ export default function SideMenu() {
     activeItem,
     canAccessCollection,
     isAdmin,
+    isGalleryLjManager,
     isLoading,
     showBackofficeAdminSubmenu,
     showBlockchainSubmenu,
@@ -87,29 +88,42 @@ export default function SideMenu() {
           icon={<LayoutDashboard size={20} />}
         />
         
-        {canAccessCollection && !isAdmin && (
+        {canAccessCollection && !isAdmin && !isGalleryLjManager && (
           <>
             <MenuSeparator isCollapsed={isMenuCollapsed} />
-            <SideMenuItem 
+            <SideMenuItem
               label="Mes œuvres physiques"
               isActive={activeItem === 'myPhysicalArtwork'}
               onClick={() => handleNavigation('/art/myPhysicalArtwork', 'myPhysicalArtwork')}
               isCollapsed={isMenuCollapsed}
               icon={<Image size={20} />}
             />
-            <SideMenuItem 
+            <SideMenuItem
               label="Adresses"
               isActive={activeItem === 'addresses'}
               onClick={() => handleNavigation('/art/addresses', 'addresses')}
               isCollapsed={isMenuCollapsed}
               icon={<MapPin size={20} />}
             />
-            <SideMenuItem 
+            <SideMenuItem
               label="Créer une œuvre physique"
               isActive={activeItem === 'createArtwork'}
               onClick={() => handleNavigation('/art/createPhysicalArtwok', 'createArtwork')}
               isCollapsed={isMenuCollapsed}
               icon={<PlusCircle size={20} />}
+            />
+          </>
+        )}
+
+        {isGalleryLjManager && (
+          <>
+            <MenuSeparator isCollapsed={isMenuCollapsed} />
+            <SideMenuItem
+              label="Artistes Gallery LJ"
+              isActive={activeItem === 'galleryLjArtists'}
+              onClick={() => handleNavigation('/fr/galleryLj/artists', 'galleryLjArtists')}
+              isCollapsed={isMenuCollapsed}
+              icon={<Users size={20} />}
             />
           </>
         )}

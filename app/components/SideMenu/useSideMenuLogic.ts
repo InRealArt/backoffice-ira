@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
 import { checkIsAdmin } from '@/lib/actions/auth-actions'
 import { useAuthorization } from '@/app/hooks/useAuthorization'
+import { useGalleryLjManager } from '@/app/hooks/useGalleryLjManager'
 
 export function useSideMenuLogic() {
   // Récupérer le pathway pour déterminer l'élément actif
@@ -40,6 +41,7 @@ export function useSideMenuLogic() {
   // Si l'utilisateur est un admin ou a accès à une collection
   const [isAdmin, setIsAdmin] = useState(false)
   const canAccessCollection = isAuthorized === true
+  const { isGalleryLjManager } = useGalleryLjManager()
 
   // État de chargement pour les vérifications d'authentification
   const isLoading = isAuthLoading || isSessionPending
@@ -180,6 +182,8 @@ export function useSideMenuLogic() {
       } else if (pathname.includes('/tools')) {
         setActiveItem('adminTools')
         setShowToolsSubmenu(true)
+      } else if (pathname.includes('/fr/galleryLj/artists')) {
+        setActiveItem('galleryLjArtists')
       }
     }
   }, [pathname])
@@ -249,6 +253,7 @@ export function useSideMenuLogic() {
     activeItem,
     canAccessCollection,
     isAdmin,
+    isGalleryLjManager,
     isLoading,
     isNavigating,
     navigatingItem,

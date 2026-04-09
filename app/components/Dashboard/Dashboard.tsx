@@ -19,7 +19,9 @@ import {
 } from "@/lib/actions/prisma-actions";
 import { getPresaleArtworkCountByArtist } from "@/lib/actions/presale-artwork-actions";
 import { useIsAdmin } from "@/app/hooks/useIsAdmin";
+import { useGalleryLjManager } from "@/app/hooks/useGalleryLjManager";
 import { DashboardStats } from "./DashboardStats";
+import { GalleryLjDashboard } from "./GalleryLjDashboard";
 import { getImageUrlWithCacheBuster } from "@/lib/r2/url";
 
 export default function Dashboard() {
@@ -60,6 +62,7 @@ export default function Dashboard() {
     setIsLoadingPhysicalCollectionsCount,
   ] = useState(true);
   const { isAdmin, isLoading } = useIsAdmin();
+  const { isGalleryLjManager, isLoading: isLoadingGalleryLjManager } = useGalleryLjManager();
 
   const truncateAddress = (address: string | undefined) => {
     if (!address) return t("notDefined");
@@ -204,7 +207,9 @@ export default function Dashboard() {
     };
   }, [isAdmin, user?.email]); // Utiliser user?.email au lieu de user pour stabiliser
 
-  if (isLoading) return <LoadingSpinner fullPage message={t("loading")} />;
+  if (isLoading || isLoadingGalleryLjManager) return <LoadingSpinner fullPage message={t("loading")} />;
+
+  if (isGalleryLjManager) return <GalleryLjDashboard />;
 
   return (
     <div className="dashboard-container">

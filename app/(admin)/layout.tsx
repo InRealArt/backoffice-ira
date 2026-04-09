@@ -7,22 +7,29 @@ import { NextIntlClientProvider } from 'next-intl'
 import Navbar from '@/app/components/Navbar/Navbar'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { useIsAdmin } from '../hooks/useIsAdmin'
+import { useGalleryLjManager } from '../hooks/useGalleryLjManager'
 import { routing } from '@/i18n/routing'
 import frMessages from '@/messages/fr.json'
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) { 
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { data: session, isPending: isSessionPending } = authClient.useSession()
   const { isAdmin, isLoading } = useIsAdmin()
+  const { isGalleryLjManager, isLoading: isRoleLoading } = useGalleryLjManager()
   const isLoggedIn = !!session
-  
+
   useEffect(() => {
     if (!isSessionPending && !isLoggedIn) {
       router.push('/sign-in')
+      return
     }
-  }, [isLoggedIn, isSessionPending, router])
+    // galleryLjManager must never land on admin routes — redirect to their home
+    if (!isSessionPending && !isLoading && !isRoleLoading && isGalleryLjManager) {
+      router.push('/fr/galleryLj/artists')
+    }
+  }, [isLoggedIn, isSessionPending, isLoading, isRoleLoading, isGalleryLjManager, router])
 
-  if (isSessionPending || isLoading) {
+  if (isSessionPending || isLoading || isRoleLoading) {
     return <LoadingSpinner message="Vérification des droits administrateur..." />
   }
   
