@@ -10,11 +10,13 @@ import {
   DataTable,
   EmptyState,
   ActionButton,
+  DeleteActionButton,
   Badge,
   Column,
 } from '../../../components/PageLayout/index'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import SortableHeader from './SortableHeader'
+import { deleteWhiteListedUser } from '@/lib/actions/prisma-actions'
 
 type UserWithArtist = WhiteListedUser & { artist: Artist | null }
 
@@ -40,6 +42,12 @@ export default function UsersClient({ users, currentSort, currentOrder }: UsersC
   const router = useRouter()
   const [loadingUserId, setLoadingUserId] = useState<number | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [localUsers, setLocalUsers] = useState<UserWithArtist[]>(users)
+
+  // Sync local state when server-provided users change
+  useEffect(() => {
+    setLocalUsers(users)
+  }, [users])
 
   useEffect(() => {
     const checkIfMobile = () => setIsMobile(window.innerWidth < 768)
@@ -55,6 +63,14 @@ export default function UsersClient({ users, currentSort, currentOrder }: UsersC
 
   const handleCreateUser = () => {
     router.push('/boAdmin/create-member')
+  }
+
+  const handleDeleteUser = async (user: UserWithArtist) => {
+    const result = await deleteWhiteListedUser(user.id)
+    if (result.success) {
+      // Optimistic local removal while revalidation propagates
+      setLocalUsers((prev) => prev.filter((u) => u.id !== user.id))
+    }
   }
 
   const columns: Column<UserWithArtist>[] = [
@@ -122,6 +138,18 @@ export default function UsersClient({ users, currentSort, currentOrder }: UsersC
         return <span>{label}</span>
       },
     },
+    {
+      key: 'actions',
+      header: <span>Actions</span>,
+      width: '120px',
+      render: (user) => (
+        <DeleteActionButton
+          onDelete={() => handleDeleteUser(user)}
+          itemName={user.email}
+          buttonSize="small"
+        />
+      ),
+    },
   ]
 
   return (
@@ -140,7 +168,7 @@ export default function UsersClient({ users, currentSort, currentOrder }: UsersC
 
       <PageContent>
         <DataTable
-          data={users}
+          data={localUsers}
           columns={columns}
           keyExtractor={(user) => user.id}
           onRowClick={handleUserClick}

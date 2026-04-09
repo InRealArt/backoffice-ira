@@ -372,6 +372,46 @@ export async function updateBackofficeUser(
   return updateWhiteListedUser(data)
 }
 
+// Supprimer un utilisateur whitelisté et l'utilisateur backoffice associé
+export async function deleteWhiteListedUser(
+  id: number
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const whiteListedUser = await prisma.whiteListedUser.findUnique({
+      where: { id },
+    })
+
+    if (!whiteListedUser) {
+      return { success: false, message: 'Utilisateur non trouvé' }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // Supprimer d'abord dans BackofficeAuthUser (par email)
+      await tx.backofficeAuthUser.deleteMany({
+        where: { email: whiteListedUser.email },
+      })
+
+      // Puis supprimer dans WhiteListedUser
+      await tx.whiteListedUser.delete({
+        where: { id },
+      })
+    })
+
+    revalidatePath('/boAdmin/users')
+
+    return { success: true, message: 'Utilisateur supprimé avec succès' }
+  } catch (error) {
+    console.error('Erreur lors de la suppression de l\'utilisateur:', error)
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Une erreur inconnue est survenue',
+    }
+  }
+}
+
 // Ajouter cette fonction pour récupérer un utilisateur par son email
 export async function getBackofficeUserByEmail(email: string) {
   try {
