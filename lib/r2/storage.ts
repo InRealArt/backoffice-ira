@@ -964,11 +964,13 @@ export async function uploadMockupToFirebase(
 }
 
 /**
- * Upload une image d'artiste vers R2 dans le répertoire galleryLj/<artistSlug>/
+ * Upload une image d'artiste vers R2 dans le répertoire galleryLj/artists/<artistSlug>/
+ *
+ * Chemin : galleryLj/artists/<artistSlug>/main_image.webp
  *
  * @param imageFile - Le fichier image à uploader
  * @param artistSlug - Slug de l'artiste (slugifié, sans espaces ni accents)
- * @param fileName - Nom du fichier (sans extension)
+ * @param fileName - Nom du fichier (sans extension, ex: "main_image")
  * @param onConversionStatus - Callback pour le statut de conversion
  * @param onUploadStatus - Callback pour le statut d'upload
  * @returns Chemin relatif du fichier uploadé
@@ -994,14 +996,120 @@ export async function uploadGalleryLjArtistImage(
         onConversionStatus?.('completed')
 
         onUploadStatus?.('in-progress')
-        // Le artistSlug est déjà construit par le formulaire (firstName + lastName ou pseudo)
-        const storagePath = `galleryLj/${artistSlug}/${fileName}.webp`
+        // Chemin normalisé : galleryLj/artists/<artistSlug>/<fileName>.webp
+        const storagePath = `galleryLj/artists/${artistSlug}/${fileName}.webp`
         const relativePath = await uploadFileToR2(conversionResult.file, storagePath)
         onUploadStatus?.('completed')
 
         return relativePath
     } catch (error) {
         console.error("Erreur lors de l'upload de l'image artiste galerie LJ:", error)
+        const errorMessage =
+            error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
+        if (
+            errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp')
+        ) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+        throw error
+    }
+}
+
+/**
+ * Upload une image d'œuvre vers R2 dans le répertoire galleryLj/artists/<artistSlug>/artworks/
+ *
+ * Chemin : galleryLj/artists/<artistSlug>/artworks/<artworkSlug>.webp
+ *
+ * @param imageFile - Le fichier image à uploader
+ * @param artistSlug - Slug de l'artiste (slugifié, sans espaces ni accents)
+ * @param artworkSlug - Slug du titre de l'œuvre (slugifié, sans espaces ni accents)
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns Chemin relatif du fichier uploadé
+ */
+export async function uploadGalleryLjArtworkImage(
+    imageFile: File,
+    artistSlug: string,
+    artworkSlug: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+
+        if (!conversionResult.success) {
+            const errorMessage =
+                conversionResult.error || "Erreur lors de la conversion de l'image en WebP"
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        onUploadStatus?.('in-progress')
+        const storagePath = `galleryLj/artists/${artistSlug}/artworks/${artworkSlug}.webp`
+        const relativePath = await uploadFileToR2(conversionResult.file, storagePath)
+        onUploadStatus?.('completed')
+
+        return relativePath
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image œuvre galerie LJ:", error)
+        const errorMessage =
+            error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
+        if (
+            errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp')
+        ) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+        throw error
+    }
+}
+
+/**
+ * Upload une image d'exposition vers R2 dans le répertoire galleryLj/exhibitions/
+ *
+ * Chemin : galleryLj/exhibitions/<exhibitionSlug>/main-image.webp
+ *
+ * @param imageFile - Le fichier image à uploader
+ * @param exhibitionSlug - Slug du nom de l'exposition (slugifié, sans espaces ni accents)
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns Chemin relatif du fichier uploadé
+ */
+export async function uploadGalleryLjExhibitionImage(
+    imageFile: File,
+    exhibitionSlug: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+
+        if (!conversionResult.success) {
+            const errorMessage =
+                conversionResult.error || "Erreur lors de la conversion de l'image en WebP"
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        onUploadStatus?.('in-progress')
+        const storagePath = `galleryLj/exhibitions/${exhibitionSlug}/main-image.webp`
+        const relativePath = await uploadFileToR2(conversionResult.file, storagePath)
+        onUploadStatus?.('completed')
+
+        return relativePath
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image exposition galerie LJ:", error)
         const errorMessage =
             error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
         if (

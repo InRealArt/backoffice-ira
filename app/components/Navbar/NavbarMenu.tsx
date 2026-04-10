@@ -39,6 +39,7 @@ import {
   Receipt,
   UserCircle,
   Package,
+  CalendarDays,
 } from "lucide-react";
 
 export default function NavbarMenu() {
@@ -471,6 +472,48 @@ export default function NavbarMenu() {
                 <>
                   <Users size={18} />
                   <span>Artistes Gallery LJ</span>
+                </>
+              )}
+            </a>
+          </li>
+          <li>
+            <a
+              onClick={() =>
+                handleMenuNavigation("/fr/galleryLj/artworks", "galleryLjArtworks")
+              }
+              className="flex items-center gap-2"
+            >
+              {isItemNavigating("galleryLjArtworks") ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  <Palette size={18} />
+                  <span>Œuvres Gallery LJ</span>
+                </>
+              ) : (
+                <>
+                  <Palette size={18} />
+                  <span>Œuvres Gallery LJ</span>
+                </>
+              )}
+            </a>
+          </li>
+          <li>
+            <a
+              onClick={() =>
+                handleMenuNavigation("/fr/galleryLj/exhibitions", "galleryLjExhibitions")
+              }
+              className="flex items-center gap-2"
+            >
+              {isItemNavigating("galleryLjExhibitions") ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  <CalendarDays size={18} />
+                  <span>Expositions Gallery LJ</span>
+                </>
+              ) : (
+                <>
+                  <CalendarDays size={18} />
+                  <span>Expositions Gallery LJ</span>
                 </>
               )}
             </a>
@@ -1464,6 +1507,38 @@ export default function NavbarMenu() {
               >
                 <Users size={18} />
                 Artistes Gallery LJ
+              </a>
+            </li>
+            <li>
+              <a
+                onClick={() =>
+                  handleDesktopNavigation(
+                    "/fr/galleryLj/artworks",
+                    "galleryLjArtworks"
+                  )
+                }
+                className={`flex items-center gap-2 ${
+                  activeItem === "galleryLjArtworks" ? "active" : ""
+                }`}
+              >
+                <Palette size={18} />
+                Œuvres Gallery LJ
+              </a>
+            </li>
+            <li>
+              <a
+                onClick={() =>
+                  handleDesktopNavigation(
+                    "/fr/galleryLj/exhibitions",
+                    "galleryLjExhibitions"
+                  )
+                }
+                className={`flex items-center gap-2 ${
+                  activeItem === "galleryLjExhibitions" ? "active" : ""
+                }`}
+              >
+                <CalendarDays size={18} />
+                Expositions Gallery LJ
               </a>
             </li>
           </ul>
