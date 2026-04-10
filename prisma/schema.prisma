@@ -1863,6 +1863,7 @@ model GalleryLjArtist {
     lastName  String?  // Nom de famille
     pseudo    String   // Nom d'artiste (obligatoire)
     imageUrl  String?  // URL de la photo / portrait
+    order     Int      @default(0) // Ordre d'affichage de l'artiste
     visible   Boolean  @default(true)
     createdAt DateTime @default(now())
 
@@ -1875,10 +1876,13 @@ model GalleryLjArtist {
 model GalleryLjArtwork {
     id           Int      @id @default(autoincrement())
     name         String   // Nom / titre de l'œuvre
+    description  String?  // Description optionnelle de l'œuvre
     price        Decimal? @db.Decimal(10, 2) // Prix de vente (optionnel)
     dimensions   String?  // Dimensions, ex. "50x70cm"
     creationYear Int?     // Année de création
-    imageUrl     String   // URL de l'image (obligatoire)
+    imageUrl     String   // URL de l'image principale (obligatoire)
+    images       String[] @default([]) // URLs des images secondaires
+    order        Int      @default(0) // Ordre d'affichage de l'œuvre
     visible      Boolean  @default(true)
     artistId     Int      // FK → GalleryLjArtist
     createdAt    DateTime @default(now())
@@ -1899,6 +1903,7 @@ model GalleryLjExhibition {
     endDate     DateTime? // Date de fin
     location    String?   // Lieu
     imageUrl    String?   // URL de l'image d'affiche
+    featured    Boolean   @default(false) // Exposition mise en avant
     visible     Boolean   @default(true)
     createdAt   DateTime  @default(now())
 
