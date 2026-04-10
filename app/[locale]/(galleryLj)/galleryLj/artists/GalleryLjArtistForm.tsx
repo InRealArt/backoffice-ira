@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -33,7 +33,7 @@ const galleryLjArtistSchema = z.object({
     const hasPseudo = data.pseudo && data.pseudo.trim().length > 0
     const hasFirstName = data.firstName && data.firstName.trim().length > 0
     const hasLastName = data.lastName && data.lastName.trim().length > 0
-    
+
     return hasPseudo || (hasFirstName && hasLastName)
   },
   {
@@ -57,6 +57,8 @@ export interface GalleryLjArtistFormProps {
 // ---------------------------------------------------------------------------
 export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistFormProps) {
   const router = useRouter()
+  const params = useParams()
+  const locale = (params.locale as string) || 'fr'
   const { success, error: showError } = useToast()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -117,7 +119,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
     if (window.history.length > 1) {
       router.back()
     } else {
-      router.push('/fr/galleryLj/artists')
+      router.push(`/${locale}/galleryLj/artists`)
     }
   }
 
@@ -191,7 +193,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
 
       if (mode === 'create') {
         const result = await createGalleryLjArtist({
-          pseudo: values.pseudo,
+          pseudo: values.pseudo ?? '',
           firstName: values.firstName || null,
           lastName: values.lastName || null,
           imageUrl: imageUrl ?? null,
@@ -200,7 +202,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
 
         if (result.success) {
           success('Artiste créé avec succès')
-          router.push('/fr/galleryLj/artists')
+          router.push(`/${locale}/galleryLj/artists`)
         } else {
           showError(result.message ?? 'Erreur lors de la création')
         }
@@ -219,7 +221,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
 
         if (result.success) {
           success('Artiste mis à jour avec succès')
-          router.push('/fr/galleryLj/artists')
+          router.push(`/${locale}/galleryLj/artists`)
         } else {
           showError(result.message ?? 'Erreur lors de la mise à jour')
         }

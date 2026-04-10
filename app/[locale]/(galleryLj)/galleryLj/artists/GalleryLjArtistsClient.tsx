@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import {
@@ -46,6 +46,8 @@ export default function GalleryLjArtistsClient({
   sortDirection
 }: GalleryLjArtistsClientProps) {
   const router = useRouter()
+  const params = useParams()
+  const locale = (params.locale as string) || 'fr'
   const { success, error: showError } = useToast()
   const [artists, setArtists] = useState(initialArtists)
   const [deletingId, setDeletingId] = useState<number | null>(null)
@@ -68,7 +70,7 @@ export default function GalleryLjArtistsClient({
   }
 
   const handleRowClick = (artist: GalleryLjArtistRow) => {
-    router.push(`/fr/galleryLj/artists/${artist.id}/edit`)
+    router.push(`/${locale}/galleryLj/artists/${artist.id}/edit`)
   }
 
   const totalPages = Math.ceil(totalItems / itemsPerPage)
@@ -174,7 +176,7 @@ export default function GalleryLjArtistsClient({
         actions={
           <ActionButton
             label="Ajouter un artiste"
-            onClick={() => router.push('/fr/galleryLj/artists/create')}
+            onClick={() => router.push(`/${locale}/galleryLj/artists/create`)}
             size="small"
           />
         }
@@ -193,7 +195,7 @@ export default function GalleryLjArtistsClient({
               action={
                 <ActionButton
                   label="Ajouter un artiste"
-                  onClick={() => router.push('/fr/galleryLj/artists/create')}
+                  onClick={() => router.push(`/${locale}/galleryLj/artists/create`)}
                   variant="primary"
                 />
               }

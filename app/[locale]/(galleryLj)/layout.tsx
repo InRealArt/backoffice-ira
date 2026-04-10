@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react'
 import { authClient } from '@/lib/auth-client'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import Navbar from '@/app/components/Navbar/Navbar'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
@@ -20,18 +20,17 @@ const messages: Record<string, any> = {
 
 export default function GalleryLjLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const pathname = usePathname()
+  const params = useParams()
   const { data: session, isPending: isSessionPending } = authClient.useSession()
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
   const isLoggedIn = !!session
 
-  // Extraire la locale du pathname (ex: /fr/galleryLj/... -> fr)
-  const locale = pathname.split('/')[1] || routing.defaultLocale
+  const locale = (params.locale as string) || routing.defaultLocale
   const localeMessages = messages[locale] || messages[routing.defaultLocale]
 
   useEffect(() => {
     if (!isSessionPending && !isLoggedIn) {
-      router.push('/sign-in')
+      router.push(`/${locale}/sign-in`)
       return
     }
 
@@ -43,12 +42,12 @@ export default function GalleryLjLayout({ children }: { children: React.ReactNod
         const authorized = role === BackofficeUserRoles.galleryLjManager
         setIsAuthorized(authorized)
         if (!authorized) {
-          router.push('/')
+          router.push(`/${locale}/dashboard`)
         }
       }
       checkRole()
     }
-  }, [isLoggedIn, isSessionPending, router, session?.user?.email])
+  }, [isLoggedIn, isSessionPending, router, session?.user?.email, locale])
 
   if (isSessionPending || isAuthorized === null) {
     return <LoadingSpinner message="Vérification des droits..." />
