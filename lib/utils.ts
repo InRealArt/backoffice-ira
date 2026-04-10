@@ -135,6 +135,53 @@ export function stringToSlug(str: string): string {
 }
 
 /**
+ * Convertit les sauts de ligne d'un texte brut en balises `<br />` HTML-safe,
+ * sans risque d'injection XSS.
+ *
+ * La DB stocke les `\n` bruts (PostgreSQL les préserve nativement dans les colonnes text).
+ * Cette fonction est à appeler côté consumer (frontend/site web) au moment du rendu.
+ *
+ * Elle échappe d'abord tous les caractères HTML dangereux (`&`, `<`, `>`, `"`, `'`)
+ * avant de convertir `\n` en `<br />`, garantissant l'absence de XSS même si la
+ * valeur stockée en base contenait du contenu malveillant.
+ *
+ * Côté consumer, deux patterns d'utilisation recommandés :
+ *
+ * Pattern 1 — injection HTML (nécessite un prop d'injection HTML du framework) :
+ * ```tsx
+ * // Le résultat de formatTextToHtml() est HTML-safe (tous les chars dangereux sont échappés)
+ * // Passer la chaîne retournée à la prop d'injection HTML de votre framework
+ * const html = formatTextToHtml(artist.description ?? '')
+ * ```
+ *
+ * Pattern 2 — rendu React sans HTML brut (zéro injection HTML) :
+ * ```tsx
+ * artist.description?.split('\n').map((line, i, arr) => (
+ *   <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+ * ))
+ * ```
+ *
+ * @param text - Le texte brut tel que stocké en base (avec `\n` pour les sauts de ligne)
+ * @returns Une chaîne HTML-safe avec `<br />` à la place des sauts de ligne
+ *
+ * @example
+ * formatTextToHtml('Peintre français.\nNé en 1970.')
+ * // => 'Peintre français.<br />Né en 1970.'
+ *
+ * formatTextToHtml('<script>alert(1)</script>\nLigne 2')
+ * // => '&lt;script&gt;alert(1)&lt;/script&gt;<br />Ligne 2'
+ */
+export function formatTextToHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+        .replace(/\n/g, '<br />')
+}
+
+/**
  * Convertit une chaîne en camelCase
  * @param str - La chaîne à convertir
  * @returns La chaîne en camelCase

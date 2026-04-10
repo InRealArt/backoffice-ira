@@ -1862,7 +1862,9 @@ model GalleryLjArtist {
     firstName String?  // Prénom
     lastName  String?  // Nom de famille
     pseudo    String   // Nom d'artiste (obligatoire)
+    slug      String   @unique // Slug de l'artiste
     imageUrl  String?  // URL de la photo / portrait
+    description  String?  // Description optionnelle de l'œuvre
     order     Int      @default(0) // Ordre d'affichage de l'artiste
     visible   Boolean  @default(true)
     createdAt DateTime @default(now())

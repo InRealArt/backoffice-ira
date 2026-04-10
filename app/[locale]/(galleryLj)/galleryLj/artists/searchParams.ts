@@ -13,7 +13,7 @@ const parseAsSortDirection = createParser({
 
 // Configuration des paramètres de recherche pour les artistes galerie LJ
 export const galleryLjArtistsSearchParams = {
-    sortColumn: parseAsString.withDefault('pseudo'),
+    sortColumn: parseAsString.withDefault('order'),
     sortDirection: parseAsSortDirection.withDefault('asc'),
     page: parseAsInteger.withDefault(1),
     itemsPerPage: parseAsInteger.withDefault(25)

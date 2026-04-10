@@ -16,6 +16,7 @@ import {
 } from '@/app/components/PageLayout/index'
 import { deleteGalleryLjArtist } from '@/lib/actions/gallery-lj-artist-actions'
 import { getImageUrl } from '@/lib/r2/url'
+import { ArrowUpDown } from 'lucide-react'
 
 interface GalleryLjArtistRow {
   id: number
@@ -24,6 +25,7 @@ interface GalleryLjArtistRow {
   lastName: string | null
   imageUrl: string | null
   visible: boolean
+  order: number
   createdAt: Date
   artworks: { id: number }[]
 }
@@ -92,6 +94,16 @@ export default function GalleryLjArtistsClient({
   }
 
   const columns: Column<GalleryLjArtistRow>[] = [
+    {
+      key: 'order',
+      header: 'Ordre',
+      width: '70px',
+      render: (artist) => (
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 text-sm font-semibold">
+          {artist.order}
+        </span>
+      )
+    },
     {
       key: 'id',
       header: 'ID',
@@ -174,11 +186,20 @@ export default function GalleryLjArtistsClient({
         title="Artistes — Galerie LJ"
         subtitle="Gérez les artistes exposés dans la galerie LJ"
         actions={
-          <ActionButton
-            label="Ajouter un artiste"
-            onClick={() => router.push(`/${locale}/galleryLj/artists/create`)}
-            size="small"
-          />
+          <div className="flex gap-2">
+            <ActionButton
+              label="Modifier l'ordre"
+              onClick={() => router.push(`/${locale}/galleryLj/artists/display-order`)}
+              size="small"
+              variant="secondary"
+              icon={<ArrowUpDown size={16} />}
+            />
+            <ActionButton
+              label="Ajouter un artiste"
+              onClick={() => router.push(`/${locale}/galleryLj/artists/create`)}
+              size="small"
+            />
+          </div>
         }
       />
       <PageContent>

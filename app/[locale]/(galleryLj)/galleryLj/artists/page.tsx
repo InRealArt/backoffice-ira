@@ -18,10 +18,15 @@ export default async function GalleryLjArtistsPage({ searchParams }: PageProps) 
 
   const allArtists = await getAllGalleryLjArtists()
 
+  // Sort by order field by default (or by selected column)
   const sortedArtists = [...allArtists].sort((a, b) => {
     const valueA = (a as Record<string, unknown>)[sortColumn] ?? ''
     const valueB = (b as Record<string, unknown>)[sortColumn] ?? ''
-    if (sortDirection === 'asc') {
+    
+    // For order field, always sort ascending to respect the defined order
+    const direction = sortColumn === 'order' ? 'asc' : sortDirection
+    
+    if (direction === 'asc') {
       return typeof valueA === 'string'
         ? valueA.localeCompare(valueB as string)
         : (valueA as number) - (valueB as number)

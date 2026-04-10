@@ -18,6 +18,7 @@ import {
 import { uploadGalleryLjArtistImage } from '@/lib/r2/storage'
 import { getImageUrlWithCacheBuster } from '@/lib/r2/url'
 import { normalizeString } from '@/lib/utils'
+import TiptapEditor from '@/app/components/Forms/TiptapEditor'
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -26,6 +27,7 @@ const galleryLjArtistSchema = z.object({
   pseudo: z.string().optional(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
+  description: z.string().optional(),
   visible: z.boolean().default(true)
 }).refine(
   (data) => {
@@ -82,6 +84,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
       pseudo: '',
       firstName: '',
       lastName: '',
+      description: '',
       visible: true
     }
   })
@@ -100,6 +103,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
           setValue('pseudo', artist.pseudo)
           setValue('firstName', artist.firstName ?? '')
           setValue('lastName', artist.lastName ?? '')
+          setValue('description', artist.description ?? '')
           setValue('visible', artist.visible)
           if (artist.imageUrl) {
             setImagePreview(getImageUrlWithCacheBuster(artist.imageUrl) ?? '')
@@ -196,6 +200,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
           pseudo: values.pseudo ?? '',
           firstName: values.firstName || null,
           lastName: values.lastName || null,
+          description: values.description || null,
           imageUrl: imageUrl ?? null,
           visible: values.visible
         })
@@ -211,6 +216,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
           pseudo: values.pseudo,
           firstName: values.firstName || null,
           lastName: values.lastName || null,
+          description: values.description || null,
           visible: values.visible
         }
         if (imageUrl !== undefined) {
@@ -287,6 +293,17 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
               className="form-input"
               placeholder="Nom de famille"
               {...register('lastName')}
+            />
+          </div>
+
+          {/* Description */}
+          <div className="form-group">
+            <label htmlFor="description" className="form-label">
+              Description
+            </label>
+            <TiptapEditor
+              value={watch('description') ?? ''}
+              onChange={(html) => setValue('description', html, { shouldDirty: true })}
             />
           </div>
 

@@ -5,8 +5,24 @@ import { revalidatePath } from 'next/cache'
 import { toRelativePath } from '@/lib/r2/url'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { r2Client, R2_BUCKET_NAME } from '@/lib/r2/client'
+import DOMPurify from 'isomorphic-dompurify'
+import { generateSlug } from '@/lib/utils'
 
 const REVALIDATE_PATH = '/fr/galleryLj/artists'
+
+/**
+ * Sanitize HTML content to prevent XSS attacks
+ */
+function sanitizeHtml(html: string | null | undefined): string | null {
+    if (!html) return null
+    return DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: [
+            'p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+            'ul', 'ol', 'li', 'a', 'blockquote', 'span', 'div'
+        ],
+        ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class']
+    })
+}
 
 /**
  * Récupère tous les artistes de la galerie LJ
@@ -53,15 +69,24 @@ export async function createGalleryLjArtist(data: {
     pseudo: string
     firstName?: string | null
     lastName?: string | null
+    description?: string | null
     imageUrl?: string | null
     visible?: boolean
 }) {
     try {
+        // Slug rule: if pseudo is present, use it; otherwise use firstName-lastName
+        const slugSource = data.pseudo && data.pseudo.trim().length > 0
+            ? data.pseudo
+            : `${data.firstName || ''} ${data.lastName || ''}`.trim()
+        const slug = generateSlug(slugSource)
+
         const artist = await prisma.galleryLjArtist.create({
             data: {
                 pseudo: data.pseudo,
                 firstName: data.firstName ?? null,
                 lastName: data.lastName ?? null,
+                slug,
+                description: sanitizeHtml(data.description),
                 imageUrl: data.imageUrl ? (toRelativePath(data.imageUrl) ?? data.imageUrl) : null,
                 visible: data.visible ?? true
             }
@@ -84,17 +109,37 @@ export async function updateGalleryLjArtist(
         pseudo?: string
         firstName?: string | null
         lastName?: string | null
+        description?: string | null
         imageUrl?: string | null
         visible?: boolean
     }
 ) {
     try {
-        const updateData: typeof data & { imageUrl?: string | null } = { ...data }
+        const updateData: typeof data & { imageUrl?: string | null; slug?: string } = { ...data }
 
         if (updateData.imageUrl !== undefined) {
             updateData.imageUrl = updateData.imageUrl
                 ? (toRelativePath(updateData.imageUrl) ?? updateData.imageUrl)
                 : null
+        }
+
+        // Regenerate slug if pseudo, firstName ou lastName changes
+        if (updateData.pseudo !== undefined || updateData.firstName !== undefined || updateData.lastName !== undefined) {
+            const artist = await prisma.galleryLjArtist.findUnique({ where: { id }, select: { pseudo: true, firstName: true, lastName: true } })
+            const pseudo = updateData.pseudo ?? artist?.pseudo
+            const firstName = updateData.firstName ?? artist?.firstName
+            const lastName = updateData.lastName ?? artist?.lastName
+            
+            // Slug rule: if pseudo is present, use it; otherwise use firstName-lastName
+            const slugSource = pseudo && pseudo.trim().length > 0
+                ? pseudo
+                : `${firstName || ''} ${lastName || ''}`.trim()
+            updateData.slug = generateSlug(slugSource)
+        }
+
+        // Sanitize description if present
+        if (updateData.description !== undefined) {
+            updateData.description = sanitizeHtml(updateData.description)
         }
 
         const artist = await prisma.galleryLjArtist.update({
@@ -131,6 +176,29 @@ async function deleteR2ObjectSafe(key: string, context: string): Promise<void> {
         } else {
             console.error(`[${context}] Erreur R2 lors de la suppression de ${key}:`, r2Error)
         }
+    }
+}
+
+/**
+ * Met à jour l'ordre d'affichage des artistes de la galerie LJ
+ */
+export async function updateGalleryLjArtistsOrder(
+    updates: Array<{ id: number; order: number }>
+) {
+    try {
+        await prisma.$transaction(
+            updates.map((update) =>
+                prisma.galleryLjArtist.update({
+                    where: { id: update.id },
+                    data: { order: update.order }
+                })
+            )
+        )
+        revalidatePath(REVALIDATE_PATH)
+        return { success: true }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour de l\'ordre des artistes:', error)
+        return { success: false, message: (error as Error).message }
     }
 }
 

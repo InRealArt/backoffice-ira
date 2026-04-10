@@ -46,11 +46,12 @@ next-env.d.ts
 # Divers
 email-introduction-artistes.md
 
-#Claude Files
+#AI Files
 .agent*
 .claude/*
 .continue/*
 .cursor/*
+.qwen/*
 
 # Prisma Files  
 src/generated/prisma/*
