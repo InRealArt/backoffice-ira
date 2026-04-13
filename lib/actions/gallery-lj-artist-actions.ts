@@ -70,6 +70,11 @@ export async function createGalleryLjArtist(data: {
     firstName?: string | null
     lastName?: string | null
     description?: string | null
+    shortDescription?: string | null
+    formation?: string | null
+    personalExhibitions?: string | null
+    collectiveExhibitions?: string | null
+    publicCollections?: string | null
     imageUrl?: string | null
     visible?: boolean
 }) {
@@ -87,6 +92,11 @@ export async function createGalleryLjArtist(data: {
                 lastName: data.lastName ?? null,
                 slug,
                 description: sanitizeHtml(data.description),
+                shortDescription: data.shortDescription ?? null,
+                formation: sanitizeHtml(data.formation),
+                personalExhibitions: sanitizeHtml(data.personalExhibitions),
+                collectiveExhibitions: sanitizeHtml(data.collectiveExhibitions),
+                publicCollections: sanitizeHtml(data.publicCollections),
                 imageUrl: data.imageUrl ? (toRelativePath(data.imageUrl) ?? data.imageUrl) : null,
                 visible: data.visible ?? true
             }
@@ -110,6 +120,11 @@ export async function updateGalleryLjArtist(
         firstName?: string | null
         lastName?: string | null
         description?: string | null
+        shortDescription?: string | null
+        formation?: string | null
+        personalExhibitions?: string | null
+        collectiveExhibitions?: string | null
+        publicCollections?: string | null
         imageUrl?: string | null
         visible?: boolean
     }
@@ -137,9 +152,21 @@ export async function updateGalleryLjArtist(
             updateData.slug = generateSlug(slugSource)
         }
 
-        // Sanitize description if present
+        // Sanitize HTML fields if present
         if (updateData.description !== undefined) {
             updateData.description = sanitizeHtml(updateData.description)
+        }
+        if (updateData.formation !== undefined) {
+            updateData.formation = sanitizeHtml(updateData.formation)
+        }
+        if (updateData.personalExhibitions !== undefined) {
+            updateData.personalExhibitions = sanitizeHtml(updateData.personalExhibitions)
+        }
+        if (updateData.collectiveExhibitions !== undefined) {
+            updateData.collectiveExhibitions = sanitizeHtml(updateData.collectiveExhibitions)
+        }
+        if (updateData.publicCollections !== undefined) {
+            updateData.publicCollections = sanitizeHtml(updateData.publicCollections)
         }
 
         const artist = await prisma.galleryLjArtist.update({
