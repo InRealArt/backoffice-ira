@@ -81,7 +81,9 @@ export async function createGalleryLjArtwork(data: {
     price?: number | null
     dimensions?: string | null
     creationYear?: number | null
+    description?: string | null
     visible?: boolean
+    images?: string[]
 }) {
     try {
         const artwork = await prisma.galleryLjArtwork.create({
@@ -92,7 +94,9 @@ export async function createGalleryLjArtwork(data: {
                 price: data.price ?? null,
                 dimensions: data.dimensions ?? null,
                 creationYear: data.creationYear ?? null,
-                visible: data.visible ?? true
+                description: data.description ?? null,
+                visible: data.visible ?? true,
+                images: data.images ?? []
             }
         })
 
@@ -116,7 +120,9 @@ export async function updateGalleryLjArtwork(
         price?: number | null
         dimensions?: string | null
         creationYear?: number | null
+        description?: string | null
         visible?: boolean
+        images?: string[]
     }
 ) {
     try {
@@ -133,8 +139,10 @@ export async function updateGalleryLjArtwork(
         if (data.price !== undefined) prismaData.price = data.price
         if (data.dimensions !== undefined) prismaData.dimensions = data.dimensions
         if (data.creationYear !== undefined) prismaData.creationYear = data.creationYear
+        if (data.description !== undefined) prismaData.description = data.description
         if (data.visible !== undefined) prismaData.visible = data.visible
         if (normalizedImageUrl !== undefined) prismaData.imageUrl = normalizedImageUrl
+        if (data.images !== undefined) prismaData.images = data.images
 
         const artwork = await prisma.galleryLjArtwork.update({
             where: { id },
@@ -160,7 +168,7 @@ export async function deleteGalleryLjArtwork(id: number) {
     try {
         const artwork = await prisma.galleryLjArtwork.findUnique({
             where: { id },
-            select: { imageUrl: true }
+            select: { imageUrl: true, images: true }
         })
 
         if (!artwork) {
@@ -193,6 +201,27 @@ export async function deleteGalleryLjArtwork(id: number) {
             }
         }
 
+        // Supprimer les images secondaires R2 (non-bloquant)
+        for (const imageUrl of artwork.images) {
+            const r2Key = toRelativePath(imageUrl) ?? imageUrl
+            try {
+                await r2Client.send(
+                    new DeleteObjectCommand({
+                        Bucket: R2_BUCKET_NAME,
+                        Key: r2Key,
+                    })
+                )
+                console.log(`[deleteGalleryLjArtwork] Image secondaire R2 supprimée: ${r2Key}`)
+            } catch (r2Error: unknown) {
+                const err = r2Error as { name?: string; $metadata?: { httpStatusCode?: number } }
+                if (err?.name === 'NoSuchKey' || err?.$metadata?.httpStatusCode === 404) {
+                    console.log(`[deleteGalleryLjArtwork] Image secondaire R2 introuvable (déjà supprimée): ${r2Key}`)
+                } else {
+                    console.error(`[deleteGalleryLjArtwork] Erreur R2 image secondaire: ${r2Key}`, r2Error)
+                }
+            }
+        }
+
         await prisma.galleryLjArtwork.delete({
             where: { id }
         })
@@ -201,6 +230,67 @@ export async function deleteGalleryLjArtwork(id: number) {
         return { success: true }
     } catch (error) {
         console.error('Erreur lors de la suppression de l\'œuvre galerie LJ:', error)
+        return { success: false, message: (error as Error).message }
+    }
+}
+
+/**
+ * Supprime une image secondaire d'une œuvre galerie LJ :
+ * - Vérifie que l'URL appartient bien à artwork.images
+ * - Supprime le fichier dans Cloudflare R2
+ * - Met à jour artwork.images en base (retire l'URL)
+ */
+export async function deleteGalleryLjArtworkSecondaryImage(artworkId: number, imageUrl: string) {
+    try {
+        const artwork = await prisma.galleryLjArtwork.findUnique({
+            where: { id: artworkId },
+            select: { images: true }
+        })
+
+        if (!artwork) {
+            return { success: false, message: 'Œuvre introuvable' }
+        }
+
+        if (!artwork.images.includes(imageUrl)) {
+            return { success: false, message: 'Image introuvable dans l\'œuvre' }
+        }
+
+        // Suppression R2 (non-bloquante vis-à-vis de la DB mais on retourne l'erreur à l'appelant)
+        const r2Key = toRelativePath(imageUrl) ?? imageUrl
+        try {
+            await r2Client.send(
+                new DeleteObjectCommand({
+                    Bucket: R2_BUCKET_NAME,
+                    Key: r2Key,
+                })
+            )
+            console.log(`[deleteGalleryLjArtworkSecondaryImage] Image R2 supprimée: ${r2Key}`)
+        } catch (r2Error: unknown) {
+            const err = r2Error as { name?: string; $metadata?: { httpStatusCode?: number } }
+            if (err?.name === 'NoSuchKey' || err?.$metadata?.httpStatusCode === 404) {
+                console.log(`[deleteGalleryLjArtworkSecondaryImage] Image R2 introuvable (déjà supprimée): ${r2Key}`)
+                // On continue quand même pour nettoyer la DB
+            } else {
+                console.error(`[deleteGalleryLjArtworkSecondaryImage] Erreur R2: ${r2Key}`, r2Error)
+                return { success: false, message: 'Erreur lors de la suppression dans le stockage' }
+            }
+        }
+
+        // Retirer l'URL de artwork.images en base
+        await prisma.galleryLjArtwork.update({
+            where: { id: artworkId },
+            data: {
+                images: {
+                    set: artwork.images.filter((u) => u !== imageUrl)
+                }
+            }
+        })
+
+        revalidatePath(REVALIDATE_PATH)
+        revalidatePath(`/fr/galleryLj/artworks/${artworkId}/edit`)
+        return { success: true }
+    } catch (error) {
+        console.error('Erreur lors de la suppression de l\'image secondaire galerie LJ:', error)
         return { success: false, message: (error as Error).message }
     }
 }
