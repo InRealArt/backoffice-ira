@@ -5,22 +5,28 @@ import { revalidatePath } from 'next/cache'
 import { toRelativePath } from '@/lib/r2/url'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { r2Client, R2_BUCKET_NAME } from '@/lib/r2/client'
-import DOMPurify from 'isomorphic-dompurify'
+import sanitizeHtmlLib from 'sanitize-html'
 import { generateSlug } from '@/lib/utils'
 
 const REVALIDATE_PATH = '/fr/galleryLj/artists'
 
 /**
- * Sanitize HTML content to prevent XSS attacks
+ * Sanitize HTML content to prevent XSS attacks.
+ * Uses sanitize-html (pure Node.js, no jsdom dependency) instead of
+ * isomorphic-dompurify which pulls in jsdom and breaks on Vercel due to
+ * a CJS/ESM incompatibility in html-encoding-sniffer / @exodus/bytes.
  */
 function sanitizeHtml(html: string | null | undefined): string | null {
     if (!html) return null
-    return DOMPurify.sanitize(html, {
-        ALLOWED_TAGS: [
+    return sanitizeHtmlLib(html, {
+        allowedTags: [
             'p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
             'ul', 'ol', 'li', 'a', 'blockquote', 'span', 'div'
         ],
-        ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class']
+        allowedAttributes: {
+            'a': ['href', 'target', 'rel'],
+            '*': ['style', 'class'],
+        },
     })
 }
 
