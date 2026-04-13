@@ -13,12 +13,32 @@ type PageProps = {
 }
 
 export default async function GalleryLjArtworksPage({ searchParams }: PageProps) {
-  const { sortColumn, sortDirection, page, itemsPerPage } =
+  const { artistId, sortColumn, sortDirection, page, itemsPerPage } =
     await loadGalleryLjArtworksSearchParams(searchParams)
 
   const allArtworks = await getAllGalleryLjArtworks()
 
-  const sortedArtworks = [...allArtworks].sort((a, b) => {
+  // Build deduplicated artist list for the dropdown (sorted by display name)
+  const artistsMap = new Map<number, { id: number; label: string }>()
+  for (const { artist } of allArtworks) {
+    if (!artistsMap.has(artist.id)) {
+      const label =
+        artist.firstName && artist.lastName
+          ? `${artist.firstName} ${artist.lastName}`
+          : artist.pseudo
+      artistsMap.set(artist.id, { id: artist.id, label })
+    }
+  }
+  const artistOptions = Array.from(artistsMap.values()).sort((a, b) =>
+    a.label.localeCompare(b.label, 'fr')
+  )
+
+  // Filter by selected artist (0 = all)
+  let filteredArtworks = artistId > 0
+    ? allArtworks.filter((a) => a.artist.id === artistId)
+    : allArtworks
+
+  const sortedArtworks = [...filteredArtworks].sort((a, b) => {
     const valueA = (a as Record<string, unknown>)[sortColumn] ?? ''
     const valueB = (b as Record<string, unknown>)[sortColumn] ?? ''
     if (sortDirection === 'asc') {
@@ -43,6 +63,7 @@ export default async function GalleryLjArtworksPage({ searchParams }: PageProps)
       itemsPerPage={itemsPerPage}
       sortColumn={sortColumn}
       sortDirection={sortDirection}
+      artistOptions={artistOptions}
     />
   )
 }

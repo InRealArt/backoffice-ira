@@ -139,6 +139,11 @@ export function GalleryLjDashboard() {
               )}
             </div>
           )}
+          <div className="metric-card-button">
+            <a href="/fr/galleryLj/artworks" className="btn btn-sm btn-primary">
+              Voir les oeuvres
+            </a>
+          </div>
         </div>
 
         {/* Card 3 — Expositions */}
@@ -182,6 +187,11 @@ export function GalleryLjDashboard() {
               )}
             </div>
           )}
+          <div className="metric-card-button">
+            <a href="/fr/galleryLj/exhibitions" className="btn btn-sm btn-primary">
+              Voir les expositions
+            </a>
+          </div>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
+import { useQueryStates } from 'nuqs'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import {
   PageContainer,
@@ -16,6 +17,8 @@ import {
 } from '@/app/components/PageLayout/index'
 import { deleteGalleryLjArtwork } from '@/lib/actions/gallery-lj-artwork-actions'
 import { getImageUrl } from '@/lib/r2/url'
+import { galleryLjArtworksSearchParams } from './searchParams'
+import { Filters, FilterItem } from '@/app/components/Common'
 
 interface ArtistRef {
   id: number
@@ -37,6 +40,11 @@ interface GalleryLjArtworkRow {
   artist: ArtistRef
 }
 
+interface ArtistOption {
+  id: number
+  label: string
+}
+
 interface GalleryLjArtworksClientProps {
   artworks: GalleryLjArtworkRow[]
   totalItems: number
@@ -44,6 +52,7 @@ interface GalleryLjArtworksClientProps {
   itemsPerPage: number
   sortColumn: string
   sortDirection: 'asc' | 'desc'
+  artistOptions: ArtistOption[]
 }
 
 function getArtistLabel(artist: ArtistRef): string {
@@ -59,7 +68,8 @@ export default function GalleryLjArtworksClient({
   currentPage,
   itemsPerPage,
   sortColumn,
-  sortDirection
+  sortDirection,
+  artistOptions
 }: GalleryLjArtworksClientProps) {
   const router = useRouter()
   const params = useParams()
@@ -67,6 +77,14 @@ export default function GalleryLjArtworksClient({
   const { success, error: showError } = useToast()
   const [artworks, setArtworks] = useState(initialArtworks)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+
+  const [searchParams, setSearchParams] = useQueryStates(galleryLjArtworksSearchParams, {
+    shallow: false
+  })
+
+  const handleArtistFilterChange = (value: string) => {
+    setSearchParams({ artistId: value ? Number(value) : 0, page: 1 })
+  }
 
   const handleDelete = async (id: number) => {
     setDeletingId(id)
@@ -213,6 +231,24 @@ export default function GalleryLjArtworksClient({
         }
       />
       <PageContent>
+        {/* Filtre par artiste */}
+        {artistOptions.length > 0 && (
+          <Filters>
+            <FilterItem
+              id="artistFilter"
+              label="Artiste"
+              value={searchParams.artistId ? String(searchParams.artistId) : ''}
+              onChange={handleArtistFilterChange}
+              options={[
+                { value: '', label: 'Tous les artistes' },
+                ...artistOptions.map((artist) => ({
+                  value: String(artist.id),
+                  label: artist.label,
+                })),
+              ]}
+            />
+          </Filters>
+        )}
         <DataTable
           data={artworks}
           columns={columns}
