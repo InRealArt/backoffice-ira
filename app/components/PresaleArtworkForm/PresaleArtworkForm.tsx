@@ -26,7 +26,6 @@ import {
   ensureFolderExists,
 } from "@/lib/r2/storage";
 import { getImageUrl, getImageUrlWithCacheBuster } from "@/lib/r2/url";
-import { convertToWebPIfNeeded } from "@/lib/utils/webp-converter";
 import { normalizeString, getArtistFullName } from "@/lib/utils";
 import type { ArtistName } from "@/lib/types/artist";
 import ProgressModal from "@/app/components/art/ProgressModal";
@@ -355,48 +354,49 @@ export default function PresaleArtworkForm({
             )
           );
 
-          // Conversion WebP
-          setProgressSteps((prev) =>
-            prev.map((s) =>
-              s.id === "conversion" ? { ...s, status: "in-progress" } : s
-            )
-          );
-
-          const conversionResult = await convertToWebPIfNeeded(mainImageFile);
-
-          if (!conversionResult.success) {
-            throw new Error(
-              conversionResult.error || t("errors.webpConversionError")
-            );
-          }
-
-          setProgressSteps((prev) =>
-            prev.map((s) =>
-              s.id === "conversion" ? { ...s, status: "completed" } : s
-            )
-          );
-
-          // Upload vers Cloudflare
-          setProgressSteps((prev) =>
-            prev.map((s) =>
-              s.id === "upload" ? { ...s, status: "in-progress" } : s
-            )
-          );
-
           // Générer un nom de fichier unique basé sur le nom de l'œuvre
           const fileName = normalizeString(
             data.name || `artwork-${Date.now()}`
           );
 
+          // La conversion WebP et l'upload sont désormais gérés côté serveur par
+          // uploadImageToLandingFolder (Server Action convertAndFinalize).
+          // onConversionStatus couvre l'upload brut vers la clé temp R2.
+          // onUploadStatus couvre la conversion + écriture finale côté serveur.
           finalImageUrl = await uploadImageToLandingFolder(
-            conversionResult.file,
+            mainImageFile,
             folderName,
             fileName,
             (status, error) => {
-              // Callback pour la conversion (déjà géré)
+              if (status === "in-progress") {
+                setProgressSteps((prev) =>
+                  prev.map((s) =>
+                    s.id === "conversion" ? { ...s, status: "in-progress" } : s
+                  )
+                );
+              } else if (status === "completed") {
+                setProgressSteps((prev) =>
+                  prev.map((s) =>
+                    s.id === "conversion" ? { ...s, status: "completed" } : s
+                  )
+                );
+              } else if (status === "error") {
+                setProgressSteps((prev) =>
+                  prev.map((s) =>
+                    s.id === "conversion" ? { ...s, status: "error" } : s
+                  )
+                );
+                setProgressError(error || t("errors.webpConversionError"));
+              }
             },
             (status, error) => {
-              if (status === "error") {
+              if (status === "in-progress") {
+                setProgressSteps((prev) =>
+                  prev.map((s) =>
+                    s.id === "upload" ? { ...s, status: "in-progress" } : s
+                  )
+                );
+              } else if (status === "error") {
                 setProgressSteps((prev) =>
                   prev.map((s) =>
                     s.id === "upload" ? { ...s, status: "error" } : s

@@ -16,12 +16,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
-    const { storagePath, contentType } = await request.json()
+    const { storagePath, contentType, fileSize } = await request.json()
 
     if (!storagePath || !contentType) {
       return NextResponse.json(
         { error: "storagePath et contentType sont requis" },
         { status: 400 }
+      )
+    }
+
+    // Server-side size guard — enforced before issuing the presigned URL so an
+    // attacker who calls this endpoint directly cannot obtain a URL for a large upload.
+    // Landing/temp uploads are capped at 4 MB; all other paths keep a 50 MB ceiling.
+    const LANDING_MAX = 4 * 1024 * 1024
+    const GENERAL_MAX = 50 * 1024 * 1024
+    const effectiveMax = storagePath.startsWith('temp/') ? LANDING_MAX : GENERAL_MAX
+
+    if (typeof fileSize === 'number' && fileSize > effectiveMax) {
+      const limitMB = effectiveMax / (1024 * 1024)
+      const sizeMB = (fileSize / (1024 * 1024)).toFixed(1)
+      return NextResponse.json(
+        { error: `Fichier trop volumineux (${sizeMB} Mo). Maximum autorisé: ${limitMB} Mo.` },
+        { status: 413 }
       )
     }
 

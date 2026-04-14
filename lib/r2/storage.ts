@@ -20,12 +20,13 @@ interface UploadOptions {
  */
 async function getPresignedUploadUrl(
     storagePath: string,
-    contentType: string
+    contentType: string,
+    fileSize?: number
 ): Promise<{ uploadUrl: string; relativePath: string }> {
     const response = await fetch('/api/r2/presign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storagePath, contentType }),
+        body: JSON.stringify({ storagePath, contentType, fileSize }),
     })
 
     if (!response.ok) {
@@ -550,15 +551,23 @@ export async function ensureFolderExists(
 }
 
 /**
- * Upload une image vers R2 dans le répertoire landing d'un artiste
+ * Upload une image vers R2 dans le répertoire landing d'un artiste.
+ *
+ * Flow (server-side conversion — évite FUNCTION_PAYLOAD_TOO_LARGE sur Vercel) :
+ *   1. PUT du fichier brut vers une clé temp R2 via presigned URL (aucun binaire dans la réponse HTTP)
+ *   2. Server Action convertAndFinalize : R2 temp → sharp WebP → R2 final key
+ *   3. Suppression automatique de la clé temp par la Server Action
  *
  * @param imageFile - Le fichier image à uploader
  * @param folderName - Nom du répertoire avec la casse exacte (ex: "Jean Dupont")
  * @param fileName - Nom du fichier (sans extension)
  * @param onConversionStatus - Callback pour le statut de conversion
  * @param onUploadStatus - Callback pour le statut d'upload
- * @returns URL de l'image uploadée
+ * @returns Chemin relatif de l'image dans le bucket (ex: "artists/Jean Dupont/landing/nom.webp")
  */
+/** Maximum raw file size accepted by uploadImageToLandingFolder (4 MB). */
+export const LANDING_IMAGE_MAX_SIZE_BYTES = 4 * 1024 * 1024
+
 export async function uploadImageToLandingFolder(
     imageFile: File,
     folderName: string,
@@ -567,41 +576,58 @@ export async function uploadImageToLandingFolder(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        // Étape 1: Conversion WebP
-        onConversionStatus?.('in-progress')
-        const conversionResult = await convertToWebPIfNeeded(imageFile)
+        // Guard — earliest possible check, before any network call.
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
 
-        if (!conversionResult.success) {
-            const errorMessage =
-                conversionResult.error ||
-                "Erreur lors de la conversion de l'image en WebP"
+        // Step 1: Upload the raw file to a temp R2 key via presigned PUT URL.
+        // onConversionStatus signals the raw-upload phase (client side, no conversion yet).
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
             onConversionStatus?.('error', errorMessage)
             throw new Error(errorMessage)
         }
 
         onConversionStatus?.('completed')
 
-        // Étape 2: Upload vers R2 dans le répertoire landing
+        // Step 2: Call the Server Action to convert and write to final key.
+        // The Server Action runs on the server: fetches from R2, pipes through sharp, uploads WebP back.
         onUploadStatus?.('in-progress')
-        const folderPath = `artists/${folderName}/landing`
-        const fileExtension = 'webp'
-        const storagePath = `${folderPath}/${fileName}.${fileExtension}`
 
-        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
+        const finalKey = `artists/${folderName}/landing/${fileName}.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
 
         onUploadStatus?.('completed')
 
-        return imageUrl
+        return result.relativePath
     } catch (error) {
-        console.error("Erreur lors de l'upload de l'image:", error)
+        console.error("Erreur lors de l'upload de l'image landing:", error)
         const errorMessage =
             error instanceof Error
                 ? error.message
                 : "Erreur inconnue lors de l'upload"
 
-        // Notifier les callbacks en cas d'erreur
         if (errorMessage.toLowerCase().includes('conversion') ||
-            errorMessage.toLowerCase().includes('webp')) {
+            errorMessage.toLowerCase().includes('webp') ||
+            errorMessage.toLowerCase().includes('temp')) {
             onConversionStatus?.('error', errorMessage)
         } else {
             onUploadStatus?.('error', errorMessage)
@@ -629,13 +655,27 @@ export async function uploadImageToExhibitionFolder(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        onConversionStatus?.('in-progress')
-        const conversionResult = await convertToWebPIfNeeded(imageFile)
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
 
-        if (!conversionResult.success) {
-            const errorMessage =
-                conversionResult.error ||
-                "Erreur lors de la conversion de l'image en WebP"
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
             onConversionStatus?.('error', errorMessage)
             throw new Error(errorMessage)
         }
@@ -643,13 +683,15 @@ export async function uploadImageToExhibitionFolder(
         onConversionStatus?.('completed')
 
         onUploadStatus?.('in-progress')
-        const storagePath = `exhibitions/${exhibitionName}/${fileName}.webp`
 
-        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
+        const finalKey = `exhibitions/${exhibitionName}/${fileName}.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
 
         onUploadStatus?.('completed')
 
-        return imageUrl
+        return result.relativePath
     } catch (error) {
         console.error("Erreur lors de l'upload de l'image d'exposition:", error)
         const errorMessage =
@@ -658,7 +700,8 @@ export async function uploadImageToExhibitionFolder(
                 : "Erreur inconnue lors de l'upload"
 
         if (errorMessage.toLowerCase().includes('conversion') ||
-            errorMessage.toLowerCase().includes('webp')) {
+            errorMessage.toLowerCase().includes('webp') ||
+            errorMessage.toLowerCase().includes('temp')) {
             onConversionStatus?.('error', errorMessage)
         } else {
             onUploadStatus?.('error', errorMessage)
@@ -686,31 +729,43 @@ export async function uploadImageToMarketplaceFolder(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        // Étape 1: Conversion WebP
-        onConversionStatus?.('in-progress')
-        const conversionResult = await convertToWebPIfNeeded(imageFile)
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
 
-        if (!conversionResult.success) {
-            const errorMessage =
-                conversionResult.error ||
-                "Erreur lors de la conversion de l'image en WebP"
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
             onConversionStatus?.('error', errorMessage)
             throw new Error(errorMessage)
         }
 
         onConversionStatus?.('completed')
 
-        // Étape 2: Upload vers R2 dans le répertoire marketplace
         onUploadStatus?.('in-progress')
-        const folderPath = `artists/${folderName}/marketplace`
-        const fileExtension = 'webp'
-        const storagePath = `${folderPath}/${fileName}.${fileExtension}`
 
-        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
+        const finalKey = `artists/${folderName}/marketplace/${fileName}.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
 
         onUploadStatus?.('completed')
 
-        return imageUrl
+        return result.relativePath
     } catch (error) {
         console.error("Erreur lors de l'upload de l'image:", error)
         const errorMessage =
@@ -718,9 +773,9 @@ export async function uploadImageToMarketplaceFolder(
                 ? error.message
                 : "Erreur inconnue lors de l'upload"
 
-        // Notifier les callbacks en cas d'erreur
         if (errorMessage.toLowerCase().includes('conversion') ||
-            errorMessage.toLowerCase().includes('webp')) {
+            errorMessage.toLowerCase().includes('webp') ||
+            errorMessage.toLowerCase().includes('temp')) {
             onConversionStatus?.('error', errorMessage)
         } else {
             onUploadStatus?.('error', errorMessage)
@@ -751,36 +806,46 @@ export async function uploadImageToMarketplaceFolderByType(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        // Étape 1: Conversion WebP
-        onConversionStatus?.('in-progress')
-        const conversionResult = await convertToWebPIfNeeded(imageFile)
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
 
-        if (!conversionResult.success) {
-            const errorMessage =
-                conversionResult.error ||
-                "Erreur lors de la conversion de l'image en WebP"
+        // Capture timestamp before async calls to stay deterministic
+        const timestamp = Date.now()
+
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
             onConversionStatus?.('error', errorMessage)
             throw new Error(errorMessage)
         }
 
         onConversionStatus?.('completed')
 
-        // Étape 2: Convertir le type d'image en nom de répertoire (CLOSE_UP -> close_up)
-        const typeFolderName = imageType.toLowerCase()
-
-        // Étape 3: Upload vers R2 dans le répertoire spécifique au type
-        // R2 n'a pas besoin d'ensureFolderExists — les dossiers sont implicites
         onUploadStatus?.('in-progress')
-        const folderPath = `artists/${folderName}/marketplace/${typeFolderName}`
-        const fileExtension = 'webp'
-        const timestamp = Date.now()
-        const storagePath = `${folderPath}/${fileName}-${timestamp}.${fileExtension}`
 
-        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
+        const finalKey = `artists/${folderName}/marketplace/${imageType.toLowerCase()}/${fileName}-${timestamp}.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
 
         onUploadStatus?.('completed')
 
-        return imageUrl
+        return result.relativePath
     } catch (error) {
         console.error("Erreur lors de l'upload de l'image par type:", error)
         const errorMessage =
@@ -788,9 +853,9 @@ export async function uploadImageToMarketplaceFolderByType(
                 ? error.message
                 : "Erreur inconnue lors de l'upload"
 
-        // Notifier les callbacks en cas d'erreur
         if (errorMessage.toLowerCase().includes('conversion') ||
-            errorMessage.toLowerCase().includes('webp')) {
+            errorMessage.toLowerCase().includes('webp') ||
+            errorMessage.toLowerCase().includes('temp')) {
             onConversionStatus?.('error', errorMessage)
         } else {
             onUploadStatus?.('error', errorMessage)
@@ -818,25 +883,53 @@ export async function uploadImageToUgcFolder(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        onConversionStatus?.('in-progress')
-        const conversionResult = await convertToWebPIfNeeded(imageFile)
-        if (!conversionResult.success) {
-            const errorMessage = conversionResult.error || "Erreur lors de la conversion de l'image en WebP"
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
             onConversionStatus?.('error', errorMessage)
             throw new Error(errorMessage)
         }
+
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
         onConversionStatus?.('completed')
 
         onUploadStatus?.('in-progress')
-        const storagePath = `artistsUGC/${folderName}/${fileName}.webp`
-        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
+
+        const finalKey = `artistsUGC/${folderName}/${fileName}.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
+
         onUploadStatus?.('completed')
 
-        return imageUrl
+        return result.relativePath
     } catch (error) {
         console.error("Erreur lors de l'upload de l'image UGC:", error)
         const errorMessage = error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
-        onUploadStatus?.('error', errorMessage)
+
+        if (errorMessage.toLowerCase().includes('temp')) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+
         throw new Error(errorMessage)
     }
 }
@@ -859,29 +952,50 @@ export async function uploadMediaToUgcFolder(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        onUploadStatus?.('in-progress')
-
         const isVideo = mediaFile.type.startsWith('video/')
 
         if (isVideo) {
-            // Upload direct pour les vidéos
+            // Upload direct pour les vidéos — pas de conversion, pas de limite de taille
+            onUploadStatus?.('in-progress')
             const ext = mediaFile.name.split('.').pop() || 'mp4'
             const storagePath = `artistsUGC/${folderName}/${fileName}.${ext}`
             const mediaUrl = await uploadFileToR2(mediaFile, storagePath)
             onUploadStatus?.('completed')
             return mediaUrl
         } else {
-            // Conversion WebP pour les images
-            const conversionResult = await convertToWebPIfNeeded(mediaFile)
-            if (!conversionResult.success) {
-                const errorMessage = conversionResult.error || "Erreur lors de la conversion de l'image en WebP"
+            // Images: size guard + presigned PUT to temp + Server Action convertAndFinalize
+            if (mediaFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+                const sizeMB = (mediaFile.size / (1024 * 1024)).toFixed(1)
+                const errorMessage = `Fichier trop volumineux: ${mediaFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
                 onUploadStatus?.('error', errorMessage)
                 throw new Error(errorMessage)
             }
-            const storagePath = `artistsUGC/${folderName}/${fileName}.webp`
-            const mediaUrl = await uploadFileToR2(conversionResult.file, storagePath)
+
+            onUploadStatus?.('in-progress')
+
+            const { v4: uuidv4 } = await import('uuid')
+            const tempKey = `temp/${uuidv4()}/${mediaFile.name}`
+            const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, mediaFile.type, mediaFile.size)
+
+            const rawUploadResponse = await fetch(tempUploadUrl, {
+                method: 'PUT',
+                body: mediaFile,
+                headers: { 'Content-Type': mediaFile.type },
+            })
+
+            if (!rawUploadResponse.ok) {
+                const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
+                onUploadStatus?.('error', errorMessage)
+                throw new Error(errorMessage)
+            }
+
+            const finalKey = `artistsUGC/${folderName}/${fileName}.webp`
+
+            const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+            const result = await convertAndFinalize(tempKey, finalKey)
+
             onUploadStatus?.('completed')
-            return mediaUrl
+            return result.relativePath
         }
     } catch (error) {
         console.error("Erreur lors de l'upload du média UGC:", error)
@@ -983,12 +1097,27 @@ export async function uploadGalleryLjArtistImage(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        onConversionStatus?.('in-progress')
-        const conversionResult = await convertToWebPIfNeeded(imageFile)
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
 
-        if (!conversionResult.success) {
-            const errorMessage =
-                conversionResult.error || "Erreur lors de la conversion de l'image en WebP"
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
             onConversionStatus?.('error', errorMessage)
             throw new Error(errorMessage)
         }
@@ -996,19 +1125,23 @@ export async function uploadGalleryLjArtistImage(
         onConversionStatus?.('completed')
 
         onUploadStatus?.('in-progress')
-        // Chemin normalisé : galleryLj/artists/<artistSlug>/<fileName>.webp
-        const storagePath = `galleryLj/artists/${artistSlug}/${fileName}.webp`
-        const relativePath = await uploadFileToR2(conversionResult.file, storagePath)
+
+        const finalKey = `galleryLj/artists/${artistSlug}/${fileName}.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
+
         onUploadStatus?.('completed')
 
-        return relativePath
+        return result.relativePath
     } catch (error) {
         console.error("Erreur lors de l'upload de l'image artiste galerie LJ:", error)
         const errorMessage =
             error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
         if (
             errorMessage.toLowerCase().includes('conversion') ||
-            errorMessage.toLowerCase().includes('webp')
+            errorMessage.toLowerCase().includes('webp') ||
+            errorMessage.toLowerCase().includes('temp')
         ) {
             onConversionStatus?.('error', errorMessage)
         } else {
@@ -1038,12 +1171,27 @@ export async function uploadGalleryLjArtworkImage(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        onConversionStatus?.('in-progress')
-        const conversionResult = await convertToWebPIfNeeded(imageFile)
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
 
-        if (!conversionResult.success) {
-            const errorMessage =
-                conversionResult.error || "Erreur lors de la conversion de l'image en WebP"
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
             onConversionStatus?.('error', errorMessage)
             throw new Error(errorMessage)
         }
@@ -1051,18 +1199,23 @@ export async function uploadGalleryLjArtworkImage(
         onConversionStatus?.('completed')
 
         onUploadStatus?.('in-progress')
-        const storagePath = `galleryLj/artists/${artistSlug}/artworks/${artworkSlug}/${artworkSlug}.webp`
-        const relativePath = await uploadFileToR2(conversionResult.file, storagePath)
+
+        const finalKey = `galleryLj/artists/${artistSlug}/artworks/${artworkSlug}/${artworkSlug}.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
+
         onUploadStatus?.('completed')
 
-        return relativePath
+        return result.relativePath
     } catch (error) {
         console.error("Erreur lors de l'upload de l'image œuvre galerie LJ:", error)
         const errorMessage =
             error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
         if (
             errorMessage.toLowerCase().includes('conversion') ||
-            errorMessage.toLowerCase().includes('webp')
+            errorMessage.toLowerCase().includes('webp') ||
+            errorMessage.toLowerCase().includes('temp')
         ) {
             onConversionStatus?.('error', errorMessage)
         } else {
@@ -1092,12 +1245,30 @@ export async function uploadGalleryLjArtworkSecondaryImage(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        onConversionStatus?.('in-progress')
-        const conversionResult = await convertToWebPIfNeeded(imageFile)
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
 
-        if (!conversionResult.success) {
-            const errorMessage =
-                conversionResult.error || "Erreur lors de la conversion de l'image en WebP"
+        // Capture timestamp before async calls to stay deterministic
+        const timestamp = Date.now()
+
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
             onConversionStatus?.('error', errorMessage)
             throw new Error(errorMessage)
         }
@@ -1105,19 +1276,23 @@ export async function uploadGalleryLjArtworkSecondaryImage(
         onConversionStatus?.('completed')
 
         onUploadStatus?.('in-progress')
-        const timestamp = Date.now()
-        const storagePath = `galleryLj/artists/${artistSlug}/artworks/${artworkSlug}/${artworkSlug}-${timestamp}.webp`
-        const relativePath = await uploadFileToR2(conversionResult.file, storagePath)
+
+        const finalKey = `galleryLj/artists/${artistSlug}/artworks/${artworkSlug}/${artworkSlug}-${timestamp}.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
+
         onUploadStatus?.('completed')
 
-        return relativePath
+        return result.relativePath
     } catch (error) {
         console.error("Erreur lors de l'upload de l'image secondaire œuvre galerie LJ:", error)
         const errorMessage =
             error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
         if (
             errorMessage.toLowerCase().includes('conversion') ||
-            errorMessage.toLowerCase().includes('webp')
+            errorMessage.toLowerCase().includes('webp') ||
+            errorMessage.toLowerCase().includes('temp')
         ) {
             onConversionStatus?.('error', errorMessage)
         } else {
@@ -1145,12 +1320,27 @@ export async function uploadGalleryLjExhibitionImage(
     onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
 ): Promise<string> {
     try {
-        onConversionStatus?.('in-progress')
-        const conversionResult = await convertToWebPIfNeeded(imageFile)
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
 
-        if (!conversionResult.success) {
-            const errorMessage =
-                conversionResult.error || "Erreur lors de la conversion de l'image en WebP"
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
             onConversionStatus?.('error', errorMessage)
             throw new Error(errorMessage)
         }
@@ -1158,18 +1348,23 @@ export async function uploadGalleryLjExhibitionImage(
         onConversionStatus?.('completed')
 
         onUploadStatus?.('in-progress')
-        const storagePath = `galleryLj/exhibitions/${exhibitionSlug}/main-image.webp`
-        const relativePath = await uploadFileToR2(conversionResult.file, storagePath)
+
+        const finalKey = `galleryLj/exhibitions/${exhibitionSlug}/main-image.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
+
         onUploadStatus?.('completed')
 
-        return relativePath
+        return result.relativePath
     } catch (error) {
         console.error("Erreur lors de l'upload de l'image exposition galerie LJ:", error)
         const errorMessage =
             error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
         if (
             errorMessage.toLowerCase().includes('conversion') ||
-            errorMessage.toLowerCase().includes('webp')
+            errorMessage.toLowerCase().includes('webp') ||
+            errorMessage.toLowerCase().includes('temp')
         ) {
             onConversionStatus?.('error', errorMessage)
         } else {

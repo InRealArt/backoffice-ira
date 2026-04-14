@@ -1,5 +1,15 @@
 /**
- * Utilitaire pour la conversion d'images en WebP
+ * Utilitaire pour la conversion d'images en WebP (client-side via API Route)
+ *
+ * NOTE: `convertToWebPIfNeeded` is DEPRECATED for upload flows.
+ * `uploadImageToLandingFolder` (and similar server-side upload helpers) no longer call it —
+ * they use the `convertAndFinalize` Server Action instead, which avoids the Vercel
+ * FUNCTION_PAYLOAD_TOO_LARGE error caused by returning base64 WebP data in JSON responses.
+ *
+ * `convertToWebPIfNeeded` and `convertMultipleToWebP` are kept here because they are still
+ * used by standalone UI tools (e.g. the /tools/webp-converter page via ArtworkForm) that
+ * explicitly call /api/tools/webp-converter for client-side preview/download workflows.
+ * Do NOT remove this file or the /api/tools/webp-converter route while those callers exist.
  */
 
 interface ConversionResult {
