@@ -318,7 +318,7 @@ ${accordionItems}
                 const imageHtml = post.mainImageUrl
                   ? `<img class="related-article-card-image" src="${validateImageUrl(post.mainImageUrl) || ''}" alt="${post.title}" loading="lazy">`
                   : `<div class="related-article-card-image-placeholder"></div>`
-                return `        <a class="related-article-card" href="/${post.categoryName.toLowerCase()}/${post.slug}">
+                return `        <a class="related-article-card" href="/blog/${post.slug}">
           ${imageHtml}
           <div class="related-article-card-body">
             <p class="related-article-card-category">${post.categoryName}</p>
