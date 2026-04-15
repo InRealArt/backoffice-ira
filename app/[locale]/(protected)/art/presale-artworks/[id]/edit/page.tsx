@@ -51,11 +51,12 @@ export default async function EditPresaleArtworkPage({ params }: EditPresaleArtw
       </div>
       
       <div className="page-content">
-        <PresaleArtworkForm 
-          mode="edit" 
+        <PresaleArtworkForm
+          mode="edit"
           presaleArtworkId={presaleArtworkId}
           defaultArtistId={backofficeUser.artistId}
           redirectUrl="/art/presale-artworks"
+          showFeatured={false}
         />
       </div>
     </div>

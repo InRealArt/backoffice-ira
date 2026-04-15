@@ -70,6 +70,11 @@ export interface PresaleArtworkFormProps {
    * Sous-titre personnalisé de la page
    */
   pageSubtitle?: string;
+  /**
+   * Afficher le champ "Œuvre phare / mise en avant" (isTopArtwork)
+   * Par défaut true. Passer false pour le masquer (contexte artiste).
+   */
+  showFeatured?: boolean;
 }
 
 function ImageThumbnail({ url, alt }: { url: string; alt: string }) {
@@ -99,6 +104,7 @@ export default function PresaleArtworkForm({
   redirectUrl,
   pageTitle,
   pageSubtitle,
+  showFeatured = true,
 }: PresaleArtworkFormProps) {
   const router = useRouter();
   const t = useTranslations("art.presaleArtworkForm");
@@ -740,7 +746,7 @@ export default function PresaleArtworkForm({
       <div className="form-card">
         <div className="card-content">
           {/* isTopArtwork toggle - placed at the top of all fields */}
-          <div className="form-group mb-lg">
+          {showFeatured && <div className="form-group mb-lg">
             <label className="form-label">
               {t("fields.isTopArtwork") || "Œuvre phare / mise en avant"}
             </label>
@@ -806,7 +812,7 @@ export default function PresaleArtworkForm({
             <p className="form-hint mt-1 text-xs text-gray-500 dark:text-gray-400">
               Activer pour afficher cette œuvre dans la section "Œuvres phares" sur la page de l'artiste
             </p>
-          </div>
+          </div>}
 
           <TranslationField
             entityType="PresaleArtwork"

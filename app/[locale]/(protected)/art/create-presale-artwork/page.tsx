@@ -34,10 +34,11 @@ export default async function CreatePresaleArtworkPage() {
       </div>
       
       <div className="page-content">
-        <PresaleArtworkForm 
-          mode="create" 
+        <PresaleArtworkForm
+          mode="create"
           defaultArtistId={backofficeUser.artistId}
           redirectUrl="/art/my-artworks"
+          showFeatured={false}
         />
       </div>
     </div>
