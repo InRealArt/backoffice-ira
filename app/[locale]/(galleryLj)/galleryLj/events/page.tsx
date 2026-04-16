@@ -1,20 +1,18 @@
 import { getAllGalleryLjExhibitions } from "@/lib/actions/gallery-lj-exhibition-actions";
-import { loadGalleryLjExhibitionsSearchParams } from "./searchParams";
-import GalleryLjExhibitionsClient from "./GalleryLjEventsClient";
+import { loadGalleryLjExhibitionsSearchParams } from "../exhibitions/searchParams";
+import GalleryLjExhibitionsClient from "../exhibitions/GalleryLjEventsClient";
 import type { SearchParams } from "nuqs/server";
 
 export const metadata = {
-  title: "Expositions Galerie LJ | Administration",
-  description: "Gérez les expositions de la galerie LJ",
+  title: "Evènements Galerie LJ | Administration",
+  description: "Gérez les évènements de la galerie LJ",
 };
 
 type PageProps = {
   searchParams: Promise<SearchParams>;
 };
 
-export default async function GalleryLjExhibitionsPage({
-  searchParams,
-}: PageProps) {
+export default async function GalleryLjEventsPage({ searchParams }: PageProps) {
   const { sortColumn, sortDirection, page, itemsPerPage } =
     await loadGalleryLjExhibitionsSearchParams(searchParams);
 

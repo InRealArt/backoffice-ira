@@ -1373,3 +1373,75 @@ export async function uploadGalleryLjExhibitionImage(
         throw error
     }
 }
+
+/**
+ * Upload une image hero vers R2 dans le répertoire galleryLj/hero/
+ *
+ * Chemin : galleryLj/hero/<heroSlug>.webp
+ *
+ * @param imageFile - Le fichier image à uploader
+ * @param heroSlug - Slug du titre du hero (slugifié, sans espaces ni accents)
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns Chemin relatif du fichier uploadé
+ */
+export async function uploadGalleryLjHeroImage(
+    imageFile: File,
+    heroSlug: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        onUploadStatus?.('in-progress')
+
+        const finalKey = `galleryLj/hero/${heroSlug}.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
+
+        onUploadStatus?.('completed')
+
+        return result.relativePath
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image hero galerie LJ:", error)
+        const errorMessage =
+            error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
+        if (
+            errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp') ||
+            errorMessage.toLowerCase().includes('temp')
+        ) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+        throw error
+    }
+}

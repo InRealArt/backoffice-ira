@@ -11,40 +11,42 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { useDropzone } from 'react-dropzone'
 import { Camera, X } from 'lucide-react'
 import {
-  createGalleryLjExhibition,
-  updateGalleryLjExhibition,
-  getGalleryLjExhibitionById
-} from '@/lib/actions/gallery-lj-exhibition-actions'
-import { uploadGalleryLjExhibitionImage } from '@/lib/r2/storage'
+  createGalleryLjHero,
+  updateGalleryLjHero,
+  getGalleryLjHeroById
+} from '@/lib/actions/gallery-lj-hero-actions'
+import { uploadGalleryLjHeroImage } from '@/lib/r2/storage'
 import { getImageUrlWithCacheBuster } from '@/lib/r2/url'
 import { normalizeString } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Schema
 // ---------------------------------------------------------------------------
-const galleryLjExhibitionSchema = z.object({
-  name: z.string().min(1, "Le nom de l'exposition est obligatoire"),
-  description: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  location: z.string().optional(),
-  visible: z.boolean().default(true)
+const galleryLjHeroSchema = z.object({
+  title: z.string().min(1, 'Le titre est obligatoire'),
+  text: z.string().optional(),
+  ctaUrl: z.string().optional()
 })
 
-type GalleryLjExhibitionFormValues = z.infer<typeof galleryLjExhibitionSchema>
+type GalleryLjHeroFormValues = z.infer<typeof galleryLjHeroSchema>
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
-export interface GalleryLjExhibitionFormProps {
+export interface GalleryLjHeroFormProps {
   mode: 'create' | 'edit'
-  exhibitionId?: number
+  heroId?: number
+  hasReachedHeroLimit?: boolean
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryLjExhibitionFormProps) {
+export default function GalleryLjHeroForm({
+  mode,
+  heroId,
+  hasReachedHeroLimit = false
+}: GalleryLjHeroFormProps) {
   const router = useRouter()
   const params = useParams()
   const locale = (params.locale as string) || 'fr'
@@ -63,71 +65,55 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
     handleSubmit,
     setValue,
     formState: { errors }
-  } = useForm<GalleryLjExhibitionFormValues>({
-    resolver: zodResolver(galleryLjExhibitionSchema),
+  } = useForm<GalleryLjHeroFormValues>({
+    resolver: zodResolver(galleryLjHeroSchema),
     defaultValues: {
-      name: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      location: '',
-      visible: true
+      title: '',
+      text: '',
+      ctaUrl: ''
     }
   })
 
   // -------------------------------------------------------------------------
-  // Load existing exhibition in edit mode
+  // Load existing hero in edit mode
   // -------------------------------------------------------------------------
   useEffect(() => {
-    if (mode !== 'edit' || !exhibitionId) return
+    if (mode !== 'edit' || !heroId) return
 
-    const fetchExhibition = async () => {
+    const fetchHero = async () => {
       setIsLoading(true)
       try {
-        const exhibition = await getGalleryLjExhibitionById(exhibitionId)
-        if (exhibition) {
-          setValue('name', exhibition.name)
-          setValue('description', exhibition.description ?? '')
-          setValue(
-            'startDate',
-            exhibition.startDate
-              ? new Date(exhibition.startDate).toISOString().split('T')[0]
-              : ''
-          )
-          setValue(
-            'endDate',
-            exhibition.endDate
-              ? new Date(exhibition.endDate).toISOString().split('T')[0]
-              : ''
-          )
-          setValue('location', exhibition.location ?? '')
-          setValue('visible', exhibition.visible)
-          if (exhibition.imageUrl) {
-            setImagePreview(getImageUrlWithCacheBuster(exhibition.imageUrl) ?? '')
+        const hero = await getGalleryLjHeroById(heroId)
+        if (hero) {
+          setValue('title', hero.title)
+          setValue('text', hero.text ?? '')
+          setValue('ctaUrl', hero.ctaUrl ?? '')
+          if (hero.image) {
+            setImagePreview(getImageUrlWithCacheBuster(hero.image) ?? '')
           }
         }
       } catch {
-        showError("Erreur lors du chargement de l'exposition")
+        showError('Erreur lors du chargement du héro')
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchExhibition()
-  }, [mode, exhibitionId, setValue, showError])
+    fetchHero()
+  }, [mode, heroId, setValue, showError])
 
   const handleCancel = () => {
     if (window.history.length > 1) {
       router.back()
     } else {
-      router.push(`/${locale}/galleryLj/exhibitions`)
+      router.push(`/${locale}/galleryLj/hero`)
     }
   }
 
   // -------------------------------------------------------------------------
-  // Validation error handler — fired by react-hook-form when Zod validation fails
+  // Validation error handler
   // -------------------------------------------------------------------------
-  const onInvalid = useCallback((fieldErrors: FieldErrors<GalleryLjExhibitionFormValues>) => {
+  const onInvalid = useCallback((fieldErrors: FieldErrors<GalleryLjHeroFormValues>) => {
     const messages = Object.values(fieldErrors)
       .map((err) => err?.message)
       .filter((msg): msg is string => typeof msg === 'string' && msg.length > 0)
@@ -190,62 +176,57 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
   // -------------------------------------------------------------------------
   // Submit
   // -------------------------------------------------------------------------
-  const onSubmit = async (values: GalleryLjExhibitionFormValues) => {
+  const onSubmit = async (values: GalleryLjHeroFormValues) => {
+    if (mode === 'create' && hasReachedHeroLimit) {
+      showError('Un seul héro est autorisé. Supprimez le héro existant avant d\'en créer un nouveau.')
+      return
+    }
+
     setIsSubmitting(true)
     try {
       let imageUrl: string | undefined
 
-      // Upload image if a new file was selected
       if (imageFile) {
         setUploadingImage(true)
-        const exhibitionSlug = normalizeString(values.name)
-        imageUrl = await uploadGalleryLjExhibitionImage(imageFile, exhibitionSlug)
+        const heroSlug = normalizeString(values.title)
+        imageUrl = await uploadGalleryLjHeroImage(imageFile, heroSlug)
         setUploadingImage(false)
       }
 
-      // Parse optional date fields
-      const startDate = values.startDate && values.startDate.trim() !== ''
-        ? new Date(values.startDate)
-        : null
-      const endDate = values.endDate && values.endDate.trim() !== ''
-        ? new Date(values.endDate)
-        : null
-
       if (mode === 'create') {
-        const result = await createGalleryLjExhibition({
-          name: values.name,
-          description: values.description?.trim() || null,
-          startDate,
-          endDate,
-          location: values.location?.trim() || null,
-          imageUrl: imageUrl ?? null,
-          visible: values.visible
+        if (!imageUrl) {
+          showError("L'image est obligatoire pour créer un héro")
+          return
+        }
+
+        const result = await createGalleryLjHero({
+          image: imageUrl,
+          title: values.title,
+          text: values.text?.trim() || null,
+          ctaUrl: values.ctaUrl?.trim() || null
         })
 
         if (result.success) {
-          success('Exposition créée avec succès')
-          router.push(`/${locale}/galleryLj/exhibitions`)
+          success('Héro créé avec succès')
+          router.push(`/${locale}/galleryLj/hero`)
         } else {
           showError(result.message ?? 'Erreur lors de la création')
         }
-      } else if (mode === 'edit' && exhibitionId) {
-        const updateData: Parameters<typeof updateGalleryLjExhibition>[1] = {
-          name: values.name,
-          description: values.description?.trim() || null,
-          startDate,
-          endDate,
-          location: values.location?.trim() || null,
-          visible: values.visible
+      } else if (mode === 'edit' && heroId) {
+        const updateData: Parameters<typeof updateGalleryLjHero>[1] = {
+          title: values.title,
+          text: values.text?.trim() || null,
+          ctaUrl: values.ctaUrl?.trim() || null
         }
         if (imageUrl !== undefined) {
-          updateData.imageUrl = imageUrl
+          updateData.image = imageUrl
         }
 
-        const result = await updateGalleryLjExhibition(exhibitionId, updateData)
+        const result = await updateGalleryLjHero(heroId, updateData)
 
         if (result.success) {
-          success('Exposition mise à jour avec succès')
-          router.push(`/${locale}/galleryLj/exhibitions`)
+          success('Héro mis à jour avec succès')
+          router.push(`/${locale}/galleryLj/hero`)
         } else {
           showError(result.message ?? 'Erreur lors de la mise à jour')
         }
@@ -270,81 +251,55 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
       <div className="form-card">
         <div className="card-content">
 
-          {/* Nom */}
+          {/* Titre */}
           <div className="form-group">
-            <label htmlFor="name" className="form-label">
-              Nom <span className="text-red-500">*</span>
+            <label htmlFor="title" className="form-label">
+              Titre <span className="text-red-500">*</span>
             </label>
             <input
-              id="name"
+              id="title"
               type="text"
-              className={`form-input ${errors.name ? 'input-error' : ''}`}
-              placeholder="Nom de l'exposition"
-              {...register('name')}
+              className={`form-input ${errors.title ? 'input-error' : ''}`}
+              placeholder="Titre de la section hero"
+              {...register('title')}
             />
-            {errors.name && (
-              <p className="form-error">{errors.name.message}</p>
+            {errors.title && (
+              <p className="form-error">{errors.title.message}</p>
             )}
           </div>
 
-          {/* Description */}
+          {/* Texte */}
           <div className="form-group">
-            <label htmlFor="description" className="form-label">
-              Description
+            <label htmlFor="text" className="form-label">
+              Texte descriptif
             </label>
             <textarea
-              id="description"
+              id="text"
               className="form-input"
-              placeholder="Description de l'exposition"
+              placeholder="Texte descriptif (optionnel)"
               rows={4}
-              {...register('description')}
+              {...register('text')}
             />
           </div>
 
-          {/* Lieu */}
+          {/* CTA URL */}
           <div className="form-group">
-            <label htmlFor="location" className="form-label">
-              Lieu
+            <label htmlFor="ctaUrl" className="form-label">
+              URL du bouton CTA
             </label>
             <input
-              id="location"
+              id="ctaUrl"
               type="text"
               className="form-input"
-              placeholder="ex: Galerie LJ, Paris"
-              {...register('location')}
-            />
-          </div>
-
-          {/* Date de début */}
-          <div className="form-group">
-            <label htmlFor="startDate" className="form-label">
-              Date de début
-            </label>
-            <input
-              id="startDate"
-              type="date"
-              className="form-input"
-              {...register('startDate')}
-            />
-          </div>
-
-          {/* Date de fin */}
-          <div className="form-group">
-            <label htmlFor="endDate" className="form-label">
-              Date de fin
-            </label>
-            <input
-              id="endDate"
-              type="date"
-              className="form-input"
-              {...register('endDate')}
+              placeholder="https://..."
+              {...register('ctaUrl')}
             />
           </div>
 
           {/* Image upload */}
           <div className="form-group">
             <label className="form-label">
-              Image d&apos;affiche
+              Image hero {mode === 'create' && <span className="text-red-500">*</span>}
             </label>
             {!imagePreview ? (
               <div className="mb-3">
@@ -360,7 +315,7 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  <input {...getImageInputProps()} ref={imageInputRef} id="exhibition-image-input" />
+                  <input {...getImageInputProps()} ref={imageInputRef} id="hero-image-input" />
                   <div
                     style={{
                       display: 'flex',
@@ -370,7 +325,7 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
                     }}
                     onClick={(e) => {
                       e.stopPropagation()
-                      const input = document.getElementById('exhibition-image-input') as HTMLInputElement
+                      const input = document.getElementById('hero-image-input') as HTMLInputElement
                       if (input) {
                         input.click()
                       }
@@ -455,18 +410,6 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
             )}
           </div>
 
-          {/* Visible */}
-          <div className="form-group">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                className="form-checkbox"
-                {...register('visible')}
-              />
-              <span className="form-label mb-0">Visible sur la galerie</span>
-            </label>
-          </div>
-
         </div>
       </div>
 
@@ -482,7 +425,7 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
         <button
           type="submit"
           className="btn btn-primary btn-medium"
-          disabled={isSubmitting}
+          disabled={isSubmitting || (mode === 'create' && hasReachedHeroLimit)}
         >
           {isSubmitting ? (
             <>
@@ -490,7 +433,7 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
               {mode === 'create' ? 'Création...' : 'Mise à jour...'}
             </>
           ) : mode === 'create' ? (
-            "Créer l'exposition"
+            'Créer le héro'
           ) : (
             'Enregistrer'
           )}

@@ -458,6 +458,27 @@ export default function NavbarMenu() {
           <li>
             <a
               onClick={() =>
+                handleMenuNavigation("/fr/galleryLj/dashboard", "galleryLjDashboard")
+              }
+              className="flex items-center gap-2"
+            >
+              {isItemNavigating("galleryLjDashboard") ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  <LayoutDashboard size={18} />
+                  <span>Dashboard</span>
+                </>
+              ) : (
+                <>
+                  <LayoutDashboard size={18} />
+                  <span>Dashboard</span>
+                </>
+              )}
+            </a>
+          </li>
+          <li>
+            <a
+              onClick={() =>
                 handleMenuNavigation("/fr/galleryLj/artists", "galleryLjArtists")
               }
               className="flex items-center gap-2"
@@ -500,20 +521,41 @@ export default function NavbarMenu() {
           <li>
             <a
               onClick={() =>
-                handleMenuNavigation("/fr/galleryLj/exhibitions", "galleryLjExhibitions")
+                handleMenuNavigation('/fr/galleryLj/events', 'galleryLjEvents')
               }
               className="flex items-center gap-2"
             >
-              {isItemNavigating("galleryLjExhibitions") ? (
+              {isItemNavigating('galleryLjEvents') ? (
                 <>
                   <span className="loading loading-spinner loading-sm"></span>
                   <CalendarDays size={18} />
-                  <span>Expositions Gallery LJ</span>
+                  <span>Evènements Gallery LJ</span>
                 </>
               ) : (
                 <>
                   <CalendarDays size={18} />
-                  <span>Expositions Gallery LJ</span>
+                  <span>Evènements Gallery LJ</span>
+                </>
+              )}
+            </a>
+          </li>
+          <li>
+            <a
+              onClick={() =>
+                handleMenuNavigation("/fr/galleryLj/hero", "galleryLjHero")
+              }
+              className="flex items-center gap-2"
+            >
+              {isItemNavigating("galleryLjHero") ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  <Layout size={18} />
+                  <span>Hero Galerie LJ</span>
+                </>
+              ) : (
+                <>
+                  <Layout size={18} />
+                  <span>Hero Galerie LJ</span>
                 </>
               )}
             </a>
@@ -1497,6 +1539,22 @@ export default function NavbarMenu() {
               <a
                 onClick={() =>
                   handleDesktopNavigation(
+                    "/fr/galleryLj/dashboard",
+                    "galleryLjDashboard"
+                  )
+                }
+                className={`flex items-center gap-2 ${
+                  activeItem === "galleryLjDashboard" ? "active" : ""
+                }`}
+              >
+                <LayoutDashboard size={18} />
+                Dashboard
+              </a>
+            </li>
+            <li>
+              <a
+                onClick={() =>
+                  handleDesktopNavigation(
                     "/fr/galleryLj/artists",
                     "galleryLjArtists"
                   )
@@ -1529,16 +1587,32 @@ export default function NavbarMenu() {
               <a
                 onClick={() =>
                   handleDesktopNavigation(
-                    "/fr/galleryLj/exhibitions",
-                    "galleryLjExhibitions"
+                    '/fr/galleryLj/events',
+                    'galleryLjEvents'
                   )
                 }
                 className={`flex items-center gap-2 ${
-                  activeItem === "galleryLjExhibitions" ? "active" : ""
+                  activeItem === 'galleryLjEvents' ? 'active' : ''
                 }`}
               >
                 <CalendarDays size={18} />
-                Expositions Gallery LJ
+                Evènements Gallery LJ
+              </a>
+            </li>
+            <li>
+              <a
+                onClick={() =>
+                  handleDesktopNavigation(
+                    "/fr/galleryLj/hero",
+                    "galleryLjHero"
+                  )
+                }
+                className={`flex items-center gap-2 ${
+                  activeItem === "galleryLjHero" ? "active" : ""
+                }`}
+              >
+                <Layout size={18} />
+                Hero Galerie LJ
               </a>
             </li>
           </ul>

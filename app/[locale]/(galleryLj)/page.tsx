@@ -10,5 +10,5 @@ type Props = {
  */
 export default async function GalleryLjRootPage({ params }: Props) {
   const { locale } = await params
-  redirect(`/${locale}/galleryLj/artists`)
+  redirect(`/${locale}/galleryLj/dashboard`)
 }

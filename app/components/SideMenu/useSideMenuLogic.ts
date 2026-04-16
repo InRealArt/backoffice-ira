@@ -152,7 +152,9 @@ export function useSideMenuLogic() {
   // Déterminer l'élément actif en fonction du chemin
   useEffect(() => {
     if (pathname) {
-      if (pathname.includes('/dashboard')) {
+      if (pathname.includes('/galleryLj/dashboard')) {
+        setActiveItem('galleryLjDashboard')
+      } else if (pathname.includes('/dashboard')) {
         setActiveItem('dashboard')
       } else if (pathname.includes('/art/myPhysicalArtwork')) {
         setActiveItem('myPhysicalArtwork')
@@ -182,7 +184,9 @@ export function useSideMenuLogic() {
       } else if (pathname.includes('/tools')) {
         setActiveItem('adminTools')
         setShowToolsSubmenu(true)
-      } else if (pathname.includes('/fr/galleryLj/artists')) {
+      } else if (pathname.includes('/galleryLj/hero')) {
+        setActiveItem('galleryLjHero')
+      } else if (pathname.includes('/galleryLj/artists')) {
         setActiveItem('galleryLjArtists')
       }
     }

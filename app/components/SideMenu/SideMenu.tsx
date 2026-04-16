@@ -9,7 +9,7 @@ import MarketplaceSubMenu from './MarketplaceSubMenu'
 import DataAdministrationSubMenu from './DataAdministrationSubMenu'
 import LandingSubMenu from './LandingSubMenu'
 import ToolsSubMenu from './ToolsSubMenu'
-import { LayoutDashboard, Image, MapPin, PlusCircle, Users } from 'lucide-react'
+import { LayoutDashboard, Image, MapPin, PlusCircle, Users, Layout } from 'lucide-react'
 
 // Composant de fallback pour le chargement
 function SideMenuSkeleton({ isMenuCollapsed }: { isMenuCollapsed: boolean }) {
@@ -119,11 +119,25 @@ export default function SideMenu() {
           <>
             <MenuSeparator isCollapsed={isMenuCollapsed} />
             <SideMenuItem
+              label="Dashboard"
+              isActive={activeItem === 'galleryLjDashboard'}
+              onClick={() => handleNavigation('/fr/galleryLj/dashboard', 'galleryLjDashboard')}
+              isCollapsed={isMenuCollapsed}
+              icon={<LayoutDashboard size={20} />}
+            />
+            <SideMenuItem
               label="Artistes Gallery LJ"
               isActive={activeItem === 'galleryLjArtists'}
               onClick={() => handleNavigation('/fr/galleryLj/artists', 'galleryLjArtists')}
               isCollapsed={isMenuCollapsed}
               icon={<Users size={20} />}
+            />
+            <SideMenuItem
+              label="Hero Galerie LJ"
+              isActive={activeItem === 'galleryLjHero'}
+              onClick={() => handleNavigation('/fr/galleryLj/hero', 'galleryLjHero')}
+              isCollapsed={isMenuCollapsed}
+              icon={<Layout size={20} />}
             />
           </>
         )}

@@ -1,21 +1,21 @@
-import GalleryLjExhibitionForm from "../../GalleryLjEventForm";
+import GalleryLjExhibitionForm from "../../../exhibitions/GalleryLjEventForm";
 import { getGalleryLjExhibitionById } from "@/lib/actions/gallery-lj-exhibition-actions";
 import { notFound } from "next/navigation";
 
 export const metadata = {
-  title: "Modifier une exposition Galerie LJ | Administration",
-  description: "Modification d'une exposition de la galerie LJ",
+  title: "Modifier un évènement Galerie LJ | Administration",
+  description: "Modification d'un évènement de la galerie LJ",
 };
 
-interface EditGalleryLjExhibitionPageProps {
+interface EditGalleryLjEventPageProps {
   params: Promise<{
     id: string;
   }>;
 }
 
-export default async function EditGalleryLjExhibitionPage({
+export default async function EditGalleryLjEventPage({
   params,
-}: EditGalleryLjExhibitionPageProps) {
+}: EditGalleryLjEventPageProps) {
   const resolvedParams = await params;
   const exhibitionId = parseInt(resolvedParams.id, 10);
 
@@ -32,9 +32,9 @@ export default async function EditGalleryLjExhibitionPage({
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1 className="page-title">Modifier une exposition</h1>
+        <h1 className="page-title">Modifier un évènement</h1>
         <p className="page-subtitle">
-          Modification de l&apos;exposition : {exhibition.name}
+          Modification de l&apos;évènement : {exhibition.name}
         </p>
       </div>
 

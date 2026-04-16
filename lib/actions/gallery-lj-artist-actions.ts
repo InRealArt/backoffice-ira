@@ -82,7 +82,7 @@ export async function createGalleryLjArtist(data: {
     collectiveExhibitions?: string | null
     publicCollections?: string | null
     imageUrl?: string | null
-    visible?: boolean
+    permanent?: boolean
 }) {
     try {
         // Slug rule: if pseudo is present, use it; otherwise use firstName-lastName
@@ -104,7 +104,7 @@ export async function createGalleryLjArtist(data: {
                 collectiveExhibitions: sanitizeHtml(data.collectiveExhibitions),
                 publicCollections: sanitizeHtml(data.publicCollections),
                 imageUrl: data.imageUrl ? (toRelativePath(data.imageUrl) ?? data.imageUrl) : null,
-                visible: data.visible ?? true
+                permanent: data.permanent ?? true
             }
         })
 
@@ -132,7 +132,7 @@ export async function updateGalleryLjArtist(
         collectiveExhibitions?: string | null
         publicCollections?: string | null
         imageUrl?: string | null
-        visible?: boolean
+        permanent?: boolean
     }
 ) {
     try {

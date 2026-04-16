@@ -15,8 +15,8 @@ import {
 export function GalleryLjDashboard() {
   const [artistMetrics, setArtistMetrics] = useState<GalleryLjArtistMetrics>({
     total: 0,
-    visible: 0,
-    hidden: 0,
+    permanent: 0,
+    temporary: 0,
   })
   const [artworkMetrics, setArtworkMetrics] = useState<GalleryLjArtworkMetrics>({
     total: 0,
@@ -92,10 +92,10 @@ export function GalleryLjDashboard() {
           </div>
           {!isLoadingArtists && (
             <div className="dashboard-small-text">
-              <span style={{ color: '#10b981' }}>{artistMetrics.visible} visible{artistMetrics.visible > 1 ? 's' : ''}</span>
-              {artistMetrics.hidden > 0 && (
+              <span style={{ color: '#10b981' }}>{artistMetrics.permanent} permanent{artistMetrics.permanent > 1 ? 's' : ''}</span>
+              {artistMetrics.temporary > 0 && (
                 <span style={{ color: '#6b7280', marginLeft: '0.5rem' }}>
-                  · {artistMetrics.hidden} masqu{artistMetrics.hidden > 1 ? 'és' : 'é'}
+                  · {artistMetrics.temporary} temporaire{artistMetrics.temporary > 1 ? 's' : ''}
                 </span>
               )}
             </div>
@@ -188,7 +188,7 @@ export function GalleryLjDashboard() {
             </div>
           )}
           <div className="metric-card-button">
-            <a href="/fr/galleryLj/exhibitions" className="btn btn-sm btn-primary">
+            <a href="/fr/galleryLj/events" className="btn btn-sm btn-primary">
               Voir les expositions
             </a>
           </div>

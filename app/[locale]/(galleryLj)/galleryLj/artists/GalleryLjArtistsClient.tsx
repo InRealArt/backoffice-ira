@@ -24,7 +24,7 @@ interface GalleryLjArtistRow {
   firstName: string | null
   lastName: string | null
   imageUrl: string | null
-  visible: boolean
+  permanent: boolean
   order: number
   createdAt: Date
   artworks: { id: number }[]
@@ -154,14 +154,14 @@ export default function GalleryLjArtistsClient({
       render: (artist) => <span>{artist.artworks.length}</span>
     },
     {
-      key: 'visible',
-      header: 'Visible',
+      key: 'permanent',
+      header: 'Résident',
       width: '80px',
       render: (artist) => (
         <span
-          className={`badge ${artist.visible ? 'badge-success' : 'badge-secondary'}`}
+          className={`badge ${artist.permanent ? 'badge-success' : 'badge-secondary'}`}
         >
-          {artist.visible ? 'Oui' : 'Non'}
+          {artist.permanent ? 'Oui' : 'Non'}
         </span>
       )
     },

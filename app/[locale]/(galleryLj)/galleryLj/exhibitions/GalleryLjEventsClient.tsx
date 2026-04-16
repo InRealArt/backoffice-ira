@@ -83,7 +83,7 @@ export default function GalleryLjExhibitionsClient({
   }
 
   const handleRowClick = (exhibition: GalleryLjExhibitionRow) => {
-    router.push(`/${locale}/galleryLj/exhibitions/${exhibition.id}/edit`)
+    router.push(`/${locale}/galleryLj/events/${exhibition.id}/edit`)
   }
 
   const totalPages = Math.ceil(totalItems / itemsPerPage)
@@ -195,12 +195,12 @@ export default function GalleryLjExhibitionsClient({
   return (
     <PageContainer>
       <PageHeader
-        title="Expositions — Galerie LJ"
-        subtitle="Gérez les expositions de la galerie LJ"
+        title="Evènements — Galerie LJ"
+        subtitle="Gérez les évènements de la galerie LJ"
         actions={
           <ActionButton
-            label="Nouvelle exposition"
-            onClick={() => router.push(`/${locale}/galleryLj/exhibitions/create`)}
+            label="Nouvel évènement"
+            onClick={() => router.push(`/${locale}/galleryLj/events/create`)}
             size="small"
           />
         }
@@ -215,11 +215,11 @@ export default function GalleryLjExhibitionsClient({
           loadingRowId={deletingId}
           emptyState={
             <EmptyState
-              message="Aucune exposition trouvée"
+              message="Aucun évènement trouvé"
               action={
                 <ActionButton
-                  label="Nouvelle exposition"
-                  onClick={() => router.push(`/${locale}/galleryLj/exhibitions/create`)}
+                  label="Nouvel évènement"
+                  onClick={() => router.push(`/${locale}/galleryLj/events/create`)}
                   variant="primary"
                 />
               }

@@ -33,7 +33,7 @@ const galleryLjArtistSchema = z.object({
   personalExhibitions: z.string().optional(),
   collectiveExhibitions: z.string().optional(),
   publicCollections: z.string().optional(),
-  visible: z.boolean().default(true)
+  permanent: z.boolean().default(true)
 }).refine(
   (data) => {
     // Soit le pseudo est renseigné, soit le nom + prénom
@@ -96,7 +96,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
       personalExhibitions: '',
       collectiveExhibitions: '',
       publicCollections: '',
-      visible: true
+      permanent: true
     }
   })
 
@@ -120,7 +120,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
           setValue('personalExhibitions', artist.personalExhibitions ?? '')
           setValue('collectiveExhibitions', artist.collectiveExhibitions ?? '')
           setValue('publicCollections', artist.publicCollections ?? '')
-          setValue('visible', artist.visible)
+          setValue('permanent', artist.permanent)
           if (artist.imageUrl) {
             setImagePreview(getImageUrlWithCacheBuster(artist.imageUrl) ?? '')
           }
@@ -223,7 +223,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
           collectiveExhibitions: values.collectiveExhibitions || null,
           publicCollections: values.publicCollections || null,
           imageUrl: imageUrl ?? null,
-          visible: values.visible
+          permanent: values.permanent
         })
 
         if (result.success) {
@@ -243,7 +243,7 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
           personalExhibitions: values.personalExhibitions || null,
           collectiveExhibitions: values.collectiveExhibitions || null,
           publicCollections: values.publicCollections || null,
-          visible: values.visible
+          permanent: values.permanent
         }
         if (imageUrl !== undefined) {
           updateData.imageUrl = imageUrl
@@ -502,15 +502,15 @@ export default function GalleryLjArtistForm({ mode, artistId }: GalleryLjArtistF
                 )}
               </div>
 
-              {/* Visible */}
+              {/* Permanent */}
               <div className="form-group">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     className="form-checkbox"
-                    {...register('visible')}
+                    {...register('permanent')}
                   />
-                  <span className="form-label mb-0">Visible sur la galerie</span>
+                  <span className="form-label mb-0">Artiste résident</span>
                 </label>
               </div>
             </>
