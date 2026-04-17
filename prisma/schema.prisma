@@ -1906,6 +1906,7 @@ model GalleryLjArtwork {
 model GalleryLjEvent {
     id          Int       @id @default(autoincrement())
     name        String    // Nom de l'exposition
+    slug        String?   // Slug dérivé du nom (normalizeString)
     description String?   // Description libre
     startDate   DateTime? // Date de début
     endDate     DateTime? // Date de fin

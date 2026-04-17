@@ -19,6 +19,7 @@ import { getAllGalleryLjArtists } from '@/lib/actions/gallery-lj-artist-actions'
 import { uploadGalleryLjExhibitionImage } from '@/lib/r2/storage'
 import { getImageUrlWithCacheBuster } from '@/lib/r2/url'
 import { normalizeString } from '@/lib/utils'
+import TiptapEditor from '@/app/components/Forms/TiptapEditor'
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -140,7 +141,7 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
           setValue('eventType', (exhibition.eventType as 'event' | 'exhibition') ?? 'exhibition')
           setValue(
             'artistId',
-            exhibition.artists && exhibition.artists.length > 0
+            'artists' in exhibition && exhibition.artists && exhibition.artists.length > 0
               ? String(exhibition.artists[0].artistId)
               : ''
           )
@@ -237,6 +238,7 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
     setIsSubmitting(true)
     try {
       let imageUrl: string | undefined
+      const slug = normalizeString(values.name)
 
       // Upload image if a new file was selected
       if (imageFile) {
@@ -269,7 +271,8 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
           imageUrl: imageUrl ?? null,
           eventType: values.eventType,
           artistId,
-          visible: values.visible
+          visible: values.visible,
+          slug
         })
 
         if (result.success) {
@@ -292,7 +295,8 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
           location: values.location?.trim() || null,
           eventType: values.eventType,
           artistId,
-          visible: values.visible
+          visible: values.visible,
+          slug
         }
         if (imageUrl !== undefined) {
           updateData.imageUrl = imageUrl
@@ -349,12 +353,9 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
             <label htmlFor="description" className="form-label">
               Description
             </label>
-            <textarea
-              id="description"
-              className="form-input"
-              placeholder="Description de l'exposition"
-              rows={4}
-              {...register('description')}
+            <TiptapEditor
+              value={watch('description') ?? ''}
+              onChange={(html) => setValue('description', html, { shouldDirty: true })}
             />
           </div>
 

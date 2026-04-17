@@ -51,7 +51,7 @@ export async function getAllGalleryLjExhibitions() {
     } catch (error) {
         if (isMissingColumnError(error)) {
             try {
-                const exhibitions = await prisma.galleryLjExhibition.findMany({
+                const exhibitions = await prisma.galleryLjEvent.findMany({
                     include: {
                         _count: {
                             select: { artworks: true }
@@ -93,7 +93,7 @@ export async function getGalleryLjExhibitionById(id: number) {
     } catch (error) {
         if (isMissingColumnError(error)) {
             try {
-                const exhibition = await prisma.galleryLjExhibition.findUnique({
+                const exhibition = await prisma.galleryLjEvent.findUnique({
                     where: { id },
                     include: {
                         artworks: true
@@ -123,6 +123,7 @@ export async function createGalleryLjExhibition(data: {
     eventType?: 'event' | 'exhibition'
     artistId?: number | null
     visible?: boolean
+    slug?: string | null
 }) {
     try {
         const exhibition = await prisma.galleryLjEvent.create({
@@ -134,6 +135,7 @@ export async function createGalleryLjExhibition(data: {
                 location: data.location ?? null,
                 imageUrl: data.imageUrl ? (toRelativePath(data.imageUrl) ?? data.imageUrl) : null,
                 eventType: data.eventType ?? 'exhibition',
+                slug: data.slug ?? null,
                 artists: data.eventType === 'exhibition' && data.artistId
                     ? {
                         create: {
@@ -151,7 +153,7 @@ export async function createGalleryLjExhibition(data: {
     } catch (error) {
         if (isMissingColumnError(error)) {
             try {
-                const exhibition = await prisma.galleryLjExhibition.create({
+                const exhibition = await prisma.galleryLjEvent.create({
                     data: {
                         name: data.name,
                         description: data.description ?? null,
@@ -189,6 +191,7 @@ export async function updateGalleryLjExhibition(
         eventType?: 'event' | 'exhibition'
         artistId?: number | null
         visible?: boolean
+        slug?: string | null
     }
 ) {
     try {
@@ -207,6 +210,7 @@ export async function updateGalleryLjExhibition(
         if (data.location !== undefined) prismaData.location = data.location
         if (data.eventType !== undefined) prismaData.eventType = data.eventType
         if (data.visible !== undefined) prismaData.visible = data.visible
+        if (data.slug !== undefined) prismaData.slug = data.slug
         if (normalizedImageUrl !== undefined) prismaData.imageUrl = normalizedImageUrl
         if (data.eventType !== undefined || data.artistId !== undefined) {
             prismaData.artists = {
@@ -233,13 +237,19 @@ export async function updateGalleryLjExhibition(
     } catch (error) {
         if (isMissingColumnError(error)) {
             try {
-                // galleryLjExhibition legacy model does not support eventType/artists relation
-                const { eventType, artists, ...fallbackData } = prismaData
-                void eventType
-                void artists
-                const exhibition = await prisma.galleryLjExhibition.update({
+                // galleryLjExhibition legacy model does not support eventType/artists/slug relation
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const safeData: Record<string, any> = {}
+                if (data.name !== undefined) safeData.name = data.name
+                if (data.description !== undefined) safeData.description = data.description
+                if (data.startDate !== undefined) safeData.startDate = data.startDate
+                if (data.endDate !== undefined) safeData.endDate = data.endDate
+                if (data.location !== undefined) safeData.location = data.location
+                if (data.visible !== undefined) safeData.visible = data.visible
+                if (data.imageUrl !== undefined) safeData.imageUrl = data.imageUrl ? (toRelativePath(data.imageUrl) ?? data.imageUrl) : null
+                const exhibition = await prisma.galleryLjEvent.update({
                     where: { id },
-                    data: fallbackData
+                    data: safeData
                 })
                 revalidatePath(REVALIDATE_PATH)
                 revalidatePath(`/fr/galleryLj/events/${id}/edit`)
@@ -306,7 +316,7 @@ export async function deleteGalleryLjExhibition(id: number) {
     } catch (error) {
         if (isMissingColumnError(error)) {
             try {
-                const exhibition = await prisma.galleryLjExhibition.findUnique({
+                const exhibition = await prisma.galleryLjEvent.findUnique({
                     where: { id },
                     select: { imageUrl: true }
                 })
@@ -336,7 +346,7 @@ export async function deleteGalleryLjExhibition(id: number) {
                     }
                 }
 
-                await prisma.galleryLjExhibition.delete({
+                await prisma.galleryLjEvent.delete({
                     where: { id }
                 })
 
