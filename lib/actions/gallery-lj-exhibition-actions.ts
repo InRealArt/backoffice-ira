@@ -121,7 +121,7 @@ export async function createGalleryLjExhibition(data: {
     location?: string | null
     imageUrl?: string | null
     eventType?: 'event' | 'exhibition'
-    artistId?: number | null
+    artistIds?: number[]
     visible?: boolean
     slug?: string | null
 }) {
@@ -136,10 +136,10 @@ export async function createGalleryLjExhibition(data: {
                 imageUrl: data.imageUrl ? (toRelativePath(data.imageUrl) ?? data.imageUrl) : null,
                 eventType: data.eventType ?? 'exhibition',
                 slug: data.slug ?? null,
-                artists: data.eventType === 'exhibition' && data.artistId
+                artists: data.eventType === 'exhibition' && data.artistIds?.length
                     ? {
-                        create: {
-                            artistId: data.artistId
+                        createMany: {
+                            data: data.artistIds.map((artistId) => ({ artistId }))
                         }
                     }
                     : undefined,
@@ -189,7 +189,7 @@ export async function updateGalleryLjExhibition(
         location?: string | null
         imageUrl?: string | null
         eventType?: 'event' | 'exhibition'
-        artistId?: number | null
+        artistIds?: number[]
         visible?: boolean
         slug?: string | null
     }
@@ -212,13 +212,13 @@ export async function updateGalleryLjExhibition(
         if (data.visible !== undefined) prismaData.visible = data.visible
         if (data.slug !== undefined) prismaData.slug = data.slug
         if (normalizedImageUrl !== undefined) prismaData.imageUrl = normalizedImageUrl
-        if (data.eventType !== undefined || data.artistId !== undefined) {
+        if (data.eventType !== undefined || data.artistIds !== undefined) {
             prismaData.artists = {
                 deleteMany: {},
-                ...(data.eventType === 'exhibition' && data.artistId
+                ...(data.eventType === 'exhibition' && data.artistIds?.length
                     ? {
-                        create: {
-                            artistId: data.artistId
+                        createMany: {
+                            data: data.artistIds.map((artistId) => ({ artistId }))
                         }
                     }
                     : {})

@@ -31,7 +31,7 @@ const galleryLjExhibitionSchema = z.object({
   endDate: z.string().optional(),
   location: z.string().optional(),
   eventType: z.enum(['event', 'exhibition']).default('exhibition'),
-  artistId: z.string().optional(),
+  artistIds: z.array(z.string()).default([]),
   visible: z.boolean().default(true)
 })
 
@@ -66,6 +66,9 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
     lastName: string | null
   }>>([])
   const [loadingArtists, setLoadingArtists] = useState(true)
+  const [selectedArtistIds, setSelectedArtistIds] = useState<string[]>([])
+  const [artistSearch, setArtistSearch] = useState('')
+  const [artistDropdownOpen, setArtistDropdownOpen] = useState(false)
 
   const imageInputRef = useRef<HTMLInputElement>(null)
 
@@ -84,12 +87,16 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
       endDate: '',
       location: '',
       eventType: 'exhibition',
-      artistId: '',
+      artistIds: [],
       visible: true
     }
   })
 
   const selectedEventType = watch('eventType')
+
+  useEffect(() => {
+    setValue('artistIds', selectedArtistIds)
+  }, [selectedArtistIds, setValue])
 
   useEffect(() => {
     const fetchArtists = async () => {
@@ -139,12 +146,11 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
           )
           setValue('location', exhibition.location ?? '')
           setValue('eventType', (exhibition.eventType as 'event' | 'exhibition') ?? 'exhibition')
-          setValue(
-            'artistId',
-            'artists' in exhibition && exhibition.artists && exhibition.artists.length > 0
-              ? String(exhibition.artists[0].artistId)
-              : ''
-          )
+          const ids = 'artists' in exhibition && exhibition.artists
+            ? exhibition.artists.map((a) => String(a.artistId))
+            : []
+          setValue('artistIds', ids)
+          setSelectedArtistIds(ids)
           setValue('visible', exhibition.visible)
           if (exhibition.imageUrl) {
             setImagePreview(getImageUrlWithCacheBuster(exhibition.imageUrl) ?? '')
@@ -257,10 +263,10 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
         : null
 
       if (mode === 'create') {
-        const artistId =
-          values.eventType === 'exhibition' && values.artistId && values.artistId.trim() !== ''
-            ? Number(values.artistId)
-            : null
+        const artistIds =
+          values.eventType === 'exhibition'
+            ? (values.artistIds ?? []).map(Number).filter(Boolean)
+            : []
 
         const result = await createGalleryLjExhibition({
           name: values.name,
@@ -270,7 +276,7 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
           location: values.location?.trim() || null,
           imageUrl: imageUrl ?? null,
           eventType: values.eventType,
-          artistId,
+          artistIds,
           visible: values.visible,
           slug
         })
@@ -282,10 +288,10 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
           showError(result.message ?? 'Erreur lors de la création')
         }
       } else if (mode === 'edit' && exhibitionId) {
-        const artistId =
-          values.eventType === 'exhibition' && values.artistId && values.artistId.trim() !== ''
-            ? Number(values.artistId)
-            : null
+        const artistIds =
+          values.eventType === 'exhibition'
+            ? (values.artistIds ?? []).map(Number).filter(Boolean)
+            : []
 
         const updateData: Parameters<typeof updateGalleryLjExhibition>[1] = {
           name: values.name,
@@ -294,7 +300,7 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
           endDate,
           location: values.location?.trim() || null,
           eventType: values.eventType,
-          artistId,
+          artistIds,
           visible: values.visible,
           slug
         }
@@ -390,27 +396,91 @@ export default function GalleryLjExhibitionForm({ mode, exhibitionId }: GalleryL
 
           {selectedEventType === 'exhibition' && (
             <div className="form-group">
-              <label htmlFor="artistId" className="form-label">
-                Artiste lié à l&apos;exposition
+              <label className="form-label">
+                Artistes liés à l&apos;exposition
               </label>
-              <select
-                id="artistId"
-                className={`form-input ${errors.artistId ? 'input-error' : ''}`}
-                disabled={loadingArtists}
-                {...register('artistId')}
-              >
-                <option value="">{loadingArtists ? 'Chargement...' : 'Sélectionner un artiste'}</option>
-                {artists.map((artist) => (
-                  <option key={artist.id} value={artist.id}>
-                    {artist.firstName && artist.lastName
-                      ? `${artist.firstName} ${artist.lastName} (${artist.pseudo})`
-                      : artist.pseudo}
-                  </option>
-                ))}
-              </select>
-              {errors.artistId && (
-                <p className="form-error">{errors.artistId.message}</p>
-              )}
+
+              {/* Pills des artistes sélectionnés */}
+              <div className="flex flex-wrap gap-2 mb-2 min-h-[32px]">
+                {selectedArtistIds.map((id) => {
+                  const artist = artists.find((a) => String(a.id) === id)
+                  if (!artist) return null
+                  const label = artist.firstName && artist.lastName
+                    ? `${artist.firstName} ${artist.lastName}`
+                    : artist.pseudo
+                  return (
+                    <span
+                      key={id}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200"
+                    >
+                      {label}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedArtistIds((prev) => prev.filter((x) => x !== id))}
+                        className="hover:text-blue-600 ml-1"
+                        aria-label={`Retirer ${label}`}
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  )
+                })}
+                {selectedArtistIds.length === 0 && (
+                  <span className="text-sm text-gray-400 italic">Aucun artiste sélectionné</span>
+                )}
+              </div>
+
+              {/* Combobox filtrable */}
+              <div className="relative">
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder={loadingArtists ? 'Chargement...' : 'Rechercher un artiste...'}
+                  value={artistSearch}
+                  disabled={loadingArtists}
+                  onChange={(e) => {
+                    setArtistSearch(e.target.value)
+                    setArtistDropdownOpen(true)
+                  }}
+                  onFocus={() => setArtistDropdownOpen(true)}
+                  onBlur={() => setTimeout(() => setArtistDropdownOpen(false), 150)}
+                />
+                {artistDropdownOpen && (
+                  <ul className="absolute z-10 w-full mt-1 max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg">
+                    {artists
+                      .filter((a) => {
+                        const label = a.firstName && a.lastName
+                          ? `${a.firstName} ${a.lastName} ${a.pseudo}`
+                          : a.pseudo
+                        return label.toLowerCase().includes(artistSearch.toLowerCase())
+                      })
+                      .map((artist) => {
+                        const id = String(artist.id)
+                        const isSelected = selectedArtistIds.includes(id)
+                        const label = artist.firstName && artist.lastName
+                          ? `${artist.firstName} ${artist.lastName} (${artist.pseudo})`
+                          : artist.pseudo
+                        return (
+                          <li
+                            key={id}
+                            onMouseDown={() => {
+                              setSelectedArtistIds((prev) =>
+                                prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+                              )
+                              setArtistSearch('')
+                            }}
+                            className={`px-3 py-2 text-sm cursor-pointer flex items-center gap-2 hover:bg-gray-50 ${
+                              isSelected ? 'font-medium text-blue-700 bg-blue-50' : 'text-gray-700'
+                            }`}
+                          >
+                            <span className="w-4 text-center">{isSelected ? '✓' : ''}</span>
+                            {label}
+                          </li>
+                        )
+                      })}
+                  </ul>
+                )}
+              </div>
             </div>
           )}
 
