@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { ElementType, ContentElement, H2Element, H3Element, ParagraphElement, ImageElement, VideoElement, ListElement, OrderedListElement, AccordionElement, AccordionItemData, RichContent } from './types'
 import { v4 as uuidv4 } from 'uuid'
 import RichTextEditor from './RichTextEditor'
+import { normalizeYouTubeUrl } from '@/lib/utils'
 
 interface ElementProps {
   element: ContentElement
@@ -160,7 +161,7 @@ export function VideoElementComponent({ element, onUpdate, onDelete }: ElementPr
       <input
         type="text"
         value={videoElement.url}
-        onChange={(e) => onUpdate({ ...videoElement, url: e.target.value })}
+        onChange={(e) => onUpdate({ ...videoElement, url: normalizeYouTubeUrl(e.target.value) })}
         placeholder="URL de la vidéo (YouTube, Vimeo, etc.)"
         className="form-input w-full mb-2"
       />

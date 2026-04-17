@@ -6,6 +6,7 @@ import RichContentRenderer from '../BlogEditor/RichContentRenderer'
 import { HtmlTablePreview } from '../BlogEditor/ContentElements'
 import { calculateReadingTimeFromBlogContent } from '@/lib/utils/reading-time-calculator'
 import { getImageUrl } from '@/lib/r2/url'
+import { normalizeYouTubeUrl } from '@/lib/utils'
 
 interface BlogPreviewRendererProps {
   formData: FormData
@@ -86,8 +87,8 @@ export default function BlogPreviewRenderer({ formData }: BlogPreviewRendererPro
                 return (
                   <div key={element.id || elementIndex} className="mb-8">
                     <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
-                      <iframe 
-                        src={element.url}
+                      <iframe
+                        src={normalizeYouTubeUrl(element.url)}
                         style={{ 
                           position: 'absolute', 
                           top: 0, 

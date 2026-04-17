@@ -50,6 +50,53 @@ export function getArtistDisplayName(artist: ArtistName): string {
  * @param val - L'URL à valider (peut être une chaîne vide ou undefined)
  * @returns true si l'URL est valide ou vide, false sinon
  */
+/**
+ * Normalizes a YouTube URL to the embed format required for iframes.
+ *
+ * Handles:
+ *   https://www.youtube.com/watch?v=ID&t=30  → https://www.youtube.com/embed/ID?start=30
+ *   https://youtu.be/ID?t=30                 → https://www.youtube.com/embed/ID?start=30
+ *   https://www.youtube.com/embed/ID         → unchanged
+ *
+ * Non-YouTube URLs are returned as-is.
+ */
+export function normalizeYouTubeUrl(url: string): string {
+    if (!url) return url
+
+    try {
+        const parsed = new URL(url)
+        const hostname = parsed.hostname.replace(/^www\./, '')
+
+        let videoId: string | null = null
+        let startSeconds: string | null = null
+
+        if (hostname === 'youtube.com') {
+            if (parsed.pathname === '/watch') {
+                videoId = parsed.searchParams.get('v')
+                const t = parsed.searchParams.get('t')
+                if (t) startSeconds = t.replace(/s$/, '')
+            } else if (parsed.pathname.startsWith('/embed/')) {
+                // Already in embed format — return as-is
+                return url
+            }
+        } else if (hostname === 'youtu.be') {
+            videoId = parsed.pathname.slice(1) // strip leading /
+            const t = parsed.searchParams.get('t')
+            if (t) startSeconds = t.replace(/s$/, '')
+        }
+
+        if (!videoId) return url
+
+        const embedUrl = new URL(`https://www.youtube.com/embed/${videoId}`)
+        if (startSeconds) {
+            embedUrl.searchParams.set('start', startSeconds)
+        }
+        return embedUrl.toString()
+    } catch {
+        return url
+    }
+}
+
 export function validateUrl(val: string | undefined): boolean {
     if (val === "" || !val) return true
     // Décoder les entités HTML comme &amp; en &
