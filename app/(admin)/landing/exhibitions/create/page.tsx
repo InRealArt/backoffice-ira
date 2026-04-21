@@ -1,11 +1,14 @@
 import ExhibitionForm from '../ExhibitionForm'
+import { getAllLandingArtistsForExhibition } from '@/lib/actions/exhibition-actions'
 
 export const metadata = {
   title: 'Nouvelle exposition | Administration',
   description: 'Créer une nouvelle exposition',
 }
 
-export default function CreateExhibitionPage() {
+export default async function CreateExhibitionPage() {
+  const artists = await getAllLandingArtistsForExhibition()
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -14,7 +17,7 @@ export default function CreateExhibitionPage() {
       </div>
 
       <div className="page-content">
-        <ExhibitionForm mode="create" />
+        <ExhibitionForm mode="create" artists={artists} />
       </div>
     </div>
   )

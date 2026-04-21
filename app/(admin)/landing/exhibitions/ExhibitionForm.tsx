@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,10 +10,11 @@ import { Camera, X } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { Exhibition } from '@/src/generated/prisma/browser'
 import { createExhibition, updateExhibition } from '@/lib/actions/exhibition-actions'
+import type { ExhibitionArtistOption } from '@/lib/actions/exhibition-actions'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import { uploadImageToExhibitionFolder } from '@/lib/r2/storage'
-import { getImageUrlWithCacheBuster } from '@/lib/r2/url'
-import { normalizeString } from '@/lib/utils'
+import { getImageUrl, getImageUrlWithCacheBuster } from '@/lib/r2/url'
+import { normalizeString, getArtistDisplayName } from '@/lib/utils'
 
 const formSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
@@ -56,16 +57,32 @@ function isValidRemoteImageUrl(url: string): boolean {
 interface ExhibitionFormProps {
   mode: 'create' | 'edit'
   exhibition?: Exhibition
+  /** All available landing artists for selection */
+  artists?: ExhibitionArtistOption[]
+  /** Landing artist IDs already associated with this exhibition (edit mode) */
+  initialArtistIds?: number[]
 }
 
-export default function ExhibitionForm({ mode, exhibition }: ExhibitionFormProps) {
+export default function ExhibitionForm({
+  mode,
+  exhibition,
+  artists = [],
+  initialArtistIds = [],
+}: ExhibitionFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>(
-    exhibition?.imageUrl ?? ''
+    getImageUrl(exhibition?.imageUrl) ?? ''
   )
   const { success, error: showError } = useToast()
+
+  // Artist many-to-many state
+  const [selectedArtistIds, setSelectedArtistIds] = useState<number[]>(initialArtistIds)
+  const [artistSearch, setArtistSearch] = useState('')
+  const [artistDropdownOpen, setArtistDropdownOpen] = useState(false)
+  const artistInputRef = useRef<HTMLInputElement>(null)
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
 
   const {
     register,
@@ -87,6 +104,18 @@ export default function ExhibitionForm({ mode, exhibition }: ExhibitionFormProps
   })
 
   const nameValue = watch('name')
+
+  useEffect(() => {
+    if (!artistDropdownOpen || !artistInputRef.current) return
+    const rect = artistInputRef.current.getBoundingClientRect()
+    setDropdownStyle({
+      position: 'fixed',
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      zIndex: 9999,
+    })
+  }, [artistDropdownOpen])
 
   const handleImageDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -154,6 +183,7 @@ export default function ExhibitionForm({ mode, exhibition }: ExhibitionFormProps
         imageUrl: finalImageUrl,
         description: data.description || null,
         linkToEvent: data.linkToEvent || null,
+        artistIds: selectedArtistIds,
       }
 
       let result: { success: boolean; message?: string }
@@ -418,6 +448,98 @@ export default function ExhibitionForm({ mode, exhibition }: ExhibitionFormProps
               disabled={isSubmitting}
             />
             {errors.linkToEvent && <p className="form-error">{errors.linkToEvent.message}</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Artistes */}
+      <div className="form-card">
+        <div className="card-header">
+          <h2 className="card-title">Artistes</h2>
+        </div>
+        <div className="card-content">
+          <div className="form-group">
+            <label className="form-label">Artistes liés à l&apos;exposition</label>
+
+            {/* Selected artist chips */}
+            <div className="flex flex-wrap gap-2 mb-2 min-h-[32px]">
+              {selectedArtistIds.map((id) => {
+                const artist = artists.find((a) => a.id === id)
+                if (!artist) return null
+                const label = getArtistDisplayName(artist)
+                return (
+                  <span
+                    key={id}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200"
+                  >
+                    {label}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedArtistIds((prev) => prev.filter((x) => x !== id))}
+                      className="hover:text-blue-600 ml-1"
+                      aria-label={`Retirer ${label}`}
+                      disabled={isSubmitting}
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                )
+              })}
+              {selectedArtistIds.length === 0 && (
+                <span className="text-sm text-gray-400 italic">Aucun artiste sélectionné</span>
+              )}
+            </div>
+
+            {/* Searchable combobox */}
+            <div className="relative">
+              <input
+                ref={artistInputRef}
+                type="text"
+                className="form-input"
+                placeholder={artists.length === 0 ? 'Aucun artiste disponible' : 'Rechercher un artiste...'}
+                value={artistSearch}
+                disabled={isSubmitting || artists.length === 0}
+                onChange={(e) => {
+                  setArtistSearch(e.target.value)
+                  setArtistDropdownOpen(true)
+                }}
+                onFocus={() => setArtistDropdownOpen(true)}
+                onBlur={() => setTimeout(() => setArtistDropdownOpen(false), 150)}
+              />
+              {artistDropdownOpen && artists.length > 0 && (
+                <ul style={dropdownStyle} className="max-h-52 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg">
+                  {artists
+                    .filter((a) => {
+                      const label = getArtistDisplayName(a)
+                      const fullText = [a.name, a.surname, a.pseudo].filter(Boolean).join(' ')
+                      return fullText.toLowerCase().includes(artistSearch.toLowerCase())
+                    })
+                    .map((artist) => {
+                      const isSelected = selectedArtistIds.includes(artist.id)
+                      const label = getArtistDisplayName(artist)
+                      return (
+                        <li
+                          key={artist.id}
+                          onMouseDown={() => {
+                            setSelectedArtistIds((prev) =>
+                              prev.includes(artist.id)
+                                ? prev.filter((x) => x !== artist.id)
+                                : [...prev, artist.id]
+                            )
+                            setArtistSearch('')
+                          }}
+                          className={`px-3 py-2 text-sm cursor-pointer flex items-center gap-2 hover:bg-gray-50 ${
+                            isSelected ? 'font-medium text-blue-700 bg-blue-50' : 'text-gray-700'
+                          }`}
+                        >
+                          <span className="w-4 text-center">{isSelected ? '✓' : ''}</span>
+                          {label}
+                        </li>
+                      )
+                    })}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       </div>

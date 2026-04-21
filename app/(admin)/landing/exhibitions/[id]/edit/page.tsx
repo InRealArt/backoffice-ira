@@ -1,5 +1,9 @@
 import { notFound } from 'next/navigation'
-import { getExhibitionById } from '@/lib/actions/exhibition-actions'
+import {
+  getExhibitionById,
+  getAllLandingArtistsForExhibition,
+  getExhibitionArtistIds,
+} from '@/lib/actions/exhibition-actions'
 import ExhibitionForm from '../../ExhibitionForm'
 
 export const metadata = {
@@ -19,7 +23,11 @@ export default async function EditExhibitionPage({ params }: EditExhibitionPageP
     notFound()
   }
 
-  const exhibition = await getExhibitionById(exhibitionId)
+  const [exhibition, artists, initialArtistIds] = await Promise.all([
+    getExhibitionById(exhibitionId),
+    getAllLandingArtistsForExhibition(),
+    getExhibitionArtistIds(exhibitionId),
+  ])
 
   if (!exhibition) {
     notFound()
@@ -33,7 +41,12 @@ export default async function EditExhibitionPage({ params }: EditExhibitionPageP
       </div>
 
       <div className="page-content">
-        <ExhibitionForm mode="edit" exhibition={exhibition} />
+        <ExhibitionForm
+          mode="edit"
+          exhibition={exhibition}
+          artists={artists}
+          initialArtistIds={initialArtistIds}
+        />
       </div>
     </div>
   )
