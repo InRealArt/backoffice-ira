@@ -108,14 +108,23 @@ export async function updateTopArtistsOrder(
         )
         if (validUpdates.length === 0) return { success: true }
 
-        await prisma.$transaction(
-            validUpdates.map((update) =>
-                prisma.landingUgcTopArtists.update({
+        // Use temporary negative offsets to avoid unique constraint violations
+        // on `order` when swapping values (PostgreSQL checks per-row, not deferred)
+        const OFFSET = 100000
+        await prisma.$transaction(async (tx) => {
+            for (const update of validUpdates) {
+                await tx.landingUgcTopArtists.update({
+                    where: { id: update.id },
+                    data: { order: update.order + OFFSET },
+                })
+            }
+            for (const update of validUpdates) {
+                await tx.landingUgcTopArtists.update({
                     where: { id: update.id },
                     data: { order: update.order },
                 })
-            )
-        )
+            }
+        })
 
         REVALIDATE_PATHS.forEach((path) => revalidatePath(path))
         return { success: true }
