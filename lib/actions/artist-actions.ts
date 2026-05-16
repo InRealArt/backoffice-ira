@@ -321,6 +321,11 @@ export async function createUserArtistProfile(
             }
         }
 
+        // S'assurer que le pays existe dans la base de données avant de sauvegarder
+        if (countryCode) {
+            await ensureCountryExists(countryCode)
+        }
+
         // Créer l'artiste dans la table Artist
         const artist = await prisma.artist.create({
             data: {
@@ -420,12 +425,15 @@ export async function createUserArtistProfile(
         }
     } catch (error: any) {
         console.error('Erreur lors de la création du profil artiste:', error)
-        return {
-            success: false,
-            message: error.code === 'P2002'
-                ? 'Un champ unique est déjà utilisé'
-                : 'Une erreur est survenue lors de la création du profil artiste'
+        let message = 'Une erreur est survenue lors de la création du profil artiste'
+        if (error.code === 'P2002') {
+            message = 'Un champ unique est déjà utilisé (pseudo ou email déjà existant)'
+        } else if (error.code === 'P2003') {
+            message = 'Pays sélectionné invalide ou non reconnu en base de données'
+        } else if (error.message?.includes('Code pays invalide')) {
+            message = error.message
         }
+        return { success: false, message }
     }
 }
 
