@@ -37,8 +37,10 @@ export default function ProgressModal({ isOpen, steps, currentError, onClose, ti
         justifyContent: 'center',
         zIndex: 9999
       }}
+      onClick={currentError && onClose ? onClose : undefined}
     >
       <div
+        onClick={(e) => e.stopPropagation()}
         style={{
           backgroundColor: 'white',
           borderRadius: '8px',

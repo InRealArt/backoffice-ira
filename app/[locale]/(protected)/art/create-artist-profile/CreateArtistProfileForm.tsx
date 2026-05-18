@@ -930,6 +930,7 @@ export default function CreateArtistProfileForm({
         isOpen={showProgressModal}
         steps={progressSteps}
         currentError={progressError}
+        onClose={() => setShowProgressModal(false)}
       />
     </>
   );
