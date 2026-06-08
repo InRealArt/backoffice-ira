@@ -518,6 +518,7 @@ model LandingArtist {
     secondaryImageUrl   String?
     artistId            Int
     isTopArtist         Boolean                @default(false)
+    isCurrentlyExposed  Boolean                @default(false)
     //Champs pour le descriptif détaillé de l'artiste sur la landing
     mediumTags          String[]               @default([])
     quoteFromInRealArt  String?
@@ -1154,6 +1155,7 @@ model Team {
     email        String
     role         String
     order        Int?
+    visible      Boolean @default(true)
     intro        String?
     description  String?
     photoUrl1    String?
@@ -1906,7 +1908,7 @@ model GalleryLjArtwork {
 model GalleryLjEvent {
     id          Int       @id @default(autoincrement())
     name        String    // Nom de l'exposition
-    slug        String?   // Slug dérivé du nom (normalizeString)
+    slug        String    @unique // Slug de l'exposition
     description String?   // Description libre
     startDate   DateTime? // Date de début
     endDate     DateTime? // Date de fin

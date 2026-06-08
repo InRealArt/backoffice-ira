@@ -27,6 +27,7 @@ const formSchema = z.object({
   description: z.string().nullable().optional(),
   artworkStyle: z.string().nullable().optional(),
   artistsPage: z.boolean().default(false),
+  isCurrentlyExposed: z.boolean().default(false),
   imageUrl: z.string().optional(), // Sera rempli après l'upload si nouveau fichier
   secondaryImageUrl: z.string().nullable().optional(),
   websiteUrl: z
@@ -89,6 +90,7 @@ interface LandingArtistWithArtist {
   artworkImages: any;
   artworkStyle: string | null;
   artistsPage: boolean | null;
+  isCurrentlyExposed?: boolean | null;
   imageUrl: string;
   secondaryImageUrl?: string | null;
   artistId: number;
@@ -236,6 +238,7 @@ export default function LandingArtistEditForm({
       description: landingArtist.description || "",
       artworkStyle: landingArtist.artworkStyle || "",
       artistsPage: landingArtist.artistsPage || false,
+      isCurrentlyExposed: landingArtist.isCurrentlyExposed || false,
       imageUrl: landingArtist.imageUrl,
       secondaryImageUrl: landingArtist.secondaryImageUrl || "",
       websiteUrl: landingArtist.artist.websiteUrl || "",
@@ -268,6 +271,7 @@ export default function LandingArtistEditForm({
 
   // Utiliser useWatch pour optimiser les re-renders (best practice React Hook Form)
   const artistsPage = useWatch({ control, name: "artistsPage" });
+  const isCurrentlyExposed = useWatch({ control, name: "isCurrentlyExposed" });
   const mediumTags = useWatch({ control, name: "mediumTags" }) || [];
 
   useEffect(() => {
@@ -567,6 +571,7 @@ export default function LandingArtistEditForm({
         description: data.description || null,
         artworkStyle: data.artworkStyle || null,
         artistsPage: data.artistsPage,
+        isCurrentlyExposed: data.isCurrentlyExposed,
         imageUrl: imageUrl || "",
         secondaryImageUrl: secondaryImageUrl,
         mediumTags: Array.isArray(data.mediumTags) ? data.mediumTags : [],
@@ -923,6 +928,75 @@ export default function LandingArtistEditForm({
                         }}
                       >
                         Affiché
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <div
+                      className="d-flex align-items-center gap-md"
+                      style={{ marginBottom: "20px" }}
+                    >
+                      <span
+                        className={!isCurrentlyExposed ? "text-primary" : "text-muted"}
+                        style={{
+                          fontWeight: !isCurrentlyExposed ? "bold" : "normal",
+                        }}
+                      >
+                        Non exposé
+                      </span>
+                      <label
+                        className="d-flex align-items-center"
+                        style={{
+                          position: "relative",
+                          display: "inline-block",
+                          width: "60px",
+                          height: "30px",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          {...register("isCurrentlyExposed")}
+                          style={{ opacity: 0, width: 0, height: 0 }}
+                        />
+                        <span
+                          style={{
+                            position: "absolute",
+                            cursor: "pointer",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: isCurrentlyExposed ? "#4f46e5" : "#ccc",
+                            borderRadius: "34px",
+                            transition: "0.4s",
+                          }}
+                        >
+                          <span
+                            style={{
+                              position: "absolute",
+                              content: '""',
+                              height: "22px",
+                              width: "22px",
+                              left: "4px",
+                              bottom: "4px",
+                              backgroundColor: "white",
+                              borderRadius: "50%",
+                              transition: "0.4s",
+                              transform: isCurrentlyExposed
+                                ? "translateX(30px)"
+                                : "translateX(0)",
+                            }}
+                          ></span>
+                        </span>
+                      </label>
+                      <span
+                        className={isCurrentlyExposed ? "text-primary" : "text-muted"}
+                        style={{
+                          fontWeight: isCurrentlyExposed ? "bold" : "normal",
+                        }}
+                      >
+                        Exposé actuellement
                       </span>
                     </div>
                   </div>

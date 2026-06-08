@@ -1,4 +1,5 @@
 import NewTeamMemberForm from './NewTeamMemberForm'
+import TeamCreateTabs from './TeamCreateTabs'
 
 export const metadata = {
   title: 'Ajouter un membre d\'équipe | Landing',
@@ -7,9 +8,6 @@ export const metadata = {
 
 export default function NewTeamMemberPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Ajouter un membre d&apos;équipe</h1>
-      <NewTeamMemberForm />
-    </div>
+    <TeamCreateTabs profileForm={<NewTeamMemberForm />} />
   )
 } 

@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Team } from '@/src/generated/prisma/browser'
-import { updateTeamMember } from '@/lib/actions/team-actions'
+import { updateTeamMember, updateTeamMemberVisible } from '@/lib/actions/team-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import { useToast } from '@/app/components/Toast/ToastContext' 
 import Image from 'next/image'
+import { getImageUrl } from '@/lib/r2/url'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,17 +19,18 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Le nom est requis'),
   email: z.string().email('Email invalide').min(1, 'L\'email est requis'),
   role: z.string().min(1, 'Le rôle est requis'),
+  visible: z.boolean(),
   order: z.number().nullable().optional(),
   intro: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  photoUrl1: z.string().url('URL d\'image invalide').nullable().optional(),
-  photoUrl2: z.string().url('URL d\'image invalide').nullable().optional(),
-  linkedinUrl: z.string().url('URL LinkedIn invalide').nullable().optional(),
-  instagramUrl: z.string().url('URL Instagram invalide').nullable().optional(),
-  facebookUrl: z.string().url('URL Facebook invalide').nullable().optional(),
-  githubUrl: z.string().url('URL GitHub invalide').nullable().optional(),
-  twitterUrl: z.string().url('URL Twitter invalide').nullable().optional(),
-  websiteUrl: z.string().url('URL de site web invalide').nullable().optional(),
+  photoUrl1: z.string().url('URL d\'image invalide').or(z.literal('')).nullable().optional(),
+  photoUrl2: z.string().url('URL d\'image invalide').or(z.literal('')).nullable().optional(),
+  linkedinUrl: z.string().url('URL LinkedIn invalide').or(z.literal('')).nullable().optional(),
+  instagramUrl: z.string().url('URL Instagram invalide').or(z.literal('')).nullable().optional(),
+  facebookUrl: z.string().url('URL Facebook invalide').or(z.literal('')).nullable().optional(),
+  githubUrl: z.string().url('URL GitHub invalide').or(z.literal('')).nullable().optional(),
+  twitterUrl: z.string().url('URL Twitter invalide').or(z.literal('')).nullable().optional(),
+  websiteUrl: z.string().url('URL de site web invalide').or(z.literal('')).nullable().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -45,6 +47,7 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors }
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -53,6 +56,7 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
       lastName: teamMember.lastName,
       email: teamMember.email,
       role: teamMember.role,
+      visible: teamMember.visible,
       order: teamMember.order,
       intro: teamMember.intro || null,
       description: teamMember.description || null,
@@ -68,6 +72,7 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
   })
 
   const photoUrl1 = watch('photoUrl1')
+  const visible = watch('visible')
   
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
@@ -79,6 +84,7 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
         lastName: data.lastName,
         email: data.email,
         role: data.role,
+        visible: data.visible,
         order: data.order === undefined ? null : data.order,
         intro: data.intro === undefined ? null : data.intro,
         description: data.description === undefined ? null : data.description,
@@ -118,9 +124,9 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
       } else {
         error(result.message || 'Une erreur est survenue')
       }
-    } catch (error: any) {
+    } catch (err: any) {
       error('Une erreur est survenue lors de la mise à jour')
-      console.error(error)
+      console.error(err)
     } finally {
       setIsSubmitting(false)
     }
@@ -149,10 +155,10 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
           <div className="card-content">
             <div className="d-flex gap-lg">
               <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
-                {photoUrl1 ? (
+                {getImageUrl(photoUrl1) ? (
                   <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
                     <Image
-                      src={photoUrl1}
+                      src={getImageUrl(photoUrl1)!}
                       alt={`${teamMember.firstName} ${teamMember.lastName}`}
                       fill
                       style={{ objectFit: 'cover' }}
@@ -246,6 +252,66 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
             <h2 className="card-title">Description</h2>
           </div>
           <div className="card-content">
+            <div className="form-group">
+              <div className="d-flex align-items-center gap-md" style={{ marginBottom: '20px' }}>
+                <span
+                  className={!visible ? 'text-primary' : 'text-muted'}
+                  style={{ fontWeight: !visible ? 'bold' : 'normal' }}
+                >
+                  Non affiché
+                </span>
+                <label
+                  className="d-flex align-items-center"
+                  style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}
+                >
+                  <input
+                    type="checkbox"
+                    {...register('visible', {
+                      onChange: async (e) => {
+                        const newValue = e.target.checked
+                        try {
+                          const result = await updateTeamMemberVisible(teamMember.id, newValue)
+                          if (result.success) {
+                            success(newValue ? 'Membre affiché sur le site' : 'Membre masqué du site')
+                          } else {
+                            error(result.message || 'Erreur lors de la mise à jour')
+                            setValue('visible', !newValue)
+                          }
+                        } catch {
+                          error('Erreur réseau lors de la mise à jour de la visibilité')
+                          setValue('visible', !newValue)
+                        }
+                      }
+                    })}
+                    style={{ opacity: 0, width: 0, height: 0 }}
+                  />
+                  <span
+                    style={{
+                      position: 'absolute', cursor: 'pointer',
+                      top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: visible ? '#4f46e5' : '#ccc',
+                      borderRadius: '34px', transition: '0.4s',
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute', height: '22px', width: '22px',
+                        left: '4px', bottom: '4px', backgroundColor: 'white',
+                        borderRadius: '50%', transition: '0.4s',
+                        transform: visible ? 'translateX(30px)' : 'translateX(0)',
+                      }}
+                    />
+                  </span>
+                </label>
+                <span
+                  className={visible ? 'text-primary' : 'text-muted'}
+                  style={{ fontWeight: visible ? 'bold' : 'normal' }}
+                >
+                  Affiché
+                </span>
+              </div>
+            </div>
+
             <div className="form-group">
               <label htmlFor="order" className="form-label">Ordre d'affichage</label>
               <input

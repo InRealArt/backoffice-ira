@@ -102,6 +102,29 @@ export async function createTeamMember(
     }
 }
 
+export async function updateTeamMemberVisible(
+    id: number,
+    visible: boolean
+): Promise<{ success: boolean; message?: string }> {
+    try {
+        await prisma.team.update({
+            where: { id },
+            data: { visible }
+        })
+
+        revalidatePath(`/landing/team`)
+        revalidatePath(`/landing/team/${id}/edit`)
+
+        return { success: true }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour de la visibilité:', error)
+        return {
+            success: false,
+            message: 'Une erreur est survenue lors de la mise à jour.'
+        }
+    }
+}
+
 export async function deleteTeamMember(
     id: number
 ): Promise<{ success: boolean; message?: string }> {

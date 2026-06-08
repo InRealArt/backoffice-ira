@@ -30,6 +30,7 @@ export interface LandingArtistData {
     imageArtistStudio?: string | null
     onboardingBo?: Date | null
     isTopArtist?: boolean
+    isCurrentlyExposed?: boolean
 }
 
 /**
@@ -87,6 +88,7 @@ export async function createLandingArtist(data: LandingArtistData) {
                 description: data.description,
                 artworkStyle: data.artworkStyle,
                 artistsPage: data.artistsPage,
+                isCurrentlyExposed: data.isCurrentlyExposed,
                 imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
                 secondaryImageUrl: toRelativePath(data.secondaryImageUrl) ?? data.secondaryImageUrl ?? null,
                 artworkImages: data.artworkImages || '[]',
@@ -141,6 +143,7 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                 description: data.description,
                 artworkStyle: data.artworkStyle,
                 artistsPage: data.artistsPage,
+                isCurrentlyExposed: data.isCurrentlyExposed,
                 imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
                 secondaryImageUrl: toRelativePath(data.secondaryImageUrl) ?? data.secondaryImageUrl ?? null,
                 artworkImages: data.artworkImages || '[]',
