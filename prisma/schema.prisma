@@ -1249,6 +1249,15 @@ enum LandingPage {
     terms                              @map("/terms")
     terms_nft                          @map("/terms-nft")
     legal                              @map("/legal")
+    services                           @map("/services")
+    agence                             @map("/agence")
+    agence_artists                     @map("/agence/artists")
+    academy                            @map("/academy")
+    media                              @map("/media")
+    media_production                   @map("/media/production")
+    blog                               @map("/blog")
+    usecaseLeasingHotelPrestige        @map("/usecase/leasing/hotelPrestige")
+    usecaseLeasingImmobilier           @map("/usecase/leasing/immobilier")
 
     @@schema("landing")
 }

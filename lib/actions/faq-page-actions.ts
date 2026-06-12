@@ -5,6 +5,45 @@ import { DetailedFaqPage, DetailedFaqPageItem, LandingPage } from '@/src/generat
 import { revalidatePath } from 'next/cache'
 import { unstable_noStore } from 'next/cache'
 
+// Mapping URL (@map) → clé enum Prisma
+const URL_TO_LANDING_PAGE_KEY: Record<string, LandingPage> = {
+    '/': 'root',
+    '/artists': 'artists',
+    '/marketplace': 'marketplace',
+    '/token': 'token',
+    '/usecase': 'usecase',
+    '/usecase/leasing': 'usecaseLeasing',
+    '/usecase/lending': 'usecaseLending',
+    '/usecase/fractionate': 'usecaseFractionate',
+    '/usecase/companies': 'usecaseCompanies',
+    '/roadmap': 'roadmap',
+    '/presale': 'presale',
+    '/team': 'team',
+    '/loa-simulator': 'loa_simulator',
+    '/heritage-art-simulator': 'heritage_art_simulator',
+    '/art-salon-simulator/artbasel-paris': 'art_salon_simulator_artbasel_paris',
+    '/art-salon-simulator/artgeneve': 'art_salon_simulator_artgeneve',
+    '/joinInRealArt': 'joinInRealArt',
+    '/joinInRealArt/artists': 'joinInRealArt_artists',
+    '/joinInRealArt/galleries': 'joinInRealArt_galleries',
+    '/faq': 'faq',
+    '/faq/translated': 'faq_translated',
+    '/glossary': 'glossary',
+    '/contact': 'contact',
+    '/terms': 'terms',
+    '/terms-nft': 'terms_nft',
+    '/legal': 'legal',
+    '/services': 'services',
+    '/agence': 'agence',
+    '/agence/artists': 'agence_artists',
+    '/academy': 'academy',
+    '/media': 'media',
+    '/media/production': 'media_production',
+    '/blog': 'blog',
+    '/usecase/leasing/hotelPrestige': 'usecaseLeasingHotelPrestige',
+    '/usecase/leasing/immobilier': 'usecaseLeasingImmobilier',
+}
+
 /**
  * Récupère tous les DetailedFaqPage avec leurs DetailedFaqPageItem associés
  * @returns Liste des DetailedFaqPage avec leurs faqItems
@@ -99,12 +138,15 @@ export async function getAvailableLandingPages() {
  * @param name Nom du DetailedFaqPage (valeur de l'enum LandingPage)
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
-export async function createDetailedFaqPage(name: LandingPage) {
+export async function createDetailedFaqPage(name: string) {
     try {
+        // Le formulaire envoie l'URL (@map). On résout la clé enum Prisma correspondante.
+        const enumKey: LandingPage = URL_TO_LANDING_PAGE_KEY[name] ?? (name as LandingPage)
+
         // Vérifier si une FAQ existe déjà pour cette page
         const existingFaqPage = await prisma.detailedFaqPage.findFirst({
             where: {
-                name,
+                name: enumKey,
             },
         })
 
@@ -117,7 +159,7 @@ export async function createDetailedFaqPage(name: LandingPage) {
 
         const newFaqPage = await prisma.detailedFaqPage.create({
             data: {
-                name,
+                name: enumKey,
             },
         })
 
