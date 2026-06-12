@@ -14,6 +14,7 @@ import ProgressModal from '@/app/components/art/ProgressModal'
 import {
     createUgcArtistProfile,
     updateUgcArtistProfile,
+    updateUgcArtistProfileVisible,
     fetchImageForUgcUpload,
 } from '@/lib/actions/ugc-artist-profile-actions'
 import type { UgcArtistProfileWithRelations } from '@/lib/actions/ugc-artist-profile-actions'
@@ -38,6 +39,7 @@ const formSchema = z
         averageEngagement: z.string().optional().nullable(),
         totalConsumption: z.string().optional().nullable(),
         socialNetworks: z.array(z.string()).default([]),
+        visible: z.boolean().default(true),
     })
     .superRefine((data, ctx) => {
         const hasName = data.name && data.name.trim() !== ''
@@ -214,10 +216,12 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
             averageEngagement: profile?.socialMetrics?.averageEngagement != null ? String(profile.socialMetrics.averageEngagement) : '',
             totalConsumption: profile?.socialMetrics?.totalConsumption != null ? String(profile.socialMetrics.totalConsumption) : '',
             socialNetworks: (profile?.socialMetrics?.socialNetworks ?? []) as string[],
+            visible: profile?.visible ?? true,
         },
     })
 
     const creationMode = watch('creationMode')
+    const visible = watch('visible')
 
     // When user selects a landing artist from dropdown
     const handleLandingArtistSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -451,6 +455,7 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                 presentation: data.presentation?.trim() || null,
                 mediaUrls: uploadedMediaUrls,
                 tags: data.tags ?? [],
+                visible: data.visible ?? true,
                 ...(isEditMode ? {} : { landingArtistId: data.landingArtistId ?? null }),
                 socialMetrics: hasSocialMetrics || isEditMode ? {
                     totalAudience: parsedTotalAudience,
@@ -634,6 +639,66 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                                 <p className="text-muted" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
                                     Requis si le nom ET le prénom ne sont pas renseignés.
                                 </p>
+                            </div>
+                        </div>
+
+                        {/* Visible toggle */}
+                        <div className="form-section mt-lg">
+                            <h2 className="section-title">Visibilité</h2>
+                            <div className="d-flex align-items-center gap-md">
+                                <span
+                                    className={!visible ? 'text-primary' : 'text-muted'}
+                                    style={{ fontWeight: !visible ? 'bold' : 'normal' }}
+                                >
+                                    Non affiché
+                                </span>
+                                <label style={{ position: 'relative', display: 'inline-block', width: '60px', height: '30px' }}>
+                                    <input
+                                        type="checkbox"
+                                        {...register('visible', {
+                                            onChange: async (e) => {
+                                                if (!isEditMode || !profile) return
+                                                const newValue = e.target.checked
+                                                try {
+                                                    const result = await updateUgcArtistProfileVisible(profile.id, newValue)
+                                                    if (result.success) {
+                                                        success(newValue ? 'Profil affiché sur le site' : 'Profil masqué du site')
+                                                    } else {
+                                                        error(result.message || 'Erreur lors de la mise à jour')
+                                                        setValue('visible', !newValue)
+                                                    }
+                                                } catch {
+                                                    error('Erreur réseau lors de la mise à jour de la visibilité')
+                                                    setValue('visible', !newValue)
+                                                }
+                                            }
+                                        })}
+                                        style={{ opacity: 0, width: 0, height: 0 }}
+                                    />
+                                    <span
+                                        style={{
+                                            position: 'absolute', cursor: 'pointer',
+                                            top: 0, left: 0, right: 0, bottom: 0,
+                                            backgroundColor: visible ? '#4f46e5' : '#ccc',
+                                            borderRadius: '34px', transition: '0.4s',
+                                        }}
+                                    >
+                                        <span
+                                            style={{
+                                                position: 'absolute', height: '22px', width: '22px',
+                                                left: '4px', bottom: '4px', backgroundColor: 'white',
+                                                borderRadius: '50%', transition: '0.4s',
+                                                transform: visible ? 'translateX(30px)' : 'translateX(0)',
+                                            }}
+                                        />
+                                    </span>
+                                </label>
+                                <span
+                                    className={visible ? 'text-primary' : 'text-muted'}
+                                    style={{ fontWeight: visible ? 'bold' : 'normal' }}
+                                >
+                                    Affiché
+                                </span>
                             </div>
                         </div>
 

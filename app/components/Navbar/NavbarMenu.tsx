@@ -1794,7 +1794,7 @@ export default function NavbarMenu() {
               <details>
                 <summary className="flex items-center gap-2">
                   <Sparkles size={18} />
-                  Landing UGC
+                  InRealArt Agence
                 </summary>
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60">
                   <li>
@@ -1808,7 +1808,7 @@ export default function NavbarMenu() {
                       className="flex items-center gap-2"
                     >
                       <Sparkles size={18} />
-                      Top Artistes UGC
+                      Top Artistes Agence
                     </a>
                   </li>
                   <li>
@@ -1822,7 +1822,7 @@ export default function NavbarMenu() {
                       className="flex items-center gap-2"
                     >
                       <Users size={18} />
-                      Profils Artistes UGC
+                      Profils Artistes Agence
                     </a>
                   </li>
                 </ul>

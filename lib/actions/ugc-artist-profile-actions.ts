@@ -136,6 +136,7 @@ export async function updateUgcArtistProfile(
         presentation?: string | null
         mediaUrls?: string[]
         tags?: string[]
+        visible?: boolean
         socialMetrics?: {
             totalAudience?: number | null
             averageEngagement?: number | null
@@ -180,6 +181,20 @@ export async function updateUgcArtistProfile(
     } catch (error) {
         console.error('Error updating UGC artist profile:', error)
         return { success: false, message: 'Erreur lors de la mise à jour' }
+    }
+}
+
+export async function updateUgcArtistProfileVisible(
+    id: number,
+    visible: boolean
+): Promise<{ success: boolean; message?: string }> {
+    try {
+        await prisma.landingUgcArtistProfile.update({ where: { id }, data: { visible } })
+        REVALIDATE_PATHS.forEach((p) => revalidatePath(p))
+        return { success: true }
+    } catch (error) {
+        console.error('Error updating UGC artist profile visibility:', error)
+        return { success: false, message: 'Erreur lors de la mise à jour de la visibilité' }
     }
 }
 

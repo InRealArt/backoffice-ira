@@ -1756,6 +1756,7 @@ model LandingUgcArtistProfile {
     name            String?
     surname         String?
     pseudo          String?
+    visible         Boolean @default(true)
     profileImageUrl String?
     title           String?
     description     String?
