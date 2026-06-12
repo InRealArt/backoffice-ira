@@ -66,25 +66,28 @@ export async function getDetailedFaqPageById(id: number) {
  */
 export async function getAvailableLandingPages() {
     try {
-        // Récupérer toutes les valeurs de l'enum LandingPage
-        const allLandingPages = Object.values(LandingPage)
+        // Récupérer les valeurs réelles de l'enum depuis PostgreSQL (les @map, ex: "/artists")
+        const enumRows = await prisma.$queryRaw<{ enumlabel: string }[]>`
+            SELECT enumlabel::text
+            FROM pg_enum
+            JOIN pg_type ON pg_enum.enumtypid = pg_type.oid
+            JOIN pg_namespace ON pg_type.typnamespace = pg_namespace.oid
+            WHERE pg_type.typname = 'LandingPage'
+              AND pg_namespace.nspname = 'landing'
+            ORDER BY pg_enum.enumsortorder
+        `
+        const allLandingPages = enumRows.map(r => r.enumlabel)
+        
+        // Récupérer les pages déjà utilisées (valeurs @map stockées en DB)
+        const usedPages = await prisma.$queryRaw<{ name: string }[]>`
+            SELECT name::text FROM landing."DetailedFaqPage"
+        `
+        const usedPageNames = new Set(usedPages.map(p => p.name))
+        
 
-        // Récupérer les pages déjà utilisées
-        const usedPages = await prisma.detailedFaqPage.findMany({
-            select: {
-                name: true,
-            },
-        })
-
-        // Extraire les noms des pages utilisées
-        const usedPageNames = usedPages.map(page => page.name.toString())
-
-        // Filtrer pour obtenir les pages disponibles
-        const availablePages = allLandingPages.filter(
-            page => !usedPageNames.includes(page.toString())
-        )
-        console.log("availablePages : ")
-        return availablePages
+        const available = allLandingPages.filter(page => !usedPageNames.has(page))
+        
+        return available
     } catch (error) {
         console.error('Erreur lors de la récupération des pages disponibles:', error)
         return []
