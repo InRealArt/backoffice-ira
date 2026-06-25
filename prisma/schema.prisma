@@ -519,6 +519,7 @@ model LandingArtist {
     artistId            Int
     isTopArtist         Boolean                @default(false)
     isCurrentlyExposed  Boolean                @default(false)
+    isFeatured          Boolean                @default(false)
     //Champs pour le descriptif détaillé de l'artiste sur la landing
     mediumTags          String[]               @default([])
     quoteFromInRealArt  String?
@@ -1297,6 +1298,7 @@ model PresaleArtwork {
     mockupUrls           Json                   @default("[]")
     isSold               Boolean                @default(false)
     isTopArtwork         Boolean                @default(false)
+    isFeatured           Boolean                @default(false)
     createdAt            DateTime               @default(now())
     artist               Artist                 @relation(fields: [artistId], references: [id])
     landingArtistKeyWorks LandingArtistKeyWork[]
@@ -1344,6 +1346,7 @@ model SeoPost {
     generatedArticleHtml String?
     jsonLd               String?
     pinned               Boolean    @default(false)
+    isFeatured           Boolean    @default(false)
     categoryId           Int
     listTags             String[]
 
@@ -1394,6 +1397,7 @@ model Exhibition {
     imageUrl     String?                         // URL Cloudflare de l'image illustrant l'exposition
     description  String?                         // Description de l'exposition
     linkToEvent  String?                         // Lien vers l'événement externe
+    isFeatured   Boolean                         @default(false)
     artists      ExhibitionArtist[]
 
     @@schema("landing")

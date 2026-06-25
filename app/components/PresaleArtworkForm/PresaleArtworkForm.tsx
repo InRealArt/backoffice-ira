@@ -42,6 +42,7 @@ const createPresaleArtworkSchema = (t: (key: string) => string) =>
     height: z.string().optional(),
     isSold: z.boolean().optional().default(false),
     isTopArtwork: z.boolean().optional().default(false),
+    isFeatured: z.boolean().optional().default(false),
   });
 
 type PresaleArtworkFormValues = z.infer<
@@ -166,6 +167,7 @@ export default function PresaleArtworkForm({
       height: "",
       isSold: false,
       isTopArtwork: false,
+      isFeatured: false,
     },
   });
 
@@ -225,6 +227,7 @@ export default function PresaleArtworkForm({
             setValue("height", presaleArtwork.height?.toString() || "");
             setValue("isSold", presaleArtwork.isSold ?? false);
             setValue("isTopArtwork", presaleArtwork.isTopArtwork ?? false);
+            setValue("isFeatured", presaleArtwork.isFeatured ?? false);
             setImagePreview(getImageUrlWithCacheBuster(presaleArtwork.imageUrl) ?? "");
 
             // Initialiser les URLs de mockups
@@ -511,6 +514,7 @@ export default function PresaleArtworkForm({
           mockupUrls: JSON.stringify(finalMockupUrls),
           isSold: data.isSold ?? false,
           isTopArtwork: data.isTopArtwork ?? false,
+          isFeatured: data.isFeatured ?? false,
         });
 
         if (result.success) {
@@ -557,6 +561,7 @@ export default function PresaleArtworkForm({
           mockupUrls: JSON.stringify(finalMockupUrls),
           isSold: data.isSold ?? false,
           isTopArtwork: data.isTopArtwork ?? false,
+          isFeatured: data.isFeatured ?? false,
         });
 
         if (result.success) {
@@ -721,6 +726,7 @@ export default function PresaleArtworkForm({
   // Surveiller la valeur de isSold pour le toggle switch
   const isSold = watch("isSold") ?? false;
   const isTopArtwork = watch("isTopArtwork") ?? false;
+  const isFeatured = watch("isFeatured") ?? false;
 
   const isValidRemoteImageUrl = (url: string): boolean => {
     if (url.startsWith("data:") || url.startsWith("blob:")) return false;
@@ -811,6 +817,70 @@ export default function PresaleArtworkForm({
             </div>
             <p className="form-hint mt-1 text-xs text-gray-500 dark:text-gray-400">
               Activer pour afficher cette œuvre dans la section "Œuvres phares" sur la page de l'artiste
+            </p>
+
+            {/* isFeatured toggle */}
+            <div className="d-flex align-items-center gap-md" style={{ marginTop: "20px" }}>
+              <span
+                className={!isFeatured ? "text-primary" : "text-muted"}
+                style={{ fontWeight: !isFeatured ? "bold" : "normal" }}
+              >
+                Non
+              </span>
+              <label
+                style={{
+                  position: "relative",
+                  display: "inline-block",
+                  width: "60px",
+                  height: "30px",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  {...register("isFeatured")}
+                  disabled={isSubmitting}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    cursor: "pointer",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: isFeatured ? "#4f46e5" : "#ccc",
+                    borderRadius: "34px",
+                    transition: "0.4s",
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      content: '""',
+                      height: "22px",
+                      width: "22px",
+                      left: "4px",
+                      bottom: "4px",
+                      backgroundColor: "white",
+                      borderRadius: "50%",
+                      transition: "0.4s",
+                      transform: isFeatured
+                        ? "translateX(30px)"
+                        : "translateX(0)",
+                    }}
+                  ></span>
+                </span>
+              </label>
+              <span
+                className={isFeatured ? "text-primary" : "text-muted"}
+                style={{ fontWeight: isFeatured ? "bold" : "normal" }}
+              >
+                Œuvre du moment
+              </span>
+            </div>
+            <p className="form-hint mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Activer pour sélectionner cette œuvre comme œuvre du moment (une seule à la fois)
             </p>
           </div>}
 

@@ -51,30 +51,53 @@ export async function createExhibition(data: {
     imageUrl?: string | null
     description?: string | null
     linkToEvent?: string | null
+    isFeatured?: boolean
     artistIds?: number[]
 }): Promise<{ success: boolean; message?: string; id?: number }> {
     try {
-        const exhibition = await prisma.exhibition.create({
-            data: {
-                name: data.name,
-                startDate: data.startDate,
-                endDate: data.endDate,
-                address: data.address,
-                imageUrl: data.imageUrl ?? null,
-                description: data.description ?? null,
-                linkToEvent: data.linkToEvent ?? null,
+        // Valider que la date de fin est après la date de début
+        if (new Date(data.startDate) > new Date(data.endDate)) {
+            return {
+                success: false,
+                message: 'La date de fin doit être après ou égale à la date de début'
             }
-        })
-
-        if (data.artistIds && data.artistIds.length > 0) {
-            await prisma.exhibitionArtist.createMany({
-                data: data.artistIds.map((landingArtistId) => ({
-                    exhibitionId: exhibition.id,
-                    landingArtistId,
-                })),
-                skipDuplicates: true,
-            })
         }
+
+        // Utiliser une transaction pour garantir l'atomicité de la contrainte d'unicité isFeatured
+        const exhibition = await prisma.$transaction(async (tx) => {
+            // Si isFeatured est true, mettre les autres expositions à false
+            if (data.isFeatured) {
+                await tx.exhibition.updateMany({
+                    where: { isFeatured: true },
+                    data: { isFeatured: false }
+                })
+            }
+
+            const newExhibition = await tx.exhibition.create({
+                data: {
+                    name: data.name,
+                    startDate: data.startDate,
+                    endDate: data.endDate,
+                    address: data.address,
+                    imageUrl: data.imageUrl ?? null,
+                    description: data.description ?? null,
+                    linkToEvent: data.linkToEvent ?? null,
+                    isFeatured: data.isFeatured ?? false,
+                }
+            })
+
+            if (data.artistIds && data.artistIds.length > 0) {
+                await tx.exhibitionArtist.createMany({
+                    data: data.artistIds.map((landingArtistId) => ({
+                        exhibitionId: newExhibition.id,
+                        landingArtistId,
+                    })),
+                    skipDuplicates: true,
+                })
+            }
+
+            return newExhibition
+        })
 
         revalidatePath('/landing/exhibitions')
 
@@ -98,31 +121,52 @@ export async function updateExhibition(
         imageUrl?: string | null
         description?: string | null
         linkToEvent?: string | null
+        isFeatured?: boolean
         artistIds?: number[]
     }
 ): Promise<{ success: boolean; message?: string }> {
     try {
+        // Valider que la date de fin est après la date de début (si les deux sont fournies)
+        if (data.startDate && data.endDate && new Date(data.startDate) > new Date(data.endDate)) {
+            return {
+                success: false,
+                message: 'La date de fin doit être après ou égale à la date de début'
+            }
+        }
+
         const { artistIds, ...exhibitionData } = data
 
-        await prisma.exhibition.update({
-            where: { id },
-            data: exhibitionData
-        })
+        // Utiliser une transaction pour garantir l'atomicité de la contrainte d'unicité isFeatured
+        await prisma.$transaction(async (tx) => {
+            // Si isFeatured est true, mettre les autres expositions à false (sauf celle-ci)
+            if (data.isFeatured) {
+                await tx.exhibition.updateMany({
+                    where: {
+                        isFeatured: true,
+                        id: { not: id }
+                    },
+                    data: { isFeatured: false }
+                })
+            }
 
-        if (artistIds !== undefined) {
-            await prisma.$transaction([
-                prisma.exhibitionArtist.deleteMany({ where: { exhibitionId: id } }),
-                ...(artistIds.length > 0
-                    ? [prisma.exhibitionArtist.createMany({
+            await tx.exhibition.update({
+                where: { id },
+                data: exhibitionData
+            })
+
+            if (artistIds !== undefined) {
+                await tx.exhibitionArtist.deleteMany({ where: { exhibitionId: id } })
+                if (artistIds.length > 0) {
+                    await tx.exhibitionArtist.createMany({
                         data: artistIds.map((landingArtistId) => ({
                             exhibitionId: id,
                             landingArtistId,
                         })),
                         skipDuplicates: true,
-                    })]
-                    : [])
-            ])
-        }
+                    })
+                }
+            }
+        })
 
         revalidatePath('/landing/exhibitions')
         revalidatePath(`/landing/exhibitions/${id}/edit`)

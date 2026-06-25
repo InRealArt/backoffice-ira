@@ -24,6 +24,10 @@ const formSchema = z.object({
   imageUrl: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   linkToEvent: z.string().url("URL de l'événement invalide").nullable().optional().or(z.literal('')),
+  isFeatured: z.boolean().optional().default(false),
+}).refine(data => new Date(data.startDate) <= new Date(data.endDate), {
+  message: 'La date de fin doit être après ou égale à la date de début',
+  path: ['endDate']
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -100,10 +104,12 @@ export default function ExhibitionForm({
       imageUrl: exhibition?.imageUrl ?? '',
       description: exhibition?.description ?? '',
       linkToEvent: exhibition?.linkToEvent ?? '',
+      isFeatured: exhibition?.isFeatured ?? false,
     },
   })
 
   const nameValue = watch('name')
+  const isFeatured = watch('isFeatured')
 
   useEffect(() => {
     if (!artistDropdownOpen || !artistInputRef.current) return
@@ -183,6 +189,7 @@ export default function ExhibitionForm({
         imageUrl: finalImageUrl,
         description: data.description || null,
         linkToEvent: data.linkToEvent || null,
+        isFeatured: data.isFeatured ?? false,
         artistIds: selectedArtistIds,
       }
 
@@ -448,6 +455,85 @@ export default function ExhibitionForm({
               disabled={isSubmitting}
             />
             {errors.linkToEvent && <p className="form-error">{errors.linkToEvent.message}</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Mise en avant */}
+      <div className="form-card">
+        <div className="card-content">
+          <div className="form-group">
+            <div className="d-flex align-items-center gap-md">
+              <span
+                className={
+                  !isFeatured ? "text-primary" : "text-muted"
+                }
+                style={{
+                  fontWeight: !isFeatured ? "bold" : "normal",
+                }}
+              >
+                Non
+              </span>
+              <label
+                className="d-flex align-items-center"
+                style={{
+                  position: "relative",
+                  display: "inline-block",
+                  width: "60px",
+                  height: "30px",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  {...register("isFeatured")}
+                  disabled={isSubmitting}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    cursor: "pointer",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: isFeatured ? "#4f46e5" : "#ccc",
+                    borderRadius: "34px",
+                    transition: "0.4s",
+                  }}
+                >
+                  <span
+                    style={{
+                      position: "absolute",
+                      content: '""',
+                      height: "22px",
+                      width: "22px",
+                      left: "4px",
+                      bottom: "4px",
+                      backgroundColor: "white",
+                      borderRadius: "50%",
+                      transition: "0.4s",
+                      transform: isFeatured
+                        ? "translateX(30px)"
+                        : "translateX(0)",
+                    }}
+                  ></span>
+                </span>
+              </label>
+              <span
+                className={
+                  isFeatured ? "text-primary" : "text-muted"
+                }
+                style={{
+                  fontWeight: isFeatured ? "bold" : "normal",
+                }}
+              >
+                Exposition du moment
+              </span>
+            </div>
+            <p className="form-hint mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Activer pour sélectionner cette exposition comme exposition du moment (une seule à la fois)
+            </p>
           </div>
         </div>
       </div>

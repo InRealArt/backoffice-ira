@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
-import { processExcelImport } from '@/lib/actions/presale-artwork-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
 import type { ArtistName } from '@/lib/types/artist'
 import { getArtistFullName } from '@/lib/utils'
@@ -102,34 +101,19 @@ export default function ImportExcelForm({ artists }: ImportExcelFormProps) {
 
       console.log('👤 Artiste sélectionné:', getArtistFullName(artist), 'ID:', artist.id)
 
-      // Nouvelle approche : utiliser arrayBuffer() directement sur le File object
-      console.log('📋 Lecture du fichier avec arrayBuffer()...')
-      
-      try {
-        const arrayBuffer = await selectedFile.arrayBuffer()
-        console.log('✅ ArrayBuffer obtenu, taille:', arrayBuffer.byteLength)
-        
-        // Convertir ArrayBuffer en base64
-        const bytes = new Uint8Array(arrayBuffer)
-        console.log('📊 Conversion en Uint8Array, longueur:', bytes.length)
-        
-        // Conversion optimisée en base64
-        let binary = ''
-        const len = bytes.byteLength
-        for (let i = 0; i < len; i++) {
-          binary += String.fromCharCode(bytes[i])
-        }
-        const base64 = btoa(binary)
-        
-        console.log('🔐 Base64 final, longueur:', base64.length)
-        console.log('🔐 Premiers caractères:', base64.substring(0, 50))
-        
-        // Appeler l'action server pour traiter le fichier
-        console.log('🚀 Appel de l\'action serveur...')
-        const result = await processExcelImport({
-          artistId: artist.id,
-          fileBase64: base64
-        })
+      // Utiliser FormData et envoyer au route handler
+      console.log('📋 Préparation du FormData...')
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+      formData.append('artistId', artist.id.toString())
+
+      console.log('🚀 Appel du route handler...')
+      const response = await fetch('/api/presale-artworks/import', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
         
         console.log('📬 Résultat reçu du serveur:', result)
 
@@ -153,13 +137,6 @@ export default function ImportExcelForm({ artists }: ImportExcelFormProps) {
         } else {
           error('message' in result ? (result.message || 'Une erreur est survenue lors de l\'import') : 'Une erreur est survenue lors de l\'import')
         }
-      } catch (readError: any) {
-        console.error('❌ Erreur lors de la lecture avec arrayBuffer():', readError)
-        console.error('❌ Message:', readError.message)
-        console.error('❌ Stack:', readError.stack)
-        
-        error(`Impossible de lire le fichier : ${readError.message}. Assurez-vous que le fichier n'est pas ouvert dans Excel et qu'il n'est pas sur un emplacement synchronisé (OneDrive, Google Drive).`)
-      }
     } catch (err: any) {
       console.error('❌ Erreur générale lors de l\'import:', err)
       console.error('❌ Stack:', err.stack)

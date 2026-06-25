@@ -68,6 +68,7 @@ export async function createSeoPost(data: {
     estimatedReadTime?: number | null
     status: 'DRAFT' | 'PUBLISHED'
     pinned?: boolean
+    isFeatured?: boolean
     mainImageUrl?: string
     mainImageAlt?: string
     mainImageCaption?: string
@@ -129,31 +130,43 @@ export async function createSeoPost(data: {
         const generatedHtmlWithReadTime = generateSeoHtml(seoPostDataWithReadTime)
         const generatedArticleHtmlWithReadTime = generateArticleHtml(seoPostDataWithReadTime)
 
-        // Créer l'article
-        const seoPost = await prisma.seoPost.create({
-            data: {
-                title: data.title,
-                categoryId: data.categoryId,
-                metaDescription: data.metaDescription,
-                metaKeywords: data.metaKeywords || [],
-                slug: data.slug,
-                content: data.content, // Stocker le JSON du blog content
-                excerpt: data.excerpt,
-                author: data.author,
-                authorLink: data.authorLink ?? undefined,
-                estimatedReadTime: calculatedReadingTime, // Utiliser le temps calculé automatiquement
-                status: data.status,
-                pinned: data.pinned || false,
-                mainImageUrl: toRelativePath(data.mainImageUrl) ?? data.mainImageUrl ?? undefined,
-                mainImageAlt: data.mainImageAlt,
-                mainImageCaption: data.mainImageCaption,
-                createdAt: data.creationDate,
-                jsonLd: jsonLd,
-                generatedHtml: generatedHtmlWithReadTime,
-                generatedArticleHtml: generatedArticleHtmlWithReadTime,
-                languageId: languageId,
-                originalPostId: data.originalPostId || null
+        // Utiliser une transaction pour garantir l'atomicité de la contrainte d'unicité isFeatured
+        const seoPost = await prisma.$transaction(async (tx) => {
+            // Si isFeatured est true, mettre les autres articles à false
+            if (data.isFeatured) {
+                await tx.seoPost.updateMany({
+                    where: { isFeatured: true },
+                    data: { isFeatured: false }
+                })
             }
+
+            // Créer l'article
+            return await tx.seoPost.create({
+                data: {
+                    title: data.title,
+                    categoryId: data.categoryId,
+                    metaDescription: data.metaDescription,
+                    metaKeywords: data.metaKeywords || [],
+                    slug: data.slug,
+                    content: data.content, // Stocker le JSON du blog content
+                    excerpt: data.excerpt,
+                    author: data.author,
+                    authorLink: data.authorLink ?? undefined,
+                    estimatedReadTime: calculatedReadingTime, // Utiliser le temps calculé automatiquement
+                    status: data.status,
+                    pinned: data.pinned || false,
+                    isFeatured: data.isFeatured ?? false,
+                    mainImageUrl: toRelativePath(data.mainImageUrl) ?? data.mainImageUrl ?? undefined,
+                    mainImageAlt: data.mainImageAlt,
+                    mainImageCaption: data.mainImageCaption,
+                    createdAt: data.creationDate,
+                    jsonLd: jsonLd,
+                    generatedHtml: generatedHtmlWithReadTime,
+                    generatedArticleHtml: generatedArticleHtmlWithReadTime,
+                    languageId: languageId,
+                    originalPostId: data.originalPostId || null
+                }
+            })
         })
 
         // Mettre à jour le champ listTags avec les vrais tags (pas les keywords)
@@ -238,18 +251,17 @@ export async function createSeoPost(data: {
             console.log(`   - jsonLd: ${fieldsToTranslate.jsonLd ? 'Présent' : 'Absent'}`)
             console.log(`   - generatedArticleHtml: ${fieldsToTranslate.generatedArticleHtml ? 'Présent' : 'Absent'}`)
 
-            // Lancer la traduction automatique de manière asynchrone pour ne pas bloquer la réponse
-            handleSeoPostTranslationsOnUpdate(seoPost.id, fieldsToTranslate)
-                .then(result => {
-                    if (result.success) {
-                        console.log(`✅ Traductions automatiques lors de la création: ${result.message}`)
-                    } else {
-                        console.error('❌ Erreur lors des traductions automatiques:', result.message)
-                    }
-                })
-                .catch(error => {
-                    console.error('❌ Erreur lors des traductions automatiques:', error)
-                })
+            // Lancer la traduction automatique et attendre le résultat
+            try {
+                const translationResult = await handleSeoPostTranslationsOnUpdate(seoPost.id, fieldsToTranslate)
+                if (translationResult.success) {
+                    console.log(`✅ Traductions automatiques lors de la création: ${translationResult.message}`)
+                } else {
+                    console.error('❌ Erreur lors des traductions automatiques:', translationResult.message)
+                }
+            } catch (error) {
+                console.error('❌ Erreur lors des traductions automatiques:', error)
+            }
         } else {
             if (!isOriginalPost) {
                 console.log('⏭️  Traduction automatique ignorée: ce post est une traduction (originalPostId !== null)')
@@ -287,6 +299,7 @@ export async function updateSeoPost(id: number, data: {
     estimatedReadTime?: number | null
     status?: 'DRAFT' | 'PUBLISHED'
     pinned?: boolean
+    isFeatured?: boolean
     mainImageUrl?: string
     mainImageAlt?: string
     mainImageCaption?: string
@@ -353,44 +366,59 @@ export async function updateSeoPost(id: number, data: {
         const generatedHtmlWithReadTime = generateSeoHtml(seoPostDataWithReadTime)
         const generatedArticleHtmlWithReadTime = generateArticleHtml(seoPostDataWithReadTime)
 
-        // Préparer les données pour la mise à jour
-        const updateData: any = {
-            jsonLd: jsonLd,
-            generatedHtml: generatedHtmlWithReadTime,
-            generatedArticleHtml: generatedArticleHtmlWithReadTime,
-            estimatedReadTime: calculatedReadingTime // Toujours mettre à jour le temps de lecture calculé
-        }
-
-        // Ajouter les champs de base s'ils sont fournis
-        if (data.title !== undefined) updateData.title = data.title
-        if (data.metaDescription !== undefined) updateData.metaDescription = data.metaDescription
-        // Gérer séparément metaKeywords et listTags
-        if (data.metaKeywords !== undefined) {
-            updateData.metaKeywords = data.metaKeywords || []
-        }
-        if (data.slug !== undefined) updateData.slug = data.slug
-        if (data.content !== undefined) updateData.content = data.content
-        if (data.excerpt !== undefined) updateData.excerpt = data.excerpt
-        if (data.author !== undefined) updateData.author = data.author
-        if (data.authorLink !== undefined) updateData.authorLink = data.authorLink ?? undefined
-        if (data.status !== undefined) updateData.status = data.status
-        if (data.pinned !== undefined) updateData.pinned = data.pinned
-        if (data.mainImageUrl !== undefined) updateData.mainImageUrl = toRelativePath(data.mainImageUrl) ?? data.mainImageUrl ?? undefined
-        if (data.mainImageAlt !== undefined) updateData.mainImageAlt = data.mainImageAlt
-        if (data.mainImageCaption !== undefined) updateData.mainImageCaption = data.mainImageCaption
-        if (data.creationDate !== undefined) updateData.createdAt = data.creationDate
-
-        // Gérer la relation category si categoryId est fourni
-        if (data.categoryId !== undefined) {
-            updateData.category = {
-                connect: { id: data.categoryId }
+        // Utiliser une transaction pour garantir l'atomicité de la contrainte d'unicité isFeatured
+        const seoPost = await prisma.$transaction(async (tx) => {
+            // Si isFeatured est true, mettre les autres articles à false (sauf celui-ci)
+            if (data.isFeatured) {
+                await tx.seoPost.updateMany({
+                    where: {
+                        isFeatured: true,
+                        id: { not: id }
+                    },
+                    data: { isFeatured: false }
+                })
             }
-        }
 
-        // Mettre à jour l'article
-        const seoPost = await prisma.seoPost.update({
-            where: { id },
-            data: updateData
+            // Préparer les données pour la mise à jour
+            const updateData: any = {
+                jsonLd: jsonLd,
+                generatedHtml: generatedHtmlWithReadTime,
+                generatedArticleHtml: generatedArticleHtmlWithReadTime,
+                estimatedReadTime: calculatedReadingTime // Toujours mettre à jour le temps de lecture calculé
+            }
+
+            // Ajouter les champs de base s'ils sont fournis
+            if (data.title !== undefined) updateData.title = data.title
+            if (data.metaDescription !== undefined) updateData.metaDescription = data.metaDescription
+            // Gérer séparément metaKeywords et listTags
+            if (data.metaKeywords !== undefined) {
+                updateData.metaKeywords = data.metaKeywords || []
+            }
+            if (data.slug !== undefined) updateData.slug = data.slug
+            if (data.content !== undefined) updateData.content = data.content
+            if (data.excerpt !== undefined) updateData.excerpt = data.excerpt
+            if (data.author !== undefined) updateData.author = data.author
+            if (data.authorLink !== undefined) updateData.authorLink = data.authorLink ?? undefined
+            if (data.status !== undefined) updateData.status = data.status
+            if (data.pinned !== undefined) updateData.pinned = data.pinned
+            if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured
+            if (data.mainImageUrl !== undefined) updateData.mainImageUrl = toRelativePath(data.mainImageUrl) ?? data.mainImageUrl ?? undefined
+            if (data.mainImageAlt !== undefined) updateData.mainImageAlt = data.mainImageAlt
+            if (data.mainImageCaption !== undefined) updateData.mainImageCaption = data.mainImageCaption
+            if (data.creationDate !== undefined) updateData.createdAt = data.creationDate
+
+            // Gérer la relation category si categoryId est fourni
+            if (data.categoryId !== undefined) {
+                updateData.category = {
+                    connect: { id: data.categoryId }
+                }
+            }
+
+            // Mettre à jour l'article
+            return await tx.seoPost.update({
+                where: { id },
+                data: updateData
+            })
         })
 
         // Mettre à jour le champ listTags avec les vrais tags (si fournis)
@@ -505,18 +533,17 @@ export async function updateSeoPost(id: number, data: {
             console.log(`   - jsonLd: ${fieldsToTranslate.jsonLd ? 'Présent' : 'Absent'}`)
             console.log(`   - generatedArticleHtml: ${fieldsToTranslate.generatedArticleHtml ? 'Présent' : 'Absent'}`)
 
-            // Lancer la traduction automatique de manière asynchrone pour ne pas bloquer la réponse
-            handleSeoPostTranslationsOnUpdate(id, fieldsToTranslate)
-                .then(result => {
-                    if (result.success) {
-                        console.log(`✅ Traductions automatiques: ${result.message}`)
-                    } else {
-                        console.error('❌ Erreur lors des traductions automatiques:', result.message)
-                    }
-                })
-                .catch(error => {
-                    console.error('❌ Erreur lors des traductions automatiques:', error)
-                })
+            // Lancer la traduction automatique et attendre le résultat
+            try {
+                const translationResult = await handleSeoPostTranslationsOnUpdate(id, fieldsToTranslate)
+                if (translationResult.success) {
+                    console.log(`✅ Traductions automatiques: ${translationResult.message}`)
+                } else {
+                    console.error('❌ Erreur lors des traductions automatiques:', translationResult.message)
+                }
+            } catch (error) {
+                console.error('❌ Erreur lors des traductions automatiques:', error)
+            }
         } else {
             if (!isOriginalPost) {
                 console.log('⏭️  Traduction automatique ignorée: ce post est une traduction (originalPostId !== null)')

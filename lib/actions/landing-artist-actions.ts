@@ -9,6 +9,7 @@ export interface LandingArtistData {
     description?: string | null
     artworkStyle?: string | null
     artistsPage?: boolean | null
+    isFeatured?: boolean
     imageUrl: string
     secondaryImageUrl?: string | null
     artworkImages?: string
@@ -81,31 +82,72 @@ export async function getLandingArtistById(id: number) {
  */
 export async function createLandingArtist(data: LandingArtistData) {
     try {
-        const newLandingArtist = await prisma.landingArtist.create({
-            data: {
-                artistId: data.artistId!,
-                intro: data.intro,
-                description: data.description,
-                artworkStyle: data.artworkStyle,
-                artistsPage: data.artistsPage,
-                isCurrentlyExposed: data.isCurrentlyExposed,
-                imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
-                secondaryImageUrl: toRelativePath(data.secondaryImageUrl) ?? data.secondaryImageUrl ?? null,
-                artworkImages: data.artworkImages || '[]',
-                slug: data.slug!,
-                // Nouveaux champs du modèle LandingArtist
-                mediumTags: data.mediumTags || [],
-                quoteFromInRealArt: data.quoteFromInRealArt,
-                biographyHeader1: data.biographyHeader1,
-                biographyText1: data.biographyText1,
-                biographyHeader2: data.biographyHeader2,
-                biographyText2: data.biographyText2,
-                biographyHeader3: data.biographyHeader3,
-                biographyText3: data.biographyText3,
-                biographyHeader4: data.biographyHeader4,
-                biographyText4: data.biographyText4,
-                imageArtistStudio: toRelativePath(data.imageArtistStudio) ?? data.imageArtistStudio ?? null,
-            },
+        // Utiliser une transaction pour garantir l'atomicité de la contrainte d'unicité isFeatured
+        // et des créations de catégories/spécialités associées
+        const newLandingArtist = await prisma.$transaction(async (tx) => {
+            // Si isFeatured est true, mettre les autres artistes à false
+            if (data.isFeatured) {
+                await tx.landingArtist.updateMany({
+                    where: { isFeatured: true },
+                    data: { isFeatured: false }
+                })
+            }
+
+            const landingArtist = await tx.landingArtist.create({
+                data: {
+                    artistId: data.artistId!,
+                    intro: data.intro,
+                    description: data.description,
+                    artworkStyle: data.artworkStyle,
+                    artistsPage: data.artistsPage,
+                    isCurrentlyExposed: data.isCurrentlyExposed,
+                    isFeatured: data.isFeatured || false,
+                    imageUrl: toRelativePath(data.imageUrl) ?? null,
+                    secondaryImageUrl: toRelativePath(data.secondaryImageUrl) ?? null,
+                    artworkImages: data.artworkImages || '[]',
+                    slug: data.slug!,
+                    // Nouveaux champs du modèle LandingArtist
+                    mediumTags: data.mediumTags || [],
+                    quoteFromInRealArt: data.quoteFromInRealArt,
+                    biographyHeader1: data.biographyHeader1,
+                    biographyText1: data.biographyText1,
+                    biographyHeader2: data.biographyHeader2,
+                    biographyText2: data.biographyText2,
+                    biographyHeader3: data.biographyHeader3,
+                    biographyText3: data.biographyText3,
+                    biographyHeader4: data.biographyHeader4,
+                    biographyText4: data.biographyText4,
+                    imageArtistStudio: toRelativePath(data.imageArtistStudio) ?? null,
+                },
+            })
+
+            // Gérer les catégories dans la même transaction
+            if (data.categoryIds && data.categoryIds.length > 0) {
+                await tx.landingArtistCategory.deleteMany({
+                    where: { landingArtistId: landingArtist.id }
+                })
+                await tx.landingArtistCategory.createMany({
+                    data: data.categoryIds.map(categoryId => ({
+                        landingArtistId: landingArtist.id,
+                        categoryId
+                    }))
+                })
+            }
+
+            // Gérer les spécialités via l'Artist dans la même transaction
+            if (data.artistId && data.specialtyIds && data.specialtyIds.length > 0) {
+                await tx.artistSpecialty.deleteMany({
+                    where: { artistId: data.artistId }
+                })
+                await tx.artistSpecialty.createMany({
+                    data: data.specialtyIds.map(specialtyId => ({
+                        artistId: data.artistId!,
+                        specialtyId
+                    }))
+                })
+            }
+
+            return landingArtist
         })
 
         // Assurer que artworkImages est toujours un string
@@ -134,35 +176,50 @@ export async function createLandingArtist(data: LandingArtistData) {
  */
 export async function updateLandingArtist(id: number, data: LandingArtistData) {
     try {
-        const updatedLandingArtist = await prisma.landingArtist.update({
-            where: {
-                id,
-            },
-            data: {
-                intro: data.intro,
-                description: data.description,
-                artworkStyle: data.artworkStyle,
-                artistsPage: data.artistsPage,
-                isCurrentlyExposed: data.isCurrentlyExposed,
-                imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
-                secondaryImageUrl: toRelativePath(data.secondaryImageUrl) ?? data.secondaryImageUrl ?? null,
-                artworkImages: data.artworkImages || '[]',
-                slug: data.slug,
-                // Nouveaux champs du modèle LandingArtist
-                mediumTags: data.mediumTags,
-                quoteFromInRealArt: data.quoteFromInRealArt,
-                biographyHeader1: data.biographyHeader1,
-                biographyText1: data.biographyText1,
-                biographyHeader2: data.biographyHeader2,
-                biographyText2: data.biographyText2,
-                biographyHeader3: data.biographyHeader3,
-                biographyText3: data.biographyText3,
-                biographyHeader4: data.biographyHeader4,
-                biographyText4: data.biographyText4,
-                imageArtistStudio: toRelativePath(data.imageArtistStudio) ?? data.imageArtistStudio ?? null,
-                onboardingBo: data.onboardingBo,
-                isTopArtist: data.isTopArtist,
-            },
+        // Utiliser une transaction pour garantir l'atomicité de la contrainte d'unicité isFeatured
+        const updatedLandingArtist = await prisma.$transaction(async (tx) => {
+            // Si isFeatured est true, mettre les autres artistes à false
+            if (data.isFeatured) {
+                await tx.landingArtist.updateMany({
+                    where: {
+                        isFeatured: true,
+                        id: { not: id }
+                    },
+                    data: { isFeatured: false }
+                })
+            }
+
+            return await tx.landingArtist.update({
+                where: {
+                    id,
+                },
+                data: {
+                    intro: data.intro,
+                    description: data.description,
+                    artworkStyle: data.artworkStyle,
+                    artistsPage: data.artistsPage,
+                    isCurrentlyExposed: data.isCurrentlyExposed,
+                    isFeatured: data.isFeatured,
+                    imageUrl: toRelativePath(data.imageUrl) ?? null,
+                    secondaryImageUrl: toRelativePath(data.secondaryImageUrl) ?? null,
+                    artworkImages: data.artworkImages || '[]',
+                    slug: data.slug,
+                    // Nouveaux champs du modèle LandingArtist
+                    mediumTags: data.mediumTags,
+                    quoteFromInRealArt: data.quoteFromInRealArt,
+                    biographyHeader1: data.biographyHeader1,
+                    biographyText1: data.biographyText1,
+                    biographyHeader2: data.biographyHeader2,
+                    biographyText2: data.biographyText2,
+                    biographyHeader3: data.biographyHeader3,
+                    biographyText3: data.biographyText3,
+                    biographyHeader4: data.biographyHeader4,
+                    biographyText4: data.biographyText4,
+                    imageArtistStudio: toRelativePath(data.imageArtistStudio) ?? null,
+                    onboardingBo: data.onboardingBo,
+                    isTopArtist: data.isTopArtist,
+                },
+            })
         })
 
         // Assurer que artworkImages est toujours un string
@@ -318,22 +375,14 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
             }
         }
 
-        // Créer le nouvel artiste landing
+        // Créer le nouvel artiste landing (catégories et spécialités gérées dans la transaction)
         const result = await createLandingArtist(formData)
 
-        if (result.success && result.landingArtist) {
-            // Gérer les catégories après la création
-            await handleArtistCategories(result.landingArtist.id, formData.categoryIds)
-            
-            // Gérer les spécialités après la création (via l'artiste)
-            if (formData.artistId && formData.specialtyIds !== undefined) {
-                await handleArtistSpecialties(formData.artistId, formData.specialtyIds)
-            }
+        if (result.success) {
+            // Revalider les chemins pour mettre à jour les données dans toutes les pages concernées
+            revalidatePath('/landing/landingArtists')
+            revalidatePath('/landing/landingArtists/create')
         }
-
-        // Revalider les chemins pour mettre à jour les données dans toutes les pages concernées
-        revalidatePath('/landing/landingArtists')
-        revalidatePath('/landing/landingArtists/create')
 
         return result
     } catch (error: any) {

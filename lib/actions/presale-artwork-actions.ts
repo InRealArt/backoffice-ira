@@ -96,6 +96,31 @@ export async function getPresaleArtworkByOrder(order: number) {
     }
 }
 
+// Internal helper for transaction-aware queries
+async function getPresaleArtworkByIdWithClient(id: number, client: any) {
+    try {
+        return await client.presaleArtwork.findUnique({
+            where: { id },
+            include: { artist: true }
+        })
+    } catch (error) {
+        console.error('Erreur lors de la récupération de l\'œuvre en prévente:', error)
+        return null
+    }
+}
+
+// Internal helper for transaction-aware queries
+async function getPresaleArtworkByOrderWithClient(order: number, client: any) {
+    try {
+        return await client.presaleArtwork.findFirst({
+            where: { order }
+        })
+    } catch (error) {
+        console.error('Erreur lors de la récupération de l\'œuvre par ordre:', error)
+        return null
+    }
+}
+
 /**
  * Échange l'ordre entre deux œuvres en prévente
  */
@@ -136,6 +161,7 @@ export async function createPresaleArtwork(data: {
     mockupUrls?: string
     isSold?: boolean
     isTopArtwork?: boolean
+    isFeatured?: boolean
 }) {
     try {
         // Si aucun ordre n'est fourni, utiliser l'ordre maximum + 1
@@ -146,28 +172,40 @@ export async function createPresaleArtwork(data: {
             orderToUse = maxOrder + 1
         }
 
-        const presaleArtwork = await prisma.presaleArtwork.create({
-            data: {
-                name: data.name,
-                artistId: data.artistId,
-                price: data.price,
-                imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
-                description: data.description,
-                width: data.width,
-                height: data.height,
-                order: orderToUse,
-                mockupUrls: JSON.stringify(
-                    JSON.parse(data.mockupUrls || '[]').map((item: any) => ({
-                        ...item,
-                        url: toRelativePath(item.url) ?? item.url ?? null
-                    }))
-                ),
-                isSold: data.isSold ?? false,
-                isTopArtwork: data.isTopArtwork ?? false
-            },
-            include: {
-                artist: true
+        // Utiliser une transaction pour garantir l'atomicité de la contrainte d'unicité isFeatured
+        const presaleArtwork = await prisma.$transaction(async (tx) => {
+            // Si isFeatured est true, mettre les autres artworks à false
+            if (data.isFeatured) {
+                await tx.presaleArtwork.updateMany({
+                    where: { isFeatured: true },
+                    data: { isFeatured: false }
+                })
             }
+
+            return await tx.presaleArtwork.create({
+                data: {
+                    name: data.name,
+                    artistId: data.artistId,
+                    price: data.price,
+                    imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl ?? null,
+                    description: data.description,
+                    width: data.width,
+                    height: data.height,
+                    order: orderToUse,
+                    mockupUrls: JSON.stringify(
+                        JSON.parse(data.mockupUrls || '[]').map((item: any) => ({
+                            ...item,
+                            url: toRelativePath(item.url) ?? null
+                        }))
+                    ),
+                    isSold: data.isSold ?? false,
+                    isTopArtwork: data.isTopArtwork ?? false,
+                    isFeatured: data.isFeatured ?? false
+                },
+                include: {
+                    artist: true
+                }
+            })
         })
 
         revalidatePath('/landing/presaleArtworks')
@@ -199,51 +237,68 @@ export async function updatePresaleArtwork(id: number, data: {
     mockupUrls?: string
     isSold?: boolean
     isTopArtwork?: boolean
+    isFeatured?: boolean
 }) {
     try {
-        // Gérer l'échange d'ordre si nécessaire
-        if (data.order !== undefined) {
-            const currentArtwork = await getPresaleArtworkById(id)
+        // Utiliser une transaction pour garantir l'atomicité de la contrainte d'unicité isFeatured
+        const presaleArtwork = await prisma.$transaction(async (tx) => {
+            // Si isFeatured est true, mettre les autres artworks à false (sauf celui-ci)
+            if (data.isFeatured) {
+                await tx.presaleArtwork.updateMany({
+                    where: {
+                        isFeatured: true,
+                        id: { not: id }
+                    },
+                    data: { isFeatured: false }
+                })
+            }
 
-            if (currentArtwork && currentArtwork.order !== data.order) {
-                // Vérifier s'il existe une œuvre avec l'ordre cible
-                const targetArtwork = await getPresaleArtworkByOrder(data.order)
+            // Gérer l'échange d'ordre si nécessaire
+            if (data.order !== undefined) {
+                const currentArtwork = await getPresaleArtworkByIdWithClient(id, tx)
 
-                if (targetArtwork) {
-                    // Échanger les ordres
-                    await swapPresaleArtworkOrder(
-                        id,
-                        currentArtwork.order || 0,
-                        targetArtwork.id,
-                        targetArtwork.order || 0
-                    )
+                if (currentArtwork && currentArtwork.order !== data.order) {
+                    // Vérifier s'il existe une œuvre avec l'ordre cible
+                    const targetArtwork = await getPresaleArtworkByOrderWithClient(data.order, tx)
 
-                    // Supprimer l'ordre des données à mettre à jour car il a déjà été modifié
-                    delete data.order
+                    if (targetArtwork) {
+                        // Échanger les ordres en utilisant le client transactionnel
+                        await tx.presaleArtwork.update({
+                            where: { id },
+                            data: { order: targetArtwork.order }
+                        })
+                        await tx.presaleArtwork.update({
+                            where: { id: targetArtwork.id },
+                            data: { order: currentArtwork.order || 0 }
+                        })
+
+                        // Supprimer l'ordre des données à mettre à jour car il a déjà été modifié
+                        delete data.order
+                    }
                 }
             }
-        }
 
-        // Normaliser les URLs vers des chemins relatifs avant écriture en BD
-        if (data.imageUrl !== undefined) {
-            data.imageUrl = toRelativePath(data.imageUrl) ?? data.imageUrl
-        }
-        if (data.mockupUrls !== undefined) {
-            data.mockupUrls = JSON.stringify(
-                JSON.parse(data.mockupUrls || '[]').map((item: any) => ({
-                    ...item,
-                    url: toRelativePath(item.url) ?? item.url ?? null
-                }))
-            )
-        }
-
-        // Mettre à jour les autres données
-        const presaleArtwork = await prisma.presaleArtwork.update({
-            where: { id },
-            data,
-            include: {
-                artist: true
+            // Normaliser les URLs vers des chemins relatifs avant écriture en BD
+            if (data.imageUrl !== undefined) {
+                data.imageUrl = toRelativePath(data.imageUrl) ?? data.imageUrl
             }
+            if (data.mockupUrls !== undefined) {
+                data.mockupUrls = JSON.stringify(
+                    JSON.parse(data.mockupUrls || '[]').map((item: any) => ({
+                        ...item,
+                        url: toRelativePath(item.url) ?? null
+                    }))
+                )
+            }
+
+            // Mettre à jour les autres données
+            return await tx.presaleArtwork.update({
+                where: { id },
+                data,
+                include: {
+                    artist: true
+                }
+            })
         })
 
         revalidatePath('/landing/presaleArtworks')
@@ -412,36 +467,23 @@ export async function processExcelImport(data: {
     fileBase64: string
 }) {
     try {
-        console.log('🔵 [SERVER] Début du traitement Excel')
-        console.log('👤 [SERVER] Artist ID:', data.artistId)
-        console.log('📦 [SERVER] Base64 reçu, longueur:', data.fileBase64.length)
-        console.log('📦 [SERVER] Premiers caractères:', data.fileBase64.substring(0, 50))
-
         // Importation dynamique d'exceljs
-        console.log('📚 [SERVER] Import d\'ExcelJS...')
         const ExcelJS = (await import('exceljs')).default
-        console.log('✅ [SERVER] ExcelJS importé')
 
         // Décoder le fichier base64 en ArrayBuffer
-        console.log('🔓 [SERVER] Décodage base64...')
         const buffer = Buffer.from(data.fileBase64, 'base64')
-        console.log('✅ [SERVER] Buffer créé, taille:', buffer.length)
 
         const arrayBuffer = buffer.buffer.slice(
             buffer.byteOffset,
             buffer.byteOffset + buffer.byteLength
         )
-        console.log('✅ [SERVER] ArrayBuffer créé, taille:', arrayBuffer.byteLength)
 
         // Créer un workbook et charger le ArrayBuffer
-        console.log('📖 [SERVER] Chargement du workbook...')
         const workbook = new ExcelJS.Workbook()
         await workbook.xlsx.load(arrayBuffer)
-        console.log('✅ [SERVER] Workbook chargé, nombre de feuilles:', workbook.worksheets.length)
 
         // Récupérer la première feuille
         const worksheet = workbook.worksheets[0]
-        console.log('📄 [SERVER] Première feuille récupérée:', worksheet?.name)
 
         if (!worksheet) {
             return {

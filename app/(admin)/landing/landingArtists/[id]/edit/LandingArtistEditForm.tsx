@@ -28,6 +28,7 @@ const formSchema = z.object({
   artworkStyle: z.string().nullable().optional(),
   artistsPage: z.boolean().default(false),
   isCurrentlyExposed: z.boolean().default(false),
+  isFeatured: z.boolean().default(false),
   imageUrl: z.string().optional(), // Sera rempli après l'upload si nouveau fichier
   secondaryImageUrl: z.string().nullable().optional(),
   websiteUrl: z
@@ -91,6 +92,7 @@ interface LandingArtistWithArtist {
   artworkStyle: string | null;
   artistsPage: boolean | null;
   isCurrentlyExposed?: boolean | null;
+  isFeatured?: boolean | null;
   imageUrl: string;
   secondaryImageUrl?: string | null;
   artistId: number;
@@ -239,6 +241,7 @@ export default function LandingArtistEditForm({
       artworkStyle: landingArtist.artworkStyle || "",
       artistsPage: landingArtist.artistsPage || false,
       isCurrentlyExposed: landingArtist.isCurrentlyExposed || false,
+      isFeatured: landingArtist.isFeatured || false,
       imageUrl: landingArtist.imageUrl,
       secondaryImageUrl: landingArtist.secondaryImageUrl || "",
       websiteUrl: landingArtist.artist.websiteUrl || "",
@@ -272,6 +275,7 @@ export default function LandingArtistEditForm({
   // Utiliser useWatch pour optimiser les re-renders (best practice React Hook Form)
   const artistsPage = useWatch({ control, name: "artistsPage" });
   const isCurrentlyExposed = useWatch({ control, name: "isCurrentlyExposed" });
+  const isFeatured = useWatch({ control, name: "isFeatured" });
   const mediumTags = useWatch({ control, name: "mediumTags" }) || [];
 
   useEffect(() => {
@@ -572,6 +576,7 @@ export default function LandingArtistEditForm({
         artworkStyle: data.artworkStyle || null,
         artistsPage: data.artistsPage,
         isCurrentlyExposed: data.isCurrentlyExposed,
+        isFeatured: data.isFeatured,
         imageUrl: imageUrl || "",
         secondaryImageUrl: secondaryImageUrl,
         mediumTags: Array.isArray(data.mediumTags) ? data.mediumTags : [],
@@ -997,6 +1002,72 @@ export default function LandingArtistEditForm({
                         }}
                       >
                         Exposé actuellement
+                      </span>
+                    </div>
+                    <div
+                      className="d-flex align-items-center gap-md"
+                      style={{ marginBottom: "20px" }}
+                    >
+                      <span
+                        className={!isFeatured ? "text-primary" : "text-muted"}
+                        style={{
+                          fontWeight: !isFeatured ? "bold" : "normal",
+                        }}
+                      >
+                        Non
+                      </span>
+                      <label
+                        className="d-flex align-items-center"
+                        style={{
+                          position: "relative",
+                          display: "inline-block",
+                          width: "60px",
+                          height: "30px",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          {...register("isFeatured")}
+                          style={{ opacity: 0, width: 0, height: 0 }}
+                        />
+                        <span
+                          style={{
+                            position: "absolute",
+                            cursor: "pointer",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: isFeatured ? "#4f46e5" : "#ccc",
+                            borderRadius: "34px",
+                            transition: "0.4s",
+                          }}
+                        >
+                          <span
+                            style={{
+                              position: "absolute",
+                              content: '""',
+                              height: "22px",
+                              width: "22px",
+                              left: "4px",
+                              bottom: "4px",
+                              backgroundColor: "white",
+                              borderRadius: "50%",
+                              transition: "0.4s",
+                              transform: isFeatured
+                                ? "translateX(30px)"
+                                : "translateX(0)",
+                            }}
+                          ></span>
+                        </span>
+                      </label>
+                      <span
+                        className={isFeatured ? "text-primary" : "text-muted"}
+                        style={{
+                          fontWeight: isFeatured ? "bold" : "normal",
+                        }}
+                      >
+                        Artiste du moment
                       </span>
                     </div>
                   </div>

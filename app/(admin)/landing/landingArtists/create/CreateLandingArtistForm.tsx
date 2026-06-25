@@ -26,6 +26,7 @@ const formSchema = z.object({
   description: z.string().nullable().optional(),
   artworkStyle: z.string().nullable().optional(),
   artistsPage: z.boolean().default(false),
+  isFeatured: z.boolean().default(false),
   imageUrl: z.string().optional(), // Sera rempli après l'upload
   secondaryImageUrl: z.string().nullable().optional(),
   websiteUrl: z
@@ -147,6 +148,7 @@ export default function CreateLandingArtistForm({
       description: "",
       artworkStyle: "",
       artistsPage: false,
+      isFeatured: false,
       imageUrl: "",
       secondaryImageUrl: "",
       websiteUrl: "",
@@ -170,6 +172,7 @@ export default function CreateLandingArtistForm({
 
   const artistId = watch("artistId");
   const artistsPage = watch("artistsPage");
+  const isFeatured = watch("isFeatured");
   const mediumTags = watch("mediumTags" as any) as string[] | undefined;
   const categoryIds = watch("categoryIds") || [];
 
@@ -410,6 +413,7 @@ export default function CreateLandingArtistForm({
         description: data.description || null,
         artworkStyle: data.artworkStyle || null,
         artistsPage: data.artistsPage,
+        isFeatured: data.isFeatured,
         imageUrl: imageUrl,
         secondaryImageUrl: secondaryImageUrl,
         websiteUrl: data.websiteUrl || null,
@@ -764,6 +768,78 @@ export default function CreateLandingArtistForm({
                             }}
                           >
                             Affiché
+                          </span>
+                        </div>
+                        <div
+                          className="d-flex align-items-center gap-md"
+                          style={{ marginBottom: "20px" }}
+                        >
+                          <span
+                            className={
+                              !isFeatured ? "text-primary" : "text-muted"
+                            }
+                            style={{
+                              fontWeight: !isFeatured ? "bold" : "normal",
+                            }}
+                          >
+                            Non
+                          </span>
+                          <label
+                            className="d-flex align-items-center"
+                            style={{
+                              position: "relative",
+                              display: "inline-block",
+                              width: "60px",
+                              height: "30px",
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              {...register("isFeatured")}
+                              style={{ opacity: 0, width: 0, height: 0 }}
+                            />
+                            <span
+                              style={{
+                                position: "absolute",
+                                cursor: "pointer",
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: isFeatured
+                                  ? "#4f46e5"
+                                  : "#ccc",
+                                borderRadius: "34px",
+                                transition: "0.4s",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  position: "absolute",
+                                  content: '""',
+                                  height: "22px",
+                                  width: "22px",
+                                  left: "4px",
+                                  bottom: "4px",
+                                  backgroundColor: "white",
+                                  borderRadius: "50%",
+                                  transition: "0.4s",
+                                  transform: isFeatured
+                                    ? "translateX(30px)"
+                                    : "translateX(0)",
+                                }}
+                              ></span>
+                            </span>
+                          </label>
+                          <span
+                            className={
+                              isFeatured ? "text-primary" : "text-muted"
+                            }
+                            style={{
+                              fontWeight: isFeatured ? "bold" : "normal",
+                            }}
+                          >
+                            Artiste du moment
                           </span>
                         </div>
                       </div>

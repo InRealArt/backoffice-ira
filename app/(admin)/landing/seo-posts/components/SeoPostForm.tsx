@@ -36,6 +36,7 @@ const formSchema = z.object({
   authorLink: z.string().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED']),
   pinned: z.boolean().optional(),
+  isFeatured: z.boolean().optional().default(false),
   mainImageUrl: z.string().optional(),
   mainImageAlt: z.string().optional(),
   mainImageCaption: z.string().optional(),
@@ -194,6 +195,7 @@ export default function SeoPostForm({
     authorLink: seoPost?.authorLink || '',
     status: seoPost?.status || 'DRAFT',
     pinned: seoPost?.pinned || false,
+    isFeatured: seoPost?.isFeatured || false,
     mainImageUrl: seoPost?.mainImageUrl || '',
     mainImageAlt: seoPost?.mainImageAlt || '',
     mainImageCaption: seoPost?.mainImageCaption || '',
@@ -217,6 +219,8 @@ export default function SeoPostForm({
     title: watch('title'),
     mainImageUrl: watch('mainImageUrl'),
   }
+
+  const isFeatured = watch('isFeatured') ?? false
 
   // Génération automatique du slug à partir du titre
   useEffect(() => {
@@ -732,6 +736,73 @@ export default function SeoPostForm({
               <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
             )}
           </AccordionItem>
+
+          {/* Article du moment (featured) */}
+          <div style={{ padding: '1.5rem', backgroundColor: '#f9fafb', borderRadius: '8px', marginBottom: '1rem' }}>
+            <div className="d-flex align-items-center gap-md">
+              <span
+                style={{
+                  fontWeight: !isFeatured ? 'bold' : 'normal',
+                  color: !isFeatured ? '#4f46e5' : '#9ca3af',
+                }}
+              >
+                Non
+              </span>
+              <label
+                style={{
+                  position: 'relative',
+                  display: 'inline-block',
+                  width: '60px',
+                  height: '30px',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  {...register('isFeatured')}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    cursor: 'pointer',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: isFeatured ? '#4f46e5' : '#ccc',
+                    borderRadius: '34px',
+                    transition: '0.4s',
+                  }}
+                >
+                  <span
+                    style={{
+                      position: 'absolute',
+                      content: '""',
+                      height: '22px',
+                      width: '22px',
+                      left: '4px',
+                      bottom: '4px',
+                      backgroundColor: 'white',
+                      borderRadius: '50%',
+                      transition: '0.4s',
+                      transform: isFeatured ? 'translateX(30px)' : 'translateX(0)',
+                    }}
+                  ></span>
+                </span>
+              </label>
+              <span
+                style={{
+                  fontWeight: isFeatured ? 'bold' : 'normal',
+                  color: isFeatured ? '#4f46e5' : '#9ca3af',
+                }}
+              >
+                Article du moment
+              </span>
+            </div>
+            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem', marginBottom: 0 }}>
+              Activer pour marquer cet article comme article du moment (un seul à la fois)
+            </p>
+          </div>
 
           <AccordionItem
             title={`Articles liés${selectedRelatedPosts.length > 0 ? ` (${selectedRelatedPosts.length})` : ''}`}
