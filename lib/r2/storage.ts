@@ -866,6 +866,89 @@ export async function uploadImageToMarketplaceFolderByType(
 }
 
 /**
+ * Catégorie d'image pour une fiche établissement Artitude
+ */
+export type ArtitudeImageCategory = 'cover' | 'interior' | 'exterior' | 'artist' | 'others'
+
+/**
+ * Upload une image vers R2 dans le répertoire ARTITUDE/{Prénom Nom}/{category}/
+ *
+ * Chemin : ARTITUDE/<Prénom Nom>/<interior|exterior|artist|others>/<fileName>-<timestamp>.webp
+ *
+ * @param imageFile - Le fichier image à uploader
+ * @param folderName - Nom du répertoire artiste avec la casse exacte (ex: "Jean Dupont")
+ * @param category - Catégorie de l'image (interior, exterior, artist, others)
+ * @param fileName - Nom du fichier (sans extension)
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns Chemin relatif du fichier uploadé
+ */
+export async function uploadArtitudeArtistImage(
+    imageFile: File,
+    folderName: string,
+    category: ArtitudeImageCategory,
+    fileName: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        const timestamp = Date.now()
+
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        onUploadStatus?.('in-progress')
+
+        const finalKey = `ARTITUDE/${folderName}/${category}/${fileName}-${timestamp}.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
+
+        onUploadStatus?.('completed')
+
+        return result.relativePath
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image Artitude:", error)
+        const errorMessage =
+            error instanceof Error ? error.message : "Erreur inconnue lors de l'upload"
+        if (
+            errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp') ||
+            errorMessage.toLowerCase().includes('temp')
+        ) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+        throw error
+    }
+}
+
+/**
  * Upload une image vers R2 dans le répertoire artistsUGC
  *
  * @param imageFile - Le fichier image à uploader

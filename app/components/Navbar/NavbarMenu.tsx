@@ -773,6 +773,30 @@ export default function NavbarMenu() {
                 <a
                   onClick={() =>
                     handleMenuNavigation(
+                      "/landing/indexArtitude",
+                      "indexArtitude"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("indexArtitude") ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      <Users size={18} />
+                      <span>{t("landing.indexArtitude")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Users size={18} />
+                      <span>{t("landing.indexArtitude")}</span>
+                    </>
+                  )}
+                </a>
+              </li>
+              <li>
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
                       "/landing/presaleArtworks",
                       "presaleArtworks"
                     )
@@ -1745,6 +1769,20 @@ export default function NavbarMenu() {
                     >
                       <Users size={18} />
                       Page artistes
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleDesktopNavigation(
+                          "/landing/indexArtitude",
+                          "indexArtitude"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Users size={18} />
+                      Index Artitude
                     </a>
                   </li>
                   <li>

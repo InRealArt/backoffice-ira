@@ -90,6 +90,12 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             icon={<Users size={18} />}
           />
           <SideMenuItem
+            label="Index Artitude"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/indexArtitude', 'indexArtitude')}
+            icon={<Users size={18} />}
+          />
+          <SideMenuItem
             label="Œuvres en prévente"
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/presaleArtworks', 'presaleArtworks')}
@@ -164,6 +170,12 @@ export default function LandingSubMenu({ isActive, isOpen, toggleSubmenu, onNavi
             label="Page artistes"
             isSubmenuItem={true}
             onClick={() => onNavigate('/landing/landingArtists', 'landingArtists')}
+            icon={<Users size={18} />}
+          />
+          <SideMenuItem
+            label="Index Artitude"
+            isSubmenuItem={true}
+            onClick={() => onNavigate('/landing/indexArtitude', 'indexArtitude')}
             icon={<Users size={18} />}
           />
           <SideMenuItem

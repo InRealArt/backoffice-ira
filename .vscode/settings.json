@@ -12,5 +12,5 @@
         "**/.git/**": true
     },
     "search.followSymlinks": false,
-    "workbench.colorTheme": "Default Dark Modern"
+    "workbench.colorTheme": "Dark Modern"
 }

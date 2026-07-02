@@ -487,6 +487,7 @@ model Artist {
     WhiteListedUsers   WhiteListedUser[]
     artistSpecialties  ArtistSpecialtyArtist[]
     awards             ArtistAward[]
+    artitudeArtist     ArtitudeArtist?
 
     @@schema("public")
 }
@@ -540,6 +541,61 @@ model LandingArtist {
     ugcArtistProfile    LandingUgcArtistProfile?
     exhibitions         ExhibitionArtist[]
     @@index([artistId])
+    @@schema("landing")
+}
+
+// Fiche établissement Google Business Profile (Google My Business) associée à l'artiste
+model ArtitudeArtist {
+    id       Int    @id @default(autoincrement())
+    artistId Int    @unique
+    artist   Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+    // === Adresse (Google Business Profile : storefrontAddress / PostalAddress) ===
+    addressLine1 String // Numéro et nom de rue
+    addressLine2 String? // Complément d'adresse (bâtiment, étage...)
+    postalCode   String
+    city         String // Ville (locality)
+    countryCode  String? // Code pays ISO
+    Country      Country? @relation(fields: [countryCode], references: [code])
+
+    // === Géolocalisation (ciblage Google Maps / OpenStreetMap) ===
+    latitude  Decimal? @db.Decimal(9, 6) // Latitude (ex: 48.856614)
+    longitude Decimal? @db.Decimal(9, 6) // Longitude (ex: 2.352222)
+
+    // === Contact (Google Business Profile : phoneNumbers) ===
+    phoneNumber String? // Numéro de téléphone principal (primaryPhone)
+
+    // === Présence en ligne (Google Business Profile : websiteUri) ===
+    websiteUrl String? @db.Text
+
+    // === Lien vers la fiche établissement Google Business Profile ===
+    googleBusinessProfileUrl String @db.Text
+
+    // === Horaires d'ouverture (Google Business Profile : regularHours.periods) ===
+    // Format JSON : [{ "day": "MONDAY", "openTime": "09:00", "closeTime": "18:00" }, ...]
+    openingHours Json?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    images ArtitudeArtistImages?
+
+    @@index([countryCode])
+    @@schema("landing")
+}
+
+// Images de la fiche établissement Google Business Profile
+model ArtitudeArtistImages {
+    id               Int            @id @default(autoincrement())
+    artitudeArtistId Int            @unique
+    artitudeArtist   ArtitudeArtist @relation(fields: [artitudeArtistId], references: [id], onDelete: Cascade)
+
+    coverImage     String? // Image de couverture de la fiche établissement
+    exteriorImages String[] @default([]) // Photos extérieures de l'établissement
+    interiorImages String[] @default([]) // Photos intérieures de l'établissement
+    artistImages   String[] @default([]) // Photos de l'artiste
+    otherImages    String[] @default([]) // Photos diverses
+
     @@schema("landing")
 }
 
@@ -1566,6 +1622,7 @@ model Country {
     artistAddresses   ArtistAddress[]
     customerAddresses CustomerAddress[]
     artists           Artist[]
+    artitudeArtists   ArtitudeArtist[]
 
     @@schema("public")
 }
