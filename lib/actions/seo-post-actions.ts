@@ -827,4 +827,68 @@ export async function getSeoPostsByLanguage(languageCode: string = 'fr') {
         console.error('Erreur lors de la récupération des articles:', error)
         throw new Error('Impossible de récupérer les articles')
     }
+}
+
+// Supprime un article SEO ainsi que sa traduction associée (paire FR/EN)
+export async function deleteSeoPost(id: number) {
+    try {
+        const post = await prisma.seoPost.findUnique({
+            where: { id },
+            include: { language: true }
+        })
+
+        if (!post) {
+            return {
+                success: false,
+                message: 'Article non trouvé'
+            }
+        }
+
+        let frenchPostId: number | null = null
+        let englishPostId: number | null = null
+
+        if (post.language.code === 'en') {
+            englishPostId = post.id
+            if (post.originalPostId) {
+                const frenchPost = await prisma.seoPost.findUnique({
+                    where: { id: post.originalPostId },
+                    select: { id: true }
+                })
+                frenchPostId = frenchPost?.id ?? null
+            }
+        } else if (post.language.code === 'fr') {
+            frenchPostId = post.id
+            const englishPost = await prisma.seoPost.findFirst({
+                where: { originalPostId: post.id },
+                select: { id: true }
+            })
+            englishPostId = englishPost?.id ?? null
+        }
+
+        const idsToDelete = [englishPostId, frenchPostId].filter(
+            (postId): postId is number => postId !== null
+        )
+
+        if (idsToDelete.length === 0) {
+            idsToDelete.push(id)
+        }
+
+        await prisma.$transaction(
+            idsToDelete.map(postId =>
+                prisma.seoPost.deleteMany({ where: { id: postId } })
+            )
+        )
+
+        revalidatePath('/landing/seo-posts')
+
+        return {
+            success: true
+        }
+    } catch (error) {
+        console.error(`Erreur lors de la suppression de l'article SEO ${id}:`, error)
+        return {
+            success: false,
+            message: (error as Error).message
+        }
+    }
 } 
