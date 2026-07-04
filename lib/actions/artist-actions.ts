@@ -151,6 +151,15 @@ export interface CreateArtistData {
 export async function createArtist(data: CreateArtistData): Promise<{ success: boolean; message?: string; artist?: Artist }> {
     try {
         console.log('data', data)
+
+        // Si le pseudo n'est pas renseigné, le construire à partir du prénom et du nom
+        if (!data.pseudo || data.pseudo.trim().length === 0) {
+            data = {
+                ...data,
+                pseudo: [data.name, data.surname].filter((part) => part && part.trim().length > 0).join(' ')
+            }
+        }
+
         // Vérifier si le pseudo est déjà utilisé
         const existingArtist = await prisma.artist.findFirst({
             where: {
