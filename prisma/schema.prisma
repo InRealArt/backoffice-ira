@@ -458,8 +458,8 @@ model Artist {
     id                 Int                     @id @default(autoincrement())
     name               String?
     surname            String?
-    pseudo             String?                  @unique
-    description        String                  @unique
+    pseudo             String?                 @unique
+    description        String                  
     publicKey          String                  @unique
     imageUrl           String                  @unique
     isGallery          Boolean                 @default(false)
