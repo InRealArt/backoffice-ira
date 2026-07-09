@@ -575,6 +575,8 @@ model ArtitudeArtist {
     // Format JSON : [{ "day": "MONDAY", "openTime": "09:00", "closeTime": "18:00" }, ...]
     openingHours Json?
 
+    isActive Boolean @default(false)
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 

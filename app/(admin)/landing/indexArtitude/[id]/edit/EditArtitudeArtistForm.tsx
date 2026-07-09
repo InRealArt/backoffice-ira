@@ -86,6 +86,7 @@ interface ArtitudeArtistData {
   websiteUrl: string | null
   googleBusinessProfileUrl: string
   openingHours: unknown
+  isActive: boolean
   images: ArtitudeArtistImagesData | null
 }
 
@@ -142,6 +143,7 @@ export default function EditArtitudeArtistForm({
   const [hours, setHours] = useState<Record<OpeningHoursPeriod['day'], DayHours>>(() =>
     buildInitialHours(artitudeArtist.openingHours)
   )
+  const [isActive, setIsActive] = useState(artitudeArtist.isActive)
 
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [progressSteps, setProgressSteps] = useState<
@@ -391,6 +393,7 @@ export default function EditArtitudeArtistForm({
         websiteUrl: data.websiteUrl || null,
         googleBusinessProfileUrl: data.googleBusinessProfileUrl,
         openingHours: openingHours.length > 0 ? openingHours : null,
+        isActive,
         coverImage: newCoverImage ?? existingCoverImage,
         interiorImages: [...existingInteriorImages, ...newInteriorImages],
         exteriorImages: [...existingExteriorImages, ...newExteriorImages],
@@ -438,6 +441,20 @@ export default function EditArtitudeArtistForm({
   const infoTabContent = (
     <>
       <div className="form-section">
+        <h2 className="section-title">Statut</h2>
+        <div className="form-group">
+          <label className="d-flex align-items-center gap-sm">
+            <input
+              type="checkbox"
+              checked={isActive}
+              onChange={(e) => setIsActive(e.target.checked)}
+            />
+            Fiche active
+          </label>
+        </div>
+      </div>
+
+      <div className="form-section mt-lg">
         <h2 className="section-title">Adresse</h2>
         <div className="form-group">
           <label htmlFor="addressLine1" className="form-label">

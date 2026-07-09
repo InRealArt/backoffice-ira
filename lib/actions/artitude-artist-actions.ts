@@ -239,6 +239,7 @@ export interface ArtitudeArtistUpdateData {
     websiteUrl?: string | null
     googleBusinessProfileUrl: string
     openingHours?: OpeningHoursPeriod[] | null
+    isActive?: boolean
     coverImage?: string | null
     interiorImages: string[]
     exteriorImages: string[]
@@ -293,6 +294,7 @@ export async function updateArtitudeArtistAction(
                     websiteUrl: data.websiteUrl || null,
                     googleBusinessProfileUrl: data.googleBusinessProfileUrl,
                     openingHours: data.openingHours && data.openingHours.length > 0 ? (data.openingHours as any) : undefined,
+                    isActive: data.isActive,
                     images: {
                         upsert: {
                             create: {
