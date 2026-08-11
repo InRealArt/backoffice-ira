@@ -751,11 +751,16 @@ export async function updateUserArtistProfile(
 }
 
 /**
- * Récupère tous les artistes et galeries
+ * Récupère tous les artistes et galeries présents dans LandingArtist
  */
 export async function getAllArtistsAndGalleries() {
     try {
         const artists = await prisma.artist.findMany({
+            where: {
+                LandingArtist: {
+                    some: {}
+                }
+            },
             select: {
                 id: true,
                 name: true,
