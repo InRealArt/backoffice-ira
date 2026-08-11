@@ -87,8 +87,8 @@ export default function SeoCategoryForm({ category, isEditing = false }: SeoCate
           }
           
           success('Catégorie mise à jour avec succès')
-          router.push('/landing/blog-categories')
           router.refresh()
+          router.push('/landing/blog-categories')
         } else {
           error(result.message || 'Une erreur est survenue lors de la mise à jour')
         }
@@ -111,8 +111,8 @@ export default function SeoCategoryForm({ category, isEditing = false }: SeoCate
           }
           
           success('Catégorie créée avec succès')
-          router.push('/landing/blog-categories')
           router.refresh()
+          router.push('/landing/blog-categories')
         } else {
           error(result.message || 'Une erreur est survenue lors de la création')
         }
