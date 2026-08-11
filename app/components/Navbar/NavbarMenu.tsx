@@ -1075,6 +1075,30 @@ export default function NavbarMenu() {
                   )}
                 </a>
               </li>
+              <li>
+                <a
+                  onClick={() =>
+                    handleMenuNavigation(
+                      "/landing/blog-categories",
+                      "blog-categories"
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {isItemNavigating("blog-categories") ? (
+                    <>
+                      <span className="loading loading-spinner loading-sm"></span>
+                      <Folder size={18} />
+                      <span>{t("dataAdmin.blogCategories")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Folder size={18} />
+                      <span>{t("dataAdmin.blogCategories")}</span>
+                    </>
+                  )}
+                </a>
+              </li>
             </ul>
           </li>
           <li className="divider my-1"></li>
@@ -1941,6 +1965,20 @@ export default function NavbarMenu() {
                     >
                       <Wrench size={18} />
                       Techniques d'œuvres
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      onClick={() =>
+                        handleDesktopNavigation(
+                          "/landing/blog-categories",
+                          "blog-categories"
+                        )
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      <Folder size={18} />
+                      Catégories de blog
                     </a>
                   </li>
                 </ul>

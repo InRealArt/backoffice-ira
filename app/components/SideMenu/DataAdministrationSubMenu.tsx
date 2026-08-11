@@ -2,6 +2,7 @@
 
 import React from 'react'
 import SideMenuItem from './SideMenuItem'
+import { useIsAdmin } from '@/app/hooks/useIsAdmin'
 import { Database, Users, Folder, Palette, Brush, Wrench, Tag } from 'lucide-react'
 
 interface DataAdministrationSubMenuProps {
@@ -13,6 +14,8 @@ interface DataAdministrationSubMenuProps {
 }
 
 export default function DataAdministrationSubMenu({ isActive, isOpen, toggleSubmenu, onNavigate, isCollapsed = false }: DataAdministrationSubMenuProps) {
+  const { isAdmin } = useIsAdmin()
+
   return (
     <>
       <SideMenuItem 
@@ -57,9 +60,17 @@ export default function DataAdministrationSubMenu({ isActive, isOpen, toggleSubm
             onClick={() => onNavigate('/dataAdministration/artwork-techniques', 'artwork-techniques')}
             icon={<Wrench size={18} />}
           />
+          {isAdmin && (
+            <SideMenuItem
+              label="Catégories de blog"
+              isSubmenuItem={true}
+              onClick={() => onNavigate('/landing/blog-categories', 'blog-categories')}
+              icon={<Folder size={18} />}
+            />
+          )}
         </ul>
       )}
-      
+
       {isOpen && isCollapsed && (
         <ul className="submenu visible">
           <SideMenuItem 
@@ -92,6 +103,12 @@ export default function DataAdministrationSubMenu({ isActive, isOpen, toggleSubm
             onClick={() => onNavigate('/dataAdministration/artwork-techniques', 'artwork-techniques')}
             icon={<Wrench size={18} />}
           />
+          <SideMenuItem
+              label="Catégories de blog"
+              isSubmenuItem={true}
+              onClick={() => onNavigate('/landing/blog-categories', 'blog-categories')}
+              icon={<Folder size={18} />}
+            />
         </ul>
       )}
     </>

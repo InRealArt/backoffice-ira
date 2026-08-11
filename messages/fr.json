@@ -519,7 +519,8 @@
       "artistCategories": "Catégories d'artistes",
       "artworkMediums": "Mediums d'œuvres",
       "artworkStyles": "Styles d'œuvres",
-      "artworkTechniques": "Techniques d'œuvres"
+      "artworkTechniques": "Techniques d'œuvres",
+      "blogCategories": "Catégories de blog"
     },
     "backofficeAdmin": {
       "title": "BACKOFFICE ADMIN",
