@@ -43,17 +43,24 @@ export interface TranslatedFields {
 // Fonction de traduction avec Google Translate
 async function translateWithGoogle(
     text: string,
-    targetLang: string
+    targetLang: string,
+    sourceLang: string = 'fr'
 ): Promise<string> {
     if (!text || text.trim() === '') return text
 
     try {
         // Utilise l'API Google Translate gratuite
         const response = await fetch(
-            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=fr&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
+            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
         )
         const data = await response.json()
-        return data[0][0][0] || text
+        // data[0] contient un segment par phrase/portion découpée par Google pour les
+        // textes longs : il faut tous les concaténer, sinon seule la première portion
+        // traduite est conservée et le reste du texte disparaît silencieusement.
+        const translated = Array.isArray(data?.[0])
+            ? data[0].map((segment: any) => segment[0]).join('')
+            : ''
+        return translated || text
     } catch (error) {
         console.error('Erreur Google Translate:', error)
         return text
@@ -172,7 +179,8 @@ async function simpleTranslation(
 // Fonction pour traduire le contenu JSON structuré
 async function translateJsonContent(
     jsonContent: string,
-    targetLang: string
+    targetLang: string,
+    sourceLang: string = 'fr'
 ): Promise<string> {
     if (!jsonContent || jsonContent.trim() === '') return jsonContent
 
@@ -193,7 +201,7 @@ async function translateJsonContent(
 
                 // Traduire le titre de la section si présent
                 const translatedTitle = section.title
-                    ? await translateWithGoogle(section.title, targetLang)
+                    ? await translateWithGoogle(section.title, targetLang, sourceLang)
                     : section.title
 
                 // Traduire chaque élément de la section
@@ -204,33 +212,56 @@ async function translateJsonContent(
                         // Traduire le contenu textuel selon le type
                         if (['h2', 'h3', 'paragraph'].includes(element.type)) {
                             if (element.content) {
-                                translatedElement.content = await translateWithGoogle(element.content, targetLang)
+                                translatedElement.content = await translateWithGoogle(element.content, targetLang, sourceLang)
+                            }
+
+                            // Le rendu privilégie richContent.segments quand il est présent :
+                            // il faut donc aussi traduire le texte de chaque segment, sous peine
+                            // que le contenu affiché reste dans la langue d'origine.
+                            if (element.richContent?.segments && Array.isArray(element.richContent.segments)) {
+                                translatedElement.richContent = {
+                                    ...element.richContent,
+                                    segments: await Promise.all(
+                                        element.richContent.segments.map(async (segment: any) => ({
+                                            ...segment,
+                                            text: segment.text ? await translateWithGoogle(segment.text, targetLang, sourceLang) : segment.text,
+                                            linkText: segment.linkText ? await translateWithGoogle(segment.linkText, targetLang, sourceLang) : segment.linkText
+                                        }))
+                                    )
+                                }
                             }
                         }
 
                         // Traduire les attributs des images
                         if (element.type === 'image') {
                             if (element.alt) {
-                                translatedElement.alt = await translateWithGoogle(element.alt, targetLang)
+                                translatedElement.alt = await translateWithGoogle(element.alt, targetLang, sourceLang)
                             }
                             if (element.caption) {
-                                translatedElement.caption = await translateWithGoogle(element.caption, targetLang)
+                                translatedElement.caption = await translateWithGoogle(element.caption, targetLang, sourceLang)
                             }
                         }
 
                         // Traduire les attributs des vidéos
                         if (element.type === 'video') {
                             if (element.caption) {
-                                translatedElement.caption = await translateWithGoogle(element.caption, targetLang)
+                                translatedElement.caption = await translateWithGoogle(element.caption, targetLang, sourceLang)
                             }
                             // L'URL reste inchangée
+                        }
+
+                        // Traduire les listes (à puces et numérotées)
+                        if ((element.type === 'list' || element.type === 'ordered_list') && Array.isArray(element.items)) {
+                            translatedElement.items = await Promise.all(
+                                element.items.map((item: string) => translateWithGoogle(item, targetLang, sourceLang))
+                            )
                         }
 
                         // Traduire les accordéons
                         if (element.type === 'accordion') {
                             // Traduire le titre de l'accordéon
                             if (element.title) {
-                                translatedElement.title = await translateWithGoogle(element.title, targetLang)
+                                translatedElement.title = await translateWithGoogle(element.title, targetLang, sourceLang)
                             }
 
                             // Traduire chaque item de l'accordéon
@@ -238,8 +269,8 @@ async function translateJsonContent(
                                 translatedElement.items = await Promise.all(
                                     element.items.map(async (item: any) => ({
                                         ...item,
-                                        title: item.title ? await translateWithGoogle(item.title, targetLang) : item.title,
-                                        content: item.content ? await translateWithGoogle(item.content, targetLang) : item.content
+                                        title: item.title ? await translateWithGoogle(item.title, targetLang, sourceLang) : item.title,
+                                        content: item.content ? await translateWithGoogle(item.content, targetLang, sourceLang) : item.content
                                     }))
                                 )
                             }
@@ -367,6 +398,101 @@ export async function translateSeoPostFields(
         console.error('❌ Erreur lors de la traduction Google:', error)
         console.warn('🔄 Basculement vers la traduction simple')
         return simpleTranslation(fields, targetLanguageCode)
+    }
+}
+
+/**
+ * Traduit automatiquement les champs d'un SeoPost vers l'anglais.
+ * Utilise la détection automatique de langue (sl=auto) de Google Translate :
+ * un texte déjà en anglais est retourné inchangé, un texte en français (ou toute
+ * autre langue) est traduit vers l'anglais. Utilisé lors de l'édition d'un post
+ * dont la langue (languageId) est l'anglais, pour corriger tout contenu saisi
+ * par erreur en français.
+ */
+export async function translateFieldsToEnglish(
+    fields: FieldsToTranslate
+): Promise<{ fields: TranslatedFields; translationFailed: boolean }> {
+    const sourceLang = 'auto'
+    const targetLang = 'en'
+
+    try {
+        const [
+            translatedTitle,
+            translatedMetaDescription,
+            translatedExcerpt,
+            translatedMainImageAlt,
+            translatedMainImageCaption
+        ] = await Promise.all([
+            translateWithGoogle(fields.title, targetLang, sourceLang),
+            translateWithGoogle(fields.metaDescription, targetLang, sourceLang),
+            fields.excerpt ? translateWithGoogle(fields.excerpt, targetLang, sourceLang) : undefined,
+            fields.mainImageAlt ? translateWithGoogle(fields.mainImageAlt, targetLang, sourceLang) : undefined,
+            fields.mainImageCaption ? translateWithGoogle(fields.mainImageCaption, targetLang, sourceLang) : undefined
+        ])
+
+        const [translatedKeywords, translatedTags] = await Promise.all([
+            Promise.all(fields.metaKeywords.map(keyword => translateWithGoogle(keyword, targetLang, sourceLang))),
+            Promise.all(fields.listTags.map(tag => translateWithGoogle(tag, targetLang, sourceLang)))
+        ])
+
+        const translatedContent = await translateJsonContent(fields.content, targetLang, sourceLang)
+
+        let translatedGeneratedHtml: string | undefined
+        let translatedJsonLd: string | undefined
+        let translatedGeneratedArticleHtml: string | undefined
+
+        if (fields.generatedHtml || fields.jsonLd || fields.generatedArticleHtml) {
+            const htmlTranslations = await Promise.all([
+                fields.generatedHtml ? translateHtmlContent(fields.generatedHtml, targetLang, sourceLang) : undefined,
+                fields.jsonLd ? translateJsonLd(fields.jsonLd, targetLang, sourceLang) : undefined,
+                fields.generatedArticleHtml ? translateArticleHtml(fields.generatedArticleHtml, targetLang, sourceLang) : undefined
+            ])
+
+            translatedGeneratedHtml = htmlTranslations[0]
+            translatedJsonLd = htmlTranslations[1]
+            translatedGeneratedArticleHtml = htmlTranslations[2]
+        }
+
+        return {
+            translationFailed: false,
+            fields: {
+                title: translatedTitle,
+                metaDescription: translatedMetaDescription,
+                metaKeywords: translatedKeywords,
+                content: translatedContent,
+                excerpt: translatedExcerpt,
+                listTags: translatedTags,
+                mainImageAlt: translatedMainImageAlt,
+                mainImageCaption: translatedMainImageCaption,
+                slug: translatedTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+                generatedHtml: translatedGeneratedHtml,
+                jsonLd: translatedJsonLd,
+                generatedArticleHtml: translatedGeneratedArticleHtml,
+                status: fields.status,
+                pinned: fields.pinned
+            }
+        }
+    } catch (error) {
+        console.error('❌ Erreur lors de la traduction automatique vers l\'anglais:', error)
+        return {
+            translationFailed: true,
+            fields: {
+                title: fields.title,
+                metaDescription: fields.metaDescription,
+                metaKeywords: fields.metaKeywords,
+                content: fields.content,
+                excerpt: fields.excerpt,
+                listTags: fields.listTags,
+                mainImageAlt: fields.mainImageAlt,
+                mainImageCaption: fields.mainImageCaption,
+                slug: fields.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+                generatedHtml: fields.generatedHtml,
+                jsonLd: fields.jsonLd,
+                generatedArticleHtml: fields.generatedArticleHtml,
+                status: fields.status,
+                pinned: fields.pinned
+            }
+        }
     }
 }
 

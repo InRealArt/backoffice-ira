@@ -11,16 +11,23 @@ interface HtmlElement {
 // Fonction de traduction avec Google Translate
 async function translateWithGoogle(
     text: string,
-    targetLang: string
+    targetLang: string,
+    sourceLang: string = 'fr'
 ): Promise<string> {
     if (!text || text.trim() === '') return text
 
     try {
         const response = await fetch(
-            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=fr&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
+            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
         )
         const data = await response.json()
-        return data[0][0][0] || text
+        // data[0] contient un segment par phrase/portion découpée par Google pour les
+        // textes longs : il faut tous les concaténer, sinon seule la première portion
+        // traduite est conservée et le reste du texte disparaît silencieusement.
+        const translated = Array.isArray(data?.[0])
+            ? data[0].map((segment: any) => segment[0]).join('')
+            : ''
+        return translated || text
     } catch (error) {
         console.error('Erreur Google Translate:', error)
         return text
@@ -166,7 +173,8 @@ function escapeRegex(text: string): string {
 // Fonction principale pour traduire le HTML
 export async function translateHtmlContent(
     html: string,
-    targetLanguageCode: string
+    targetLanguageCode: string,
+    sourceLang: string = 'fr'
 ): Promise<string> {
     if (!html || html.trim() === '') return html
 
@@ -185,7 +193,7 @@ export async function translateHtmlContent(
 
         // Traduire tous les textes
         const translatedTexts = await Promise.all(
-            textNodes.map(text => translateWithGoogle(text, targetLanguageCode))
+            textNodes.map(text => translateWithGoogle(text, targetLanguageCode, sourceLang))
         )
 
         // Remplacer les textes dans le HTML
@@ -209,7 +217,8 @@ export async function translateHtmlContent(
 // Fonction pour traduire le JSON-LD
 export async function translateJsonLd(
     jsonLd: string,
-    targetLanguageCode: string
+    targetLanguageCode: string,
+    sourceLang: string = 'fr'
 ): Promise<string> {
     if (!jsonLd || jsonLd.trim() === '') return jsonLd
 
@@ -223,14 +232,14 @@ export async function translateJsonLd(
 
         for (const field of fieldsToTranslate) {
             if (data[field] && typeof data[field] === 'string') {
-                data[field] = await translateWithGoogle(data[field], targetLanguageCode)
+                data[field] = await translateWithGoogle(data[field], targetLanguageCode, sourceLang)
             }
         }
 
         // Traduire les éléments dans les tableaux si présents
         if (data.keywords && Array.isArray(data.keywords)) {
             data.keywords = await Promise.all(
-                data.keywords.map((keyword: string) => translateWithGoogle(keyword, targetLanguageCode))
+                data.keywords.map((keyword: string) => translateWithGoogle(keyword, targetLanguageCode, sourceLang))
             )
         }
 
@@ -246,8 +255,9 @@ export async function translateJsonLd(
 // Fonction pour traduire le contenu d'article HTML
 export async function translateArticleHtml(
     articleHtml: string,
-    targetLanguageCode: string
+    targetLanguageCode: string,
+    sourceLang: string = 'fr'
 ): Promise<string> {
     // Utiliser la même fonction que pour le HTML complet
-    return translateHtmlContent(articleHtml, targetLanguageCode)
+    return translateHtmlContent(articleHtml, targetLanguageCode, sourceLang)
 } 

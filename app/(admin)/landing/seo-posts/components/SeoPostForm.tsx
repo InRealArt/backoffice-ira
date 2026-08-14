@@ -16,7 +16,7 @@ import BlogContentEditor from '@/app/components/BlogEditor/BlogContentEditor'
 import { BlogContent, ElementType, RelatedArticleItem } from '@/app/components/BlogEditor/types'
 import { SEOAssistantButton, SEOAssistantModal, FormData } from '@/app/components/SEOAssistant'
 import { createSeoPost, updateSeoPost, pinSeoPost } from '@/lib/actions/seo-post-actions'
-import { getAllLanguages } from '@/lib/services/translation-service'
+import { getAllLanguages, translateFieldsToEnglish } from '@/lib/services/translation-service'
 import { generateSlug } from '@/lib/utils'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import Image from 'next/image'
@@ -47,7 +47,7 @@ type FormValues = z.infer<typeof formSchema>
 
 interface SeoPostFormProps {
   categories: SeoCategory[]
-  seoPost?: SeoPost | null
+  seoPost?: (SeoPost & { language?: Language | null }) | null
   isEditing?: boolean
   availablePosts?: RelatedArticleItem[]
 }
@@ -460,19 +460,59 @@ export default function SeoPostForm({
       
       // Injecter les articles liés dans le contenu final avant envoi
       const contentWithRelated = buildContentWithRelated(blogContent, selectedRelatedPosts)
+      let finalContent = JSON.stringify(contentWithRelated)
+      let finalData = { ...data }
+      let finalKeywords = keywords
+      let finalTags = tags
+      let translationWarning = false
+
+      // Si l'article édité est en anglais, on traduit automatiquement tout texte
+      // détecté comme non-anglais (ex: français collé par erreur) vers l'anglais.
+      // sl=auto laisse un texte déjà en anglais inchangé.
+      if (isEditing && seoPost?.language?.code === 'en') {
+        try {
+          const { fields: translated, translationFailed } = await translateFieldsToEnglish({
+            title: data.title,
+            metaDescription: data.metaDescription,
+            metaKeywords: keywords,
+            content: finalContent,
+            excerpt: data.excerpt,
+            listTags: tags,
+            mainImageAlt: data.mainImageAlt,
+            mainImageCaption: data.mainImageCaption
+          })
+
+          finalData = {
+            ...finalData,
+            title: translated.title,
+            slug: translated.slug,
+            metaDescription: translated.metaDescription,
+            excerpt: translated.excerpt,
+            mainImageAlt: translated.mainImageAlt,
+            mainImageCaption: translated.mainImageCaption
+          }
+          finalContent = translated.content
+          finalKeywords = translated.metaKeywords
+          finalTags = translated.listTags
+          translationWarning = translationFailed
+        } catch (error) {
+          console.error('Erreur lors de la traduction automatique vers l\'anglais:', error)
+          translationWarning = true
+        }
+      }
 
       // Formatage des données
       const formattedData = {
-        ...data,
-        content: JSON.stringify(contentWithRelated),
+        ...finalData,
+        content: finalContent,
         categoryId: parseInt(data.categoryId),
-        metaKeywords: keywords, // Utiliser le tableau de keywords pour metaKeywords
-        listTags: tags, // Utiliser le tableau de tags pour listTags
+        metaKeywords: finalKeywords, // Utiliser le tableau de keywords pour metaKeywords
+        listTags: finalTags, // Utiliser le tableau de tags pour listTags
         // Traduction automatique pour tous les nouveaux posts
         autoTranslate: !isEditing && availableLanguages.length > 0,
         targetLanguageCodes: !isEditing ? availableLanguages.map(lang => lang.code) : undefined
       }
-      
+
       let result
       
       if (isEditing && seoPost?.id) {
@@ -489,6 +529,10 @@ export default function SeoPostForm({
           successMessage += ` et traductions en cours pour ${availableLanguages.length} langue(s)`
         }
         successToast(successMessage)
+
+        if (translationWarning) {
+          errorToast('La traduction automatique vers l\'anglais a échoué : le texte original a été enregistré tel quel, merci de le vérifier')
+        }
         
         // Redirection
         setTimeout(() => {

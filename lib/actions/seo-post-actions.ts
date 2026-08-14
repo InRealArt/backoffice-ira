@@ -39,6 +39,7 @@ export async function getSeoPostById(id: number) {
             where: { id },
             include: {
                 category: true,
+                language: true,
                 tags: {
                     include: {
                         tag: true

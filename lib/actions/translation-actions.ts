@@ -16,7 +16,13 @@ async function translateWithGoogle(
             `https://translate.googleapis.com/translate_a/single?client=gtx&sl=fr&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
         )
         const data = await response.json()
-        return data[0][0][0] || text
+        // data[0] contient un segment par phrase/portion découpée par Google pour les
+        // textes longs : il faut tous les concaténer, sinon seule la première portion
+        // traduite est conservée et le reste du texte disparaît silencieusement.
+        const translated = Array.isArray(data?.[0])
+            ? data[0].map((segment: any) => segment[0]).join('')
+            : ''
+        return translated || text
     } catch (error) {
         console.error('Erreur Google Translate:', error)
         return text // Retourner le texte original en cas d'erreur
