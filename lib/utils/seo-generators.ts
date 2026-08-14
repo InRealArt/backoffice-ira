@@ -1,4 +1,5 @@
 import { BlogContent, BlogSection, ElementType, RelatedArticleItem } from '@/app/components/BlogEditor/types'
+import { getImageUrl } from '@/lib/r2/url'
 
 export interface SeoPostData {
   title: string
@@ -57,18 +58,30 @@ function getHtmlLabels(languageCode?: string) {
 }
 
 /**
- * Valide et nettoie une URL d'image
+ * Valide et nettoie une URL d'image.
+ *
+ * Les images sont stockées en BDD sous forme de chemin relatif au bucket
+ * (ex: "blog/mon-article/image.webp"). Le HTML généré étant consommé tel quel
+ * par le site corpo, il doit contenir des URLs absolues : on reconstruit donc
+ * l'URL publique R2 avant validation.
  */
 function validateImageUrl(url?: string): string {
   if (!url) return ''
 
-  // Nettoyer l'URL en supprimant les doubles slashes (sauf après le protocole)
-  const cleanUrl = url.replace(/([^:]\/)\/+/g, '$1')
+  // Reconstruire l'URL absolue depuis un chemin relatif (no-op si déjà absolue)
+  const absoluteUrl = getImageUrl(url)
+  if (!absoluteUrl) {
+    console.warn('URL d\'image invalide:', url)
+    return ''
+  }
 
-  // Vérifier que l'URL est valide
+  // Nettoyer l'URL en supprimant les doubles slashes (sauf après le protocole)
+  const cleanUrl = absoluteUrl.replace(/([^:]\/)\/+/g, '$1')
+
+  // Vérifier que l'URL est valide et encoder les caractères spéciaux
+  // (espaces, accents) présents dans les noms de fichiers du bucket
   try {
-    new URL(cleanUrl)
-    return cleanUrl
+    return new URL(cleanUrl).toString()
   } catch (error) {
     console.warn('URL d\'image invalide:', url)
     return ''
