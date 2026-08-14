@@ -13,6 +13,47 @@ export interface SeoPostData {
   blogContent: BlogContent
   tags?: string[]
   estimatedReadTime?: number // Temps de lecture en minutes
+  /**
+   * Code de langue de l'article (ex: 'fr', 'en'). Détermine la langue des
+   * libellés statiques et du format de date dans le HTML généré.
+   * Par défaut 'fr'.
+   */
+  languageCode?: string
+}
+
+/**
+ * Libellés statiques injectés dans le HTML généré, par langue.
+ * Le HTML généré est consommé tel quel par le site corpo : ses libellés
+ * doivent donc suivre la langue de l'article, pas celle du backoffice.
+ */
+const HTML_LABELS: Record<string, {
+  locale: string
+  by: string
+  readTime: string
+  minutes: string
+  relatedArticles: string
+  tags: string
+}> = {
+  fr: {
+    locale: 'fr-FR',
+    by: 'Par',
+    readTime: 'Temps de lecture',
+    minutes: 'min',
+    relatedArticles: 'Articles liés',
+    tags: 'Tags'
+  },
+  en: {
+    locale: 'en-US',
+    by: 'By',
+    readTime: 'Reading time',
+    minutes: 'min',
+    relatedArticles: 'Related articles',
+    tags: 'Tags'
+  }
+}
+
+function getHtmlLabels(languageCode?: string) {
+  return HTML_LABELS[languageCode ?? 'fr'] ?? HTML_LABELS.fr
 }
 
 /**
@@ -72,18 +113,10 @@ export function generateSeoJsonLd(postData: SeoPostData): string {
 export function generateSeoHtml(postData: SeoPostData): string {
   const articleHtml = generateArticleHtml(postData)
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
   const cleanMainImageUrl = validateImageUrl(postData.mainImageUrl)
 
   return `<!DOCTYPE html>
-<html lang="fr">
+<html lang="${postData.languageCode ?? 'fr'}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -218,8 +251,10 @@ export function generateSeoHtml(postData: SeoPostData): string {
  * Génère uniquement le HTML de la balise <article>
  */
 export function generateArticleHtml(postData: SeoPostData): string {
+  const labels = getHtmlLabels(postData.languageCode)
+
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('fr-FR', {
+    return date.toLocaleDateString(labels.locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -327,7 +362,7 @@ ${accordionItems}
         </a>`
               }).join('\n')
               return `      <div class="related-articles-section">
-        <h3>Articles liés</h3>
+        <h3>${labels.relatedArticles}</h3>
         <div class="related-articles-grid">
 ${cards}
         </div>
@@ -353,9 +388,9 @@ ${sectionHtml}
       <h1>${postData.title}</h1>
       
       <div class="article-meta">
-        ${postData.author ? `<span class="author">Par ${postData.authorLink ? `<a href="${postData.authorLink}">` : ''}${postData.author}${postData.authorLink ? '</a>' : ''}</span>` : ''}
+        ${postData.author ? `<span class="author">${labels.by} ${postData.authorLink ? `<a href="${postData.authorLink}">` : ''}${postData.author}${postData.authorLink ? '</a>' : ''}</span>` : ''}
         <time datetime="${formatDatetime(postData.creationDate)}">${formatDate(postData.creationDate)}</time>
-        ${postData.estimatedReadTime ? `<span class="read-time">Temps de lecture: ${postData.estimatedReadTime} min</span>` : ''}
+        ${postData.estimatedReadTime ? `<span class="read-time">${labels.readTime}: ${postData.estimatedReadTime} ${labels.minutes}</span>` : ''}
       </div>
       
       ${validateImageUrl(postData.mainImageUrl) ? `<figure class="main-image">
@@ -373,7 +408,7 @@ ${generateBlogContentHtml(postData.blogContent)}
     </div>
     
     ${postData.tags && postData.tags.length > 0 ? `<div class="tags-section">
-      <h3>Tags</h3>
+      <h3>${labels.tags}</h3>
       <div class="tags-list">
         ${postData.tags.map(tag => `<span class="tag-badge">${tag}</span>`).join('\n        ')}
       </div>

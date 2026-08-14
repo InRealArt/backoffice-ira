@@ -82,11 +82,18 @@ export async function createSeoPost(data: {
     try {
         // Si pas de languageId fourni, utiliser la langue par défaut
         let languageId = data.languageId
+        let languageCode: string | undefined
         if (!languageId) {
             const defaultLanguage = await prisma.language.findFirst({
                 where: { isDefault: true }
             })
             languageId = defaultLanguage?.id || 1 // fallback à 1 si pas de défaut trouvé
+            languageCode = defaultLanguage?.code
+        } else {
+            const language = await prisma.language.findUnique({
+                where: { id: languageId }
+            })
+            languageCode = language?.code
         }
 
         // Parser le contenu JSON pour obtenir le BlogContent
@@ -111,7 +118,9 @@ export async function createSeoPost(data: {
             creationDate: data.creationDate || new Date(),
             excerpt: data.excerpt,
             blogContent: blogContent,
-            tags: data.metaKeywords || []
+            tags: data.metaKeywords || [],
+            // Les libellés statiques du HTML généré suivent la langue du post
+            languageCode
         }
 
         // Générer le HTML initial pour calculer le temps de lecture
@@ -315,7 +324,8 @@ export async function updateSeoPost(id: number, data: {
                     include: {
                         tag: true
                     }
-                }
+                },
+                language: true
             }
         })
 
@@ -347,7 +357,9 @@ export async function updateSeoPost(id: number, data: {
             creationDate: data.creationDate || existingPost.createdAt,
             excerpt: data.excerpt || existingPost.excerpt || undefined,
             blogContent: blogContent,
-            tags: data.metaKeywords || existingPost.metaKeywords || []
+            tags: data.metaKeywords || existingPost.metaKeywords || [],
+            // Les libellés statiques du HTML généré suivent la langue du post
+            languageCode: existingPost.language?.code
         }
 
         // Générer le HTML initial pour calculer le temps de lecture
