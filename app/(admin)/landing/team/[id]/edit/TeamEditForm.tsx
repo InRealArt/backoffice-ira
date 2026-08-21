@@ -1,17 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Team } from '@/src/generated/prisma/browser'
-import { updateTeamMember, updateTeamMemberVisible } from '@/lib/actions/team-actions'
+import { updateTeamMember, updateTeamMemberVisible, deleteTeamMember } from '@/lib/actions/team-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
-import { useToast } from '@/app/components/Toast/ToastContext' 
-import Image from 'next/image'
-import { getImageUrl } from '@/lib/r2/url'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import TranslationField from '@/app/components/TranslationField'
+import OptionalImageUpload from '@/app/components/art/OptionalImageUpload'
+import { DeleteActionButton } from '@/app/components/PageLayout'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -23,8 +23,6 @@ const formSchema = z.object({
   order: z.number().nullable().optional(),
   intro: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  photoUrl1: z.string().url('URL d\'image invalide').or(z.literal('')).nullable().optional(),
-  photoUrl2: z.string().url('URL d\'image invalide').or(z.literal('')).nullable().optional(),
   linkedinUrl: z.string().url('URL LinkedIn invalide').or(z.literal('')).nullable().optional(),
   instagramUrl: z.string().url('URL Instagram invalide').or(z.literal('')).nullable().optional(),
   facebookUrl: z.string().url('URL Facebook invalide').or(z.literal('')).nullable().optional(),
@@ -42,6 +40,11 @@ interface TeamEditFormProps {
 export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [photo1File, setPhoto1File] = useState<File | null>(null)
+  const [photo2File, setPhoto2File] = useState<File | null>(null)
+  const [deletedPhoto1, setDeletedPhoto1] = useState(false)
+  const [deletedPhoto2, setDeletedPhoto2] = useState(false)
+  const [isDeletingMember, setIsDeletingMember] = useState(false)
   const { success, error } = useToast()
   const {
     register,
@@ -60,8 +63,6 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
       order: teamMember.order,
       intro: teamMember.intro || null,
       description: teamMember.description || null,
-      photoUrl1: teamMember.photoUrl1 || null,
-      photoUrl2: teamMember.photoUrl2 || null,
       linkedinUrl: teamMember.linkedinUrl || null,
       instagramUrl: teamMember.instagramUrl || null,
       facebookUrl: teamMember.facebookUrl || null,
@@ -71,13 +72,44 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
     }
   })
 
-  const photoUrl1 = watch('photoUrl1')
   const visible = watch('visible')
-  
+
+  // La suppression réelle sur R2 n'a lieu qu'après succès de la sauvegarde (voir onSubmit) :
+  // marquer l'état localement évite de supprimer un fichier encore référencé si l'utilisateur
+  // annule ou si la mise à jour échoue.
+  const handleDeletePhoto1 = useCallback(() => {
+    setDeletedPhoto1(true)
+    setPhoto1File(null)
+  }, [])
+
+  const handleDeletePhoto2 = useCallback(() => {
+    setDeletedPhoto2(true)
+    setPhoto2File(null)
+  }, [])
+
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
-    
+
     try {
+      let photoUrl1: string | null = deletedPhoto1 ? null : teamMember.photoUrl1 || null
+      let photoUrl2: string | null = deletedPhoto2 ? null : teamMember.photoUrl2 || null
+
+      const { uploadTeamMemberImage } = await import('@/lib/r2/storage')
+
+      if (photo1File) {
+        photoUrl1 = await uploadTeamMemberImage(photo1File, {
+          memberId: teamMember.id,
+          photoSlot: 'photo1',
+        })
+      }
+
+      if (photo2File) {
+        photoUrl2 = await uploadTeamMemberImage(photo2File, {
+          memberId: teamMember.id,
+          photoSlot: 'photo2',
+        })
+      }
+
       // Remplacer l'approche avec reduce par une assignation explicite
       const formattedData = {
         firstName: data.firstName,
@@ -88,8 +120,8 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
         order: data.order === undefined ? null : data.order,
         intro: data.intro === undefined ? null : data.intro,
         description: data.description === undefined ? null : data.description,
-        photoUrl1: data.photoUrl1 === undefined ? null : data.photoUrl1,
-        photoUrl2: data.photoUrl2 === undefined ? null : data.photoUrl2,
+        photoUrl1,
+        photoUrl2,
         linkedinUrl: data.linkedinUrl === undefined ? null : data.linkedinUrl,
         instagramUrl: data.instagramUrl === undefined ? null : data.instagramUrl,
         facebookUrl: data.facebookUrl === undefined ? null : data.facebookUrl,
@@ -97,12 +129,23 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
         twitterUrl: data.twitterUrl === undefined ? null : data.twitterUrl,
         websiteUrl: data.websiteUrl === undefined ? null : data.websiteUrl,
       }
-      
+
       const result = await updateTeamMember(teamMember.id, formattedData)
-      
+
       if (result.success) {
+        // La mise à jour DB a réussi : on peut maintenant supprimer sans risque
+        // l'ancien fichier R2 si l'utilisateur a explicitement retiré la photo
+        // (un remplacement écrase déjà le même chemin, memberId-photoSlot, donc rien à faire dans ce cas).
+        const { deleteImageFromFirebase } = await import('@/lib/r2/storage')
+        if (deletedPhoto1 && !photo1File && teamMember.photoUrl1) {
+          await deleteImageFromFirebase(teamMember.photoUrl1)
+        }
+        if (deletedPhoto2 && !photo2File && teamMember.photoUrl2) {
+          await deleteImageFromFirebase(teamMember.photoUrl2)
+        }
+
         success('Membre d\'équipe mis à jour avec succès')
-        
+
         // Gestion des traductions pour le rôle et la description
         try {
           // Utiliser la fonction générique pour gérer les traductions
@@ -135,7 +178,41 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
   const handleCancel = () => {
     router.push('/landing/team')
   }
-  
+
+  const handleDeleteMember = async () => {
+    setIsDeletingMember(true)
+
+    try {
+      // Supprimer d'abord l'enregistrement en DB : si cet appel échoue, on ne
+      // veut pas avoir déjà perdu les photos sur R2 (même logique que onSubmit).
+      const result = await deleteTeamMember(teamMember.id)
+
+      if (result.success) {
+        const { deleteImageFromFirebase } = await import('@/lib/r2/storage')
+
+        if (teamMember.photoUrl1) {
+          await deleteImageFromFirebase(teamMember.photoUrl1)
+        }
+        if (teamMember.photoUrl2) {
+          await deleteImageFromFirebase(teamMember.photoUrl2)
+        }
+
+        success('Membre d\'équipe supprimé avec succès')
+        // Navigation complète (pas router.push) : une transition client Next.js
+        // laisse le temps à la page d'édition actuelle de se re-rendre (le membre
+        // n'existe plus en DB) et déclenche un bref notFound() avant de basculer.
+        window.location.href = '/landing/team'
+      } else {
+        error(result.message || 'Une erreur est survenue lors de la suppression')
+      }
+    } catch (err) {
+      console.error('Erreur lors de la suppression du membre d\'équipe:', err)
+      error('Une erreur est survenue lors de la suppression')
+    } finally {
+      setIsDeletingMember(false)
+    }
+  }
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -154,38 +231,24 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
           </div>
           <div className="card-content">
             <div className="d-flex gap-lg">
-              <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
-                {getImageUrl(photoUrl1) ? (
-                  <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
-                    <Image
-                      src={getImageUrl(photoUrl1)!}
-                      alt={`${teamMember.firstName} ${teamMember.lastName}`}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                    />
-                  </div>
-                ) : (
-                  <div style={{ width: '200px', height: '200px', borderRadius: '8px', backgroundColor: '#e0e0e0', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '1.5rem' }}>
-                    {teamMember.firstName.charAt(0)}{teamMember.lastName.charAt(0)}
-                  </div>
-                )}
-                <div className="form-group">
-                  <label htmlFor="photoUrl1" className="form-label">URL de la photo principale</label>
-                  <input
-                    id="photoUrl1"
-                    type="text"
-                    {...register('photoUrl1')}
-                    className={`form-input ${errors.photoUrl1 ? 'input-error' : ''}`}
-                    placeholder="https://example.com/image.jpg"
-                    style={{ width: '100%', fontSize: '0.65rem' }}
-                    title={photoUrl1 || ""}
-                  />
-                  {errors.photoUrl1 && (
-                    <p className="form-error">{errors.photoUrl1.message}</p>
-                  )}
-                </div>
+              <div style={{ width: '200px', flexShrink: 0 }}>
+                <OptionalImageUpload
+                  onFileSelect={setPhoto1File}
+                  label="Photo principale"
+                  previewUrl={deletedPhoto1 ? null : teamMember.photoUrl1 || null}
+                  allowDelete={true}
+                  onDelete={handleDeletePhoto1}
+                />
+                <OptionalImageUpload
+                  onFileSelect={setPhoto2File}
+                  label="Photo secondaire"
+                  description="Une photo supplémentaire (optionnel)"
+                  previewUrl={deletedPhoto2 ? null : teamMember.photoUrl2 || null}
+                  allowDelete={true}
+                  onDelete={handleDeletePhoto2}
+                />
               </div>
-              
+
               <div style={{ flex: 1 }}>
                 <div className="d-flex gap-md">
                   <div className="form-group" style={{ flex: 1 }}>
@@ -454,22 +517,31 @@ export default function TeamEditForm({ teamMember }: TeamEditFormProps) {
           </div>
         </div>
         
-        <div className="form-actions">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="secondary-button"
+        <div className="form-actions d-flex justify-content-between">
+          <DeleteActionButton
+            onDelete={handleDeleteMember}
+            isDeleting={isDeletingMember}
             disabled={isSubmitting}
-          >
-            Annuler
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary btn-medium"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Mise à jour...' : 'Mettre à jour'}
-          </button>
+            buttonSize="medium"
+            itemName={`${teamMember.firstName} ${teamMember.lastName}`}
+          />
+          <div className="d-flex gap-md">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="secondary-button"
+              disabled={isSubmitting || isDeletingMember}
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary btn-medium"
+              disabled={isSubmitting || isDeletingMember}
+            >
+              {isSubmitting ? 'Mise à jour...' : 'Mettre à jour'}
+            </button>
+          </div>
         </div>
       </form>
     </div>

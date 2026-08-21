@@ -2,14 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createTeamMember } from '@/lib/actions/team-actions'
+import { createTeamMember, updateTeamMember } from '@/lib/actions/team-actions'
 import { handleEntityTranslations } from '@/lib/actions/translation-actions'
-import { useToast } from '@/app/components/Toast/ToastContext' 
-import Image from 'next/image'
-import { getImageUrl } from '@/lib/r2/url'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import OptionalImageUpload from '@/app/components/art/OptionalImageUpload'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -20,8 +19,6 @@ const formSchema = z.object({
   visible: z.boolean(),
   intro: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
-  photoUrl1: z.string().url('URL d\'image invalide').or(z.literal('')).nullable().optional(),
-  photoUrl2: z.string().url('URL d\'image invalide').or(z.literal('')).nullable().optional(),
   linkedinUrl: z.string().url('URL LinkedIn invalide').or(z.literal('')).nullable().optional(),
   instagramUrl: z.string().url('URL Instagram invalide').or(z.literal('')).nullable().optional(),
   facebookUrl: z.string().url('URL Facebook invalide').or(z.literal('')).nullable().optional(),
@@ -35,6 +32,8 @@ type FormValues = z.infer<typeof formSchema>
 export default function NewTeamMemberForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [photo1File, setPhoto1File] = useState<File | null>(null)
+  const [photo2File, setPhoto2File] = useState<File | null>(null)
   const { success, error } = useToast()
   const {
     register,
@@ -51,8 +50,6 @@ export default function NewTeamMemberForm() {
       visible: true,
       intro: null,
       description: null,
-      photoUrl1: null,
-      photoUrl2: null,
       linkedinUrl: null,
       instagramUrl: null,
       facebookUrl: null,
@@ -62,12 +59,11 @@ export default function NewTeamMemberForm() {
     }
   })
 
-  const photoUrl1 = watch('photoUrl1')
   const visible = watch('visible')
-  
+
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true)
-    
+
     try {
       // Modifier cette partie pour corriger les erreurs de typage
       const formattedData = {
@@ -79,8 +75,8 @@ export default function NewTeamMemberForm() {
         order: 0,
         intro: data.intro === undefined ? null : data.intro,
         description: data.description === undefined ? null : data.description,
-        photoUrl1: data.photoUrl1 === undefined ? null : data.photoUrl1,
-        photoUrl2: data.photoUrl2 === undefined ? null : data.photoUrl2,
+        photoUrl1: null,
+        photoUrl2: null,
         linkedinUrl: data.linkedinUrl === undefined ? null : data.linkedinUrl,
         instagramUrl: data.instagramUrl === undefined ? null : data.instagramUrl,
         facebookUrl: data.facebookUrl === undefined ? null : data.facebookUrl,
@@ -88,12 +84,34 @@ export default function NewTeamMemberForm() {
         twitterUrl: data.twitterUrl === undefined ? null : data.twitterUrl,
         websiteUrl: data.websiteUrl === undefined ? null : data.websiteUrl,
       }
-      
+
+      // Le membre doit d'abord exister en DB : son id sert de clé unique pour
+      // le chemin de stockage R2 des photos (team/{id}-photoSlot.webp), afin
+      // d'éviter toute collision entre homonymes.
       const result = await createTeamMember(formattedData)
-      
+
       if (result.success && result.id) {
+        if (photo1File || photo2File) {
+          const { uploadTeamMemberImage } = await import('@/lib/r2/storage')
+
+          const [photoUrl1, photoUrl2] = await Promise.all([
+            photo1File
+              ? uploadTeamMemberImage(photo1File, { memberId: result.id, photoSlot: 'photo1' })
+              : Promise.resolve(null),
+            photo2File
+              ? uploadTeamMemberImage(photo2File, { memberId: result.id, photoSlot: 'photo2' })
+              : Promise.resolve(null),
+          ])
+
+          await updateTeamMember(result.id, {
+            ...formattedData,
+            photoUrl1,
+            photoUrl2,
+          })
+        }
+
         success('Membre d\'équipe créé avec succès')
-        
+
         // Gestion des traductions pour le rôle et la description
         try {
           // Utiliser la fonction générique pour gérer les traductions
@@ -144,36 +162,18 @@ export default function NewTeamMemberForm() {
           </div>
           <div className="card-content">
             <div className="d-flex gap-lg">
-              <div className="d-flex flex-column gap-md" style={{ width: '200px' }}>
-                {getImageUrl(photoUrl1) ? (
-                  <div style={{ position: 'relative', width: '200px', height: '200px', borderRadius: '8px', overflow: 'hidden' }}>
-                    <Image
-                      src={getImageUrl(photoUrl1)!}
-                      alt="Photo de profil"
-                      fill
-                      style={{ objectFit: 'cover' }}
-                    />
-                  </div>
-                ) : (
-                  <div style={{ width: '200px', height: '200px', borderRadius: '8px', backgroundColor: '#e0e0e0', color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '1.5rem' }}>
-                    Photo
-                  </div>
-                )}
-                <div className="form-group">
-                  <label htmlFor="photoUrl1" className="form-label">URL de la photo principale</label>
-                  <input
-                    id="photoUrl1"
-                    type="text"
-                    {...register('photoUrl1')}
-                    className={`form-input ${errors.photoUrl1 ? 'input-error' : ''}`}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                  {errors.photoUrl1 && (
-                    <p className="form-error">{errors.photoUrl1.message}</p>
-                  )}
-                </div>
+              <div style={{ width: '200px', flexShrink: 0 }}>
+                <OptionalImageUpload
+                  onFileSelect={setPhoto1File}
+                  label="Photo principale"
+                />
+                <OptionalImageUpload
+                  onFileSelect={setPhoto2File}
+                  label="Photo secondaire"
+                  description="Une photo supplémentaire (optionnel)"
+                />
               </div>
-              
+
               <div style={{ flex: 1 }}>
                 <div className="d-flex gap-md">
                   <div className="form-group" style={{ flex: 1 }}>

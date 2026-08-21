@@ -72,6 +72,7 @@ export function DeleteActionButton({
   return (
     <>
       <button
+        type="button"
         onClick={handleDeleteClick}
         className={`btn btn-danger btn-${buttonSize} ${className}`}
         disabled={isButtonDisabled}
@@ -91,6 +92,7 @@ export function DeleteActionButton({
 
           <div className="flex justify-end gap-3 mt-2 pt-4 border-t border-gray-200">
             <button
+              type="button"
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
@@ -101,6 +103,7 @@ export function DeleteActionButton({
               {t("cancel")}
             </button>
             <button
+              type="button"
               className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               onClick={(e) => {
                 e.stopPropagation();

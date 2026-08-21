@@ -351,6 +351,80 @@ export async function uploadArtistImageWithWebP(
 }
 
 /**
+ * Options pour l'upload d'une photo de membre d'équipe avec conversion WebP
+ */
+export interface UploadTeamMemberImageOptions {
+    /** Id unique du membre d'équipe (évite les collisions de nom) */
+    memberId: number
+    /** Emplacement de la photo (photo1 ou photo2) */
+    photoSlot: 'photo1' | 'photo2'
+    /** Callback appelé lors du changement de statut de conversion */
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+    /** Callback appelé lors du changement de statut d'upload */
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+}
+
+/**
+ * Upload une photo de membre d'équipe vers R2 avec conversion WebP automatique.
+ * Stockage à plat dans team/ (ex: "team/marie-dupont-42-photo1.webp"), pas de sous-dossier par membre.
+ * Le nom du fichier original est conservé (normalisé) et suffixé par l'id du membre et
+ * l'emplacement de la photo, ce qui garantit l'unicité même entre deux fichiers homonymes.
+ *
+ * @param imageFile - Le fichier image à uploader
+ * @param options - Options de configuration
+ * @returns Chemin relatif de l'image uploadée (pour stockage en DB)
+ */
+export async function uploadTeamMemberImage(
+    imageFile: File,
+    options: UploadTeamMemberImageOptions
+): Promise<string> {
+    try {
+        // Étape 1: Conversion WebP
+        options.onConversionStatus?.('in-progress')
+        const conversionResult = await convertToWebPIfNeeded(imageFile)
+
+        if (!conversionResult.success) {
+            const errorMessage =
+                conversionResult.error ||
+                "Erreur lors de la conversion de l'image en WebP"
+            options.onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        options.onConversionStatus?.('completed')
+
+        // Étape 2: Préparation du chemin de stockage (à plat dans team/, clé unique par id)
+        const { memberId, photoSlot } = options
+        const originalName = imageFile.name.replace(/\.[^./]+$/, '')
+        const normalizedName = normalizeString(originalName) || 'photo'
+        const storagePath = `team/${normalizedName}-${memberId}-${photoSlot}.webp`
+
+        // Étape 3: Upload vers R2
+        options.onUploadStatus?.('in-progress')
+        const imageUrl = await uploadFileToR2(conversionResult.file, storagePath)
+
+        options.onUploadStatus?.('completed')
+
+        return imageUrl
+    } catch (error) {
+        console.error("Erreur lors de l'upload de la photo du membre d'équipe:", error)
+        const errorMessage =
+            error instanceof Error
+                ? error.message
+                : "Erreur inconnue lors de l'upload"
+
+        if (errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp')) {
+            options.onConversionStatus?.('error', errorMessage)
+        } else {
+            options.onUploadStatus?.('error', errorMessage)
+        }
+
+        throw error
+    }
+}
+
+/**
  * checkFolderExists — R2 n'a pas de notion de dossier vide.
  * Retourne toujours true pour maintenir la compatibilité avec les composants existants.
  *

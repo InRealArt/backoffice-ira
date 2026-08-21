@@ -82,8 +82,9 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900 m-0">{title}</h2>
-            <button 
-              className="bg-transparent border-0 text-2xl leading-none cursor-pointer text-gray-400 hover:text-gray-600 transition-colors p-1 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100" 
+            <button
+              type="button"
+              className="bg-transparent border-0 text-2xl leading-none cursor-pointer text-gray-400 hover:text-gray-600 transition-colors p-1 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
               onClick={onClose}
               aria-label="Fermer"
             >
