@@ -786,6 +786,80 @@ export async function uploadImageToExhibitionFolder(
 }
 
 /**
+ * Upload une image vers R2 dans le répertoire agency-events/<Nom événement>/
+ *
+ * @param imageFile - Le fichier image à uploader
+ * @param eventName - Nom de l'événement agence (utilisé comme nom de dossier)
+ * @param fileName - Nom du fichier (sans extension)
+ * @param onConversionStatus - Callback pour le statut de conversion
+ * @param onUploadStatus - Callback pour le statut d'upload
+ * @returns URL de l'image uploadée
+ */
+export async function uploadImageToAgencyEventFolder(
+    imageFile: File,
+    eventName: string,
+    fileName: string,
+    onConversionStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void,
+    onUploadStatus?: (status: 'in-progress' | 'completed' | 'error', error?: string) => void
+): Promise<string> {
+    try {
+        if (imageFile.size > LANDING_IMAGE_MAX_SIZE_BYTES) {
+            const sizeMB = (imageFile.size / (1024 * 1024)).toFixed(1)
+            const errorMessage = `Fichier trop volumineux: ${imageFile.name} (${sizeMB} Mo). Maximum autorisé: 4 Mo.`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('in-progress')
+
+        const { v4: uuidv4 } = await import('uuid')
+        const tempKey = `temp/${uuidv4()}/${imageFile.name}`
+        const { uploadUrl: tempUploadUrl } = await getPresignedUploadUrl(tempKey, imageFile.type, imageFile.size)
+
+        const rawUploadResponse = await fetch(tempUploadUrl, {
+            method: 'PUT',
+            body: imageFile,
+            headers: { 'Content-Type': imageFile.type },
+        })
+
+        if (!rawUploadResponse.ok) {
+            const errorMessage = `Échec de l'upload brut vers R2 temp: HTTP ${rawUploadResponse.status}`
+            onConversionStatus?.('error', errorMessage)
+            throw new Error(errorMessage)
+        }
+
+        onConversionStatus?.('completed')
+
+        onUploadStatus?.('in-progress')
+
+        const finalKey = `agency-events/${eventName}/${fileName}.webp`
+
+        const { convertAndFinalize } = await import('@/lib/r2/actions/convert-and-finalize')
+        const result = await convertAndFinalize(tempKey, finalKey)
+
+        onUploadStatus?.('completed')
+
+        return result.relativePath
+    } catch (error) {
+        console.error("Erreur lors de l'upload de l'image d'événement agence:", error)
+        const errorMessage =
+            error instanceof Error
+                ? error.message
+                : "Erreur inconnue lors de l'upload"
+
+        if (errorMessage.toLowerCase().includes('conversion') ||
+            errorMessage.toLowerCase().includes('webp') ||
+            errorMessage.toLowerCase().includes('temp')) {
+            onConversionStatus?.('error', errorMessage)
+        } else {
+            onUploadStatus?.('error', errorMessage)
+        }
+
+        throw error
+    }
+}
+
+/**
  * Upload une image vers R2 dans le répertoire marketplace d'un artiste
  *
  * @param imageFile - Le fichier image à uploader

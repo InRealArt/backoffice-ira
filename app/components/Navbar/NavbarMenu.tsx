@@ -843,6 +843,32 @@ export default function NavbarMenu() {
                   </a>
                 </li>
               )}
+              {isAdmin && (
+                <li>
+                  <a
+                    onClick={() =>
+                      handleMenuNavigation(
+                        "/landing/agency-events",
+                        "agencyEvents"
+                      )
+                    }
+                    className="flex items-center gap-2"
+                  >
+                    {isItemNavigating("agencyEvents") ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm"></span>
+                        <CalendarDays size={18} />
+                        <span>{t("landing.agencyEvents")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <CalendarDays size={18} />
+                        <span>{t("landing.agencyEvents")}</span>
+                      </>
+                    )}
+                  </a>
+                </li>
+              )}
               <li>
                 <a
                   onClick={() =>

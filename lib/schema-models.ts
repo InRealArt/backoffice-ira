@@ -110,6 +110,13 @@ export async function getSchemaModels() {
             ]
         },
         {
+            name: 'AgencyEvent',
+            fields: [
+                { name: 'name', type: 'String' },
+                { name: 'description', type: 'String' }
+            ]
+        },
+        {
             name: 'StickyFooter',
             fields: [
                 { name: 'title', type: 'String' },

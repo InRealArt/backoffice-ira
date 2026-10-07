@@ -1477,6 +1477,18 @@ model ExhibitionArtist {
     @@schema("landing")
 }
 
+// Événement organisé ou mis en avant par l'agence
+model AgencyEvent {
+    id          Int     @id @default(autoincrement())
+    name        String  // Nom de l'événement
+    imageUrl    String? // URL Cloudflare de l'image illustrant l'événement
+    description String  // Description de l'événement
+    linkToEvent String? // Lien vers l'événement externe
+    isFeatured  Boolean @default(false)
+
+    @@schema("landing")
+}
+
 model StickyFooter {
     id                    Int       @id @default(autoincrement())
     activeOnAllPages      Boolean   @default(false)
