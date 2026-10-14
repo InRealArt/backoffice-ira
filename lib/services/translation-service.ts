@@ -1,7 +1,9 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { translateHtmlContent, translateJsonLd, translateArticleHtml } from './html-translation-service'
+import { generateSeoJsonLd, generateSeoHtml, generateArticleHtml, SeoPostData } from '@/lib/utils/seo-generators'
+import { calculateReadingTime } from '@/lib/utils/reading-time-calculator'
+import { BlogContent, ElementType } from '@/app/components/BlogEditor/types'
 
 export interface FieldsToTranslate {
     title: string
@@ -40,266 +42,394 @@ export interface TranslatedFields {
     pinned?: boolean
 }
 
-// Fonction de traduction avec Google Translate
-async function translateWithGoogle(
+// L'API Google Translate gratuite (non officielle) bloque l'IP appelante (HTTP 429)
+// quand elle reçoit trop de requêtes. Plutôt qu'un appel par texte (des dizaines par
+// article, en parallèle), les textes sont regroupés en quelques paquets envoyés l'un
+// après l'autre. Si Google bloque malgré tout, MyMemory (gratuit, sans compte) prend le relais.
+const GOOGLE_TRANSLATE_URL = 'https://translate.googleapis.com/translate_a/single'
+// Taille max d'un paquet (en caractères) : limite de Google Traduction ~5000
+const MAX_BATCH_CHARS = 4500
+// Séparateur entre les textes d'un paquet : Google conserve les sauts de ligne
+const BATCH_SEPARATOR = '\n'
+const MYMEMORY_URL = 'https://api.mymemory.translated.net/get'
+
+// Google a bloqué l'IP : inutile de réessayer, il faut basculer sur MyMemory
+class GoogleRateLimitError extends Error {}
+
+// Envoie une requête de traduction ; lève une erreur si Google ne répond pas
+async function requestGoogleTranslation(
     text: string,
     targetLang: string,
-    sourceLang: string = 'fr'
+    sourceLang: string
 ): Promise<string> {
-    if (!text || text.trim() === '') return text
-
-    try {
-        // Utilise l'API Google Translate gratuite
-        const response = await fetch(
-            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
-        )
-        const data = await response.json()
-        // data[0] contient un segment par phrase/portion découpée par Google pour les
-        // textes longs : il faut tous les concaténer, sinon seule la première portion
-        // traduite est conservée et le reste du texte disparaît silencieusement.
-        const translated = Array.isArray(data?.[0])
-            ? data[0].map((segment: any) => segment[0]).join('')
-            : ''
-        return translated || text
-    } catch (error) {
-        console.error('Erreur Google Translate:', error)
-        return text
+    const maxAttempts = 3
+    for (let attempt = 1; ; attempt++) {
+        try {
+            // POST : pas de limite de longueur d'URL pour les paquets volumineux
+            const response = await fetch(
+                `${GOOGLE_TRANSLATE_URL}?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                    body: new URLSearchParams({ q: text })
+                }
+            )
+            if (response.status === 429) {
+                throw new GoogleRateLimitError('Google Translate HTTP 429')
+            }
+            if (!response.ok) {
+                throw new Error(`Google Translate HTTP ${response.status}`)
+            }
+            const data = await response.json()
+            // data[0] contient un segment par phrase/portion découpée par Google :
+            // il faut tous les concaténer pour récupérer le texte complet.
+            if (!Array.isArray(data?.[0])) {
+                throw new Error('Réponse Google Translate inattendue')
+            }
+            return data[0].map((segment: any) => segment[0] ?? '').join('')
+        } catch (error) {
+            if (error instanceof GoogleRateLimitError || attempt >= maxAttempts) throw error
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
+        }
     }
 }
 
-// Fonction de traduction de fallback simple
-async function simpleTranslation(
-    fields: FieldsToTranslate,
-    targetLanguageCode: string
-): Promise<TranslatedFields> {
-    const targetLanguage = await prisma.language.findUnique({
-        where: { code: targetLanguageCode }
-    })
-
-    if (!targetLanguage) {
-        throw new Error(`Langue non trouvée: ${targetLanguageCode}`)
-    }
-
-    // Traduction basique avec préfixe indiquant la langue
-    const languagePrefix = `[${targetLanguageCode.toUpperCase()}]`
-
-    // Traduction simple du contenu JSON
-    let translatedContent = fields.content
+// Test préalable : une requête minuscule pour savoir si Google bloque l'IP
+async function isGoogleRateLimited(targetLang: string, sourceLang: string): Promise<boolean> {
     try {
-        const contentData = JSON.parse(fields.content)
-        if (Array.isArray(contentData)) {
-            const translatedSections = contentData.map((section: any) => {
-                const translatedSection = { ...section }
-
-                // Traduire le titre de la section
-                if (section.title) {
-                    translatedSection.title = `${languagePrefix} ${section.title}`
-                }
-
-                // Traduire les éléments
-                if (section.elements && Array.isArray(section.elements)) {
-                    translatedSection.elements = section.elements.map((element: any) => {
-                        const translatedElement = { ...element }
-
-                        // Traduire le contenu textuel (h2, h3, paragraph)
-                        if (['h2', 'h3', 'paragraph'].includes(element.type)) {
-                            if (element.content) {
-                                translatedElement.content = `${languagePrefix} ${element.content}`
-                            }
-                        }
-
-                        // Traduire les attributs des images
-                        if (element.type === 'image') {
-                            if (element.alt) {
-                                translatedElement.alt = `${languagePrefix} ${element.alt}`
-                            }
-                            if (element.caption) {
-                                translatedElement.caption = `${languagePrefix} ${element.caption}`
-                            }
-                        }
-
-                        // Traduire les attributs des vidéos
-                        if (element.type === 'video') {
-                            if (element.caption) {
-                                translatedElement.caption = `${languagePrefix} ${element.caption}`
-                            }
-                            // L'URL reste inchangée
-                        }
-
-                        // Traduire les accordéons
-                        if (element.type === 'accordion') {
-                            // Traduire le titre de l'accordéon
-                            if (element.title) {
-                                translatedElement.title = `${languagePrefix} ${element.title}`
-                            }
-
-                            // Traduire chaque item de l'accordéon
-                            if (element.items && Array.isArray(element.items)) {
-                                translatedElement.items = element.items.map((item: any) => ({
-                                    ...item,
-                                    title: item.title ? `${languagePrefix} ${item.title}` : item.title,
-                                    content: item.content ? `${languagePrefix} ${item.content}` : item.content
-                                }))
-                            }
-                        }
-
-                        return translatedElement
-                    })
-                }
-
-                return translatedSection
-            })
-            translatedContent = JSON.stringify(translatedSections, null, 2)
-        }
+        await requestGoogleTranslation('bonjour', targetLang, sourceLang)
+        return false
     } catch (error) {
-        console.error('Erreur lors de la traduction simple du JSON:', error)
-        // Garder le contenu original en cas d'erreur
+        // Les autres erreurs (réseau…) seront retentées lors de la traduction
+        return error instanceof GoogleRateLimitError
     }
+}
+
+// Traduit des textes non vides avec Google, regroupés en quelques requêtes
+async function translateTextsWithGoogle(
+    texts: string[],
+    targetLang: string,
+    sourceLang: string
+): Promise<string[]> {
+    const results = [...texts]
+
+    // Constituer les paquets d'indices de textes à traduire
+    const batches: number[][] = []
+    let current: number[] = []
+    let currentSize = 0
+    texts.forEach((text, index) => {
+        // Un texte multi-lignes casserait le découpage par séparateur : il part seul
+        if (text.includes(BATCH_SEPARATOR) || text.length > MAX_BATCH_CHARS) {
+            batches.push([index])
+            return
+        }
+        if (current.length > 0 && currentSize + text.length + 1 > MAX_BATCH_CHARS) {
+            batches.push(current)
+            current = []
+            currentSize = 0
+        }
+        current.push(index)
+        currentSize += text.length + 1
+    })
+    if (current.length > 0) batches.push(current)
+
+    // Paquets traduits l'un après l'autre pour ne pas déclencher le blocage de Google
+    for (const batch of batches) {
+        const joined = batch.map(index => texts[index]).join(BATCH_SEPARATOR)
+        const translated = await requestGoogleTranslation(joined, targetLang, sourceLang)
+
+        if (batch.length === 1) {
+            results[batch[0]] = translated
+            continue
+        }
+
+        const lines = translated.split(BATCH_SEPARATOR)
+        if (lines.length === batch.length) {
+            batch.forEach((index, i) => { results[index] = lines[i] })
+        } else {
+            // Google a fusionné ou découpé des lignes : on retraduit ce paquet texte par texte
+            console.warn(`⚠️ Découpage du paquet incohérent (${lines.length}/${batch.length}), traduction texte par texte`)
+            for (const index of batch) {
+                results[index] = await requestGoogleTranslation(texts[index], targetLang, sourceLang)
+            }
+        }
+    }
+
+    return results
+}
+
+// MyMemory limite chaque requête à 500 octets (accents = 2 octets) : on garde une marge
+const MYMEMORY_MAX_BYTES = 450
+
+class MyMemoryQuotaError extends Error {}
+
+const byteLength = (text: string) => new TextEncoder().encode(text).length
+
+// Découpe un texte en morceaux de MYMEMORY_MAX_BYTES max : par phrase, puis par mot
+function splitForMyMemory(text: string): string[] {
+    const chunks: string[] = []
+    let current = ''
+    const pushPiece = (piece: string, separator: string) => {
+        const candidate = current ? current + separator + piece : piece
+        if (byteLength(candidate) <= MYMEMORY_MAX_BYTES) {
+            current = candidate
+            return
+        }
+        if (current) chunks.push(current)
+        current = piece
+    }
+
+    for (const sentence of text.split(/(?<=[.!?…;:])\s+/)) {
+        if (byteLength(sentence) <= MYMEMORY_MAX_BYTES) {
+            pushPiece(sentence, ' ')
+            continue
+        }
+        // Phrase trop longue : découpage par mots
+        for (const word of sentence.split(/\s+/)) {
+            pushPiece(word, ' ')
+        }
+    }
+    if (current) chunks.push(current)
+    return chunks
+}
+
+// MyMemory renvoie parfois des entités HTML dans les traductions issues de sa mémoire
+function decodeHtmlEntities(text: string): string {
+    return text
+        .replace(/&#39;|&apos;/g, '\'')
+        .replace(/&quot;/g, '"')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+}
+
+async function requestMyMemoryTranslation(
+    text: string,
+    targetLang: string,
+    sourceLang: string
+): Promise<string> {
+    const params = new URLSearchParams({
+        q: text,
+        langpair: `${sourceLang === 'auto' ? 'Autodetect' : sourceLang}|${targetLang}`
+    })
+    // Email facultatif : fait passer le quota de 5 000 à 50 000 caractères/jour
+    if (process.env.MYMEMORY_EMAIL) params.set('de', process.env.MYMEMORY_EMAIL)
+
+    const maxAttempts = 3
+    for (let attempt = 1; ; attempt++) {
+        try {
+            const response = await fetch(`${MYMEMORY_URL}?${params}`)
+            if (response.status === 429) {
+                throw new MyMemoryQuotaError('Quota quotidien MyMemory atteint')
+            }
+            if (!response.ok) {
+                throw new Error(`MyMemory HTTP ${response.status}`)
+            }
+            const data = await response.json()
+            const translated: string | undefined = data?.responseData?.translatedText
+            // Quota épuisé : MyMemory peut renvoyer un avertissement À LA PLACE de la traduction
+            if (data?.quotaFinished || /^MYMEMORY WARNING/i.test(translated ?? '')) {
+                throw new MyMemoryQuotaError('Quota quotidien MyMemory atteint')
+            }
+            // Détection automatique : un texte déjà dans la langue cible est refusé
+            // par MyMemory (Google le renvoie tel quel) : on le conserve
+            if (sourceLang === 'auto' && /DISTINCT LANGUAGES/i.test(translated ?? '')) {
+                return text
+            }
+            if (Number(data?.responseStatus) !== 200 || !translated) {
+                throw new Error(`MyMemory : ${data?.responseDetails || 'réponse inattendue'}`)
+            }
+            return decodeHtmlEntities(translated)
+        } catch (error) {
+            if (error instanceof MyMemoryQuotaError || attempt >= maxAttempts) throw error
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
+        }
+    }
+}
+
+// Traduit des textes non vides avec MyMemory, une requête par morceau, l'une après l'autre
+async function translateTextsWithMyMemory(
+    texts: string[],
+    targetLang: string,
+    sourceLang: string
+): Promise<string[]> {
+    const results: string[] = []
+    for (const text of texts) {
+        // Ligne par ligne pour conserver les sauts de ligne
+        const translatedLines: string[] = []
+        for (const line of text.split('\n')) {
+            if (!line.trim()) {
+                translatedLines.push(line)
+                continue
+            }
+            const translatedChunks: string[] = []
+            for (const chunk of splitForMyMemory(line.trim())) {
+                translatedChunks.push(await requestMyMemoryTranslation(chunk, targetLang, sourceLang))
+            }
+            translatedLines.push(translatedChunks.join(' '))
+        }
+        results.push(translatedLines.join('\n'))
+    }
+    return results
+}
+
+// Sépare les espaces de début/fin (perdus à la traduction) du texte à traduire
+function splitOuterWhitespace(text: string) {
+    const match = text.match(/^(\s*)([\s\S]*?)(\s*)$/)
+    return { leading: match?.[1] ?? '', core: match?.[2] ?? text, trailing: match?.[3] ?? '' }
+}
+
+/**
+ * Traduit une liste de textes avec Google, ou MyMemory si Google bloque (429).
+ * Lève une erreur si la traduction échoue (au lieu de conserver silencieusement
+ * le texte d'origine).
+ */
+async function translateBatch(
+    texts: string[],
+    targetLang: string,
+    sourceLang: string
+): Promise<string[]> {
+    const results = [...texts]
+    const parts = texts.map(splitOuterWhitespace)
+    // Les textes sans aucune lettre (ponctuation, nombres) n'ont rien à traduire
+    const indices = parts.flatMap(({ core }, index) => (/\p{L}/u.test(core) ? [index] : []))
+    if (indices.length === 0) return results
+    const cores = indices.map(index => parts[index].core)
+
+    let translated: string[] | null = null
+    if (await isGoogleRateLimited(targetLang, sourceLang)) {
+        console.warn('⚠️ Google Translate bloque les requêtes (429) : bascule sur MyMemory')
+    } else {
+        try {
+            translated = await translateTextsWithGoogle(cores, targetLang, sourceLang)
+        } catch (error) {
+            if (!(error instanceof GoogleRateLimitError)) throw error
+            console.warn('⚠️ Google Translate a bloqué en cours de traduction (429) : bascule sur MyMemory')
+        }
+    }
+    if (!translated) {
+        translated = await translateTextsWithMyMemory(cores, targetLang, sourceLang)
+    }
+
+    indices.forEach((index, i) => {
+        results[index] = parts[index].leading + translated[i].trim() + parts[index].trailing
+    })
+    return results
+}
+
+
+interface TextSlot {
+    text: string
+    apply: (translated: string) => void
+}
+
+// Ajoute une propriété texte d'un objet à la liste des textes à traduire
+function addSlot(slots: TextSlot[], target: any, key: string | number) {
+    const value = target?.[key]
+    if (typeof value === 'string' && value.trim() !== '') {
+        slots.push({ text: value, apply: translated => { target[key] = translated } })
+    }
+}
+
+// Recense tous les textes du contenu structuré (BlogContent) à traduire
+function collectContentSlots(contentData: any[], slots: TextSlot[]) {
+    for (const section of contentData) {
+        addSlot(slots, section, 'title')
+        if (!Array.isArray(section.elements)) continue
+
+        for (const element of section.elements) {
+            if (['h2', 'h3', 'paragraph'].includes(element.type)) {
+                addSlot(slots, element, 'content')
+                // Le rendu privilégie richContent.segments quand il est présent
+                if (Array.isArray(element.richContent?.segments)) {
+                    for (const segment of element.richContent.segments) {
+                        addSlot(slots, segment, 'text')
+                        addSlot(slots, segment, 'linkText')
+                    }
+                }
+            }
+
+            if (element.type === 'image') {
+                addSlot(slots, element, 'alt')
+                addSlot(slots, element, 'caption')
+            }
+
+            // L'URL de la vidéo reste inchangée
+            if (element.type === 'video') {
+                addSlot(slots, element, 'caption')
+            }
+
+            if ((element.type === 'list' || element.type === 'ordered_list') && Array.isArray(element.items)) {
+                element.items.forEach((_: string, index: number) => addSlot(slots, element.items, index))
+            }
+
+            if (element.type === 'accordion') {
+                addSlot(slots, element, 'title')
+                if (Array.isArray(element.items)) {
+                    for (const item of element.items) {
+                        addSlot(slots, item, 'title')
+                        addSlot(slots, item, 'content')
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Traduit l'ensemble des champs textuels d'un SeoPost (y compris le contenu JSON)
+ * en regroupant tous les textes dans quelques requêtes.
+ */
+async function translateAllFields(
+    fields: FieldsToTranslate,
+    targetLang: string,
+    sourceLang: string
+): Promise<Omit<TranslatedFields, 'slug'>> {
+    const result = {
+        title: fields.title,
+        metaDescription: fields.metaDescription,
+        excerpt: fields.excerpt,
+        mainImageAlt: fields.mainImageAlt,
+        mainImageCaption: fields.mainImageCaption,
+        metaKeywords: [...fields.metaKeywords],
+        listTags: [...fields.listTags]
+    }
+
+    const slots: TextSlot[] = []
+    addSlot(slots, result, 'title')
+    addSlot(slots, result, 'metaDescription')
+    addSlot(slots, result, 'excerpt')
+    addSlot(slots, result, 'mainImageAlt')
+    addSlot(slots, result, 'mainImageCaption')
+    result.metaKeywords.forEach((_, index) => addSlot(slots, result.metaKeywords, index))
+    result.listTags.forEach((_, index) => addSlot(slots, result.listTags, index))
+
+    let contentData: any[] | null = null
+    try {
+        const parsed = fields.content ? JSON.parse(fields.content) : null
+        if (Array.isArray(parsed)) contentData = parsed
+    } catch (error) {
+        console.error('❌ Contenu JSON illisible, conservé tel quel:', error)
+    }
+    if (contentData) collectContentSlots(contentData, slots)
+
+    const translatedTexts = await translateBatch(slots.map(slot => slot.text), targetLang, sourceLang)
+    slots.forEach((slot, index) => slot.apply(translatedTexts[index]))
 
     return {
-        title: `${languagePrefix} ${fields.title}`,
-        metaDescription: `${languagePrefix} ${fields.metaDescription}`,
-        metaKeywords: fields.metaKeywords.map(keyword => `${languagePrefix} ${keyword}`),
-        content: translatedContent,
-        excerpt: fields.excerpt ? `${languagePrefix} ${fields.excerpt}` : undefined,
-        listTags: fields.listTags.map(tag => `${languagePrefix} ${tag}`),
-        mainImageAlt: fields.mainImageAlt ? `${languagePrefix} ${fields.mainImageAlt}` : undefined,
-        mainImageCaption: fields.mainImageCaption ? `${languagePrefix} ${fields.mainImageCaption}` : undefined,
-        slug: `${targetLanguageCode}-${fields.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`,
-        // Pour les champs HTML, on les garde tels quels en fallback
-        generatedHtml: fields.generatedHtml,
-        jsonLd: fields.jsonLd,
-        generatedArticleHtml: fields.generatedArticleHtml,
-        // Champs à synchroniser (non traduits)
+        ...result,
+        content: contentData ? JSON.stringify(contentData, null, 2) : fields.content,
         status: fields.status,
         pinned: fields.pinned
     }
 }
 
-// Fonction pour traduire le contenu JSON structuré
-async function translateJsonContent(
-    jsonContent: string,
-    targetLang: string,
-    sourceLang: string = 'fr'
-): Promise<string> {
-    if (!jsonContent || jsonContent.trim() === '') return jsonContent
-
-    try {
-        const contentData = JSON.parse(jsonContent)
-
-        // Si ce n'est pas un tableau, retourner tel quel
-        if (!Array.isArray(contentData)) {
-            return jsonContent
-        }
-
-        // Traduire chaque section
-        const translatedSections = await Promise.all(
-            contentData.map(async (section: any) => {
-                if (!section.elements || !Array.isArray(section.elements)) {
-                    return section
-                }
-
-                // Traduire le titre de la section si présent
-                const translatedTitle = section.title
-                    ? await translateWithGoogle(section.title, targetLang, sourceLang)
-                    : section.title
-
-                // Traduire chaque élément de la section
-                const translatedElements = await Promise.all(
-                    section.elements.map(async (element: any) => {
-                        const translatedElement = { ...element }
-
-                        // Traduire le contenu textuel selon le type
-                        if (['h2', 'h3', 'paragraph'].includes(element.type)) {
-                            if (element.content) {
-                                translatedElement.content = await translateWithGoogle(element.content, targetLang, sourceLang)
-                            }
-
-                            // Le rendu privilégie richContent.segments quand il est présent :
-                            // il faut donc aussi traduire le texte de chaque segment, sous peine
-                            // que le contenu affiché reste dans la langue d'origine.
-                            if (element.richContent?.segments && Array.isArray(element.richContent.segments)) {
-                                translatedElement.richContent = {
-                                    ...element.richContent,
-                                    segments: await Promise.all(
-                                        element.richContent.segments.map(async (segment: any) => ({
-                                            ...segment,
-                                            text: segment.text ? await translateWithGoogle(segment.text, targetLang, sourceLang) : segment.text,
-                                            linkText: segment.linkText ? await translateWithGoogle(segment.linkText, targetLang, sourceLang) : segment.linkText
-                                        }))
-                                    )
-                                }
-                            }
-                        }
-
-                        // Traduire les attributs des images
-                        if (element.type === 'image') {
-                            if (element.alt) {
-                                translatedElement.alt = await translateWithGoogle(element.alt, targetLang, sourceLang)
-                            }
-                            if (element.caption) {
-                                translatedElement.caption = await translateWithGoogle(element.caption, targetLang, sourceLang)
-                            }
-                        }
-
-                        // Traduire les attributs des vidéos
-                        if (element.type === 'video') {
-                            if (element.caption) {
-                                translatedElement.caption = await translateWithGoogle(element.caption, targetLang, sourceLang)
-                            }
-                            // L'URL reste inchangée
-                        }
-
-                        // Traduire les listes (à puces et numérotées)
-                        if ((element.type === 'list' || element.type === 'ordered_list') && Array.isArray(element.items)) {
-                            translatedElement.items = await Promise.all(
-                                element.items.map((item: string) => translateWithGoogle(item, targetLang, sourceLang))
-                            )
-                        }
-
-                        // Traduire les accordéons
-                        if (element.type === 'accordion') {
-                            // Traduire le titre de l'accordéon
-                            if (element.title) {
-                                translatedElement.title = await translateWithGoogle(element.title, targetLang, sourceLang)
-                            }
-
-                            // Traduire chaque item de l'accordéon
-                            if (element.items && Array.isArray(element.items)) {
-                                translatedElement.items = await Promise.all(
-                                    element.items.map(async (item: any) => ({
-                                        ...item,
-                                        title: item.title ? await translateWithGoogle(item.title, targetLang, sourceLang) : item.title,
-                                        content: item.content ? await translateWithGoogle(item.content, targetLang, sourceLang) : item.content
-                                    }))
-                                )
-                            }
-                        }
-
-                        return translatedElement
-                    })
-                )
-
-                return {
-                    ...section,
-                    title: translatedTitle,
-                    elements: translatedElements
-                }
-            })
-        )
-
-        return JSON.stringify(translatedSections, null, 2)
-    } catch (error) {
-        console.error('❌ Erreur lors de la traduction du contenu JSON:', error)
-        return jsonContent // Retourner le contenu original en cas d'erreur
-    }
-}
-
+// Lève une erreur si la traduction échoue : l'appelant décide quoi faire
 export async function translateSeoPostFields(
     fields: FieldsToTranslate,
     targetLanguageCode: string
 ): Promise<TranslatedFields> {
-    // Récupérer le nom de la langue depuis la DB
+    // Vérifier que la langue cible existe en DB
     const targetLanguage = await prisma.language.findUnique({
         where: { code: targetLanguageCode }
     })
@@ -308,97 +438,15 @@ export async function translateSeoPostFields(
         throw new Error(`Langue non trouvée: ${targetLanguageCode}`)
     }
 
-    // Mapping des codes de langue pour Google Translate
-    const langMap: Record<string, string> = {
-        'en': 'en',
-        'es': 'es',
-        'de': 'de',
-        'it': 'it',
-        'pt': 'pt',
-        'nl': 'nl',
-        'ru': 'ru',
-        'ja': 'ja',
-        'ko': 'ko',
-        'zh': 'zh'
-    }
+    console.log(`🌍 Traduction vers ${targetLanguage.name} avec Google Translate`)
+    const translated = await translateAllFields(fields, targetLanguageCode, 'fr')
 
-    const mappedLang = langMap[targetLanguageCode] || targetLanguageCode
+    // Générer un slug SEO-friendly
+    const slug = `${targetLanguageCode}-${translated.title.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')}`
 
-    try {
-        console.log(`🌍 Traduction vers ${targetLanguage.name} avec Google Translate`)
-
-        // Traduire les champs textuels de base
-        const [
-            translatedTitle,
-            translatedMetaDescription,
-            translatedExcerpt,
-            translatedMainImageAlt,
-            translatedMainImageCaption
-        ] = await Promise.all([
-            translateWithGoogle(fields.title, mappedLang),
-            translateWithGoogle(fields.metaDescription, mappedLang),
-            fields.excerpt ? translateWithGoogle(fields.excerpt, mappedLang) : undefined,
-            fields.mainImageAlt ? translateWithGoogle(fields.mainImageAlt, mappedLang) : undefined,
-            fields.mainImageCaption ? translateWithGoogle(fields.mainImageCaption, mappedLang) : undefined
-        ])
-
-        // Traduire les mots-clés et tags
-        const [translatedKeywords, translatedTags] = await Promise.all([
-            Promise.all(fields.metaKeywords.map(keyword => translateWithGoogle(keyword, mappedLang))),
-            Promise.all(fields.listTags.map(tag => translateWithGoogle(tag, mappedLang)))
-        ])
-
-        // Traduire le contenu JSON structuré
-        console.log('📝 Traduction du contenu JSON...')
-        const translatedContent = await translateJsonContent(fields.content, mappedLang)
-
-        // Traduire les champs HTML si présents
-        let translatedGeneratedHtml: string | undefined
-        let translatedJsonLd: string | undefined
-        let translatedGeneratedArticleHtml: string | undefined
-
-        if (fields.generatedHtml || fields.jsonLd || fields.generatedArticleHtml) {
-            console.log('🔧 Traduction des champs HTML...')
-
-            const htmlTranslations = await Promise.all([
-                fields.generatedHtml ? translateHtmlContent(fields.generatedHtml, mappedLang) : undefined,
-                fields.jsonLd ? translateJsonLd(fields.jsonLd, mappedLang) : undefined,
-                fields.generatedArticleHtml ? translateArticleHtml(fields.generatedArticleHtml, mappedLang) : undefined
-            ])
-
-            translatedGeneratedHtml = htmlTranslations[0]
-            translatedJsonLd = htmlTranslations[1]
-            translatedGeneratedArticleHtml = htmlTranslations[2]
-        }
-
-        // Générer un slug SEO-friendly
-        const slug = `${targetLanguageCode}-${translatedTitle.toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-|-$/g, '')}`
-
-        return {
-            title: translatedTitle,
-            metaDescription: translatedMetaDescription,
-            metaKeywords: translatedKeywords,
-            content: translatedContent, // Contenu JSON traduit
-            excerpt: translatedExcerpt,
-            listTags: translatedTags,
-            mainImageAlt: translatedMainImageAlt,
-            mainImageCaption: translatedMainImageCaption,
-            slug,
-            // Champs HTML traduits
-            generatedHtml: translatedGeneratedHtml,
-            jsonLd: translatedJsonLd,
-            generatedArticleHtml: translatedGeneratedArticleHtml,
-            // Champs à synchroniser (non traduits)
-            status: fields.status,
-            pinned: fields.pinned
-        }
-    } catch (error: any) {
-        console.error('❌ Erreur lors de la traduction Google:', error)
-        console.warn('🔄 Basculement vers la traduction simple')
-        return simpleTranslation(fields, targetLanguageCode)
-    }
+    return { ...translated, slug }
 }
 
 /**
@@ -412,64 +460,13 @@ export async function translateSeoPostFields(
 export async function translateFieldsToEnglish(
     fields: FieldsToTranslate
 ): Promise<{ fields: TranslatedFields; translationFailed: boolean }> {
-    const sourceLang = 'auto'
-    const targetLang = 'en'
-
     try {
-        const [
-            translatedTitle,
-            translatedMetaDescription,
-            translatedExcerpt,
-            translatedMainImageAlt,
-            translatedMainImageCaption
-        ] = await Promise.all([
-            translateWithGoogle(fields.title, targetLang, sourceLang),
-            translateWithGoogle(fields.metaDescription, targetLang, sourceLang),
-            fields.excerpt ? translateWithGoogle(fields.excerpt, targetLang, sourceLang) : undefined,
-            fields.mainImageAlt ? translateWithGoogle(fields.mainImageAlt, targetLang, sourceLang) : undefined,
-            fields.mainImageCaption ? translateWithGoogle(fields.mainImageCaption, targetLang, sourceLang) : undefined
-        ])
-
-        const [translatedKeywords, translatedTags] = await Promise.all([
-            Promise.all(fields.metaKeywords.map(keyword => translateWithGoogle(keyword, targetLang, sourceLang))),
-            Promise.all(fields.listTags.map(tag => translateWithGoogle(tag, targetLang, sourceLang)))
-        ])
-
-        const translatedContent = await translateJsonContent(fields.content, targetLang, sourceLang)
-
-        let translatedGeneratedHtml: string | undefined
-        let translatedJsonLd: string | undefined
-        let translatedGeneratedArticleHtml: string | undefined
-
-        if (fields.generatedHtml || fields.jsonLd || fields.generatedArticleHtml) {
-            const htmlTranslations = await Promise.all([
-                fields.generatedHtml ? translateHtmlContent(fields.generatedHtml, targetLang, sourceLang) : undefined,
-                fields.jsonLd ? translateJsonLd(fields.jsonLd, targetLang, sourceLang) : undefined,
-                fields.generatedArticleHtml ? translateArticleHtml(fields.generatedArticleHtml, targetLang, sourceLang) : undefined
-            ])
-
-            translatedGeneratedHtml = htmlTranslations[0]
-            translatedJsonLd = htmlTranslations[1]
-            translatedGeneratedArticleHtml = htmlTranslations[2]
-        }
-
+        const translated = await translateAllFields(fields, 'en', 'auto')
         return {
             translationFailed: false,
             fields: {
-                title: translatedTitle,
-                metaDescription: translatedMetaDescription,
-                metaKeywords: translatedKeywords,
-                content: translatedContent,
-                excerpt: translatedExcerpt,
-                listTags: translatedTags,
-                mainImageAlt: translatedMainImageAlt,
-                mainImageCaption: translatedMainImageCaption,
-                slug: translatedTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-                generatedHtml: translatedGeneratedHtml,
-                jsonLd: translatedJsonLd,
-                generatedArticleHtml: translatedGeneratedArticleHtml,
-                status: fields.status,
-                pinned: fields.pinned
+                ...translated,
+                slug: translated.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
             }
         }
     } catch (error) {
@@ -486,15 +483,13 @@ export async function translateFieldsToEnglish(
                 mainImageAlt: fields.mainImageAlt,
                 mainImageCaption: fields.mainImageCaption,
                 slug: fields.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-                generatedHtml: fields.generatedHtml,
-                jsonLd: fields.jsonLd,
-                generatedArticleHtml: fields.generatedArticleHtml,
                 status: fields.status,
                 pinned: fields.pinned
             }
         }
     }
 }
+
 
 // Nouvelles fonctions utilitaires
 export async function getLanguageByCode(code: string) {
@@ -524,6 +519,43 @@ export async function checkTranslationExists(
     })
 
     return !!existing
+}
+
+/**
+ * Les blocs "articles liés" référencent les posts français : dans une traduction,
+ * on remplace titre et slug par ceux de la traduction correspondante (si elle existe)
+ * pour que les liens générés pointent vers les articles dans la même langue.
+ */
+async function localizeRelatedArticles(
+    blogContent: BlogContent,
+    targetLanguageId: number
+): Promise<BlogContent> {
+    const relatedIds = blogContent.flatMap(section =>
+        (section.elements || []).flatMap(element =>
+            element.type === ElementType.RELATED_ARTICLES ? (element.posts || []).map(post => post.id) : []
+        )
+    )
+    if (relatedIds.length === 0) return blogContent
+
+    const translations = await prisma.seoPost.findMany({
+        where: { originalPostId: { in: relatedIds }, languageId: targetLanguageId },
+        select: { originalPostId: true, title: true, slug: true }
+    })
+    const translationByOriginalId = new Map(translations.map(t => [t.originalPostId, t]))
+
+    return blogContent.map(section => ({
+        ...section,
+        elements: (section.elements || []).map(element => {
+            if (element.type !== ElementType.RELATED_ARTICLES) return element
+            return {
+                ...element,
+                posts: (element.posts || []).map(post => {
+                    const translation = translationByOriginalId.get(post.id)
+                    return translation ? { ...post, title: translation.title, slug: translation.slug } : post
+                })
+            }
+        })
+    }))
 }
 
 /**
@@ -581,6 +613,7 @@ export async function handleSeoPostTranslationsOnUpdate(
 
         let translationsCreated = 0
         let translationsUpdated = 0
+        const failedLanguages: string[] = []
 
         // Pour chaque langue non-par-défaut
         for (const targetLanguage of nonDefaultLanguages) {
@@ -593,27 +626,65 @@ export async function handleSeoPostTranslationsOnUpdate(
             })
 
             try {
-                // Traduire les champs complets
-                const translatedFields = await translateSeoPostFields(completeFieldsToTranslate, targetLanguage.code)
+                // Traduire uniquement les champs textuels et le contenu JSON : le HTML
+                // français n'est PAS traduit par regex (les paragraphes contenant des
+                // liens/gras, les listes <li> et les libellés statiques restaient en
+                // français). Il est régénéré plus bas depuis le contenu traduit.
+                const translatedFields = await translateSeoPostFields(
+                    {
+                        ...completeFieldsToTranslate,
+                        generatedHtml: undefined,
+                        jsonLd: undefined,
+                        generatedArticleHtml: undefined
+                    },
+                    targetLanguage.code
+                )
+
+                let translatedBlogContent: BlogContent = []
+                try {
+                    translatedBlogContent = JSON.parse(translatedFields.content)
+                } catch (error) {
+                    console.error('Erreur lors du parsing du contenu traduit:', error)
+                }
+                translatedBlogContent = await localizeRelatedArticles(translatedBlogContent, targetLanguage.id)
+
+                // Régénérer le HTML et le JSON-LD avec les générateurs localisés
+                // (libellés statiques et format de date dans la langue cible)
+                const seoPostData: SeoPostData = {
+                    title: translatedFields.title,
+                    metaDescription: translatedFields.metaDescription,
+                    author: originalPost.author,
+                    authorLink: originalPost.authorLink ?? undefined,
+                    mainImageUrl: originalPost.mainImageUrl ?? undefined,
+                    mainImageAlt: translatedFields.mainImageAlt || undefined,
+                    mainImageCaption: translatedFields.mainImageCaption || undefined,
+                    creationDate: originalPost.createdAt,
+                    excerpt: translatedFields.excerpt || undefined,
+                    blogContent: translatedBlogContent,
+                    tags: translatedFields.metaKeywords,
+                    languageCode: targetLanguage.code
+                }
+                const estimatedReadTime = calculateReadingTime(generateSeoHtml(seoPostData))
+                const seoPostDataWithReadTime: SeoPostData = { ...seoPostData, estimatedReadTime }
 
                 const updateData = {
                     title: translatedFields.title,
                     metaDescription: translatedFields.metaDescription,
                     metaKeywords: translatedFields.metaKeywords,
-                    content: translatedFields.content,
+                    content: JSON.stringify(translatedBlogContent),
                     excerpt: translatedFields.excerpt,
                     listTags: translatedFields.listTags,
                     mainImageAlt: translatedFields.mainImageAlt,
                     mainImageCaption: translatedFields.mainImageCaption,
                     slug: translatedFields.slug,
-                    // Champs HTML traduits
-                    generatedHtml: translatedFields.generatedHtml,
-                    jsonLd: translatedFields.jsonLd,
-                    generatedArticleHtml: translatedFields.generatedArticleHtml,
+                    // Champs HTML régénérés dans la langue cible
+                    generatedHtml: generateSeoHtml(seoPostDataWithReadTime),
+                    jsonLd: generateSeoJsonLd(seoPostDataWithReadTime),
+                    generatedArticleHtml: generateArticleHtml(seoPostDataWithReadTime),
                     // Conserver les autres champs du post original
                     author: originalPost.author,
                     authorLink: originalPost.authorLink,
-                    estimatedReadTime: originalPost.estimatedReadTime,
+                    estimatedReadTime,
                     status: translatedFields.status,
                     pinned: translatedFields.pinned,
                     mainImageUrl: originalPost.mainImageUrl,
@@ -644,7 +715,17 @@ export async function handleSeoPostTranslationsOnUpdate(
                 }
             } catch (translationError) {
                 console.error(`❌ Erreur lors de la traduction vers ${targetLanguage.code}:`, translationError)
+                failedLanguages.push(targetLanguage.name)
                 // Continuer avec les autres langues même si une traduction échoue
+            }
+        }
+
+        if (failedLanguages.length > 0) {
+            return {
+                success: false,
+                message: `Traduction impossible (${failedLanguages.join(', ')}) : les services de traduction n'ont pas répondu, la traduction existante n'a pas été modifiée. Pour réessayer plus tard, cochez « Retraduire en anglais » puis réenregistrez l'article`,
+                translationsCreated,
+                translationsUpdated
             }
         }
 

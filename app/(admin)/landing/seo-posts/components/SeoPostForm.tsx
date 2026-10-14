@@ -91,6 +91,8 @@ export default function SeoPostForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isChangingStatus, setIsChangingStatus] = useState(false)
   const [isPinning, setIsPinning] = useState(false)
+  // Forcer la retraduction d'un article pivot même si aucun texte n'a changé
+  const [forceTranslate, setForceTranslate] = useState(false)
   const [generatedSlug, setGeneratedSlug] = useState('')
   const [keywords, setKeywords] = useState<string[]>([])
   const [tags, setTags] = useState<string[]>([])
@@ -510,7 +512,8 @@ export default function SeoPostForm({
         listTags: finalTags, // Utiliser le tableau de tags pour listTags
         // Traduction automatique pour tous les nouveaux posts
         autoTranslate: !isEditing && availableLanguages.length > 0,
-        targetLanguageCodes: !isEditing ? availableLanguages.map(lang => lang.code) : undefined
+        targetLanguageCodes: !isEditing ? availableLanguages.map(lang => lang.code) : undefined,
+        forceTranslate: isEditing ? forceTranslate : undefined
       }
 
       let result
@@ -533,11 +536,16 @@ export default function SeoPostForm({
         if (translationWarning) {
           errorToast('La traduction automatique vers l\'anglais a échoué : le texte original a été enregistré tel quel, merci de le vérifier')
         }
-        
-        // Redirection
+
+        const translationError = 'translationError' in result ? result.translationError : undefined
+        if (translationError) {
+          errorToast(translationError)
+        }
+
+        // Redirection (différée en cas d'erreur pour laisser le temps de lire le message)
         setTimeout(() => {
           window.location.href = '/landing/seo-posts'
-        }, 1000)
+        }, translationWarning || translationError ? 5000 : 1000)
       } else {
         errorToast(result.message || 'Une erreur est survenue')
       }
@@ -963,6 +971,23 @@ export default function SeoPostForm({
             </button>
           )}
           
+          {/* Retraduction forcée (articles pivots uniquement, pas les traductions) */}
+          {isEditing && seoPost && !seoPost.originalPostId && (
+            <label
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#374151', cursor: 'pointer', userSelect: 'none' }}
+              title="Retraduit l'article dans les autres langues à l'enregistrement, même si aucun texte n'a été modifié"
+            >
+              <input
+                type="checkbox"
+                checked={forceTranslate}
+                onChange={(e) => setForceTranslate(e.target.checked)}
+                disabled={isSubmitting}
+                style={{ accentColor: '#4f46e5', width: '16px', height: '16px' }}
+              />
+              Retraduire en anglais
+            </label>
+          )}
+
           <button
             type="submit"
             className="btn btn-primary btn-medium"

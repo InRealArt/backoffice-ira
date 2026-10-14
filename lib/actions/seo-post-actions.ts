@@ -234,6 +234,8 @@ export async function createSeoPost(data: {
         console.log(`   - Langues cibles: ${data.targetLanguageCodes?.join(', ') || 'aucune'}`)
         console.log(`   - Doit traduire: ${shouldAutoTranslate}`)
 
+        // Message remonté au formulaire si la traduction automatique échoue
+        let translationError: string | undefined
         if (shouldAutoTranslate) {
             console.log('✅ Conditions remplies pour la traduction automatique')
 
@@ -268,9 +270,11 @@ export async function createSeoPost(data: {
                     console.log(`✅ Traductions automatiques lors de la création: ${translationResult.message}`)
                 } else {
                     console.error('❌ Erreur lors des traductions automatiques:', translationResult.message)
+                    translationError = translationResult.message
                 }
             } catch (error) {
                 console.error('❌ Erreur lors des traductions automatiques:', error)
+                translationError = 'Erreur lors de la traduction automatique'
             }
         } else {
             if (!isOriginalPost) {
@@ -284,7 +288,8 @@ export async function createSeoPost(data: {
         revalidatePath('/landing/seo-posts')
         return {
             success: true,
-            seoPost
+            seoPost,
+            translationError
         }
     } catch (error) {
         console.error('Erreur lors de la création de l\'article SEO:', error || 'Erreur inconnue')
@@ -314,6 +319,8 @@ export async function updateSeoPost(id: number, data: {
     mainImageAlt?: string
     mainImageCaption?: string
     creationDate?: Date
+    // Retraduire même si aucun texte n'a changé (ex: traduction précédente incomplète)
+    forceTranslate?: boolean
 }) {
     try {
         // Récupérer l'article existant
@@ -489,17 +496,44 @@ export async function updateSeoPost(id: number, data: {
         }
 
         // TRADUCTION AUTOMATIQUE : Gérer les traductions dans les autres langues
-        // Seulement si le post est le post pivot (originalPostId === null) et qu'il y a des modifications de contenu
-        const isContentUpdate = data.title || data.metaDescription || data.content || data.excerpt || data.listTags || data.mainImageAlt || data.mainImageCaption
+        // Seulement si le post est le post pivot (originalPostId === null) et qu'un texte
+        // a réellement changé par rapport à la base : le formulaire renvoie tous les champs
+        // à chaque enregistrement, et retraduire un article inchangé sollicite inutilement
+        // le service de traduction (qui bloque alors les requêtes).
+        const textChanged = (value: string | undefined, current: string | null) =>
+            value !== undefined && value !== (current ?? '')
+        const listChanged = (value: string[] | undefined, current: string[]) =>
+            value !== undefined && JSON.stringify(value) !== JSON.stringify(current)
+        const isContentUpdate =
+            textChanged(data.title, existingPost.title) ||
+            textChanged(data.metaDescription, existingPost.metaDescription) ||
+            textChanged(data.content, existingPost.content) ||
+            textChanged(data.excerpt, existingPost.excerpt) ||
+            textChanged(data.mainImageAlt, existingPost.mainImageAlt) ||
+            textChanged(data.mainImageCaption, existingPost.mainImageCaption) ||
+            listChanged(data.metaKeywords, existingPost.metaKeywords) ||
+            listChanged(data.listTags, existingPost.listTags)
         const isStatusUpdate = data.status !== undefined
         const isPinnedUpdate = data.pinned !== undefined
         const isOriginalPost = existingPost.originalPostId === null
+
+        // Texte inchangé mais traduction absente (jamais créée ou création échouée) : on la crée
+        let isTranslationMissing = false
+        if (isOriginalPost && !isContentUpdate && !data.forceTranslate) {
+            const [targetLanguageCount, translationCount] = await Promise.all([
+                prisma.language.count({ where: { isDefault: false } }),
+                prisma.seoPost.count({ where: { originalPostId: id } })
+            ])
+            isTranslationMissing = translationCount < targetLanguageCount
+        }
 
         console.log('🔍 Vérification pour traduction automatique:')
         console.log(`   - Post ID: ${id}`)
         console.log(`   - Est un post original (pivot): ${isOriginalPost}`)
         console.log(`   - originalPostId: ${existingPost.originalPostId}`)
         console.log(`   - Modifications de contenu: ${isContentUpdate}`)
+        console.log(`   - Traduction manquante: ${isTranslationMissing}`)
+        console.log(`   - Retraduction forcée: ${!!data.forceTranslate}`)
         console.log(`   - Modification de statut: ${isStatusUpdate}`)
         console.log(`   - Modification d'épinglage: ${isPinnedUpdate}`)
 
@@ -519,7 +553,9 @@ export async function updateSeoPost(id: number, data: {
             console.log(`✅ Statut/épinglage synchronisé avec les traductions`)
         }
 
-        if (isContentUpdate && isOriginalPost) {
+        // Message remonté au formulaire si la traduction automatique échoue
+        let translationError: string | undefined
+        if ((isContentUpdate || isTranslationMissing || data.forceTranslate) && isOriginalPost) {
             console.log('✅ Conditions remplies pour la traduction automatique')
 
             // Préparer les champs à traduire avec les données mises à jour
@@ -538,7 +574,7 @@ export async function updateSeoPost(id: number, data: {
                 generatedArticleHtml: generatedArticleHtmlWithReadTime || existingPost.generatedArticleHtml || '',
                 // Champs à synchroniser
                 status: data.status || existingPost.status,
-                pinned: data.pinned || existingPost.pinned || false
+                pinned: data.pinned ?? existingPost.pinned ?? false
             }
 
             console.log('🔄 Lancement de la traduction automatique avec champs HTML')
@@ -553,16 +589,18 @@ export async function updateSeoPost(id: number, data: {
                     console.log(`✅ Traductions automatiques: ${translationResult.message}`)
                 } else {
                     console.error('❌ Erreur lors des traductions automatiques:', translationResult.message)
+                    translationError = translationResult.message
                 }
             } catch (error) {
                 console.error('❌ Erreur lors des traductions automatiques:', error)
+                translationError = 'Erreur lors de la traduction automatique'
             }
         } else {
             if (!isOriginalPost) {
                 console.log('⏭️  Traduction automatique ignorée: ce post est une traduction (originalPostId !== null)')
             }
-            if (!isContentUpdate) {
-                console.log('⏭️  Traduction automatique ignorée: aucune modification de contenu détectée')
+            if (!isContentUpdate && !isTranslationMissing && !data.forceTranslate) {
+                console.log('⏭️  Traduction automatique ignorée: aucun texte modifié et traductions déjà présentes')
             }
         }
 
@@ -571,7 +609,8 @@ export async function updateSeoPost(id: number, data: {
 
         return {
             success: true,
-            seoPost
+            seoPost,
+            translationError
         }
     } catch (error) {
         console.error(`Erreur lors de la mise à jour de l'article SEO ${id}:`, error || 'Erreur inconnue')
