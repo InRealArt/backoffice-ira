@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { Artist, Prisma } from '@/src/generated/prisma/client'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { generateSlug, toCamelCase, getCountries } from '@/lib/utils'
 import { toRelativePath } from '@/lib/r2/url'
 

@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { AgencyEvent } from '@/src/generated/prisma/client'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { z } from 'zod'
 import { getSession } from '@/lib/auth-helpers'
 import { checkIsAdmin } from '@/lib/actions/auth-actions'

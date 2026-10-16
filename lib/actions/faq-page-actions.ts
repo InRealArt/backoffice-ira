@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { DetailedFaqPage, DetailedFaqPageItem, LandingPage } from '@/src/generated/prisma/client'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { unstable_noStore } from 'next/cache'
 
 // Mapping URL (@map) → clé enum Prisma

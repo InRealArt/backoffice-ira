@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { Exhibition } from '@/src/generated/prisma/client'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 
 // ---------------------------------------------------------------------------
 // Types

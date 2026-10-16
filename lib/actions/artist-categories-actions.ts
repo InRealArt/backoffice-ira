@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma'
 import { generateSlug } from '@/lib/utils'
 import { ArtistCategory } from '@/src/generated/prisma/client'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { toRelativePath } from '@/lib/r2/url'
 
 export async function getArtistCategoryById(id: number): Promise<ArtistCategory | null> {

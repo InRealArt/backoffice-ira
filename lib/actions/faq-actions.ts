@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { Faq } from '@/src/generated/prisma/client'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 
 export async function getFaqById(id: number): Promise<Faq | null> {
     try {
