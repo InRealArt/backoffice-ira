@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth'
+import { APIError } from 'better-auth/api'
 import { after } from 'next/server'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { prisma } from './prisma'
@@ -34,10 +35,42 @@ export const auth = betterAuth({
                 required: false,
                 input: false
             },
+            // input: false → jamais modifiable par le client (sign-up ou update-user).
+            // La valeur est posée côté serveur depuis la liste blanche (databaseHooks ci-dessous).
             artistId: {
                 type: 'number',
                 required: false,
-                input: true
+                input: false
+            }
+        }
+    },
+    // Sécurité : l'inscription est publique (/api/auth/sign-up/email est appelable directement),
+    // donc la liste blanche est appliquée ICI, côté serveur, et non par le client.
+    databaseHooks: {
+        user: {
+            create: {
+                before: async (user) => {
+                    // Insensible à la casse : Better Auth normalise l'email en minuscules, alors que
+                    // la whitelist peut contenir la casse saisie par l'admin.
+                    const whiteListed = await prisma.whiteListedUser.findFirst({
+                        where: { email: { equals: user.email.trim(), mode: 'insensitive' } },
+                        select: { role: true, artistId: true }
+                    })
+
+                    if (!whiteListed) {
+                        throw new APIError('FORBIDDEN', {
+                            message: "Votre email n'est pas autorisé à créer un compte sur cette plateforme. Veuillez contacter l'administrateur pour être ajouté à la liste blanche."
+                        })
+                    }
+
+                    // Rôle et artistId imposés par la whitelist : jamais ceux fournis par le client
+                    return {
+                        data: {
+                            role: whiteListed.role ?? null,
+                            artistId: whiteListed.artistId ?? null
+                        }
+                    }
+                }
             }
         }
     },

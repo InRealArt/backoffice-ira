@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import ExcelJS from 'exceljs'
 
@@ -7,6 +8,7 @@ import ExcelJS from 'exceljs'
  * Récupère les artistes visibles avec leurs œuvres en prévente pour l'inventaire Excel
  */
 export async function getArtistsForInventoryExport() {
+    await requireAdmin()
   try {
     // Récupérer tous les artistes avec leurs LandingArtist et PresaleArtworks
     const artists = await prisma.artist.findMany({
@@ -64,6 +66,7 @@ export async function getArtistsForInventoryExport() {
  * Génère un fichier Excel avec l'inventaire total
  */
 export async function generateInventoryExcel(): Promise<Buffer> {
+    await requireAdmin()
   const artists = await getArtistsForInventoryExport()
 
   const workbook = new ExcelJS.Workbook()
@@ -134,6 +137,7 @@ export async function generateInventoryExcel(): Promise<Buffer> {
  * Récupère les artistes avec leurs œuvres créées après leur date d'onboarding
  */
 export async function getArtistsForSelfAddedInventoryExport() {
+    await requireAdmin()
   try {
     // Récupérer tous les artistes avec leurs LandingArtist (avec onboardingBo) et PresaleArtworks
     const artists = await prisma.artist.findMany({
@@ -219,6 +223,7 @@ export async function getArtistsForSelfAddedInventoryExport() {
  * Génère un fichier Excel avec l'inventaire des œuvres ajoutées par les artistes
  */
 export async function generateSelfAddedInventoryExcel(): Promise<Buffer> {
+    await requireAdmin()
   const artists = await getArtistsForSelfAddedInventoryExport()
 
   const workbook = new ExcelJS.Workbook()

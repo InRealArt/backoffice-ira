@@ -1,4 +1,5 @@
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { generateSlug } from '../utils'
 
@@ -8,6 +9,7 @@ import { generateSlug } from '../utils'
  * @param tagNames - Les noms des tags à associer à l'article
  */
 export async function createOrUpdateSeoTags(postId: number, tagNames: string[]) {
+    await requireAdmin()
     try {
         // Filtrer les tags vides
         const validTagNames = tagNames.filter(tag => tag.trim() !== '')
@@ -90,6 +92,7 @@ export async function createOrUpdateSeoTags(postId: number, tagNames: string[]) 
  * @param postId - L'ID de l'article
  */
 export async function getSeoTagsByPostId(postId: number) {
+    await requireAdmin()
     try {
         const postTags = await prisma.seoPostTag.findMany({
             where: { postId },

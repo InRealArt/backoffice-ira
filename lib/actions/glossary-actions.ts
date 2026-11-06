@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { Faq } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
@@ -11,6 +12,7 @@ import { revalidatePath } from 'next/cache'
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
 export async function deleteDetailedGlossaryHeader(id: number) {
+    await requireAdmin()
     try {
         // Supprimer d'abord tous les DetailedGlossaryItems associés
         await prisma.detailedGlossaryItem.deleteMany({
@@ -47,6 +49,7 @@ export async function deleteDetailedGlossaryHeader(id: number) {
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
 export async function createDetailedGlossaryHeader(name: string) {
+    await requireAdmin()
     try {
         const newHeader = await prisma.detailedGlossaryHeader.create({
             data: {
@@ -77,6 +80,7 @@ export async function createDetailedGlossaryHeader(name: string) {
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
 export async function updateDetailedGlossaryHeader(id: number, name: string) {
+    await requireAdmin()
     try {
         const updatedHeader = await prisma.detailedGlossaryHeader.update({
             where: {
@@ -109,6 +113,7 @@ export async function updateDetailedGlossaryHeader(id: number, name: string) {
  * @returns Liste des DetailedGlossaryHeader avec leurs glossaryItems
  */
 export async function getDetailedGlossaryHeaders() {
+    await requireAdmin()
     try {
         const glossaryHeaders = await prisma.detailedGlossaryHeader.findMany({
             orderBy: {
@@ -136,6 +141,7 @@ export async function createDetailedGlossaryItem(data: {
     question: string,
     answer: string
 }) {
+    await requireAdmin()
     try {
         const newItem = await prisma.detailedGlossaryItem.create({
             data: {
@@ -168,6 +174,7 @@ export async function createDetailedGlossaryItem(data: {
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
 export async function deleteDetailedGlossaryItem(id: number) {
+    await requireAdmin()
     try {
         await prisma.detailedGlossaryItem.delete({
             where: {

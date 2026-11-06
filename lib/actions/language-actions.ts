@@ -1,10 +1,12 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { Language } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getLanguageById(id: number): Promise<Language | null> {
+    await requireAdmin()
     try {
         return await prisma.language.findUnique({
             where: { id }
@@ -19,6 +21,7 @@ export async function updateLanguage(
     id: number,
     data: Omit<Language, 'id'>
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         // Si cette langue devient la langue par défaut, réinitialiser le statut des autres langues
         if (data.isDefault) {
@@ -64,6 +67,7 @@ export async function updateLanguage(
 export async function createLanguage(
     data: Omit<Language, 'id'>
 ): Promise<{ success: boolean; language?: Language; message?: string }> {
+    await requireAdmin()
     try {
         // Si cette langue devient la langue par défaut, réinitialiser le statut des autres langues
         if (data.isDefault) {
@@ -106,6 +110,7 @@ export async function createLanguage(
 export async function deleteLanguage(
     id: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         // Vérifier si la langue est utilisée par des traductions
         const translationsUsingLanguage = await prisma.translation.count({

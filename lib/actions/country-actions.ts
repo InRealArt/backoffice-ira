@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 
 export interface CountryRecord {
@@ -8,6 +9,7 @@ export interface CountryRecord {
 }
 
 export async function getAllCountries(): Promise<CountryRecord[]> {
+    await requireAdmin()
     const countries = await prisma.country.findMany({
         orderBy: { name: 'asc' }
     })

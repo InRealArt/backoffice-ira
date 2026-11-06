@@ -1,4 +1,5 @@
 'use server'
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { unstable_noStore as noStore } from 'next/cache'
@@ -38,6 +39,7 @@ export interface LandingArtistData {
  * Récupère tous les artistes de la landing page avec leurs informations d'artiste
  */
 export async function getAllLandingArtists() {
+    await requireAdmin()
     return prisma.landingArtist.findMany({
         include: {
             artist: true
@@ -54,6 +56,7 @@ export async function getAllLandingArtists() {
  * Récupère un artiste de la landing page par son ID
  */
 export async function getLandingArtistById(id: number) {
+    await requireAdmin()
     return prisma.landingArtist.findUnique({
         where: {
             id
@@ -81,6 +84,7 @@ export async function getLandingArtistById(id: number) {
  * Crée un nouvel artiste sur la landing page
  */
 export async function createLandingArtist(data: LandingArtistData) {
+    await requireAdmin()
     try {
         // Utiliser une transaction pour garantir l'atomicité de la contrainte d'unicité isFeatured
         // et des créations de catégories/spécialités associées
@@ -175,6 +179,7 @@ export async function createLandingArtist(data: LandingArtistData) {
  * Met à jour un artiste de la landing page
  */
 export async function updateLandingArtist(id: number, data: LandingArtistData) {
+    await requireAdmin()
     try {
         // Utiliser une transaction pour garantir l'atomicité de la contrainte d'unicité isFeatured
         const updatedLandingArtist = await prisma.$transaction(async (tx) => {
@@ -245,6 +250,7 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
  * Récupère tous les artistes qui n'ont pas encore d'entrée dans la table LandingArtist
  */
 export async function getArtistsNotInLanding() {
+    await requireAdmin()
     // Forcer la récupération des données en temps réel sans cache
     noStore()
 
@@ -264,6 +270,7 @@ export async function getArtistsNotInLanding() {
  * Vérifie si un artiste existe
  */
 export async function checkArtistExists(id: number) {
+    await requireAdmin()
     const count = await prisma.artist.count({
         where: {
             id
@@ -277,6 +284,7 @@ export async function checkArtistExists(id: number) {
  * Vérifie si un artiste est déjà dans la landing page
  */
 export async function checkArtistInLanding(artistId: number) {
+    await requireAdmin()
     const count = await prisma.landingArtist.count({
         where: {
             artistId
@@ -348,6 +356,7 @@ export async function createLandingArtistAction(formData: LandingArtistData): Pr
         slug: string;
     };
 }> {
+    await requireAdmin()
     try {
         // Vérification des données requises
         if (!formData.artistId || !formData.imageUrl || !formData.slug) {
@@ -412,6 +421,7 @@ export async function updateLandingArtistAction(id: number, formData: LandingArt
         slug: string;
     };
 }> {
+    await requireAdmin()
     try {
         // Vérification des données requises
         if (!formData.imageUrl) {
@@ -468,6 +478,7 @@ export async function updateLandingArtistOnboardingBo(
     landingArtistId: number,
     onboardingBo: Date | null
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.landingArtist.update({
             where: {

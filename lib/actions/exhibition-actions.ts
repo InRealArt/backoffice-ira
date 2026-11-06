@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { Exhibition } from '@/src/generated/prisma/client'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
@@ -20,6 +21,7 @@ export interface ExhibitionArtistOption {
 }
 
 export async function getAllExhibitions(): Promise<Exhibition[]> {
+    await requireAdmin()
     try {
         return await prisma.exhibition.findMany({
             orderBy: {
@@ -33,6 +35,7 @@ export async function getAllExhibitions(): Promise<Exhibition[]> {
 }
 
 export async function getExhibitionById(id: number): Promise<Exhibition | null> {
+    await requireAdmin()
     try {
         return await prisma.exhibition.findUnique({
             where: { id }
@@ -54,6 +57,7 @@ export async function createExhibition(data: {
     isFeatured?: boolean
     artistIds?: number[]
 }): Promise<{ success: boolean; message?: string; id?: number }> {
+    await requireAdmin()
     try {
         // Valider que la date de fin est après la date de début
         if (new Date(data.startDate) > new Date(data.endDate)) {
@@ -125,6 +129,7 @@ export async function updateExhibition(
         artistIds?: number[]
     }
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         // Valider que la date de fin est après la date de début (si les deux sont fournies)
         if (data.startDate && data.endDate && new Date(data.startDate) > new Date(data.endDate)) {
@@ -190,6 +195,7 @@ export async function updateExhibition(
  * Called server-side from page components; passed as props to the form.
  */
 export async function getAllLandingArtistsForExhibition(): Promise<ExhibitionArtistOption[]> {
+    await requireAdmin()
     try {
         const rows = await prisma.landingArtist.findMany({
             select: {
@@ -222,6 +228,7 @@ export async function getAllLandingArtistsForExhibition(): Promise<ExhibitionArt
  * Returns the landingArtistIds currently associated with an exhibition.
  */
 export async function getExhibitionArtistIds(exhibitionId: number): Promise<number[]> {
+    await requireAdmin()
     try {
         const rows = await prisma.exhibitionArtist.findMany({
             where: { exhibitionId },
@@ -242,6 +249,7 @@ export async function setExhibitionArtists(
     exhibitionId: number,
     landingArtistIds: number[]
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.$transaction([
             prisma.exhibitionArtist.deleteMany({ where: { exhibitionId } }),
@@ -269,6 +277,7 @@ export async function setExhibitionArtists(
 export async function deleteExhibition(
     id: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.exhibition.delete({
             where: { id }

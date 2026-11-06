@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { SeoPost } from '@/src/generated/prisma/client'
@@ -10,6 +11,7 @@ import { translateSeoPostFields, getLanguageByCode, checkTranslationExists, hand
 import { calculateReadingTime } from '@/lib/utils/reading-time-calculator'
 
 export async function getAllSeoPosts() {
+    await requireAdmin()
     try {
         const seoPosts = await prisma.seoPost.findMany({
             include: {
@@ -34,6 +36,7 @@ export async function getAllSeoPosts() {
 }
 
 export async function getSeoPostById(id: number) {
+    await requireAdmin()
     try {
         const seoPost = await prisma.seoPost.findUnique({
             where: { id },
@@ -79,6 +82,7 @@ export async function createSeoPost(data: {
     autoTranslate?: boolean
     targetLanguageCodes?: string[]
 }) {
+    await requireAdmin()
     try {
         // Si pas de languageId fourni, utiliser la langue par défaut
         let languageId = data.languageId
@@ -322,6 +326,7 @@ export async function updateSeoPost(id: number, data: {
     // Retraduire même si aucun texte n'a changé (ex: traduction précédente incomplète)
     forceTranslate?: boolean
 }) {
+    await requireAdmin()
     try {
         // Récupérer l'article existant
         const existingPost = await prisma.seoPost.findUnique({
@@ -622,6 +627,7 @@ export async function updateSeoPost(id: number, data: {
 }
 
 export async function pinSeoPost(id: number) {
+    await requireAdmin()
     try {
         // Vérifier que l'article existe
         const existingPost = await prisma.seoPost.findUnique({
@@ -724,6 +730,7 @@ export async function createSeoPostTranslation(
     originalPostId: number,
     targetLanguageCode: string
 ) {
+    await requireAdmin()
     try {
         // Récupérer la langue cible
         const targetLanguage = await getLanguageByCode(targetLanguageCode)
@@ -820,6 +827,7 @@ export async function createSeoPostTranslation(
 
 // Récupérer les posts FR pour le sélecteur d'articles liés
 export async function getSeoPostsForRelatedSelector(excludeId?: number) {
+    await requireAdmin()
     try {
         const posts = await prisma.seoPost.findMany({
             where: {
@@ -853,6 +861,7 @@ export async function getSeoPostsForRelatedSelector(excludeId?: number) {
 
 // Nouvelle fonction pour récupérer les posts par langue
 export async function getSeoPostsByLanguage(languageCode: string = 'fr') {
+    await requireAdmin()
     try {
         const posts = await prisma.seoPost.findMany({
             where: {
@@ -883,6 +892,7 @@ export async function getSeoPostsByLanguage(languageCode: string = 'fr') {
 
 // Supprime un article SEO ainsi que sa traduction associée (paire FR/EN)
 export async function deleteSeoPost(id: number) {
+    await requireAdmin()
     try {
         const post = await prisma.seoPost.findUnique({
             where: { id },

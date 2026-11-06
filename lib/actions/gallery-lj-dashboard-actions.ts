@@ -1,5 +1,6 @@
 'use server'
 
+import { requireGalleryLjManager } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 
 export interface GalleryLjArtistMetrics {
@@ -25,6 +26,7 @@ export interface GalleryLjExhibitionMetrics {
  * Métriques pour les artistes de la galerie LJ
  */
 export async function getGalleryLjArtistMetrics(): Promise<GalleryLjArtistMetrics> {
+  await requireGalleryLjManager()
   try {
     const [total, permanent] = await Promise.all([
       prisma.galleryLjArtist.count(),
@@ -41,6 +43,7 @@ export async function getGalleryLjArtistMetrics(): Promise<GalleryLjArtistMetric
  * Métriques pour les œuvres de la galerie LJ
  */
 export async function getGalleryLjArtworkMetrics(): Promise<GalleryLjArtworkMetrics> {
+  await requireGalleryLjManager()
   try {
     const [total, visible] = await Promise.all([
       prisma.galleryLjArtwork.count(),
@@ -60,6 +63,7 @@ export async function getGalleryLjArtworkMetrics(): Promise<GalleryLjArtworkMetr
  * - past     : endDate < now
  */
 export async function getGalleryLjExhibitionMetrics(): Promise<GalleryLjExhibitionMetrics> {
+  await requireGalleryLjManager()
   try {
     const now = new Date()
 

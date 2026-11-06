@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { generateSlug } from '@/lib/utils'
 import { ArtistCategory } from '@/src/generated/prisma/client'
@@ -7,6 +8,7 @@ import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landin
 import { toRelativePath } from '@/lib/r2/url'
 
 export async function getArtistCategoryById(id: number): Promise<ArtistCategory | null> {
+    await requireAdmin()
     try {
         return await prisma.artistCategory.findUnique({
             where: { id }
@@ -18,6 +20,7 @@ export async function getArtistCategoryById(id: number): Promise<ArtistCategory 
 }
 
 export async function getAllArtistCategories(): Promise<ArtistCategory[]> {
+    await requireAdmin()
     try {
         const artistCategories = await prisma.artistCategory.findMany({
             orderBy: {
@@ -66,6 +69,7 @@ export async function updateArtistCategory(
         order?: number | null
     }
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         const updateData: any = {
             name: data.name,
@@ -113,6 +117,7 @@ export async function createArtistCategory(
         order?: number | null
     }
 ): Promise<{ success: boolean; message?: string; id?: number }> {
+    await requireAdmin()
     try {
         const uniqueSlug = await generateUniqueArtistCategorySlug(data.name)
         const newArtistCategory = await prisma.artistCategory.create({
@@ -152,6 +157,7 @@ export async function createArtistCategory(
 export async function deleteArtistCategory(
     id: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.artistCategory.delete({
             where: { id }

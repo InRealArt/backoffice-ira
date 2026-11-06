@@ -1,10 +1,12 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { Faq } from '@/src/generated/prisma/client'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 
 export async function getFaqById(id: number): Promise<Faq | null> {
+    await requireAdmin()
     try {
         return await prisma.faq.findUnique({
             where: { id }
@@ -19,6 +21,7 @@ export async function updateFaq(
     id: number,
     data: Omit<Faq, 'id'>
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.faq.update({
             where: { id },
@@ -50,6 +53,7 @@ export async function updateFaq(
 export async function createFaq(
     data: Omit<Faq, 'id'>
 ): Promise<{ success: boolean; faq?: Faq; message?: string }> {
+    await requireAdmin()
     try {
         const faq = await prisma.faq.create({
             data
@@ -82,6 +86,7 @@ export async function createFaq(
 export async function deleteFaq(
     id: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.faq.delete({
             where: { id }
@@ -106,6 +111,7 @@ export async function deleteFaq(
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
 export async function deleteDetailedFaqHeader(id: number) {
+    await requireAdmin()
     try {
         // Supprimer d'abord tous les DetailedFaqItems associés
         await prisma.detailedFaqItem.deleteMany({
@@ -142,6 +148,7 @@ export async function deleteDetailedFaqHeader(id: number) {
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
 export async function createDetailedFaqHeader(name: string) {
+    await requireAdmin()
     try {
         const newHeader = await prisma.detailedFaqHeader.create({
             data: {
@@ -172,6 +179,7 @@ export async function createDetailedFaqHeader(name: string) {
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
 export async function updateDetailedFaqHeader(id: number, name: string) {
+    await requireAdmin()
     try {
         const updatedHeader = await prisma.detailedFaqHeader.update({
             where: {
@@ -204,6 +212,7 @@ export async function updateDetailedFaqHeader(id: number, name: string) {
  * @returns Liste des DetailedFaqHeader avec leurs faqItems
  */
 export async function getDetailedFaqHeaders() {
+    await requireAdmin()
     try {
         const faqHeaders = await prisma.detailedFaqHeader.findMany({
             orderBy: {
@@ -231,6 +240,7 @@ export async function createDetailedFaqItem(data: {
     question: string,
     answer: string
 }) {
+    await requireAdmin()
     try {
         const newItem = await prisma.detailedFaqItem.create({
             data: {
@@ -263,6 +273,7 @@ export async function createDetailedFaqItem(data: {
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
 export async function deleteDetailedFaqItem(id: number) {
+    await requireAdmin()
     try {
         await prisma.detailedFaqItem.delete({
             where: {

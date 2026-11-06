@@ -1,5 +1,6 @@
 'use server'
 
+import { requireGalleryLjManager } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { toRelativePath } from '@/lib/r2/url'
@@ -12,6 +13,7 @@ const REVALIDATE_PATH = '/fr/galleryLj/artworks'
  * Récupère toutes les œuvres de la galerie LJ avec leur artiste
  */
 export async function getAllGalleryLjArtworks() {
+    await requireGalleryLjManager()
     try {
         const artworks = await prisma.galleryLjArtwork.findMany({
             include: {
@@ -44,6 +46,7 @@ export async function getAllGalleryLjArtworks() {
  * Récupère une œuvre galerie LJ par son ID
  */
 export async function getGalleryLjArtworkById(id: number) {
+    await requireGalleryLjManager()
     try {
         const artwork = await prisma.galleryLjArtwork.findUnique({
             where: { id },
@@ -85,6 +88,7 @@ export async function createGalleryLjArtwork(data: {
     visible?: boolean
     images?: string[]
 }) {
+    await requireGalleryLjManager()
     try {
         const artwork = await prisma.galleryLjArtwork.create({
             data: {
@@ -125,6 +129,7 @@ export async function updateGalleryLjArtwork(
         images?: string[]
     }
 ) {
+    await requireGalleryLjManager()
     try {
         // Normalize imageUrl to relative path if provided
         const normalizedImageUrl = data.imageUrl !== undefined
@@ -165,6 +170,7 @@ export async function updateGalleryLjArtwork(
  * une erreur, la suppression en base de données est quand même effectuée.
  */
 export async function deleteGalleryLjArtwork(id: number) {
+    await requireGalleryLjManager()
     try {
         const artwork = await prisma.galleryLjArtwork.findUnique({
             where: { id },
@@ -241,6 +247,7 @@ export async function deleteGalleryLjArtwork(id: number) {
  * - Met à jour artwork.images en base (retire l'URL)
  */
 export async function deleteGalleryLjArtworkSecondaryImage(artworkId: number, imageUrl: string) {
+    await requireGalleryLjManager()
     try {
         const artwork = await prisma.galleryLjArtwork.findUnique({
             where: { id: artworkId },

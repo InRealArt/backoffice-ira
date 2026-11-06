@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
-import { checkIsAdmin } from '@/lib/actions/auth-actions'
 import { useAuthorization } from '@/app/hooks/useAuthorization'
 import { useGalleryLjManager } from '@/app/hooks/useGalleryLjManager'
+import { useIsAdmin } from '@/app/hooks/useIsAdmin'
 
 export function useSideMenuLogic() {
   // Récupérer le pathway pour déterminer l'élément actif
@@ -14,7 +14,6 @@ export function useSideMenuLogic() {
 
   // Utiliser Better Auth pour l'authentification
   const { data: session, isPending: isSessionPending } = authClient.useSession()
-  const user = session?.user
 
   // Utiliser le hook optimisé pour l'autorisation (avec cache et déduplication)
   const { isAuthorized, isLoading: isAuthLoading } = useAuthorization({
@@ -39,8 +38,10 @@ export function useSideMenuLogic() {
   const isLoggedIn = !!session
 
   // Si l'utilisateur est un admin ou a accès à une collection
-  const [isAdmin, setIsAdmin] = useState(false)
+  const { isAdmin: isAdminRole } = useIsAdmin()
   const canAccessCollection = isAuthorized === true
+  // Admin uniquement si l'utilisateur est aussi autorisé (rôle lu depuis la session, sans appel serveur)
+  const isAdmin = isAdminRole && isAuthorized === true
   const { isGalleryLjManager } = useGalleryLjManager()
 
   // État de chargement pour les vérifications d'authentification
@@ -201,39 +202,6 @@ export function useSideMenuLogic() {
       }
     }
   }, [])
-
-  // Vérification du rôle admin uniquement (l'autorisation est gérée par useAuthorization)
-  useEffect(() => {
-    let isMounted = true
-
-    const checkAdminRole = async () => {
-      const userEmail = user?.email
-
-      // Vérifier le rôle admin seulement si l'utilisateur est autorisé
-      if (userEmail && isAuthorized === true && !isSessionPending) {
-        try {
-          // Vérifier si l'utilisateur a un rôle administrateur via Server Action
-          const isAdminResult = await checkIsAdmin(userEmail);
-
-          if (!isMounted) return
-
-          setIsAdmin(isAdminResult);
-        } catch (error) {
-          if (!isMounted) return
-          console.error('Erreur lors de la vérification du rôle admin:', error);
-          setIsAdmin(false);
-        }
-      } else {
-        setIsAdmin(false);
-      }
-    };
-
-    checkAdminRole();
-
-    return () => {
-      isMounted = false
-    }
-  }, [user?.email, isAuthorized, isSessionPending]);
 
   // Effet pour fermer les sous-menus sur clic en dehors
   useEffect(() => {

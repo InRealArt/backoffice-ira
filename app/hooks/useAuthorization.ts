@@ -134,7 +134,7 @@ export function useAuthorization(
         // Créer une nouvelle promesse de vérification
         const checkPromise = (async () => {
             try {
-                const result = await checkAuthorizedUser(email)
+                const result = await checkAuthorizedUser()
                 const authorized = result.authorized
 
                 // Mettre à jour le cache

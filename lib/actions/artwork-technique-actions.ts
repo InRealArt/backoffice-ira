@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ArtworkTechnique } from '@/src/generated/prisma/client'
@@ -32,6 +33,7 @@ export async function getAllArtworkTechniques(): Promise<ArtworkTechnique[]> {
 
 // Créer une nouvelle technique d'œuvre
 export async function createArtworkTechnique(data: ArtworkTechniqueFormData): Promise<ActionResult & { id?: number }> {
+    await requireAdmin()
     try {
         const artworkTechnique = await prisma.artworkTechnique.create({
             data: {
@@ -67,6 +69,7 @@ export async function createArtworkTechnique(data: ArtworkTechniqueFormData): Pr
 
 // Mettre à jour une technique d'œuvre existante
 export async function updateArtworkTechnique(id: number, data: ArtworkTechniqueFormData): Promise<ActionResult> {
+    await requireAdmin()
     try {
         await prisma.artworkTechnique.update({
             where: { id },
@@ -109,6 +112,7 @@ export async function updateArtworkTechnique(id: number, data: ArtworkTechniqueF
 
 // Supprimer une technique d'œuvre
 export async function deleteArtworkTechnique(id: number): Promise<ActionResult> {
+    await requireAdmin()
     try {
         await prisma.artworkTechnique.delete({
             where: { id },

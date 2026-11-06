@@ -1,4 +1,5 @@
 'use server'
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 
@@ -15,6 +16,7 @@ export interface LandingArtistSeoData {
  * Récupère le SEO d'un artiste landing (avec ses keyWorks)
  */
 export async function getLandingArtistSeo(landingArtistId: number) {
+    await requireAdmin()
     return prisma.landingArtistSeo.findUnique({
         where: { landingArtistId },
         include: {
@@ -32,6 +34,7 @@ export async function getLandingArtistSeo(landingArtistId: number) {
  * Récupère les PresaleArtworks disponibles (non vendues) pour un artiste donné
  */
 export async function getPresaleArtworksForArtist(artistId: number) {
+    await requireAdmin()
     return prisma.presaleArtwork.findMany({
         where: {
             artistId,
@@ -57,6 +60,7 @@ export async function upsertLandingArtistSeoAction(
     landingArtistId: number,
     data: LandingArtistSeoData
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         const { keyWorkIds, ...seoFields } = data
 

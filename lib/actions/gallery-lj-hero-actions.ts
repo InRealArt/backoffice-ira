@@ -1,5 +1,6 @@
 'use server'
 
+import { requireGalleryLjManager } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { toRelativePath } from '@/lib/r2/url'
@@ -12,6 +13,7 @@ const REVALIDATE_PATH = '/fr/galleryLj/hero'
  * Récupère tous les héros de la galerie LJ
  */
 export async function getAllGalleryLjHeroes() {
+    await requireGalleryLjManager()
     try {
         const heroes = await prisma.galleryLjHero.findMany({
             orderBy: {
@@ -29,6 +31,7 @@ export async function getAllGalleryLjHeroes() {
  * Récupère un héro galerie LJ par son ID
  */
 export async function getGalleryLjHeroById(id: number) {
+    await requireGalleryLjManager()
     try {
         const hero = await prisma.galleryLjHero.findUnique({
             where: { id }
@@ -49,6 +52,7 @@ export async function createGalleryLjHero(data: {
     text?: string | null
     ctaUrl?: string | null
 }) {
+    await requireGalleryLjManager()
     try {
         const existingHeroesCount = await prisma.galleryLjHero.count()
         if (existingHeroesCount >= 1) {
@@ -87,6 +91,7 @@ export async function updateGalleryLjHero(
         ctaUrl?: string | null
     }
 ) {
+    await requireGalleryLjManager()
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const prismaData: Record<string, any> = {}
@@ -116,6 +121,7 @@ export async function updateGalleryLjHero(
  * une erreur, la suppression en base de données est quand même effectuée.
  */
 export async function deleteGalleryLjHero(id: number) {
+    await requireGalleryLjManager()
     try {
         const hero = await prisma.galleryLjHero.findUnique({
             where: { id },

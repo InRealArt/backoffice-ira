@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { NetworkType } from '@/src/generated/prisma/client'
@@ -23,6 +24,7 @@ const smartContractSchema = z.object({
 type CreateSmartContractInput = z.infer<typeof smartContractSchema>
 
 export async function createSmartContracts(data: CreateSmartContractInput) {
+    await requireAdmin()
     try {
         // Valider les données
         const validationResult = smartContractSchema.safeParse(data)
@@ -96,6 +98,7 @@ export async function createSmartContracts(data: CreateSmartContractInput) {
 }
 
 export async function updateSmartContract(id: number, data: CreateSmartContractInput) {
+    await requireAdmin()
     try {
         const validationResult = smartContractSchema.safeParse(data)
 

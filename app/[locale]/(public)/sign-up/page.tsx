@@ -7,7 +7,6 @@ import Image from 'next/image'
 import { authClient } from '@/lib/auth-client'
 import Button from '@/app/components/Button/Button'
 import { useToast } from '@/app/components/Toast/ToastContext'
-import { checkWhiteListedUser, updateUserAfterSignup, deleteUserAfterFailedSignup } from '@/lib/actions/auth-actions'
 
 export default function SignUpPage () {
   const router = useRouter()
@@ -24,8 +23,10 @@ export default function SignUpPage () {
     setIsLoading(true)
 
     try {
-      // 1. Créer le compte avec better-auth
-      const { error: authError, data } = await authClient.signUp.email({
+      // La whitelist, le rôle et l'artistId sont appliqués côté serveur (databaseHooks dans lib/auth.ts).
+      // En cas d'email non autorisé, l'inscription est refusée et son message affiché.
+      // L'utilisateur est connecté automatiquement après l'inscription (session déjà porteuse du rôle).
+      const { error: authError } = await authClient.signUp.email({
         name,
         email,
         password,
@@ -33,57 +34,12 @@ export default function SignUpPage () {
       })
 
       if (authError) {
-        const errorMessage = authError.message || 'Vous n\'êtes pas autorisé à utiliser le backoffice'
-        errorToast(errorMessage)
+        errorToast(authError.message || 'Vous n\'êtes pas autorisé à utiliser le backoffice')
         setIsLoading(false)
         return
       }
 
-      // 2. Attendre un peu pour s'assurer que l'utilisateur est bien créé dans la base
-      await new Promise(resolve => setTimeout(resolve, 300))
-
-      // 3. Vérifier si l'utilisateur est dans la whitelist
-      const whiteListedUser = await checkWhiteListedUser(email)
-
-      if (!whiteListedUser) {
-        // Utilisateur non whitelisté : afficher toast d'erreur
-        // Supprimer le compte créé car non autorisé
-        await deleteUserAfterFailedSignup(email)
-        const errorMessage = 'Votre email n\'est pas autorisé à créer un compte sur cette plateforme. Veuillez contacter l\'administrateur pour être ajouté à la liste blanche.'
-        errorToast(errorMessage)
-        setIsLoading(false)
-        return
-      }
-
-      // 4. Mettre à jour le rôle et l'artistId depuis la whitelist
-      const updateResult = await updateUserAfterSignup(
-        email,
-        whiteListedUser.role || null,
-        whiteListedUser.artistId || null
-      )
-
-      if (!updateResult.success) {
-        const errorMessage = updateResult.message || 'Erreur lors de la mise à jour du profil'
-        errorToast(errorMessage)
-        setIsLoading(false)
-        return
-      }
-
-      // 5. Connecter l'utilisateur
-      const { error: signInError } = await authClient.signIn.email({
-        email,
-        password,
-        callbackURL: '/dashboard'
-      })
-
-      if (signInError) {
-        const errorMessage = 'Erreur lors de la connexion'
-        errorToast(errorMessage)
-        setIsLoading(false)
-        return
-      }
-
-      // 6. Rediriger vers le dashboard
+      // Rediriger vers le dashboard
       router.push('/dashboard')
     } catch (err) {
       console.error('Erreur lors du signup:', err)

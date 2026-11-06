@@ -1,5 +1,6 @@
 'use server'
 
+import { requireGalleryLjManager } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { toRelativePath } from '@/lib/r2/url'
@@ -35,6 +36,7 @@ function isMissingColumnError(error: unknown): boolean {
  * Récupère toutes les expositions de la galerie LJ avec le nombre d'œuvres liées
  */
 export async function getAllGalleryLjExhibitions() {
+    await requireGalleryLjManager()
     try {
         const exhibitions = await prisma.galleryLjEvent.findMany({
             select: {
@@ -76,6 +78,7 @@ export async function getAllGalleryLjExhibitions() {
  * Récupère une exposition galerie LJ par son ID, avec ses œuvres liées
  */
 export async function getGalleryLjExhibitionById(id: number) {
+    await requireGalleryLjManager()
     try {
         const exhibition = await prisma.galleryLjEvent.findUnique({
             where: { id },
@@ -125,6 +128,7 @@ export async function createGalleryLjExhibition(data: {
     visible?: boolean
     slug?: string | null
 }) {
+    await requireGalleryLjManager()
     try {
         const exhibition = await prisma.galleryLjEvent.create({
             data: {
@@ -194,6 +198,7 @@ export async function updateGalleryLjExhibition(
         slug?: string | null
     }
 ) {
+    await requireGalleryLjManager()
     try {
         // Normalize imageUrl to relative path if provided
         const normalizedImageUrl = data.imageUrl !== undefined
@@ -271,6 +276,7 @@ export async function updateGalleryLjExhibition(
  * une erreur, la suppression en base de données est quand même effectuée.
  */
 export async function deleteGalleryLjExhibition(id: number) {
+    await requireGalleryLjManager()
     try {
         const exhibition = await prisma.galleryLjEvent.findUnique({
             where: { id },
