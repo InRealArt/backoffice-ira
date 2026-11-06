@@ -6,6 +6,8 @@ import { ArtworkSupport } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getArtworkSupportById(id: number): Promise<ArtworkSupport | null> {
+    await requireAdmin()
+
     try {
         return await prisma.artworkSupport.findUnique({
             where: { id }

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ArtistAddress } from '@/src/generated/prisma/client'
+import { requireAdmin } from '@/lib/auth-helpers'
 
 // Récupérer les adresses d'un utilisateur BackofficeAuthUser (schéma backoffice)
 export async function getAddresses(backofficeAuthUserId: string) {
@@ -31,6 +32,8 @@ export async function getAddresses(backofficeAuthUserId: string) {
 
 // Récupérer les adresses d'un artiste via BackofficeAuthUser (schéma backoffice) - pour les admins
 export async function getAddressesByArtistId(artistId: number) {
+    await requireAdmin()
+
     try {
         // Trouver le BackofficeAuthUser associé à l'artiste
         const backofficeAuthUser = await prisma.backofficeAuthUser.findFirst({
@@ -74,6 +77,8 @@ export async function getAddressesByArtistId(artistId: number) {
 
 // Récupérer toutes les adresses pour l'administration
 export async function getAllAddressesForAdmin() {
+    await requireAdmin()
+
     try {
         const addresses = await prisma.artistAddress.findMany({
             select: {
@@ -226,6 +231,8 @@ export async function updateAddress(id: number, data: {
 
 // Supprimer une adresse
 export async function deleteAddress(id: number) {
+    await requireAdmin()
+
     try {
         const address = await prisma.artistAddress.findUnique({
             where: { id }

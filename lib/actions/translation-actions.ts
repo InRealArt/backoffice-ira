@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
+import { requireAdmin } from '@/lib/auth-helpers'
 
 // Fonction de traduction avec Google Translate
 async function translateWithGoogle(
@@ -174,6 +175,8 @@ export async function handleEntityTranslations(
 
 // Créer une nouvelle traduction
 export async function createTranslation(data: TranslationData): Promise<ActionResult> {
+    await requireAdmin()
+
     try {
         const { entityType, entityId, field, value, languageId } = data
 
@@ -231,6 +234,8 @@ export async function createTranslation(data: TranslationData): Promise<ActionRe
 
 // Mettre à jour une traduction existante
 export async function updateTranslation(id: number, data: TranslationData): Promise<ActionResult> {
+    await requireAdmin()
+
     try {
         // Vérifier si la traduction existe
         const existingTranslation = await prisma.translation.findUnique({
@@ -299,6 +304,8 @@ export async function updateTranslation(id: number, data: TranslationData): Prom
 
 // Supprimer une traduction
 export async function deleteTranslation(id: number): Promise<ActionResult> {
+    await requireAdmin()
+
     try {
         // Vérifier si la traduction existe
         const existingTranslation = await prisma.translation.findUnique({

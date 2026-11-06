@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { PresaleArtwork } from '@/src/generated/prisma/client'
 import { toRelativePath } from '@/lib/r2/url'
+import { requireAdmin } from '@/lib/auth-helpers'
 
 /**
  * Récupère toutes les œuvres en prévente
@@ -86,6 +87,8 @@ export async function getPresaleArtworkCountByArtist(artistId: number) {
  * Récupère une œuvre en prévente par son ordre
  */
 export async function getPresaleArtworkByOrder(order: number) {
+    await requireAdmin()
+
     try {
         return await prisma.presaleArtwork.findFirst({
             where: { order }
@@ -125,6 +128,8 @@ async function getPresaleArtworkByOrderWithClient(order: number, client: any) {
  * Échange l'ordre entre deux œuvres en prévente
  */
 export async function swapPresaleArtworkOrder(id1: number, order1: number, id2: number, order2: number) {
+    await requireAdmin()
+
     try {
         // Utiliser une transaction pour garantir l'atomicité
         await prisma.$transaction([
@@ -466,6 +471,8 @@ export async function processExcelImport(data: {
     artistId: number
     fileBase64: string
 }) {
+    await requireAdmin()
+
     try {
         // Importation dynamique d'exceljs
         const ExcelJS = (await import('exceljs')).default

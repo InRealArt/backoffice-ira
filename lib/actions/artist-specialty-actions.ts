@@ -2,11 +2,14 @@
 
 import { prisma } from '@/lib/prisma'
 import type { ArtistSpecialty } from '@/src/generated/prisma/client'
+import { requireAdmin } from '@/lib/auth-helpers'
 
 /**
  * Récupère une spécialité d'artiste par son ID
  */
 export async function getArtistSpecialtyById(id: number): Promise<ArtistSpecialty | null> {
+    await requireAdmin()
+
     try {
         return await prisma.artistSpecialty.findUnique({
             where: { id }

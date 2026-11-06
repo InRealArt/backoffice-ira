@@ -145,6 +145,8 @@ export async function deleteArtworkTechnique(id: number): Promise<ActionResult> 
 
 // Récupérer toutes les techniques d'œuvre (pour les composants client)
 export async function getArtworkTechniques(): Promise<ArtworkTechnique[]> {
+    await requireAdmin()
+
     try {
         const artworkTechniques = await prisma.artworkTechnique.findMany({
             orderBy: {
@@ -160,6 +162,8 @@ export async function getArtworkTechniques(): Promise<ArtworkTechnique[]> {
 
 // Récupérer une technique d'œuvre par ID
 export async function getArtworkTechniqueById(id: number): Promise<ArtworkTechnique | null> {
+    await requireAdmin()
+
     try {
         const artworkTechnique = await prisma.artworkTechnique.findUnique({
             where: { id },

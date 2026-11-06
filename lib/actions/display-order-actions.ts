@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
+import { requireAdmin } from '@/lib/auth-helpers'
 
 /**
  * Interface générique pour les entités avec displayOrder
@@ -60,6 +61,8 @@ export async function updateDisplayOrder<T extends DisplayOrderEntity>(
 export async function getMaxDisplayOrderByArtist(
     artistId: number
 ): Promise<number> {
+    await requireAdmin()
+
     try {
         const result = await prisma.presaleArtwork.aggregate({
             where: { artistId },
