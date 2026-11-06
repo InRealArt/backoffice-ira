@@ -5,6 +5,7 @@ import { Artist, Prisma } from '@/src/generated/prisma/client'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { generateSlug, toCamelCase, getCountries } from '@/lib/utils'
 import { toRelativePath } from '@/lib/r2/url'
+import { requireAdmin } from '@/lib/auth-helpers'
 
 export async function getArtistById(id: number): Promise<Artist | null> {
     try {
@@ -52,6 +53,8 @@ export async function updateArtist(
     id: number,
     data: Prisma.ArtistUpdateInput
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
+
     try {
         // S'assurer que le pays existe dans la base de données avant de sauvegarder
         // Extraire countryCode de manière sûre depuis Prisma.ArtistUpdateInput
@@ -149,6 +152,8 @@ export interface CreateArtistData {
  * Crée un nouvel artiste
  */
 export async function createArtist(data: CreateArtistData): Promise<{ success: boolean; message?: string; artist?: Artist }> {
+    await requireAdmin()
+
     try {
         console.log('data', data)
 
@@ -800,6 +805,8 @@ export async function getAllArtistsAndGalleries() {
  * Duplique un artiste en ajoutant "TEST" au nom de famille
  */
 export async function duplicateArtist(artistId: number): Promise<{ success: boolean; message?: string; artist?: Artist }> {
+    await requireAdmin()
+
     try {
         // Récupérer l'artiste original avec son LandingArtist et ses relations
         const originalArtist = await prisma.artist.findUnique({
@@ -993,6 +1000,8 @@ export async function duplicateArtist(artistId: number): Promise<{ success: bool
  * @param nameFilter - Filtre optionnel pour rechercher par nom ou prénom
  */
 export async function getArtistsWithPresaleArtworkCount(nameFilter?: string) {
+    await requireAdmin()
+
     try {
         // Construire la condition de filtrage
         const where: any = {

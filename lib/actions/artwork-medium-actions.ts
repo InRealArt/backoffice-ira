@@ -6,6 +6,8 @@ import { ArtworkMedium } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getArtworkMediumById(id: number): Promise<ArtworkMedium | null> {
+    await requireAdmin()
+
     try {
         return await prisma.artworkMedium.findUnique({
             where: { id }
