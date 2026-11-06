@@ -18,7 +18,8 @@ env:
   # Si le GITHUB_TOKEN du workflow n'a pas accès au package, créer un secret NPM_GITHUB_TOKEN
   # (PAT avec le scope read:packages).
   GITHUB_TOKEN: ${{ secrets.NPM_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
-  # Requis par `prisma generate` (postinstall) ; aucune connexion n'est ouverte.
+  # Requis par `prisma generate` (postinstall, via prisma.config.ts) ; aucune connexion n'est ouverte.
+  DIRECT_URL: postgresql://ci:ci@localhost:5432/ci
   DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
 
 jobs:
