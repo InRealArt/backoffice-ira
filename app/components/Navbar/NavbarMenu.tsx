@@ -50,7 +50,6 @@ export default function NavbarMenu() {
     activeItem,
     canAccessCollection,
     isAdmin,
-    isGalleryLjManager,
     isLoading,
     isNavigating,
     navigatingItem,
@@ -169,7 +168,7 @@ export default function NavbarMenu() {
     const fetchAssociatedArtist = async () => {
       const userEmail = user?.email;
 
-      if (!isAdmin && !isGalleryLjManager && userEmail && canAccessCollection) {
+      if (!isAdmin && userEmail && canAccessCollection) {
         setIsLoadingArtist(true);
         try {
           const backofficeUser = await getBackofficeUserByEmail(userEmail);
@@ -221,7 +220,7 @@ export default function NavbarMenu() {
     return () => {
       isMounted = false;
     };
-  }, [isAdmin, isGalleryLjManager, user?.email, canAccessCollection, pathname]);
+  }, [isAdmin, user?.email, canAccessCollection, pathname]);
 
   // Fermer le menu dropdown quand la page est chargée (pathname change)
   useEffect(() => {
@@ -241,7 +240,6 @@ export default function NavbarMenu() {
     if (
       canAccessCollection &&
       !isAdmin &&
-      !isGalleryLjManager &&
       !isLoadingArtist &&
       !associatedArtist
     ) {
@@ -275,7 +273,7 @@ export default function NavbarMenu() {
       );
     }
 
-    if (canAccessCollection && !isAdmin && !isGalleryLjManager) {
+    if (canAccessCollection && !isAdmin) {
       return (
         <>
           <li>
@@ -448,118 +446,6 @@ export default function NavbarMenu() {
               </li>
             </>
           )}
-        </>
-      );
-    }
-
-    if (isGalleryLjManager) {
-      return (
-        <>
-          <li>
-            <a
-              onClick={() =>
-                handleMenuNavigation("/fr/galleryLj/dashboard", "galleryLjDashboard")
-              }
-              className="flex items-center gap-2"
-            >
-              {isItemNavigating("galleryLjDashboard") ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  <LayoutDashboard size={18} />
-                  <span>Dashboard</span>
-                </>
-              ) : (
-                <>
-                  <LayoutDashboard size={18} />
-                  <span>Dashboard</span>
-                </>
-              )}
-            </a>
-          </li>
-          <li>
-            <a
-              onClick={() =>
-                handleMenuNavigation("/fr/galleryLj/artists", "galleryLjArtists")
-              }
-              className="flex items-center gap-2"
-            >
-              {isItemNavigating("galleryLjArtists") ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  <Users size={18} />
-                  <span>Artistes Gallery LJ</span>
-                </>
-              ) : (
-                <>
-                  <Users size={18} />
-                  <span>Artistes Gallery LJ</span>
-                </>
-              )}
-            </a>
-          </li>
-          <li>
-            <a
-              onClick={() =>
-                handleMenuNavigation("/fr/galleryLj/artworks", "galleryLjArtworks")
-              }
-              className="flex items-center gap-2"
-            >
-              {isItemNavigating("galleryLjArtworks") ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  <Palette size={18} />
-                  <span>Œuvres Gallery LJ</span>
-                </>
-              ) : (
-                <>
-                  <Palette size={18} />
-                  <span>Œuvres Gallery LJ</span>
-                </>
-              )}
-            </a>
-          </li>
-          <li>
-            <a
-              onClick={() =>
-                handleMenuNavigation('/fr/galleryLj/events', 'galleryLjEvents')
-              }
-              className="flex items-center gap-2"
-            >
-              {isItemNavigating('galleryLjEvents') ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  <CalendarDays size={18} />
-                  <span>Evènements Gallery LJ</span>
-                </>
-              ) : (
-                <>
-                  <CalendarDays size={18} />
-                  <span>Evènements Gallery LJ</span>
-                </>
-              )}
-            </a>
-          </li>
-          <li>
-            <a
-              onClick={() =>
-                handleMenuNavigation("/fr/galleryLj/hero", "galleryLjHero")
-              }
-              className="flex items-center gap-2"
-            >
-              {isItemNavigating("galleryLjHero") ? (
-                <>
-                  <span className="loading loading-spinner loading-sm"></span>
-                  <Layout size={18} />
-                  <span>Hero Galerie LJ</span>
-                </>
-              ) : (
-                <>
-                  <Layout size={18} />
-                  <span>Hero Galerie LJ</span>
-                </>
-              )}
-            </a>
-          </li>
         </>
       );
     }
@@ -1455,7 +1341,6 @@ export default function NavbarMenu() {
         {/* Si l'utilisateur n'a pas d'artiste associé, afficher uniquement "Créer mon profil artiste" */}
         {canAccessCollection &&
           !isAdmin &&
-          !isGalleryLjManager &&
           !isLoadingArtist &&
           !associatedArtist && (
             <ul className="menu menu-horizontal px-1">
@@ -1481,7 +1366,6 @@ export default function NavbarMenu() {
         {/* Menu utilisateur normal */}
         {canAccessCollection &&
           !isAdmin &&
-          !isGalleryLjManager &&
           !isLoadingArtist &&
           associatedArtist && (
             <ul className="menu menu-horizontal px-1">
@@ -1605,92 +1489,6 @@ export default function NavbarMenu() {
               )}
             </ul>
           )}
-
-        {/* Menu Gallery LJ Manager */}
-        {isGalleryLjManager && (
-          <ul className="menu menu-horizontal px-1">
-            <li>
-              <a
-                onClick={() =>
-                  handleDesktopNavigation(
-                    "/fr/galleryLj/dashboard",
-                    "galleryLjDashboard"
-                  )
-                }
-                className={`flex items-center gap-2 ${
-                  activeItem === "galleryLjDashboard" ? "active" : ""
-                }`}
-              >
-                <LayoutDashboard size={18} />
-                Dashboard
-              </a>
-            </li>
-            <li>
-              <a
-                onClick={() =>
-                  handleDesktopNavigation(
-                    "/fr/galleryLj/artists",
-                    "galleryLjArtists"
-                  )
-                }
-                className={`flex items-center gap-2 ${
-                  activeItem === "galleryLjArtists" ? "active" : ""
-                }`}
-              >
-                <Users size={18} />
-                Artistes Gallery LJ
-              </a>
-            </li>
-            <li>
-              <a
-                onClick={() =>
-                  handleDesktopNavigation(
-                    "/fr/galleryLj/artworks",
-                    "galleryLjArtworks"
-                  )
-                }
-                className={`flex items-center gap-2 ${
-                  activeItem === "galleryLjArtworks" ? "active" : ""
-                }`}
-              >
-                <Palette size={18} />
-                Œuvres Gallery LJ
-              </a>
-            </li>
-            <li>
-              <a
-                onClick={() =>
-                  handleDesktopNavigation(
-                    '/fr/galleryLj/events',
-                    'galleryLjEvents'
-                  )
-                }
-                className={`flex items-center gap-2 ${
-                  activeItem === 'galleryLjEvents' ? 'active' : ''
-                }`}
-              >
-                <CalendarDays size={18} />
-                Evènements Gallery LJ
-              </a>
-            </li>
-            <li>
-              <a
-                onClick={() =>
-                  handleDesktopNavigation(
-                    "/fr/galleryLj/hero",
-                    "galleryLjHero"
-                  )
-                }
-                className={`flex items-center gap-2 ${
-                  activeItem === "galleryLjHero" ? "active" : ""
-                }`}
-              >
-                <Layout size={18} />
-                Hero Galerie LJ
-              </a>
-            </li>
-          </ul>
-        )}
 
         {/* Menu administrateur */}
         {isAdmin && (

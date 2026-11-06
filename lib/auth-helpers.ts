@@ -87,6 +87,3 @@ export async function requireRole(...roles: BackofficeUserRoles[]) {
 
 /** Raccourci : réservé aux administrateurs. */
 export const requireAdmin = () => requireRole(BackofficeUserRoles.admin)
-
-/** Raccourci : réservé aux responsables galerie LJ (isolé des admins, volontairement). */
-export const requireGalleryLjManager = () => requireRole(BackofficeUserRoles.galleryLjManager)

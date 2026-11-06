@@ -31,7 +31,7 @@ const ROOT = process.env.GUARDS_ROOT
     : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const BASELINE_PATH = path.join(ROOT, 'scripts/action-guards-baseline.json')
 
-const GUARD_NAMES = new Set(['requireAdmin', 'requireRole', 'requireGalleryLjManager', 'requireSession'])
+const GUARD_NAMES = new Set(['requireAdmin', 'requireRole', 'requireSession'])
 const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])
 
 const args = new Set(process.argv.slice(2))
@@ -143,7 +143,7 @@ if (newlyUnguarded.length > 0) {
     console.error('\n✗ Fonctions exportées sans garde d\'autorisation (hors baseline) :')
     for (const id of newlyUnguarded) console.error(`  - ${id}`)
     console.error(
-        '\n  Ajoutez `await requireAdmin()` (ou requireRole / requireGalleryLjManager / requireSession)\n' +
+        '\n  Ajoutez `await requireAdmin()` (ou requireRole / requireSession)\n' +
             '  en PREMIÈRE instruction, avant tout try/catch.\n' +
             '  Si la fonction est volontairement publique, ajoutez-la à la baseline après revue :\n' +
             '  node scripts/check-action-guards.mjs --update-baseline',

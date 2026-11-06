@@ -29,8 +29,16 @@ export const ROLE_LABELS: Record<BackofficeUserRole, string> = {
   [BackofficeUserRoles.galleryLjManager]: 'Responsable galerie LJ',
 }
 
+/**
+ * Rôles abandonnés : toujours présents dans l'enum Prisma (schéma géré hors du projet),
+ * mais plus proposés à l'attribution. Le libellé reste dans ROLE_LABELS (exhaustivité du type).
+ */
+const DEPRECATED_ROLES: BackofficeUserRole[] = [BackofficeUserRoles.galleryLjManager]
+
 /** Ordered list of roles for <select> rendering. */
-export const ROLE_OPTIONS = Object.values(BackofficeUserRoles).map((value) => ({
-  value,
-  label: ROLE_LABELS[value],
-}))
+export const ROLE_OPTIONS = Object.values(BackofficeUserRoles)
+  .filter((value) => !DEPRECATED_ROLES.includes(value))
+  .map((value) => ({
+    value,
+    label: ROLE_LABELS[value],
+  }))

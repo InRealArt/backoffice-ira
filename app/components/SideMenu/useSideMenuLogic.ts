@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
 import { useAuthorization } from '@/app/hooks/useAuthorization'
-import { useGalleryLjManager } from '@/app/hooks/useGalleryLjManager'
 import { useIsAdmin } from '@/app/hooks/useIsAdmin'
 
 export function useSideMenuLogic() {
@@ -42,7 +41,6 @@ export function useSideMenuLogic() {
   const canAccessCollection = isAuthorized === true
   // Admin uniquement si l'utilisateur est aussi autorisé (rôle lu depuis la session, sans appel serveur)
   const isAdmin = isAdminRole && isAuthorized === true
-  const { isGalleryLjManager } = useGalleryLjManager()
 
   // État de chargement pour les vérifications d'authentification
   const isLoading = isAuthLoading || isSessionPending
@@ -153,9 +151,7 @@ export function useSideMenuLogic() {
   // Déterminer l'élément actif en fonction du chemin
   useEffect(() => {
     if (pathname) {
-      if (pathname.includes('/galleryLj/dashboard')) {
-        setActiveItem('galleryLjDashboard')
-      } else if (pathname.includes('/dashboard')) {
+      if (pathname.includes('/dashboard')) {
         setActiveItem('dashboard')
       } else if (pathname.includes('/art/myPhysicalArtwork')) {
         setActiveItem('myPhysicalArtwork')
@@ -185,10 +181,6 @@ export function useSideMenuLogic() {
       } else if (pathname.includes('/tools')) {
         setActiveItem('adminTools')
         setShowToolsSubmenu(true)
-      } else if (pathname.includes('/galleryLj/hero')) {
-        setActiveItem('galleryLjHero')
-      } else if (pathname.includes('/galleryLj/artists')) {
-        setActiveItem('galleryLjArtists')
       }
     }
   }, [pathname])
@@ -225,7 +217,6 @@ export function useSideMenuLogic() {
     activeItem,
     canAccessCollection,
     isAdmin,
-    isGalleryLjManager,
     isLoading,
     isNavigating,
     navigatingItem,

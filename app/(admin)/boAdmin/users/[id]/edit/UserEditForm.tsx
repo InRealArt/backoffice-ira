@@ -187,7 +187,7 @@ export default function UserEditForm({ user }: UserEditFormProps) {
             )}
 
             {/* Galerie associée */}
-            {(selectedRole === BackofficeUserRoles.galleryManager || selectedRole === BackofficeUserRoles.galleryLjManager) && (
+            {selectedRole === BackofficeUserRoles.galleryManager && (
               <div className="form-group">
                 <label htmlFor="artistId" className="form-label">
                   Galerie associée
@@ -201,7 +201,7 @@ export default function UserEditForm({ user }: UserEditFormProps) {
                     id="artistId"
                     {...register('artistId', {
                       required:
-                        (selectedRole === BackofficeUserRoles.galleryManager || selectedRole === BackofficeUserRoles.galleryLjManager)
+                        selectedRole === BackofficeUserRoles.galleryManager
                           ? 'Veuillez sélectionner une galerie'
                           : false,
                       valueAsNumber: true,
