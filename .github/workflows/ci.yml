@@ -40,12 +40,9 @@ jobs:
         run: npm test
 
   typecheck:
-    name: Type-check (informatif)
+    name: Type-check
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # TODO : retirer continue-on-error une fois les erreurs TypeScript existantes corrigées
-    # (décalage avec le schéma Prisma), puis passer ignoreBuildErrors à false dans next.config.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
