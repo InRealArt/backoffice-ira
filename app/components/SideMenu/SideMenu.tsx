@@ -9,7 +9,7 @@ import MarketplaceSubMenu from './MarketplaceSubMenu'
 import DataAdministrationSubMenu from './DataAdministrationSubMenu'
 import LandingSubMenu from './LandingSubMenu'
 import ToolsSubMenu from './ToolsSubMenu'
-import { LayoutDashboard, Image, MapPin, PlusCircle, Users, Layout } from 'lucide-react'
+import { LayoutDashboard, Image, MapPin, PlusCircle } from 'lucide-react'
 
 // Composant de fallback pour le chargement
 function SideMenuSkeleton({ isMenuCollapsed }: { isMenuCollapsed: boolean }) {
@@ -40,7 +40,6 @@ export default function SideMenu() {
     activeItem,
     canAccessCollection,
     isAdmin,
-    isGalleryLjManager,
     isLoading,
     showBackofficeAdminSubmenu,
     showBlockchainSubmenu,
@@ -88,7 +87,7 @@ export default function SideMenu() {
           icon={<LayoutDashboard size={20} />}
         />
         
-        {canAccessCollection && !isAdmin && !isGalleryLjManager && (
+        {canAccessCollection && !isAdmin && (
           <>
             <MenuSeparator isCollapsed={isMenuCollapsed} />
             <SideMenuItem
@@ -115,33 +114,6 @@ export default function SideMenu() {
           </>
         )}
 
-        {isGalleryLjManager && (
-          <>
-            <MenuSeparator isCollapsed={isMenuCollapsed} />
-            <SideMenuItem
-              label="Dashboard"
-              isActive={activeItem === 'galleryLjDashboard'}
-              onClick={() => handleNavigation('/fr/galleryLj/dashboard', 'galleryLjDashboard')}
-              isCollapsed={isMenuCollapsed}
-              icon={<LayoutDashboard size={20} />}
-            />
-            <SideMenuItem
-              label="Artistes Gallery LJ"
-              isActive={activeItem === 'galleryLjArtists'}
-              onClick={() => handleNavigation('/fr/galleryLj/artists', 'galleryLjArtists')}
-              isCollapsed={isMenuCollapsed}
-              icon={<Users size={20} />}
-            />
-            <SideMenuItem
-              label="Hero Galerie LJ"
-              isActive={activeItem === 'galleryLjHero'}
-              onClick={() => handleNavigation('/fr/galleryLj/hero', 'galleryLjHero')}
-              isCollapsed={isMenuCollapsed}
-              icon={<Layout size={20} />}
-            />
-          </>
-        )}
-        
         {isAdmin && (
           <>
             <MenuSeparator isCollapsed={isMenuCollapsed} />

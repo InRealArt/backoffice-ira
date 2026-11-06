@@ -6,7 +6,7 @@ vi.mock('@/lib/auth', () => ({ auth: { api: { getSession: getSessionMock } } }))
 vi.mock('next/headers', () => ({ headers: vi.fn(async () => new Headers()) }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 
-const { requireAdmin, requireGalleryLjManager, requireRole, UnauthorizedError } = await import('@/lib/auth-helpers')
+const { requireAdmin, requireRole, UnauthorizedError } = await import('@/lib/auth-helpers')
 const { BackofficeUserRoles } = await import('@/lib/types/roles')
 
 const sessionWith = (role?: string | null) => ({ user: { id: 'u1', email: 'a@b.c', role } })
@@ -37,15 +37,15 @@ describe('requireRole', () => {
     })
 
     it('accepte l\'un des rôles listés', async () => {
-        getSessionMock.mockResolvedValue(sessionWith(BackofficeUserRoles.galleryLjManager))
-        await expect(requireRole(BackofficeUserRoles.admin, BackofficeUserRoles.galleryLjManager)).resolves.toBeTruthy()
+        getSessionMock.mockResolvedValue(sessionWith(BackofficeUserRoles.artist))
+        await expect(requireRole(BackofficeUserRoles.admin, BackofficeUserRoles.artist)).resolves.toBeTruthy()
     })
 
-    it('isole galleryLjManager des admins (et inversement)', async () => {
-        getSessionMock.mockResolvedValue(sessionWith(BackofficeUserRoles.admin))
-        await expect(requireGalleryLjManager()).rejects.toThrow(UnauthorizedError)
-
-        getSessionMock.mockResolvedValue(sessionWith(BackofficeUserRoles.galleryLjManager))
+    it('n\'accorde pas l\'accès admin à un autre rôle, et un admin n\'hérite pas des autres rôles', async () => {
+        getSessionMock.mockResolvedValue(sessionWith(BackofficeUserRoles.galleryManager))
         await expect(requireAdmin()).rejects.toThrow(UnauthorizedError)
+
+        getSessionMock.mockResolvedValue(sessionWith(BackofficeUserRoles.admin))
+        await expect(requireRole(BackofficeUserRoles.artist)).rejects.toThrow(UnauthorizedError)
     })
 })

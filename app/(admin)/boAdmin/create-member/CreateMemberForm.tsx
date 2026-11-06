@@ -213,8 +213,8 @@ export default function CreateMemberForm() {
               </div>
             )}
             
-            {/* Liste déroulante des galeries si le rôle est "galleryManager" ou "galleryLjManager" */}
-            {(selectedRole === BackofficeUserRoles.galleryManager || selectedRole === BackofficeUserRoles.galleryLjManager) && (
+            {/* Liste déroulante des galeries si le rôle est "galleryManager" */}
+            {selectedRole === BackofficeUserRoles.galleryManager && (
               <div className="form-group">
                 <label htmlFor="artistId" className="form-label">
                   Galerie associée
@@ -228,7 +228,7 @@ export default function CreateMemberForm() {
                     <select
                       id="artistId"
                       {...register('artistId', {
-                        required: (selectedRole === BackofficeUserRoles.galleryManager || selectedRole === BackofficeUserRoles.galleryLjManager) ? 'Veuillez sélectionner une galerie' : false,
+                        required: selectedRole === BackofficeUserRoles.galleryManager ? 'Veuillez sélectionner une galerie' : false,
                         valueAsNumber: true
                       })}
                       className={`form-select ${errors.artistId ? 'input-error' : ''}`}
