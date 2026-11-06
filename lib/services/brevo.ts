@@ -1,5 +1,3 @@
-'use server'
-
 interface SendEmailParams {
     to: string
     subject: string
@@ -21,14 +19,7 @@ export async function sendEmailViaBrevo({
         const senderEmail = process.env.BREVO_SENDER_EMAIL || 'teaminrealart@gmail.com'
 
         // Log pour déboguer (sans exposer la clé API complète)
-        console.log('[Brevo] Tentative d\'envoi d\'email:', {
-            to,
-            subject,
-            senderEmail,
-            hasApiKey: !!apiKey,
-            apiKeyPrefix: apiKey ? `${apiKey.substring(0, 8)}...` : 'missing',
-            environment: process.env.NODE_ENV
-        })
+        console.log('[Brevo] Tentative d\'envoi d\'email:', { subject, hasApiKey: !!apiKey })
 
         if (!apiKey) {
             const errorMsg = 'BREVO_API_KEY n\'est pas configurée dans les variables d\'environnement'
@@ -54,12 +45,6 @@ export async function sendEmailViaBrevo({
             textContent: text || subject
         }
 
-        console.log('[Brevo] Payload email (sans contenu HTML):', {
-            ...emailPayload,
-            htmlContent: `[${html.length} caractères]`,
-            textContent: emailPayload.textContent
-        })
-
         // Configuration du fetch avec timeout pour Vercel
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 secondes max
@@ -81,9 +66,7 @@ export async function sendEmailViaBrevo({
             const responseText = await response.text()
             console.log('[Brevo] Réponse HTTP:', {
                 status: response.status,
-                statusText: response.statusText,
-                headers: Object.fromEntries(response.headers.entries()),
-                responseLength: responseText.length
+                statusText: response.statusText
             })
 
             if (!response.ok) {

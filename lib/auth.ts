@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth'
+import { after } from 'next/server'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { prisma } from './prisma'
 import { sendEmailViaBrevo } from './services/brevo'
@@ -8,11 +9,22 @@ export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: 'postgresql'
     }),
+    // URL de base utilisée pour construire les liens (ex. lien de reset password dans l'email).
+    // BETTER_AUTH_URL en priorité ; en production Vercel, fallback sur le domaine officiel.
+    baseURL: process.env.BETTER_AUTH_URL
+        || (process.env.VERCEL_ENV === 'production' ? 'https://backoffice-inrealart.vercel.app' : undefined),
     // Origines de confiance pour CORS et sécurité
     trustedOrigins: [
         'https://backoffice-shopify.vercel.app',
-        'https://backoffice-inrealart.vercel.app'
+        'https://backoffice-inrealart.vercel.app',
+        ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:3000'] : [])
     ],
+    // Garde la fonction serverless en vie jusqu'à la fin de l'envoi de l'email
+    advanced: {
+        backgroundTasks: {
+            handler: (promise) => after(promise)
+        }
+    },
     // on cible explicitement les modèles Prisma mappés au schéma backoffice
     user: {
         modelName: 'BackofficeAuthUser',
@@ -45,80 +57,24 @@ export const auth = betterAuth({
     },
     emailAndPassword: {
         enabled: true,
-        sendResetPassword: async ({ user, url, token }, request) => {
-            const isVercel = !!process.env.VERCEL
-            const isProduction = process.env.NODE_ENV === 'production'
-
-            console.log('[Auth] Demande de réinitialisation de mot de passe:', {
-                userId: user.id,
-                userEmail: user.email,
-                hasToken: !!token,
-                urlLength: url.length,
-                origin: request?.headers?.get('origin') || 'unknown',
-                platform: isVercel ? 'Vercel' : 'Other',
-                environment: isProduction ? 'production' : 'development',
-                hasBrevoKey: !!process.env.BREVO_API_KEY,
-                brevoKeyPrefix: process.env.BREVO_API_KEY ? `${process.env.BREVO_API_KEY.substring(0, 8)}...` : 'missing'
-            })
-
-            // Sur Vercel en production, on doit attendre l'envoi pour éviter que la fonction se termine
-            // Mais on le fait de manière non bloquante avec un timeout
-            const emailPromise = sendEmailViaBrevo({
+        // Durée de validité du lien de réinitialisation : 1 heure
+        resetPasswordTokenExpiresIn: 60 * 60,
+        // Après un reset, on invalide toutes les autres sessions (sécurité)
+        revokeSessionsOnPasswordReset: true,
+        // Appelé en tâche de fond (advanced.backgroundTasks) : la réponse HTTP ne dépend pas
+        // de Brevo, donc pas de différence de temps entre email connu et inconnu.
+        sendResetPassword: async ({ user, url }) => {
+            const result = await sendEmailViaBrevo({
                 to: user.email,
                 subject: 'Réinitialisation de votre mot de passe - InRealArt',
                 html: getResetPasswordEmailTemplate(url, user.name || undefined)
             })
-                .then((result) => {
-                    if (result.success) {
-                        console.log('[Auth] ✅ Email de réinitialisation envoyé avec succès à:', user.email)
-                    } else {
-                        console.error('[Auth] ❌ Échec de l\'envoi de l\'email de réinitialisation:', {
-                            email: user.email,
-                            error: result.message
-                        })
-                    }
-                    return result
-                })
-                .catch((error) => {
-                    console.error('[Auth] ❌ Erreur lors de l\'envoi de l\'email de reset password:', {
-                        email: user.email,
-                        error: error.message,
-                        stack: error.stack,
-                        name: error.name
-                    })
-                    return { success: false, message: error.message }
-                })
-
-            // Sur Vercel, il est CRUCIAL d'attendre l'envoi de l'email
-            // Sinon la fonction serverless se termine avant que le fetch ne soit complété
-            if (isVercel || isProduction) {
-                try {
-                    // Attendre réellement l'envoi avec un timeout de 8 secondes
-                    const result = await Promise.race([
-                        emailPromise,
-                        new Promise<{ success: false; message: string }>((resolve) =>
-                            setTimeout(() => {
-                                console.warn('[Auth] ⚠️ Timeout lors de l\'envoi de l\'email (8s)')
-                                resolve({ success: false, message: 'Timeout après 8 secondes' })
-                            }, 8000)
-                        )
-                    ])
-
-                    if (result.success) {
-                        console.log('[Auth] ✅ Email envoyé et confirmé avant la fin de la fonction')
-                    } else {
-                        console.error('[Auth] ❌ Échec confirmé de l\'envoi:', result.message)
-                    }
-                } catch (error: any) {
-                    console.error('[Auth] ❌ Erreur lors de l\'attente de l\'envoi:', {
-                        error: error.message,
-                        stack: error.stack
-                    })
-                }
-            } else {
-                // En développement local, on peut utiliser void pour éviter les timing attacks
-                void emailPromise
+            if (!result.success) {
+                console.error('[Auth] Échec envoi email reset password:', result.message)
             }
+        },
+        onPasswordReset: async ({ user }) => {
+            console.log('[Auth] Mot de passe réinitialisé pour l\'utilisateur:', user.id)
         }
     }
 })

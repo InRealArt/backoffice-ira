@@ -11,7 +11,7 @@ const handleI18nRouting = createIntlMiddleware(routing)
 
 // Pages publiques qui ne nécessitent pas d'authentification
 // Inclure les chemins avec et sans locale
-const publicPaths = ['/', '/api/auth/callback', '/login', '/sign-in', '/sign-up', '/sign-out', '/fr', '/en', '/fr/sign-in', '/en/sign-in', '/fr/sign-up', '/en/sign-up', '/fr/sign-out', '/en/sign-out', '/fr/forgot-password', '/en/forgot-password', '/fr/reset-password', '/en/reset-password']
+const publicPaths = ['/', '/api/auth/callback', '/login', '/sign-in', '/sign-up', '/sign-out', '/forgot-password', '/reset-password', '/fr', '/en', '/fr/sign-in', '/en/sign-in', '/fr/sign-up', '/en/sign-up', '/fr/sign-out', '/en/sign-out', '/fr/forgot-password', '/en/forgot-password', '/fr/reset-password', '/en/reset-password']
 
 export async function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname

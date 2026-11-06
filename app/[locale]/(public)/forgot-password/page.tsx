@@ -13,7 +13,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
-  const { success: successToast, error: errorToast } = useToast()
+  const { error: errorToast } = useToast()
 
   const onSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -22,47 +22,28 @@ export default function ForgotPasswordPage() {
 
     try {
       const baseURL = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
-      const redirectTo = `${baseURL}/reset-password`
 
-      // Utiliser l'endpoint request-password-reset de Better Auth
-      const response = await fetch('/api/auth/request-password-reset', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email,
-          redirectTo
-        })
+      // Better Auth 1.5 : requestPasswordReset (forgetPassword est déprécié).
+      // La réponse est volontairement identique que l'email existe ou non
+      // (protection contre l'énumération de comptes).
+      const { error } = await authClient.requestPasswordReset({
+        email,
+        redirectTo: `${baseURL}/reset-password`
       })
 
-      const data = await response.json()
-
-      if (!response.ok || data.error) {
-        // Détecter l'erreur spécifique "User not found"
-        const errorMessage = data.error?.message || data.message || ''
-        const isUserNotFound = 
-          errorMessage.includes('User not found') || 
-          errorMessage.includes('Reset Password: User not found') ||
-          errorMessage.toLowerCase().includes('user not found')
-        
-        if (isUserNotFound) {
-          errorToast('Cette adresse email n\'est pas reconnue dans notre système')
-        } else {
-          errorToast(errorMessage || 'Erreur lors de l\'envoi de l\'email')
-        }
+      if (error) {
+        errorToast(error.message || 'Erreur lors de l\'envoi de l\'email')
         setIsLoading(false)
         return
       }
 
       setIsSuccess(true)
-      successToast('Un email de réinitialisation a été envoyé à votre adresse')
       setIsLoading(false)
     } catch (err: any) {
       errorToast(err.message || 'Une erreur est survenue')
       setIsLoading(false)
     }
-  }, [email, successToast, errorToast])
+  }, [email, errorToast])
 
   if (isSuccess) {
     return (
@@ -104,8 +85,8 @@ export default function ForgotPasswordPage() {
               </h2>
               
               <p className='text-base-content/70 mb-6'>
-                Nous avons envoyé un email de réinitialisation à <strong>{email}</strong>.
-                Veuillez vérifier votre boîte de réception et suivre les instructions.
+                Si un compte existe pour <strong>{email}</strong>, un email de réinitialisation vient d'être envoyé.
+                Le lien est valable 1 heure.
               </p>
               
               <p className='text-sm text-base-content/60 mb-6'>
