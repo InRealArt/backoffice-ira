@@ -4,6 +4,7 @@ import { requireGalleryLjManager } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { toRelativePath } from '@/lib/r2/url'
+import { generateSlug } from '@/lib/utils'
 import { DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { r2Client, R2_BUCKET_NAME } from '@/lib/r2/client'
 
@@ -30,6 +31,23 @@ function isMissingColumnError(error: unknown): boolean {
         'code' in error &&
         (error as { code?: string }).code === 'P2022'
     )
+}
+
+/**
+ * Slug d'un événement : le slug saisi s'il existe, sinon généré depuis le nom.
+ * Un slug généré est rendu unique en ajoutant -2, -3… en cas de doublon
+ * (GalleryLjEvent.slug est obligatoire et unique).
+ */
+async function resolveEventSlug(name: string, explicitSlug?: string | null): Promise<string> {
+    const explicit = explicitSlug?.trim()
+    if (explicit) return explicit
+
+    const base = generateSlug(name) || 'evenement'
+    let slug = base
+    for (let suffix = 2; await prisma.galleryLjEvent.findUnique({ where: { slug }, select: { id: true } }); suffix++) {
+        slug = `${base}-${suffix}`
+    }
+    return slug
 }
 
 /**
@@ -130,6 +148,7 @@ export async function createGalleryLjExhibition(data: {
 }) {
     await requireGalleryLjManager()
     try {
+        const slug = await resolveEventSlug(data.name, data.slug)
         const exhibition = await prisma.galleryLjEvent.create({
             data: {
                 name: data.name,
@@ -139,7 +158,7 @@ export async function createGalleryLjExhibition(data: {
                 location: data.location ?? null,
                 imageUrl: data.imageUrl ? (toRelativePath(data.imageUrl) ?? data.imageUrl) : null,
                 eventType: data.eventType ?? 'exhibition',
-                slug: data.slug ?? null,
+                slug,
                 artists: data.eventType === 'exhibition' && data.artistIds?.length
                     ? {
                         createMany: {
@@ -155,26 +174,6 @@ export async function createGalleryLjExhibition(data: {
         revalidatePath(REVALIDATE_PATH)
         return { success: true, exhibition }
     } catch (error) {
-        if (isMissingColumnError(error)) {
-            try {
-                const exhibition = await prisma.galleryLjEvent.create({
-                    data: {
-                        name: data.name,
-                        description: data.description ?? null,
-                        startDate: data.startDate ?? null,
-                        endDate: data.endDate ?? null,
-                        location: data.location ?? null,
-                        imageUrl: data.imageUrl ? (toRelativePath(data.imageUrl) ?? data.imageUrl) : null,
-                        visible: data.visible ?? true
-                    }
-                })
-                revalidatePath(REVALIDATE_PATH)
-                return { success: true, exhibition }
-            } catch (fallbackError) {
-                console.error('Erreur fallback lors de la création de l\'exposition galerie LJ:', fallbackError)
-                return { success: false, message: (fallbackError as Error).message }
-            }
-        }
         console.error('Erreur lors de la création de l\'exposition galerie LJ:', error)
         return { success: false, message: (error as Error).message }
     }
@@ -215,7 +214,7 @@ export async function updateGalleryLjExhibition(
         if (data.location !== undefined) prismaData.location = data.location
         if (data.eventType !== undefined) prismaData.eventType = data.eventType
         if (data.visible !== undefined) prismaData.visible = data.visible
-        if (data.slug !== undefined) prismaData.slug = data.slug
+        if (data.slug?.trim()) prismaData.slug = data.slug.trim()
         if (normalizedImageUrl !== undefined) prismaData.imageUrl = normalizedImageUrl
         if (data.eventType !== undefined || data.artistIds !== undefined) {
             prismaData.artists = {

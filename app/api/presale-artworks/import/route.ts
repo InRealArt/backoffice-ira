@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
         // Vérifier que l'artiste existe
         const artist = await prisma.artist.findUnique({
-            where: { idUser: artistId }
+            where: { id: artistId }
         })
 
         if (!artist) {

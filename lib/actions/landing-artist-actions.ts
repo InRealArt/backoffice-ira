@@ -106,7 +106,7 @@ export async function createLandingArtist(data: LandingArtistData) {
                     artistsPage: data.artistsPage,
                     isCurrentlyExposed: data.isCurrentlyExposed,
                     isFeatured: data.isFeatured || false,
-                    imageUrl: toRelativePath(data.imageUrl) ?? null,
+                    imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl,
                     secondaryImageUrl: toRelativePath(data.secondaryImageUrl) ?? null,
                     artworkImages: data.artworkImages || '[]',
                     slug: data.slug!,
@@ -127,10 +127,10 @@ export async function createLandingArtist(data: LandingArtistData) {
 
             // Gérer les catégories dans la même transaction
             if (data.categoryIds && data.categoryIds.length > 0) {
-                await tx.landingArtistCategory.deleteMany({
+                await tx.artistCategoryArtist.deleteMany({
                     where: { landingArtistId: landingArtist.id }
                 })
-                await tx.landingArtistCategory.createMany({
+                await tx.artistCategoryArtist.createMany({
                     data: data.categoryIds.map(categoryId => ({
                         landingArtistId: landingArtist.id,
                         categoryId
@@ -140,13 +140,13 @@ export async function createLandingArtist(data: LandingArtistData) {
 
             // Gérer les spécialités via l'Artist dans la même transaction
             if (data.artistId && data.specialtyIds && data.specialtyIds.length > 0) {
-                await tx.artistSpecialty.deleteMany({
+                await tx.artistSpecialtyArtist.deleteMany({
                     where: { artistId: data.artistId }
                 })
-                await tx.artistSpecialty.createMany({
-                    data: data.specialtyIds.map(specialtyId => ({
+                await tx.artistSpecialtyArtist.createMany({
+                    data: data.specialtyIds.map(artistSpecialtyId => ({
                         artistId: data.artistId!,
-                        specialtyId
+                        artistSpecialtyId
                     }))
                 })
             }
@@ -205,7 +205,7 @@ export async function updateLandingArtist(id: number, data: LandingArtistData) {
                     artistsPage: data.artistsPage,
                     isCurrentlyExposed: data.isCurrentlyExposed,
                     isFeatured: data.isFeatured,
-                    imageUrl: toRelativePath(data.imageUrl) ?? null,
+                    imageUrl: toRelativePath(data.imageUrl) ?? data.imageUrl,
                     secondaryImageUrl: toRelativePath(data.secondaryImageUrl) ?? null,
                     artworkImages: data.artworkImages || '[]',
                     slug: data.slug,
