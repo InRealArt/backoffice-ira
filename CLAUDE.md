@@ -5,9 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Critical Rules
 
 ### Git & Version Control
-- **NEVER** commit or push changes to git
-- The user will handle all git operations (commit, push, branch management)
-- Only make local file modifications; do not use git commands for version control
+- Committing and pushing are allowed on any branch **except `main`**
+- **NEVER** commit or push directly to `main` (no commit while `main` is checked out, no `git push` targeting `main`, no force-push, no merge into `main`)
+- Commit messages must **never** mention Claude, Claude Code or AI, and must not include any `Co-Authored-By` or "Generated with" line or any other text indicating that Claude Code wrote the change
+- Branch management for `main` (merging PRs, etc.) stays with the user
 
 ### Database & Prisma Schema
 - **NEVER** run `prisma migrate` or `prisma db push` commands
