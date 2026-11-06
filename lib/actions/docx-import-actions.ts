@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { parseDocxBuffer, DocxParseResult } from '@/lib/utils/docx-parser'
 
 interface Category {
@@ -23,6 +24,7 @@ export async function parseDocxFile(
     fileBase64: string,
     categories: Category[]
 ): Promise<ParseDocxResult> {
+    await requireAdmin()
     try {
         // Décoder base64 → Buffer
         const binaryString = atob(fileBase64)

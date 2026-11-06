@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  # .npmrc lit GITHUB_TOKEN pour le registre privé @InRealArt (npm.pkg.github.com).
+  # Si le GITHUB_TOKEN du workflow n'a pas accès au package, créer un secret NPM_GITHUB_TOKEN
+  # (PAT avec le scope read:packages).
+  GITHUB_TOKEN: ${{ secrets.NPM_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+  # Requis par `prisma generate` (postinstall) ; aucune connexion n'est ouverte.
+  DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+
+jobs:
+  security:
+    name: Gardes d'autorisation + tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Vérifier les gardes d'autorisation (Server Actions + routes API)
+        run: npm run check:guards
+      - name: Tests unitaires (Vitest)
+        run: npm test
+
+  typecheck:
+    name: Type-check (informatif)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # TODO : retirer continue-on-error une fois les erreurs TypeScript existantes corrigées
+    # (décalage avec le schéma Prisma), puis passer ignoreBuildErrors à false dans next.config.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit

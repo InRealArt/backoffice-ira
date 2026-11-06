@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { ArtworkTheme } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
@@ -33,6 +34,7 @@ export async function updateArtworkTheme(
   id: number,
   data: Omit<ArtworkTheme, 'id'>
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
   try {
     await prisma.artworkTheme.update({
       where: { id },
@@ -64,6 +66,7 @@ export async function updateArtworkTheme(
 export async function createArtworkTheme(
   data: Omit<ArtworkTheme, 'id'>
 ): Promise<{ success: boolean; message?: string; id?: number }> {
+    await requireAdmin()
   try {
     const newArtworkTheme = await prisma.artworkTheme.create({
       data
@@ -96,6 +99,7 @@ export async function createArtworkTheme(
 export async function deleteArtworkTheme(
   id: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
   try {
     await prisma.artworkTheme.delete({
       where: { id }

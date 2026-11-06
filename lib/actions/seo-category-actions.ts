@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { SeoCategory } from '@/src/generated/prisma/client'
@@ -8,6 +9,7 @@ import { SeoCategory } from '@/src/generated/prisma/client'
  * Récupère toutes les catégories d'articles SEO
  */
 export async function getAllSeoCategories() {
+    await requireAdmin()
     try {
         const categories = await prisma.seoCategory.findMany({
             include: {
@@ -39,6 +41,7 @@ export async function getAllSeoCategories() {
  * Récupère une catégorie SEO par son ID
  */
 export async function getSeoCategoryById(id: number) {
+    await requireAdmin()
     try {
         const category = await prisma.seoCategory.findUnique({
             where: { id }
@@ -63,6 +66,7 @@ export async function createSeoCategory(data: {
     textCTA?: string
     linkCTA?: string
 }) {
+    await requireAdmin()
     try {
         const category = await prisma.seoCategory.create({
             data: {
@@ -102,6 +106,7 @@ export async function updateSeoCategory(id: number, data: {
     textCTA?: string
     linkCTA?: string
 }) {
+    await requireAdmin()
     try {
         const updateData: any = {}
 
@@ -138,6 +143,7 @@ export async function updateSeoCategory(id: number, data: {
  * Supprime une catégorie SEO
  */
 export async function deleteSeoCategory(id: number) {
+    await requireAdmin()
     try {
         await prisma.seoCategory.delete({
             where: { id }

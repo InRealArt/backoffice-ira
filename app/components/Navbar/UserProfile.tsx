@@ -1,9 +1,8 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { getUserRole } from "@/lib/actions/auth-actions";
+import { useSessionRole } from "@/app/hooks/useSessionRole";
 import { Badge } from "@/app/components/PageLayout";
 import { User, LogOut, UserCircle, Key } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -14,7 +13,7 @@ export default function UserProfile() {
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
   const isLoggedIn = !!session;
-  const [userRole, setUserRole] = useState<string | null | undefined>(null);
+  const { role: userRole } = useSessionRole();
 
   const handleSignOut = async () => {
     await authClient.signOut();
@@ -23,25 +22,6 @@ export default function UserProfile() {
   const handleChangePassword = () => {
     router.push("/change-password");
   };
-
-  // Récupérer le rôle de l'utilisateur depuis la table BackofficeAuthUser
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      if (user?.email && !isPending) {
-        try {
-          const role = await getUserRole(user.email);
-          setUserRole(role);
-        } catch (error) {
-          console.error(t("errors.fetchingRole"), error);
-          setUserRole(null);
-        }
-      } else if (!isLoggedIn) {
-        setUserRole(null);
-      }
-    };
-
-    fetchUserRole();
-  }, [user?.email, isLoggedIn, isPending]);
 
   // Fonction pour déterminer le variant du badge selon le rôle
   const getRoleBadgeVariant = (

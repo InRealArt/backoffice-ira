@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { ArtworkMedium } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
@@ -33,6 +34,7 @@ export async function updateArtworkMedium(
     id: number,
     data: Omit<ArtworkMedium, 'id'>
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.artworkMedium.update({
             where: { id },
@@ -64,6 +66,7 @@ export async function updateArtworkMedium(
 export async function createArtworkMedium(
     data: Omit<ArtworkMedium, 'id'>
 ): Promise<{ success: boolean; message?: string; id?: number }> {
+    await requireAdmin()
     try {
         const newArtworkMedium = await prisma.artworkMedium.create({
             data
@@ -96,6 +99,7 @@ export async function createArtworkMedium(
 export async function deleteArtworkMedium(
     id: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.artworkMedium.delete({
             where: { id }

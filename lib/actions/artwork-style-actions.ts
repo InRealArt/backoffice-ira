@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ArtworkStyle } from '@/src/generated/prisma/client'
@@ -32,6 +33,7 @@ export async function getAllArtworkStyles(): Promise<ArtworkStyle[]> {
 
 // Créer un nouveau style d'œuvre
 export async function createArtworkStyle(data: ArtworkStyleFormData): Promise<ActionResult & { id?: number }> {
+    await requireAdmin()
     try {
         const artworkStyle = await prisma.artworkStyle.create({
             data: {
@@ -67,6 +69,7 @@ export async function createArtworkStyle(data: ArtworkStyleFormData): Promise<Ac
 
 // Mettre à jour un style d'œuvre existant
 export async function updateArtworkStyle(id: number, data: ArtworkStyleFormData): Promise<ActionResult> {
+    await requireAdmin()
     try {
         await prisma.artworkStyle.update({
             where: { id },
@@ -109,6 +112,7 @@ export async function updateArtworkStyle(id: number, data: ArtworkStyleFormData)
 
 // Supprimer un style d'œuvre
 export async function deleteArtworkStyle(id: number): Promise<ActionResult> {
+    await requireAdmin()
     try {
         await prisma.artworkStyle.delete({
             where: { id },

@@ -294,7 +294,8 @@ export async function updateWhiteListedUser(
 
     // Utiliser l'email existant pour trouver le BackofficeAuthUser
     // car l'email peut changer dans la mise à jour
-    const emailToSearch = existingUser.email
+    // Better Auth stocke les emails en minuscules
+    const emailToSearch = existingUser.email.toLowerCase()
 
     // Utiliser une transaction pour mettre à jour les deux tables de manière atomique
     await prisma.$transaction(async (tx) => {
@@ -315,9 +316,9 @@ export async function updateWhiteListedUser(
       })
 
       // Si l'email a changé et qu'on ne trouve pas avec l'ancien email, chercher avec le nouveau
-      if (!backofficeAuthUser && data.email !== emailToSearch) {
+      if (!backofficeAuthUser && data.email.toLowerCase() !== emailToSearch) {
         backofficeAuthUser = await tx.backofficeAuthUser.findUnique({
-          where: { email: data.email }
+          where: { email: data.email.toLowerCase() }
         })
       }
 

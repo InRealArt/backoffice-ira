@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { SocialNetwork } from '@/src/generated/prisma/client'
@@ -12,6 +13,7 @@ import { toRelativePath } from '@/lib/r2/url'
 export async function fetchImageForUgcUpload(
     imageUrl: string
 ): Promise<{ success: true; base64: string; mimeType: string } | { success: false; message: string }> {
+    await requireAdmin()
     try {
         const res = await fetch(imageUrl, { cache: 'no-store' })
         if (!res.ok) {
@@ -38,6 +40,7 @@ const REVALIDATE_PATHS = [
 export type UgcArtistProfileWithRelations = NonNullable<Awaited<ReturnType<typeof getUgcArtistProfileById>>>
 
 export async function getAllUgcArtistProfiles() {
+    await requireAdmin()
     return prisma.landingUgcArtistProfile.findMany({
         include: {
             landingArtist: {
@@ -53,6 +56,7 @@ export async function getAllUgcArtistProfiles() {
 }
 
 export async function getUgcArtistProfileById(id: number) {
+    await requireAdmin()
     return prisma.landingUgcArtistProfile.findUnique({
         where: { id },
         include: {
@@ -69,6 +73,7 @@ export async function getUgcArtistProfileById(id: number) {
 }
 
 export async function getLandingArtistsForUgcSelection() {
+    await requireAdmin()
     return prisma.landingArtist.findMany({
         where: { artistsPage: true },
         orderBy: { artist: { name: 'asc' } },
@@ -97,6 +102,7 @@ export async function createUgcArtistProfile(data: {
         socialNetworks?: SocialNetwork[]
     } | null
 }): Promise<{ success: boolean; id?: number; message?: string }> {
+    await requireAdmin()
     try {
         const { socialMetrics, ...profileData } = data
         const payload = {
@@ -145,6 +151,7 @@ export async function updateUgcArtistProfile(
         } | null
     }
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         const { mediaUrls, tags, socialMetrics, profileImageUrl, ...rest } = data
         await prisma.landingUgcArtistProfile.update({
@@ -188,6 +195,7 @@ export async function updateUgcArtistProfileVisible(
     id: number,
     visible: boolean
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.landingUgcArtistProfile.update({ where: { id }, data: { visible } })
         REVALIDATE_PATHS.forEach((p) => revalidatePath(p))
@@ -201,6 +209,7 @@ export async function updateUgcArtistProfileVisible(
 export async function deleteUgcArtistProfile(
     id: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.landingUgcArtistProfile.delete({ where: { id } })
         REVALIDATE_PATHS.forEach((p) => revalidatePath(p))

@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { StickyFooter } from '@/src/generated/prisma/client'
@@ -8,6 +9,7 @@ import { StickyFooter } from '@/src/generated/prisma/client'
  * Récupère tous les sticky footers
  */
 export async function getAllStickyFooters() {
+    await requireAdmin()
     try {
         const stickyFooters = await prisma.stickyFooter.findMany({
             orderBy: {
@@ -32,6 +34,7 @@ export async function getAllStickyFooters() {
  * Récupère un sticky footer par son ID
  */
 export async function getStickyFooterById(id: number) {
+    await requireAdmin()
     try {
         const stickyFooter = await prisma.stickyFooter.findUnique({
             where: { id }
@@ -57,6 +60,7 @@ export async function createStickyFooter(data: {
     textButton?: string
     buttonUrl?: string
 }) {
+    await requireAdmin()
     try {
         const stickyFooter = await prisma.stickyFooter.create({
             data: {
@@ -98,6 +102,7 @@ export async function updateStickyFooter(id: number, data: {
     textButton?: string
     buttonUrl?: string
 }) {
+    await requireAdmin()
     try {
         const updateData: any = {}
 
@@ -135,6 +140,7 @@ export async function updateStickyFooter(id: number, data: {
  * Supprime un sticky footer
  */
 export async function deleteStickyFooter(id: number) {
+    await requireAdmin()
     try {
         await prisma.stickyFooter.delete({
             where: { id }

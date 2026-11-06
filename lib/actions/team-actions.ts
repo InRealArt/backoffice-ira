@@ -1,11 +1,13 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { Team } from '@/src/generated/prisma/client'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { toRelativePath } from '@/lib/r2/url'
 
 export async function getTeamMemberById(id: number): Promise<Team | null> {
+    await requireAdmin()
     try {
         return await prisma.team.findUnique({
             where: { id }
@@ -17,6 +19,7 @@ export async function getTeamMemberById(id: number): Promise<Team | null> {
 }
 
 export async function getAllTeamMembers(): Promise<Team[]> {
+    await requireAdmin()
     try {
         const teamMembers = await prisma.team.findMany({
             orderBy: {
@@ -34,6 +37,7 @@ export async function updateTeamMember(
     id: number,
     data: Omit<Team, 'id'>
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.team.update({
             where: { id },
@@ -69,6 +73,7 @@ export async function updateTeamMember(
 export async function createTeamMember(
     data: Omit<Team, 'id'>
 ): Promise<{ success: boolean; message?: string; id?: number }> {
+    await requireAdmin()
     try {
         const newTeamMember = await prisma.team.create({
             data: {
@@ -106,6 +111,7 @@ export async function updateTeamMemberVisible(
     id: number,
     visible: boolean
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.team.update({
             where: { id },
@@ -128,6 +134,7 @@ export async function updateTeamMemberVisible(
 export async function deleteTeamMember(
     id: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.team.delete({
             where: { id }

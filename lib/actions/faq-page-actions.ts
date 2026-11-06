@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { DetailedFaqPage, DetailedFaqPageItem, LandingPage } from '@/src/generated/prisma/client'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
@@ -49,6 +50,7 @@ const URL_TO_LANDING_PAGE_KEY: Record<string, LandingPage> = {
  * @returns Liste des DetailedFaqPage avec leurs faqItems
  */
 export async function getDetailedFaqPages() {
+    await requireAdmin()
     // Empêcher la mise en cache de cette requête
     unstable_noStore()
 
@@ -79,6 +81,7 @@ export async function getDetailedFaqPages() {
  * @returns DetailedFaqPage avec ses faqItems ou null si non trouvé
  */
 export async function getDetailedFaqPageById(id: number) {
+    await requireAdmin()
     // Empêcher la mise en cache de cette requête
     unstable_noStore()
 
@@ -104,6 +107,7 @@ export async function getDetailedFaqPageById(id: number) {
  * @returns Liste des valeurs de LandingPage disponibles
  */
 export async function getAvailableLandingPages() {
+    await requireAdmin()
     try {
         // Récupérer les valeurs réelles de l'enum depuis PostgreSQL (les @map, ex: "/artists")
         const enumRows = await prisma.$queryRaw<{ enumlabel: string }[]>`
@@ -139,6 +143,7 @@ export async function getAvailableLandingPages() {
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
 export async function createDetailedFaqPage(name: string) {
+    await requireAdmin()
     try {
         // Le formulaire envoie l'URL (@map). On résout la clé enum Prisma correspondante.
         const enumKey: LandingPage = URL_TO_LANDING_PAGE_KEY[name] ?? (name as LandingPage)
@@ -185,6 +190,7 @@ export async function createDetailedFaqPage(name: string) {
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
 export async function deleteDetailedFaqPage(id: number) {
+    await requireAdmin()
     try {
         // Supprimer d'abord tous les DetailedFaqPageItems associés
         await prisma.detailedFaqPageItem.deleteMany({
@@ -221,6 +227,7 @@ export async function deleteDetailedFaqPage(id: number) {
  * @returns Ordre maximum + 1 ou 1 si aucun item n'existe
  */
 export async function getMaxOrderForPage(pageId: number): Promise<number> {
+    await requireAdmin()
     try {
         const maxOrderItem = await prisma.detailedFaqPageItem.findFirst({
             where: {
@@ -252,6 +259,7 @@ export async function createDetailedFaqPageItem(data: {
     answer: string,
     order?: number
 }) {
+    await requireAdmin()
     try {
         // Si l'ordre n'est pas fourni, obtenir le prochain ordre disponible
         const order = data.order || await getMaxOrderForPage(data.pageId)
@@ -293,6 +301,7 @@ export async function updateDetailedFaqPageItem(id: number, data: {
     answer?: string,
     order?: number
 }) {
+    await requireAdmin()
     try {
         // Récupérer l'item pour connaître son pageId
         const item = await prisma.detailedFaqPageItem.findUnique({
@@ -336,6 +345,7 @@ export async function updateDetailedFaqPageItem(id: number, data: {
  * @returns Objet contenant le statut de l'opération et un message éventuel
  */
 export async function deleteDetailedFaqPageItem(id: number) {
+    await requireAdmin()
     try {
         // Récupérer l'item pour connaître son pageId
         const item = await prisma.detailedFaqPageItem.findUnique({

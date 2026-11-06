@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { BackofficeUserRoles } from '@/lib/types/roles'
 
 /**
  * Récupère la session de l'utilisateur authentifié
@@ -47,3 +48,45 @@ export async function getAuthenticatedUserEmail(): Promise<string> {
     return session.user.email
 }
 
+/**
+ * Erreur levée quand l'appelant d'une Server Action n'a pas les droits requis.
+ */
+export class UnauthorizedError extends Error {
+    constructor(message = 'Non autorisé') {
+        super(message)
+        this.name = 'UnauthorizedError'
+    }
+}
+
+/**
+ * Garde d'autorisation pour les Server Actions : exige une session valide ET l'un des rôles donnés.
+ *
+ * Une Server Action est un endpoint HTTP appelable directement (le proxy ignore les POST) :
+ * la protection des pages/menus ne suffit pas, chaque action sensible doit se protéger elle-même.
+ * Le rôle est lu dans la session (cookie cache de 5 min) : aucune requête DB supplémentaire.
+ *
+ * À appeler en première instruction de l'action, AVANT tout try/catch, pour que
+ * l'erreur ne soit pas avalée par un fallback silencieux.
+ *
+ * @throws UnauthorizedError si non authentifié ou rôle insuffisant
+ */
+export async function requireRole(...roles: BackofficeUserRoles[]) {
+    const session = await getSession()
+
+    if (!session?.user) {
+        throw new UnauthorizedError('Non authentifié')
+    }
+
+    const role = session.user.role as BackofficeUserRoles | null | undefined
+    if (!role || !roles.includes(role)) {
+        throw new UnauthorizedError()
+    }
+
+    return session
+}
+
+/** Raccourci : réservé aux administrateurs. */
+export const requireAdmin = () => requireRole(BackofficeUserRoles.admin)
+
+/** Raccourci : réservé aux responsables galerie LJ (isolé des admins, volontairement). */
+export const requireGalleryLjManager = () => requireRole(BackofficeUserRoles.galleryLjManager)

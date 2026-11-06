@@ -1,4 +1,5 @@
 'use server'
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma, withPrismaRetry } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { unstable_noStore as noStore } from 'next/cache'
@@ -10,6 +11,7 @@ import { toRelativePath } from '@/lib/r2/url'
  * sérialisables vers le Client Component qui consomme ces données.
  */
 export async function getAllArtitudeArtists() {
+    await requireAdmin()
     const artitudeArtists = await prisma.artitudeArtist.findMany({
         include: {
             artist: true,
@@ -36,6 +38,7 @@ export async function getAllArtitudeArtists() {
  * sérialisables vers le Client Component qui consomme ces données.
  */
 export async function getArtitudeArtistById(id: number) {
+    await requireAdmin()
     noStore()
 
     const artitudeArtist = await prisma.artitudeArtist.findUnique({
@@ -60,6 +63,7 @@ export async function getArtitudeArtistById(id: number) {
  * Récupère tous les artistes qui n'ont pas encore de fiche ArtitudeArtist
  */
 export async function getArtistsNotInArtitude() {
+    await requireAdmin()
     noStore()
 
     return prisma.artist.findMany({
@@ -145,6 +149,7 @@ export async function geocodeAddressAction(
     postalCode: string,
     city: string
 ): Promise<GeocodedCoordinates | null> {
+    await requireAdmin()
     if (!addressLine1 || !postalCode || !city) return null
     return geocodeAddress(addressLine1, postalCode, city)
 }
@@ -157,6 +162,7 @@ export async function createArtitudeArtistAction(data: ArtitudeArtistData): Prom
     message?: string
     artitudeArtist?: { id: number }
 }> {
+    await requireAdmin()
     try {
         if (!data.artistId || !data.addressLine1 || !data.postalCode || !data.city || !data.googleBusinessProfileUrl) {
             return {
@@ -257,6 +263,7 @@ export async function updateArtitudeArtistAction(
     success: boolean
     message?: string
 }> {
+    await requireAdmin()
     try {
         if (!data.addressLine1 || !data.postalCode || !data.city || !data.googleBusinessProfileUrl) {
             return {

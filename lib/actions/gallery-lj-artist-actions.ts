@@ -1,5 +1,6 @@
 'use server'
 
+import { requireGalleryLjManager } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { toRelativePath } from '@/lib/r2/url'
@@ -34,6 +35,7 @@ function sanitizeHtml(html: string | null | undefined): string | null {
  * Récupère tous les artistes de la galerie LJ
  */
 export async function getAllGalleryLjArtists() {
+    await requireGalleryLjManager()
     try {
         const artists = await prisma.galleryLjArtist.findMany({
             include: {
@@ -54,6 +56,7 @@ export async function getAllGalleryLjArtists() {
  * Récupère un artiste galerie LJ par son ID
  */
 export async function getGalleryLjArtistById(id: number) {
+    await requireGalleryLjManager()
     try {
         const artist = await prisma.galleryLjArtist.findUnique({
             where: { id },
@@ -84,6 +87,7 @@ export async function createGalleryLjArtist(data: {
     imageUrl?: string | null
     permanent?: boolean
 }) {
+    await requireGalleryLjManager()
     try {
         // Slug rule: if pseudo is present, use it; otherwise use firstName-lastName
         const slugSource = data.pseudo && data.pseudo.trim().length > 0
@@ -135,6 +139,7 @@ export async function updateGalleryLjArtist(
         permanent?: boolean
     }
 ) {
+    await requireGalleryLjManager()
     try {
         const updateData: typeof data & { imageUrl?: string | null; slug?: string } = { ...data }
 
@@ -218,6 +223,7 @@ async function deleteR2ObjectSafe(key: string, context: string): Promise<void> {
 export async function updateGalleryLjArtistsOrder(
     updates: Array<{ id: number; order: number }>
 ) {
+    await requireGalleryLjManager()
     try {
         await prisma.$transaction(
             updates.map((update) =>
@@ -248,6 +254,7 @@ export async function updateGalleryLjArtistsOrder(
  * Les suppressions R2 sont non-bloquantes : une erreur R2 ne bloque pas la suppression en base.
  */
 export async function deleteGalleryLjArtist(id: number) {
+    await requireGalleryLjManager()
     try {
         const artist = await prisma.galleryLjArtist.findUnique({
             where: { id },

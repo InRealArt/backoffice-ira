@@ -4,7 +4,6 @@ import { prisma } from '@/lib/prisma'
 import { AgencyEvent } from '@/src/generated/prisma/client'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { z } from 'zod'
-import { getSession } from '@/lib/auth-helpers'
 import { checkIsAdmin } from '@/lib/actions/auth-actions'
 
 const agencyEventSchema = z.object({
@@ -29,9 +28,7 @@ const UNAUTHORIZED = { success: false, message: 'Non autorisé' } as const
  * Les server actions sont appelables directement : la protection du menu/layout ne suffit pas.
  */
 async function isCurrentUserAdmin(): Promise<boolean> {
-    const session = await getSession()
-    const email = session?.user?.email
-    return !!email && (await checkIsAdmin(email))
+    return checkIsAdmin()
 }
 
 export async function getAllAgencyEvents(): Promise<AgencyEvent[]> {

@@ -9,9 +9,8 @@ import LoadingSpinner from '@/app/components/LoadingSpinner/LoadingSpinner'
 import { routing } from '@/i18n/routing'
 import frMessages from '@/messages/fr.json'
 import enMessages from '@/messages/en.json'
-import { getUserRole } from '@/lib/actions/auth-actions'
+import { useSessionRole } from '@/app/hooks/useSessionRole'
 import { BackofficeUserRoles } from '@/lib/types/roles'
-import { useState } from 'react'
 
 const messages: Record<string, any> = {
   fr: frMessages,
@@ -22,7 +21,7 @@ export default function GalleryLjLayout({ children }: { children: React.ReactNod
   const router = useRouter()
   const params = useParams()
   const { data: session, isPending: isSessionPending } = authClient.useSession()
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
+  const { role, isLoading: isRoleLoading } = useSessionRole()
   const isLoggedIn = !!session
 
   const locale = (params.locale as string) || routing.defaultLocale
@@ -34,22 +33,16 @@ export default function GalleryLjLayout({ children }: { children: React.ReactNod
       return
     }
 
-    if (!isSessionPending && isLoggedIn && session?.user?.email) {
-      const checkRole = async () => {
-        const role = await getUserRole(session.user.email ?? '')
-        // Strict isolation: ONLY galleryLjManager is allowed here.
-        // Admin must NOT inherit access to galleryLj routes.
-        const authorized = role === BackofficeUserRoles.galleryLjManager
-        setIsAuthorized(authorized)
-        if (!authorized) {
-          router.push(`/${locale}/dashboard`)
-        }
-      }
-      checkRole()
+    // Strict isolation: ONLY galleryLjManager is allowed here.
+    // Admin must NOT inherit access to galleryLj routes.
+    if (!isSessionPending && !isRoleLoading && isLoggedIn && role !== BackofficeUserRoles.galleryLjManager) {
+      router.push(`/${locale}/dashboard`)
     }
-  }, [isLoggedIn, isSessionPending, router, session?.user?.email, locale])
+  }, [isLoggedIn, isSessionPending, isRoleLoading, role, router, locale])
 
-  if (isSessionPending || isAuthorized === null) {
+  const isAuthorized = role === BackofficeUserRoles.galleryLjManager
+
+  if (isSessionPending || isRoleLoading) {
     return <LoadingSpinner message="Vérification des droits..." />
   }
 

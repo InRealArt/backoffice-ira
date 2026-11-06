@@ -1,5 +1,6 @@
 'use server'
 
+import { requireAdmin } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 
@@ -9,6 +10,7 @@ const REVALIDATE_PATHS = ['/landing/ugc/top-artists']
  * Récupère tous les top artistes UGC, ordonnés par leur champ `order`
  */
 export async function getTopArtists() {
+    await requireAdmin()
     return prisma.landingUgcTopArtists.findMany({
         orderBy: { order: 'asc' },
         include: {
@@ -21,6 +23,7 @@ export async function getTopArtists() {
  * Récupère tous les profils UGC artiste avec leur statut top artiste
  */
 export async function getAllUgcArtistProfilesWithTopStatus() {
+    await requireAdmin()
     const [profiles, topArtists] = await Promise.all([
         prisma.landingUgcArtistProfile.findMany({
             orderBy: [{ surname: 'asc' }, { name: 'asc' }],
@@ -42,6 +45,7 @@ export async function getAllUgcArtistProfilesWithTopStatus() {
 export async function addTopArtist(
     ugcArtistProfileId: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         // Vérifier que ce profil n'est pas déjà dans les top artistes
         const existing = await prisma.landingUgcTopArtists.findFirst({
@@ -77,6 +81,7 @@ export async function addTopArtist(
 export async function removeTopArtist(
     ugcArtistProfileId: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         await prisma.landingUgcTopArtists.deleteMany({
             where: { landingUgcArtistProfileId: ugcArtistProfileId },
@@ -102,6 +107,7 @@ const MAX_INT4 = 2_147_483_647
 export async function updateTopArtistsOrder(
     updates: Array<{ id: number; order: number }>
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
     try {
         const validUpdates = updates.filter(
             (u) => Number.isInteger(u.id) && u.id >= 1 && u.id <= MAX_INT4
