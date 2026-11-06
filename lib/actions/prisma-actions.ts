@@ -2052,6 +2052,13 @@ export async function getAllItemsForAdmin() {
 
     return items.map(item => ({
       ...item,
+      // Les Decimal Prisma ne sont pas sérialisables vers les Client Components
+      physicalItem: item.physicalItem ? {
+        ...item.physicalItem,
+        height: item.physicalItem.height?.toNumber() ?? null,
+        width: item.physicalItem.width?.toNumber() ?? null,
+        weight: item.physicalItem.weight?.toNumber() ?? null
+      } : null,
       // Mapper l'artiste pour correspondre au type ItemWithRelations
       artist: item.artist ? {
         id: item.artist.id,
