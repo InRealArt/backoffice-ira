@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   // Output standalone pour Vercel
   output: 'standalone',
 
+  // Next 16.4 écrit sinon un fichier AGENTS.md dans le dépôt à chaque `next dev`
+  agentRules: false,
+
   // Les erreurs TypeScript pré-existantes (non liées à Prisma) ne bloquent pas le build
   typescript: {
     ignoreBuildErrors: true,
