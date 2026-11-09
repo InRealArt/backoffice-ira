@@ -2,6 +2,9 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
+import { requireAdmin, requireBackofficeUser, UnauthorizedError } from '@/lib/auth-helpers'
+import { requirePresaleArtworkAccess } from '@/lib/auth-ownership'
+import { BackofficeUserRoles } from '@/lib/types/roles'
 
 // Fonction de traduction avec Google Translate
 async function translateWithGoogle(
@@ -62,6 +65,13 @@ export async function handleEntityTranslations(
     entityId: number,
     fields: FieldsToTranslate
 ): Promise<{ success: boolean; message?: string }> {
+    // Admin : toutes les entités. Artiste : uniquement les traductions de ses propres œuvres en prévente
+    const session = await requireBackofficeUser()
+    if (session.user.role !== BackofficeUserRoles.admin) {
+        if (entityType !== 'PresaleArtwork') throw new UnauthorizedError()
+        await requirePresaleArtworkAccess(entityId)
+    }
+
     try {
         // Récupérer les langues FR et EN
         const frLanguage = await prisma.language.findFirst({
@@ -174,6 +184,8 @@ export async function handleEntityTranslations(
 
 // Créer une nouvelle traduction
 export async function createTranslation(data: TranslationData): Promise<ActionResult> {
+    await requireAdmin()
+
     try {
         const { entityType, entityId, field, value, languageId } = data
 
@@ -231,6 +243,8 @@ export async function createTranslation(data: TranslationData): Promise<ActionRe
 
 // Mettre à jour une traduction existante
 export async function updateTranslation(id: number, data: TranslationData): Promise<ActionResult> {
+    await requireAdmin()
+
     try {
         // Vérifier si la traduction existe
         const existingTranslation = await prisma.translation.findUnique({
@@ -299,6 +313,8 @@ export async function updateTranslation(id: number, data: TranslationData): Prom
 
 // Supprimer une traduction
 export async function deleteTranslation(id: number): Promise<ActionResult> {
+    await requireAdmin()
+
     try {
         // Vérifier si la traduction existe
         const existingTranslation = await prisma.translation.findUnique({
@@ -338,6 +354,8 @@ export async function getTranslation(
     field: string,
     languageCode: string
 ): Promise<ActionResult> {
+    await requireBackofficeUser()
+
     try {
         // Récupérer la langue par son code
         const language = await prisma.language.findFirst({

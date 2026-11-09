@@ -1,11 +1,13 @@
 'use server'
 
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdmin, requireBackofficeUser } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { ArtworkMedium } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getArtworkMediumById(id: number): Promise<ArtworkMedium | null> {
+    await requireAdmin()
+
     try {
         return await prisma.artworkMedium.findUnique({
             where: { id }
@@ -17,6 +19,8 @@ export async function getArtworkMediumById(id: number): Promise<ArtworkMedium | 
 }
 
 export async function getAllArtworkMediums(): Promise<ArtworkMedium[]> {
+    await requireBackofficeUser()
+
     try {
         const artworkMediums = await prisma.artworkMedium.findMany({
             orderBy: {

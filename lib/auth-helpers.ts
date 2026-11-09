@@ -87,3 +87,60 @@ export async function requireRole(...roles: BackofficeUserRoles[]) {
 
 /** Raccourci : réservé aux administrateurs. */
 export const requireAdmin = () => requireRole(BackofficeUserRoles.admin)
+
+/** Raccourci : tout utilisateur du backoffice (admin, artiste ou responsable de galerie). */
+export const requireBackofficeUser = () =>
+    requireRole(
+        BackofficeUserRoles.admin,
+        BackofficeUserRoles.artist,
+        BackofficeUserRoles.galleryManager
+    )
+
+/**
+ * Contrôle de propriété : l'appelant doit être admin, ou l'artiste `artistId`.
+ *
+ * Un simple contrôle de rôle ne suffit pas pour les actions artistes : sans lui, un artiste
+ * pourrait modifier les données d'un autre en changeant l'identifiant envoyé à l'action (IDOR).
+ * L'`artistId` de la session est posé côté serveur depuis la liste blanche (lib/auth.ts).
+ *
+ * @throws UnauthorizedError si non authentifié, rôle insuffisant ou artiste différent
+ */
+export async function requireArtistAccess(artistId: number | null | undefined) {
+    const session = await requireBackofficeUser()
+
+    if (session.user.role === BackofficeUserRoles.admin) {
+        return session
+    }
+
+    const sessionArtistId = (session.user as { artistId?: number | null }).artistId
+    if (
+        session.user.role !== BackofficeUserRoles.artist ||
+        artistId == null ||
+        sessionArtistId == null ||
+        sessionArtistId !== artistId
+    ) {
+        throw new UnauthorizedError()
+    }
+
+    return session
+}
+
+/**
+ * Contrôle de propriété : l'appelant doit être admin, ou l'utilisateur `userId`
+ * (identifiant BackofficeAuthUser).
+ *
+ * @throws UnauthorizedError si non authentifié ou utilisateur différent
+ */
+export async function requireAuthUserAccess(userId: string | null | undefined) {
+    const session = await requireBackofficeUser()
+
+    if (session.user.role === BackofficeUserRoles.admin) {
+        return session
+    }
+
+    if (!userId || session.user.id !== userId) {
+        throw new UnauthorizedError()
+    }
+
+    return session
+}

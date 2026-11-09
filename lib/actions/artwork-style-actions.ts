@@ -1,6 +1,6 @@
 'use server'
 
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdmin, requireBackofficeUser } from '@/lib/auth-helpers'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ArtworkStyle } from '@/src/generated/prisma/client'
@@ -18,6 +18,8 @@ export interface ActionResult {
 
 // Fonction pour récupérer tous les styles d'œuvre (pour le composant server)
 export async function getAllArtworkStyles(): Promise<ArtworkStyle[]> {
+    await requireBackofficeUser()
+
     try {
         const artworkStyles = await prisma.artworkStyle.findMany({
             orderBy: {
@@ -145,6 +147,8 @@ export async function deleteArtworkStyle(id: number): Promise<ActionResult> {
 
 // Récupérer tous les styles d'œuvre (pour les composants client)
 export async function getArtworkStyles(): Promise<ArtworkStyle[]> {
+    await requireAdmin()
+
     try {
         const artworkStyles = await prisma.artworkStyle.findMany({
             orderBy: {
@@ -160,6 +164,8 @@ export async function getArtworkStyles(): Promise<ArtworkStyle[]> {
 
 // Récupérer un style d'œuvre par ID
 export async function getArtworkStyleById(id: number): Promise<ArtworkStyle | null> {
+    await requireAdmin()
+
     try {
         const artworkStyle = await prisma.artworkStyle.findUnique({
             where: { id },

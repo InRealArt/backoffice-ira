@@ -1,6 +1,6 @@
 'use server'
 
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdmin, requireBackofficeUser } from '@/lib/auth-helpers'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ArtworkTechnique } from '@/src/generated/prisma/client'
@@ -18,6 +18,8 @@ export interface ActionResult {
 
 // Fonction pour récupérer toutes les techniques d'œuvre (pour le composant server)
 export async function getAllArtworkTechniques(): Promise<ArtworkTechnique[]> {
+    await requireBackofficeUser()
+
     try {
         const artworkTechniques = await prisma.artworkTechnique.findMany({
             orderBy: {
@@ -145,6 +147,8 @@ export async function deleteArtworkTechnique(id: number): Promise<ActionResult> 
 
 // Récupérer toutes les techniques d'œuvre (pour les composants client)
 export async function getArtworkTechniques(): Promise<ArtworkTechnique[]> {
+    await requireAdmin()
+
     try {
         const artworkTechniques = await prisma.artworkTechnique.findMany({
             orderBy: {
@@ -160,6 +164,8 @@ export async function getArtworkTechniques(): Promise<ArtworkTechnique[]> {
 
 // Récupérer une technique d'œuvre par ID
 export async function getArtworkTechniqueById(id: number): Promise<ArtworkTechnique | null> {
+    await requireAdmin()
+
     try {
         const artworkTechnique = await prisma.artworkTechnique.findUnique({
             where: { id },

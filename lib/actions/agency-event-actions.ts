@@ -5,6 +5,7 @@ import { AgencyEvent } from '@/src/generated/prisma/client'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { z } from 'zod'
 import { checkIsAdmin } from '@/lib/actions/auth-actions'
+import { requireAdmin } from '@/lib/auth-helpers'
 
 const agencyEventSchema = z.object({
     name: z.string().trim().min(1).max(255),
@@ -32,6 +33,8 @@ async function isCurrentUserAdmin(): Promise<boolean> {
 }
 
 export async function getAllAgencyEvents(): Promise<AgencyEvent[]> {
+    await requireAdmin()
+
     try {
         if (!(await isCurrentUserAdmin())) return []
 
@@ -47,6 +50,8 @@ export async function getAllAgencyEvents(): Promise<AgencyEvent[]> {
 }
 
 export async function getAgencyEventById(id: number): Promise<AgencyEvent | null> {
+    await requireAdmin()
+
     try {
         if (!(await isCurrentUserAdmin())) return null
 
@@ -62,6 +67,8 @@ export async function getAgencyEventById(id: number): Promise<AgencyEvent | null
 export async function createAgencyEvent(
     input: AgencyEventInput
 ): Promise<{ success: boolean; message?: string; id?: number }> {
+    await requireAdmin()
+
     try {
         if (!(await isCurrentUserAdmin())) return UNAUTHORIZED
 
@@ -98,6 +105,8 @@ export async function updateAgencyEvent(
     id: number,
     input: Partial<AgencyEventInput>
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
+
     try {
         if (!(await isCurrentUserAdmin())) return UNAUTHORIZED
 
@@ -129,6 +138,8 @@ export async function updateAgencyEvent(
 export async function deleteAgencyEvent(
     id: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
+
     try {
         if (!(await isCurrentUserAdmin())) return UNAUTHORIZED
 

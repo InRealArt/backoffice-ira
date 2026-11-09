@@ -2,11 +2,14 @@
 
 import { prisma } from '@/lib/prisma'
 import type { ArtistSpecialty } from '@/src/generated/prisma/client'
+import { requireAdmin, requireBackofficeUser } from '@/lib/auth-helpers'
 
 /**
  * Récupère une spécialité d'artiste par son ID
  */
 export async function getArtistSpecialtyById(id: number): Promise<ArtistSpecialty | null> {
+    await requireAdmin()
+
     try {
         return await prisma.artistSpecialty.findUnique({
             where: { id }
@@ -21,6 +24,8 @@ export async function getArtistSpecialtyById(id: number): Promise<ArtistSpecialt
  * Récupère toutes les spécialités d'artiste
  */
 export async function getAllArtistSpecialties(): Promise<ArtistSpecialty[]> {
+    await requireBackofficeUser()
+
     try {
         return await prisma.artistSpecialty.findMany({
             orderBy: {

@@ -1,7 +1,7 @@
 'use server'
 
 import { auth } from '@/lib/auth'
-import { getSession } from '@/lib/auth-helpers'
+import { getSession, requireSession } from '@/lib/auth-helpers'
 import { headers } from 'next/headers'
 
 export interface CheckAuthorizedUserResult {
@@ -44,6 +44,8 @@ export async function checkIsAdmin(): Promise<boolean> {
 export async function setUserPassword(
     newPassword: string
 ): Promise<{ success: boolean; message: string }> {
+    await requireSession()
+
     try {
         if (!newPassword || newPassword.length < 8) {
             return {

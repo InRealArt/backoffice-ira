@@ -2,7 +2,8 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { getAuthenticatedUserEmail } from '@/lib/auth-helpers'
+import { getAuthenticatedUserEmail, requireBackofficeUser, requireArtistAccess } from '@/lib/auth-helpers'
+import { requirePhysicalCollectionAccess } from '@/lib/auth-ownership'
 import { getBackofficeUserByEmail } from './prisma-actions'
 import { getLandingArtistByArtistId } from './artist-actions'
 
@@ -26,6 +27,8 @@ export interface PhysicalCollection {
 export async function createPhysicalCollection(
     data: CreatePhysicalCollectionData
 ): Promise<{ success: boolean; message?: string; collection?: PhysicalCollection }> {
+    await requireBackofficeUser()
+
     try {
         // Récupérer l'email de l'utilisateur authentifié
         const userEmail = await getAuthenticatedUserEmail()
@@ -96,6 +99,8 @@ export async function createPhysicalCollection(
 export async function getPhysicalCollectionsByArtistId(
     artistId: number
 ): Promise<PhysicalCollection[]> {
+    await requireArtistAccess(artistId)
+
     try {
         // Récupérer le LandingArtist associé à l'artiste
         const landingArtist = await getLandingArtistByArtistId(artistId)
@@ -129,6 +134,8 @@ export async function getPhysicalCollectionsByArtistId(
 export async function getPhysicalCollectionById(
     id: number
 ): Promise<PhysicalCollection | null> {
+    await requirePhysicalCollectionAccess(id)
+
     try {
         const collection = await prisma.physicalCollection.findUnique({
             where: { id }
@@ -170,6 +177,8 @@ export interface PhysicalCollectionWithItems extends PhysicalCollection {
  * Récupère toutes les collections physiques avec leurs items pour l'artiste authentifié
  */
 export async function getPhysicalCollectionsWithItems(): Promise<PhysicalCollectionWithItems[]> {
+    await requireBackofficeUser()
+
     try {
         // Récupérer l'email de l'utilisateur authentifié
         const userEmail = await getAuthenticatedUserEmail()
@@ -285,6 +294,8 @@ export async function updatePhysicalCollection(
     id: number,
     data: UpdatePhysicalCollectionData
 ): Promise<{ success: boolean; message?: string; collection?: PhysicalCollection }> {
+    await requirePhysicalCollectionAccess(id)
+
     try {
         // Récupérer l'email de l'utilisateur authentifié
         const userEmail = await getAuthenticatedUserEmail()

@@ -5,8 +5,12 @@ import { Artist, Prisma } from '@/src/generated/prisma/client'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { generateSlug, toCamelCase, getCountries } from '@/lib/utils'
 import { toRelativePath } from '@/lib/r2/url'
+import { requireAdmin, requireArtistAccess, requireRole, UnauthorizedError, requireBackofficeUser } from '@/lib/auth-helpers'
+import { BackofficeUserRoles } from '@/lib/types/roles'
 
 export async function getArtistById(id: number): Promise<Artist | null> {
+    await requireBackofficeUser()
+
     try {
         return await prisma.artist.findUnique({
             where: { id }
@@ -52,6 +56,8 @@ export async function updateArtist(
     id: number,
     data: Prisma.ArtistUpdateInput
 ): Promise<{ success: boolean; message?: string }> {
+    await requireAdmin()
+
     try {
         // S'assurer que le pays existe dans la base de données avant de sauvegarder
         // Extraire countryCode de manière sûre depuis Prisma.ArtistUpdateInput
@@ -149,6 +155,8 @@ export interface CreateArtistData {
  * Crée un nouvel artiste
  */
 export async function createArtist(data: CreateArtistData): Promise<{ success: boolean; message?: string; artist?: Artist }> {
+    await requireAdmin()
+
     try {
         console.log('data', data)
 
@@ -240,6 +248,12 @@ export async function createArtist(data: CreateArtistData): Promise<{ success: b
 export async function createUserArtistProfile(
     formData: FormData
 ): Promise<{ success: boolean; message?: string; artist?: Artist }> {
+    // Un artiste ne peut créer un profil que pour son propre compte (userEmail vient du client)
+    const session = await requireRole(BackofficeUserRoles.admin, BackofficeUserRoles.artist)
+    if (session.user.role !== BackofficeUserRoles.admin && session.user.email !== formData.get('userEmail')) {
+        throw new UnauthorizedError()
+    }
+
     try {
         // Extraire les données du FormData
         const imageUrl = formData.get('imageUrl') as string // ← Recevoir l'URL au lieu du fichier
@@ -450,6 +464,8 @@ export async function createUserArtistProfile(
  * Récupère le LandingArtist associé à un artistId
  */
 export async function getLandingArtistByArtistId(artistId: number) {
+    await requireBackofficeUser()
+
     try {
         return await prisma.landingArtist.findFirst({
             where: { artistId },
@@ -467,6 +483,8 @@ export async function getLandingArtistByArtistId(artistId: number) {
  * Récupère les récompenses d'un artiste
  */
 export async function getArtistAwards(artistId: number) {
+    await requireBackofficeUser()
+
     try {
         return await prisma.artistAward.findMany({
             where: { artistId },
@@ -491,6 +509,8 @@ export async function getArtistAwards(artistId: number) {
  * Récupère les spécialités d'un artiste
  */
 export async function getArtistSpecialties(artistId: number) {
+    await requireBackofficeUser()
+
     try {
         const artistSpecialties = await prisma.artistSpecialtyArtist.findMany({
             where: { artistId },
@@ -511,6 +531,9 @@ export async function getArtistSpecialties(artistId: number) {
 export async function updateUserArtistProfile(
     formData: FormData
 ): Promise<{ success: boolean; message?: string; artist?: Artist }> {
+    // artistId vient du FormData (client) : il doit correspondre à l'artiste connecté (sauf admin)
+    await requireArtistAccess(parseInt(String(formData.get('artistId') ?? ''), 10) || null)
+
     try {
         // Extraire les données du FormData
         const artistId = formData.get('artistId') ? parseInt(formData.get('artistId') as string) : null
@@ -754,6 +777,8 @@ export async function updateUserArtistProfile(
  * Récupère tous les artistes et galeries présents dans LandingArtist
  */
 export async function getAllArtistsAndGalleries() {
+    await requireBackofficeUser()
+
     try {
         const artists = await prisma.artist.findMany({
             where: {
@@ -800,6 +825,8 @@ export async function getAllArtistsAndGalleries() {
  * Duplique un artiste en ajoutant "TEST" au nom de famille
  */
 export async function duplicateArtist(artistId: number): Promise<{ success: boolean; message?: string; artist?: Artist }> {
+    await requireAdmin()
+
     try {
         // Récupérer l'artiste original avec son LandingArtist et ses relations
         const originalArtist = await prisma.artist.findUnique({
@@ -993,6 +1020,8 @@ export async function duplicateArtist(artistId: number): Promise<{ success: bool
  * @param nameFilter - Filtre optionnel pour rechercher par nom ou prénom
  */
 export async function getArtistsWithPresaleArtworkCount(nameFilter?: string) {
+    await requireAdmin()
+
     try {
         // Construire la condition de filtrage
         const where: any = {

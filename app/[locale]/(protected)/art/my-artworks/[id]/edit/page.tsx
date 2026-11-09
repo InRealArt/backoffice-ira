@@ -58,6 +58,7 @@ export default async function EditPresaleArtworkPage({
           presaleArtworkId={presaleArtworkId}
           defaultArtistId={backofficeUser.artistId}
           redirectUrl="/art/my-artworks"
+          showFeatured={false}
         />
       </div>
     </div>

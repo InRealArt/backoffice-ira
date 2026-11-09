@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { requireAdmin } from '@/lib/auth-helpers'
 
 type WalletInfo = {
     address: string
@@ -13,6 +14,8 @@ export async function updateLinkedWallets(
     primaryWalletAddress: string,
     linkedWallet: WalletInfo
 ) {
+    await requireAdmin()
+
     try {
         // Vérifier si le wallet principal existe
         const user = await prisma.backofficeUser.findUnique({

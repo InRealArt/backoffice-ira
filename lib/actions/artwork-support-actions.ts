@@ -1,11 +1,13 @@
 'use server'
 
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdmin, requireBackofficeUser } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { ArtworkSupport } from '@/src/generated/prisma/client'
 import { revalidatePath } from 'next/cache'
 
 export async function getArtworkSupportById(id: number): Promise<ArtworkSupport | null> {
+    await requireAdmin()
+
     try {
         return await prisma.artworkSupport.findUnique({
             where: { id }
@@ -17,6 +19,8 @@ export async function getArtworkSupportById(id: number): Promise<ArtworkSupport 
 }
 
 export async function getAllArtworkSupports(): Promise<ArtworkSupport[]> {
+    await requireBackofficeUser()
+
     try {
         const artworkSupports = await prisma.artworkSupport.findMany({
             orderBy: {

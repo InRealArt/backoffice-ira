@@ -2,6 +2,7 @@
 
 import { UmamiApiClient } from '@umami/api-client'
 import { stringToSlug } from '@/lib/utils'
+import { requireBackofficeUser } from '@/lib/auth-helpers'
 
 /**
  * Configuration du client Umami
@@ -40,6 +41,8 @@ export async function getUmamiStatsForArtwork(
     startAt?: number,
     endAt?: number
 ) {
+    await requireBackofficeUser()
+
     try {
         const client = getUmamiClient()
         const websiteId = process.env.UMAMI_WEBSITE_ID
@@ -118,6 +121,8 @@ export async function getUmamiStatsForArtwork(
  * @param slug - Le slug de l'œuvre
  */
 export async function getUmamiMonthlyStatsForArtwork(slug: string) {
+    await requireBackofficeUser()
+
     try {
         const client = getUmamiClient()
         const websiteId = process.env.UMAMI_WEBSITE_ID
@@ -233,6 +238,8 @@ function groupPageviewsByMonth(
  * Note: Cette fonction doit être async car elle est exportée comme Server Action
  */
 export async function generateArtworkSlug(name: string): Promise<string> {
+    await requireBackofficeUser()
+
     return stringToSlug(name)
 }
 

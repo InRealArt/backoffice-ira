@@ -8,6 +8,9 @@ import { revalidatePath } from "next/cache";
 import { Prisma } from '@/src/generated/prisma/client'
 import { getLandingArtistByArtistId } from "./artist-actions";
 import { getAuthenticatedUserEmail } from "@/lib/auth-helpers";
+import { requireAdmin, requireAuthUserAccess, requireBackofficeUser, UnauthorizedError } from '@/lib/auth-helpers'
+import { requireItemAccess, requirePhysicalItemAccess } from '@/lib/auth-ownership'
+import { BackofficeUserRoles } from '@/lib/types/roles'
 
 type CreateMemberResult = {
   success: boolean
@@ -102,6 +105,8 @@ function serializeData(data: any): any {
 }
 
 export async function createMember(data: MemberFormData): Promise<CreateMemberResult> {
+    await requireAdmin()
+
   try {
     // Valider les données avec Zod
     const validatedData = memberSchema.parse(data)
@@ -169,6 +174,8 @@ export async function createMember(data: MemberFormData): Promise<CreateMemberRe
 export async function checkUserExists(
   params: CheckUserExistsParams
 ): Promise<CheckUserExistsResult> {
+  await requireAdmin()
+
   try {
     // Vérifier si l'email existe déjà dans WhiteListedUser
     const existingUser = await prisma.whiteListedUser.findUnique({
@@ -204,6 +211,8 @@ export type UsersOrderBy = {
 export async function getWhiteListedUsers(
   orderBy: UsersOrderBy = { field: 'id', direction: 'desc' }
 ): Promise<(WhiteListedUser & { artist: Artist | null })[]> {
+  await requireAdmin()
+
   try {
     const prismaOrderBy =
       orderBy.field === 'artist'
@@ -226,6 +235,8 @@ export async function getWhiteListedUsers(
 
 // Fonction de compatibilité - utilise WhiteListedUser maintenant
 export async function getBackofficeUsers(): Promise<any[]> {
+  await requireAdmin()
+
   return getWhiteListedUsers()
 }
 
@@ -236,6 +247,8 @@ type UpdateBackofficeUserResult = {
 
 // Récupérer un utilisateur whitelisté par son ID
 export async function getWhiteListedUserById(id: string) {
+  await requireAdmin()
+
   try {
     const user = await prisma.whiteListedUser.findUnique({
       where: { id: parseInt(id) },
@@ -251,6 +264,8 @@ export async function getWhiteListedUserById(id: string) {
 
 // Fonction de compatibilité
 export async function getBackofficeUserById(id: string) {
+  await requireAdmin()
+
   return getWhiteListedUserById(id)
 }
 
@@ -258,6 +273,8 @@ export async function getBackofficeUserById(id: string) {
 export async function updateWhiteListedUser(
   data: any
 ): Promise<UpdateBackofficeUserResult> {
+  await requireAdmin()
+
   try {
     // Vérifier si l'utilisateur existe
     const existingUser = await prisma.whiteListedUser.findUnique({
@@ -370,6 +387,8 @@ export async function updateWhiteListedUser(
 export async function updateBackofficeUser(
   data: any
 ): Promise<UpdateBackofficeUserResult> {
+  await requireAdmin()
+
   return updateWhiteListedUser(data)
 }
 
@@ -377,6 +396,8 @@ export async function updateBackofficeUser(
 export async function deleteWhiteListedUser(
   id: number
 ): Promise<{ success: boolean; message: string }> {
+  await requireAdmin()
+
   try {
     const whiteListedUser = await prisma.whiteListedUser.findUnique({
       where: { id },
@@ -447,6 +468,12 @@ export async function getBackofficeUserByEmail(email: string) {
 
 // Fonction pour récupérer les adresses d'un utilisateur backoffice
 export async function getBackofficeUserAddresses(email: string) {
+  // Un non-admin ne peut lire que ses propres adresses
+  const session = await requireBackofficeUser()
+  if (session.user.role !== BackofficeUserRoles.admin && session.user.email !== email) {
+    throw new UnauthorizedError()
+  }
+
   try {
     // Récupérer le BackofficeAuthUser avec ses adresses via la relation
     const backofficeUser = await prisma.backofficeAuthUser.findUnique({
@@ -561,6 +588,14 @@ export async function createItemRecord(
     price?: number,
   } | null
 ) {
+  // L'item doit appartenir à l'appelant ; un non-admin ne peut l'attribuer qu'à son propre artiste
+  const session = await requireAuthUserAccess(userId)
+  if (session.user.role !== BackofficeUserRoles.admin && itemData?.artistId != null) {
+    if (itemData.artistId !== (session.user as { artistId?: number | null }).artistId) {
+      throw new UnauthorizedError()
+    }
+  }
+
   try {
     // S'assurer que les tags sont bien un tableau de chaînes
     const processedTags = Array.isArray(tags)
@@ -683,6 +718,13 @@ export async function updateItemStatus(
   itemId: number,
   newStatus: string
 ): Promise<StatusUpdateResult> {
+  // Propriétaire de l'item ; un non-admin ne peut que soumettre son œuvre à validation ("pending"),
+  // les autres statuts (listed, etc.) sont réservés à l'admin
+  const session = await requireItemAccess(itemId)
+  if (session.user.role !== BackofficeUserRoles.admin && newStatus !== 'pending') {
+    throw new UnauthorizedError()
+  }
+
   try {
     // Vérifier si l'item existe
     const existingItem = await prisma.item.findUnique({
@@ -735,6 +777,8 @@ export async function updateItemStatus(
  * Vérifie le statut d'un item en base de données
  */
 export async function checkItemStatus({ idUser }: CheckStatusParams): Promise<StatusCheckResult> {
+  await requireAdmin()
+
   try {
     const item = await prisma.item.findFirst({
       where: {
@@ -772,6 +816,8 @@ export async function checkItemStatus({ idUser }: CheckStatusParams): Promise<St
  * Sauvegarde un certificat d'authenticité pour un item spécifique
  */
 export async function saveAuthCertificate(itemId: number, fileData: Uint8Array) {
+  await requireAdmin()
+
   try {
     // D'abord récupérer l'item pour obtenir le PhysicalItem associé
     const physicalItem = await prisma.physicalItem.findUnique({
@@ -805,6 +851,8 @@ export async function saveAuthCertificate(itemId: number, fileData: Uint8Array) 
  * Sauvegarde un certificat d'œuvre physique pour un item spécifique
  */
 export async function savePhysicalCertificate(itemId: number, fileData: Uint8Array) {
+    await requireItemAccess(itemId)
+
   try {
     // D'abord récupérer l'item pour obtenir le PhysicalItem associé
     const physicalItem = await prisma.physicalItem.findUnique({
@@ -838,6 +886,8 @@ export async function savePhysicalCertificate(itemId: number, fileData: Uint8Arr
  * Sauvegarde un certificat NFT pour un item spécifique
  */
 export async function saveNftCertificate(itemId: number, fileData: Uint8Array) {
+    await requireItemAccess(itemId)
+
   try {
     // D'abord récupérer l'item pour obtenir le PhysicalItem associé
     const physicalItem = await prisma.physicalItem.findUnique({
@@ -872,6 +922,8 @@ export async function saveNftCertificate(itemId: number, fileData: Uint8Array) {
  * Récupère le certificat d'œuvre physique pour un item spécifique
  */
 export async function getPhysicalCertificateByItemId(itemId: number) {
+    await requireItemAccess(itemId)
+
   try {
     // D'abord récupérer le PhysicalItem associé à l'item
     // Sélection explicite pour éviter les champs qui n'existent pas en base
@@ -915,6 +967,8 @@ export async function getPhysicalCertificateByItemId(itemId: number) {
 
 // Fonction pour récupérer l'utilisateur associé à un item
 export async function getUserByItemId(itemId: number) {
+  await requireAdmin()
+
   try {
     const item = await prisma.item.findUnique({
       where: { id: itemId },
@@ -934,6 +988,8 @@ export async function getUserByItemId(itemId: number) {
 
 // Fonction pour récupérer un item par son ID
 export async function getItemById(itemId: number) {
+    await requireItemAccess(itemId)
+
   try {
     const item = await prisma.item.findUnique({
       where: { id: itemId },
@@ -1054,6 +1110,8 @@ export async function getItemById(itemId: number) {
  * Récupère toutes les collections
  */
 export async function getAllCollections() {
+  await requireAdmin()
+
   try {
     // Récupérer toutes les collections sans filtrer par statut
     const collections = await prisma.nftCollection.findMany({
@@ -1102,6 +1160,8 @@ export async function createNftResource(params: {
   description: string,
   collectionId: number
 }) {
+  await requireAdmin()
+
   try {
     const { itemId, imageUri, certificateUri, tokenUri, type, status, name, description, collectionId } = params
 
@@ -1166,6 +1226,8 @@ export async function createNftResource(params: {
 }
 
 export async function getPendingItemsCount() {
+    await requireBackofficeUser()
+
   try {
     // Optimisation : compter directement sur PhysicalItem au lieu de passer par Item
     // Cela évite une jointure inutile et utilise l'index sur status
@@ -1186,6 +1248,8 @@ export async function getPendingItemsCount() {
  * @returns Un objet contenant le nombre d'artistes visibles
  */
 export async function getVisibleLandingArtistsCount() {
+    await requireBackofficeUser()
+
   try {
     const count = await prisma.landingArtist.count()
     return { count }
@@ -1244,6 +1308,8 @@ export async function checkIsAdmin(email?: string | null, walletAddress?: string
  * Récupère toutes les collections associées à des smart contracts actifs
  */
 export async function getActiveCollections() {
+  await requireAdmin()
+
   try {
     const collections = await prisma.nftCollection.findMany({
       where: {
@@ -1290,6 +1356,8 @@ export async function getActiveCollections() {
 }
 
 export async function getUserMintedItemsCount(userId: string) {
+    await requireAuthUserAccess(userId)
+
   try {
     const count = await prisma.item.count({
       where: {
@@ -1304,6 +1372,8 @@ export async function getUserMintedItemsCount(userId: string) {
 }
 
 export async function getUserListedItemsCount(userId: string) {
+    await requireAuthUserAccess(userId)
+
   try {
     // Optimisation : utiliser une jointure directe avec PhysicalItem
     // au lieu d'un OR avec relation nested
@@ -1323,6 +1393,8 @@ export async function getUserListedItemsCount(userId: string) {
 }
 
 export async function getUserPhysicalItemsCount(userId: string) {
+    await requireAuthUserAccess(userId)
+
   try {
     // Compter les physicalItems disponibles d'un utilisateur
     const availableCount = await prisma.physicalItem.count({
@@ -1356,6 +1428,8 @@ export async function getUserPhysicalItemsCount(userId: string) {
 }
 
 export async function getUserPhysicalCollectionsCount() {
+    await requireBackofficeUser()
+
   try {
     // Récupérer l'email de l'utilisateur authentifié (même logique que getPhysicalCollectionsWithItems)
     const userEmail = await getAuthenticatedUserEmail()
@@ -1394,7 +1468,7 @@ export async function getUserPhysicalCollectionsCount() {
  * @returns true si le nom existe déjà, false sinon
  */
 export async function checkNftResourceNameExists(name: string): Promise<boolean> {
-  'use server'
+  await requireAdmin()
 
   try {
     const existingResource = await prisma.nftResource.findFirst({
@@ -1417,6 +1491,8 @@ export async function checkNftResourceNameExists(name: string): Promise<boolean>
 // Mise à jour du txHash de la resource NFT
 //--------------------------------------------------------------------------
 export async function updateNftResourceTxHash(id: number, txHash: string) {
+  await requireAdmin()
+
   try {
     await prisma.nftResource.update({
       where: { id },
@@ -1441,6 +1517,8 @@ export async function updateNftResourceTxHash(id: number, txHash: string) {
  * @returns Un objet indiquant le succès ou l'échec de l'opération
  */
 export async function updateNftResourceStatusToMinted(id: number): Promise<UpdateNftResourceStatusResult> {
+  await requireAdmin()
+
   try {
     // Vérifier si la ressource existe
     const existingResource = await prisma.nftResource.findUnique({
@@ -1484,6 +1562,8 @@ export async function updateNftResourceStatusToMinted(id: number): Promise<Updat
  * @returns Un objet indiquant le succès ou l'échec de l'opération
  */
 export async function updateNftResourceStatusToRoyaltySet(id: number): Promise<UpdateNftResourceStatusResult> {
+  await requireAdmin()
+
   try {
     // Vérifier si la ressource existe
     const existingResource = await prisma.nftResource.findUnique({
@@ -1527,6 +1607,8 @@ export async function updateNftResourceStatusToRoyaltySet(id: number): Promise<U
 * @returns Un objet indiquant le succès ou l'échec de l'opération
 */
 export async function updateNftResourceStatusToListed(id: number): Promise<UpdateNftResourceStatusResult> {
+  await requireAdmin()
+
   try {
     // Vérifier si la ressource existe
     const existingResource = await prisma.nftResource.findUnique({
@@ -1565,6 +1647,8 @@ export async function updateNftResourceStatusToListed(id: number): Promise<Updat
 }
 
 export async function isCertificateUriUnique(uri: string) {
+  await requireAdmin()
+
   try {
     const existingResource = await prisma.nftResource.findFirst({
       where: { certificateUri: uri }
@@ -1593,6 +1677,8 @@ export async function createRoyaltyBeneficiary(
   totalPercentage: number,
   txHash: string
 ): Promise<CreateRoyaltyBeneficiaryResult> {
+  await requireAdmin()
+
   try {
     // Vérifier si la ressource NFT existe
     const existingResource = await prisma.nftResource.findUnique({
@@ -1660,6 +1746,8 @@ export async function getSmartContractAddress(
   type: 'Factory' | 'Royalties' | 'Marketplace',
   network?: NetworkType
 ): Promise<string | null> {
+  await requireAdmin()
+
   try {
     // Préparer la condition de recherche
     const whereCondition: any = {
@@ -1726,7 +1814,7 @@ export async function createMarketPlaceTransaction(params: {
   error?: string;
   transaction?: any;
 }> {
-  'use server';
+  await requireAdmin()
 
   try {
     // Vérifier si la ressource NFT existe
@@ -1803,7 +1891,7 @@ export async function updateNftResourceOwner(
   success: boolean;
   message?: string;
 }> {
-  'use server';
+  await requireAdmin()
 
   try {
     // Vérifier si la ressource NFT existe
@@ -1859,6 +1947,8 @@ export async function updateNftResourceOwner(
  * Récupère tous les artistes
  */
 export async function getAllArtists() {
+  await requireAdmin()
+
   try {
     const artists = await prisma.artist.findMany({
       where: {
@@ -1903,6 +1993,8 @@ export async function getAllArtists() {
  * Récupère toutes les galleries
  */
 export async function getAllGalleries() {
+  await requireAdmin()
+
   try {
     const artists = await prisma.artist.findMany({
       where: {
@@ -1935,6 +2027,8 @@ export async function getAllGalleries() {
  * Récupère un artiste par son ID
  */
 export async function getArtistById(id: number) {
+    await requireBackofficeUser()
+
   try {
     const artist = await prisma.artist.findUnique({
       where: { id },
@@ -1969,6 +2063,8 @@ export async function getArtistById(id: number) {
  * Récupère tous les Items avec leurs relations pour l'admin
  */
 export async function getAllItemsForAdmin() {
+  await requireAdmin()
+
   try {
     const items = await prisma.item.findMany({
       include: {
@@ -2110,6 +2206,14 @@ export async function updateItemRecord(
     }
   }
 ): Promise<{ success: boolean, message?: string, item?: any }> {
+  // Propriétaire de l'item uniquement ; un non-admin ne peut pas le réattribuer à un autre artiste
+  const session = await requireItemAccess(itemId)
+  if (session.user.role !== BackofficeUserRoles.admin && data?.artistId != null) {
+    if (data.artistId !== (session.user as { artistId?: number | null }).artistId) {
+      throw new UnauthorizedError()
+    }
+  }
+
   try {
     // Vérifier si l'item existe et récupérer les associations existantes
     const existingItem = await prisma.item.findUnique({
@@ -2360,6 +2464,8 @@ export async function saveItemImages(
   mainImageUrl: string | null | undefined,
   secondaryImageUrls: string[] = []
 ) {
+    await requireItemAccess(itemId)
+
   try {
     console.log(`Début de la sauvegarde des images pour l'item #${itemId}`);
     console.log(`- URL principale: ${mainImageUrl || '(aucune modification)'}`);
@@ -2424,6 +2530,8 @@ export async function savePhysicalItemImage(
   alt?: string | null,
   order?: number | null
 ) {
+    await requirePhysicalItemAccess(physicalItemId)
+
   try {
     const image = await prisma.physicalItemImage.create({
       data: {
@@ -2455,6 +2563,8 @@ export async function savePhysicalItemImage(
  * @returns Résultat de la suppression
  */
 export async function deletePhysicalItemImage(imageId: bigint) {
+  await requireAdmin()
+
   try {
     await prisma.physicalItemImage.delete({
       where: { id: imageId }
@@ -2486,6 +2596,8 @@ export async function deletePhysicalItemImageByUrl(
   imageUrl: string,
   imageType: string
 ) {
+    await requirePhysicalItemAccess(physicalItemId)
+
   try {
     // Trouver l'image par URL et type
     const image = await prisma.physicalItemImage.findFirst({
@@ -2528,6 +2640,8 @@ export async function deletePhysicalItemImageByUrl(
  * @returns Images groupées par type
  */
 export async function getPhysicalItemImagesByType(physicalItemId: bigint) {
+    await requirePhysicalItemAccess(physicalItemId)
+
   try {
     const images = await prisma.physicalItemImage.findMany({
       where: { physicalItemId },
@@ -2570,6 +2684,8 @@ export async function removeSecondaryImage(
   itemId: number,
   imageUrl: string
 ) {
+    await requireItemAccess(itemId)
+
   try {
     console.log(`Suppression de l'image secondaire pour l'item #${itemId}`);
     console.log(`URL à supprimer: ${imageUrl}`);
@@ -2629,6 +2745,8 @@ export async function removeSecondaryImage(
 export async function deletePhysicalItem(
   physicalItemId: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requirePhysicalItemAccess(physicalItemId)
+
   try {
     // Vérifier si le physicalItem existe
     const physicalItem = await prisma.physicalItem.findUnique({
@@ -2682,6 +2800,8 @@ export async function deletePhysicalItem(
  * Récupère tous les mediums artistiques
  */
 export async function getAllArtworkMediums() {
+    await requireBackofficeUser()
+
   try {
     return await prisma.artworkMedium.findMany({
       orderBy: { name: 'asc' }
@@ -2696,6 +2816,8 @@ export async function getAllArtworkMediums() {
  * Récupère tous les styles artistiques
  */
 export async function getAllArtworkStyles() {
+    await requireBackofficeUser()
+
   try {
     return await prisma.artworkStyle.findMany({
       orderBy: { name: 'asc' }
@@ -2710,6 +2832,8 @@ export async function getAllArtworkStyles() {
  * Récupère toutes les techniques artistiques
  */
 export async function getAllArtworkTechniques() {
+    await requireBackofficeUser()
+
   try {
     return await prisma.artworkTechnique.findMany({
       orderBy: { name: 'asc' }
@@ -2724,6 +2848,8 @@ export async function getAllArtworkTechniques() {
  * Récupère tous les thèmes artistiques
  */
 export async function getAllArtworkThemes() {
+    await requireBackofficeUser()
+
   try {
     return await prisma.artworkTheme.findMany({
       orderBy: { name: 'asc' }
