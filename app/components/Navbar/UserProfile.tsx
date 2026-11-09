@@ -96,7 +96,10 @@ export default function UserProfile() {
         </li>
         <li className="divider my-0" role="separator"></li>
         <li className="menu-title p-0">
-          <div className="px-3 py-2 text-sm text-base-content/70 break-all">
+          <div
+            className="px-3 py-2 text-xs font-normal normal-case text-base-content/70 truncate"
+            title={user?.email}
+          >
             {user?.email}
           </div>
         </li>
