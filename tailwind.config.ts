@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import colors from "tailwindcss/colors";
 
 const config: Config = {
   content: [
@@ -11,6 +12,23 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // DA alignée sur le site corpo : gris neutres (sans teinte bleutée)
+        gray: colors.neutral,
+        // Échelle violette centrée sur #6052ff (couleur primaire du site corpo)
+        indigo: {
+          50: "#f1f0ff",
+          100: "#e6e4ff",
+          200: "#d0ccff",
+          300: "#b0a8ff",
+          400: "#8a7eff",
+          500: "#6f63ff",
+          600: "#6052ff",
+          700: "#4d3ee6",
+          800: "#3f33bd",
+          900: "#352d94",
+          950: "#241f66",
+        },
+        gold: "var(--color-accent)",
         // Map your CSS variables to Tailwind colors
         primary: {
           DEFAULT: "var(--color-primary)",

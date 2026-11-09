@@ -748,11 +748,11 @@
 
 // Carte de métrique en flat design
 .metric-card {
-  background-color: #ffffff;
+  background-color: var(--color-background-white);
   border-radius: 12px;
   padding: 1.5rem;
-  border: 2px solid #f3f4f6;
-  transition: all 0.3s ease;
+  border: 1px solid var(--color-border);
+  transition: border-color 0.2s ease;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -761,18 +761,7 @@
   max-width: 280px;
 
   &:hover {
-    border-color: #e5e7eb;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  .dark-mode & {
-    background-color: #1f2937;
-    border-color: #374151;
-
-    &:hover {
-      border-color: #4b5563;
-    }
+    border-color: var(--color-primary);
   }
 }
 
@@ -871,51 +860,17 @@
 
 // Carte du tableau de bord - Design professionnel
 .dashboard-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: 16px;
+  background: var(--color-background-white);
+  border-radius: 12px;
   padding: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(0, 0, 0, 0.02);
   margin-bottom: 1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.2s ease;
   overflow: hidden;
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid var(--color-border);
   position: relative;
 
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 10px 24px rgba(0, 0, 0, 0.08),
-      0 0 0 1px rgba(59, 130, 246, 0.1);
-    border-color: rgba(59, 130, 246, 0.2);
-
-    &::before {
-      opacity: 1;
-    }
-  }
-
-  .dark-mode & {
-    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-    border-color: rgba(75, 85, 99, 0.5);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.4),
-      0 0 0 1px rgba(75, 85, 99, 0.3);
-
-    &:hover {
-      border-color: rgba(59, 130, 246, 0.4);
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5), 0 10px 24px rgba(0, 0, 0, 0.6),
-        0 0 0 1px rgba(59, 130, 246, 0.2);
-    }
+    border-color: var(--color-primary);
   }
 }
 
@@ -924,24 +879,19 @@
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
-
-  .dark-mode & {
-    border-bottom-color: rgba(75, 85, 99, 0.4);
-  }
+  border-bottom: 1px solid var(--color-border);
 }
 
 .dashboard-card-icon {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  border-radius: 10px;
+  background: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 
   svg {
     width: 24px;
@@ -957,26 +907,18 @@
 .dashboard-card-title {
   margin: 0 0 0.25rem;
   font-size: 1.375rem;
-  font-weight: 700;
-  color: #111827;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
   line-height: 1.3;
-
-  .dark-mode & {
-    color: #f9fafb;
-  }
 }
 
 .dashboard-card-description {
   margin: 0;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   line-height: 1.5;
   font-weight: 400;
-
-  .dark-mode & {
-    color: #9ca3af;
-  }
 }
 
 .dashboard-card-content {

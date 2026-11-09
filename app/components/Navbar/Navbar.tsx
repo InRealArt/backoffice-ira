@@ -10,7 +10,7 @@ export default function Navbar() {
 
   return (
     <div 
-      className="navbar fixed top-0 w-full z-50 shadow-lg backdrop-blur-md bg-white/95 dark:bg-gray-900/95 transition-all duration-300 font-sans" 
+      className="navbar fixed top-0 w-full z-50 border-b border-border backdrop-blur-md bg-white/95 dark:bg-gray-900/95 transition-all duration-300 font-sans" 
       style={{ padding: '0 32px', height: '90px' }}
     >
       <div className="navbar-start">
@@ -25,7 +25,7 @@ export default function Navbar() {
               className="logo-image"
             />
           </div>
-          <span className="text-xl font-semibold text-gray-900 dark:text-white">InRealArt backoffice</span>
+          <span className="text-base font-light uppercase text-gray-900 dark:text-white" style={{ letterSpacing: "0.25em" }}>InRealArt backoffice</span>
         </div>
       </div>
       

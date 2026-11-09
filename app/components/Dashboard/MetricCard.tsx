@@ -17,7 +17,7 @@ export function MetricCard({
   title,
   value,
   icon: Icon,
-  color = "#3b82f6",
+  color = "#6052ff",
   isLoading,
   buttonTitle,
   buttonRoute,

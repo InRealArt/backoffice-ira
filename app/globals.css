@@ -13,8 +13,8 @@ body.light {
   --sidemenu-width: 250px; /* Définition d'une variable pour la largeur du menu latéral */
 
   /* Couleurs en mode clair */
-  --color-primary: #4f46e5;
-  --color-primary-dark: #4338ca;
+  --color-primary: #6052ff;
+  --color-primary-dark: #4d3ee6;
   --color-primary-light: #444e6e;
   --color-purple: #6052ff;
   --color-error: #dc2626;
@@ -31,21 +31,22 @@ body.light {
   --color-background-hover: #f7f9fc;
   --color-background-disabled: #f0f0f0;
   --color-border: #eee;
+  --color-accent: #b89c72; /* doré, repris du site corpo */
   --color-border-input: #e2e8f0;
   --color-border-light: #f0f0f0;
 }
 
 .dark-theme,
 body.dark {
-  --background: #0a0a0a;
+  --background: #131313;
   --foreground: #ffffff; /* Plus blanc pour le mode sombre */
   --navbar-height: 90px;
   --sidemenu-width: 250px;
 
   /* Couleurs en mode sombre */
-  --color-primary: #6366f1;
-  --color-primary-dark: #4f46e5;
-  --color-primary-light: #312e81;
+  --color-primary: #7a6fff;
+  --color-primary-dark: #6052ff;
+  --color-primary-light: #352d94;
   --color-purple: #6052ff;
   --color-error: #ef4444;
   --color-error-dark: #dc2626;
@@ -55,14 +56,15 @@ body.dark {
   --color-text-tertiary: #e5e7eb;
   --color-text-light: #d1d5db;
   --color-text-muted: #d1d5db; /* Plus blanc pour le texte muté */
-  --color-background-main: #111827;
-  --color-background-white: #1f2937;
-  --color-background-light: #374151;
-  --color-background-hover: #2d3748;
-  --color-background-disabled: #374151;
-  --color-border: #4a5568;
-  --color-border-input: #4b5563;
-  --color-border-light: #4a5568;
+  --color-background-main: #131313;
+  --color-background-white: #1d1c1c;
+  --color-background-light: #262626;
+  --color-background-hover: #242323;
+  --color-background-disabled: #262626;
+  --color-border: #2e2e2e;
+  --color-accent: #b89c72;
+  --color-border-input: #3a3a3a;
+  --color-border-light: #2a2a2a;
 }
 
 html {
@@ -1061,5 +1063,13 @@ div:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Un indicateur de chargement doit rester animé : c'est un retour fonctionnel */
+  .loading,
+  .loading::before,
+  .loading::after {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
   }
 }
