@@ -478,6 +478,7 @@
     }
   },
   "navigation": {
+    "openMenu": "Open navigation menu",
     "dashboard": "Dashboard",
     "profile": {
       "title": "PROFILE",

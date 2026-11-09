@@ -42,6 +42,16 @@ import {
   CalendarDays,
 } from "lucide-react";
 
+// Les entrées de menu sont des <a> sans href : on les rend atteignables et
+// activables au clavier (Entrée / Espace), comme un bouton.
+function activateOnKey(e: React.KeyboardEvent<HTMLElement>) {
+  if (e.target !== e.currentTarget) return;
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    e.currentTarget.click();
+  }
+}
+
 export default function NavbarMenu() {
   const t = useTranslations("navigation");
   const pathname = usePathname();
@@ -146,6 +156,9 @@ export default function NavbarMenu() {
 
     return (
       <a
+        role="button"
+        tabIndex={0}
+        onKeyDown={activateOnKey}
         onClick={handleClick}
         className={`flex items-center gap-2 ${isMobile ? "" : ""}`}
       >
@@ -247,6 +260,9 @@ export default function NavbarMenu() {
         <>
           <li>
             <a
+              role="button"
+              tabIndex={0}
+              onKeyDown={activateOnKey}
               onClick={() =>
                 handleMenuNavigation(
                   "/art/create-artist-profile",
@@ -278,6 +294,9 @@ export default function NavbarMenu() {
         <>
           <li>
             <a
+              role="button"
+              tabIndex={0}
+              onKeyDown={activateOnKey}
               onClick={() => handleMenuNavigation("/dashboard", "dashboard")}
               className="flex items-center gap-2"
             >
@@ -305,6 +324,9 @@ export default function NavbarMenu() {
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/art/edit-artist-profile",
@@ -339,6 +361,9 @@ export default function NavbarMenu() {
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/art/create-presale-artwork",
@@ -363,6 +388,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation("/art/my-artworks", "myArtworks")
                   }
@@ -396,6 +424,9 @@ export default function NavbarMenu() {
                 <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleMenuNavigation(
                           "/art/myPhysicalArtwork",
@@ -420,6 +451,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleMenuNavigation(
                           "/art/physicalCollection",
@@ -455,6 +489,9 @@ export default function NavbarMenu() {
         <>
           <li>
             <a
+              role="button"
+              tabIndex={0}
+              onKeyDown={activateOnKey}
               onClick={() => handleMenuNavigation("/dashboard", "dashboard")}
               className="flex items-center gap-2"
             >
@@ -481,6 +518,9 @@ export default function NavbarMenu() {
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation("/landing/languages", "languages")
                   }
@@ -502,6 +542,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/landing/translations",
@@ -526,6 +569,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() => handleMenuNavigation("/landing/team", "team")}
                   className="flex items-center gap-2"
                 >
@@ -545,6 +591,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() => handleMenuNavigation("/landing/faq", "faq")}
                   className="flex items-center gap-2"
                 >
@@ -564,6 +613,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation("/landing/detailedFaq", "detailedFaq")
                   }
@@ -585,6 +637,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/landing/detailedFaqPage",
@@ -609,6 +664,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/landing/detailedGlossary",
@@ -633,6 +691,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/landing/landingArtists",
@@ -657,6 +718,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/landing/indexArtitude",
@@ -681,6 +745,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/landing/presaleArtworks",
@@ -706,6 +773,9 @@ export default function NavbarMenu() {
               {isAdmin && (
                 <li>
                   <a
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={activateOnKey}
                     onClick={() =>
                       handleMenuNavigation(
                         "/landing/exhibitions",
@@ -732,6 +802,9 @@ export default function NavbarMenu() {
               {isAdmin && (
                 <li>
                   <a
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={activateOnKey}
                     onClick={() =>
                       handleMenuNavigation(
                         "/landing/agency-events",
@@ -757,6 +830,9 @@ export default function NavbarMenu() {
               )}
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation("/landing/seo-posts", "seoPosts")
                   }
@@ -778,6 +854,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/landing/sticky-footer",
@@ -812,6 +891,9 @@ export default function NavbarMenu() {
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/landing/ugc/top-artists",
@@ -836,6 +918,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       '/landing/ugc/artist-profiles',
@@ -869,6 +954,9 @@ export default function NavbarMenu() {
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/dataAdministration/artists",
@@ -893,6 +981,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/dataAdministration/artist-categories",
@@ -917,6 +1008,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/dataAdministration/artwork-mediums",
@@ -941,6 +1035,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/dataAdministration/artwork-styles",
@@ -965,6 +1062,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/dataAdministration/artwork-techniques",
@@ -989,6 +1089,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/landing/blog-categories",
@@ -1022,6 +1125,9 @@ export default function NavbarMenu() {
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation("/boAdmin/users", "boUsers")
                   }
@@ -1043,6 +1149,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/boAdmin/create-member",
@@ -1067,6 +1176,9 @@ export default function NavbarMenu() {
               </li>
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/boAdmin/inventoryLanding",
@@ -1099,7 +1211,7 @@ export default function NavbarMenu() {
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
-                <a onClick={() => handleMenuNavigation('/blockchain/smartContracts', 'smartContracts')} className="flex items-center gap-2">
+                <a role="button" tabIndex={0} onKeyDown={activateOnKey} onClick={() => handleMenuNavigation('/blockchain/smartContracts', 'smartContracts')} className="flex items-center gap-2">
                   {isItemNavigating('smartContracts') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
@@ -1115,7 +1227,7 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/blockchain/collections', 'collections')} className="flex items-center gap-2">
+                <a role="button" tabIndex={0} onKeyDown={activateOnKey} onClick={() => handleMenuNavigation('/blockchain/collections', 'collections')} className="flex items-center gap-2">
                   {isItemNavigating('collections') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
@@ -1131,7 +1243,7 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/blockchain/royaltyBeneficiaries', 'royaltyBeneficiaries')} className="flex items-center gap-2">
+                <a role="button" tabIndex={0} onKeyDown={activateOnKey} onClick={() => handleMenuNavigation('/blockchain/royaltyBeneficiaries', 'royaltyBeneficiaries')} className="flex items-center gap-2">
                   {isItemNavigating('royaltyBeneficiaries') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
@@ -1156,7 +1268,7 @@ export default function NavbarMenu() {
             </a>
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
-                <a onClick={() => handleMenuNavigation('/admin-art/createArtwork', 'adminCreateArtwork')} className="flex items-center gap-2">
+                <a role="button" tabIndex={0} onKeyDown={activateOnKey} onClick={() => handleMenuNavigation('/admin-art/createArtwork', 'adminCreateArtwork')} className="flex items-center gap-2">
                   {isItemNavigating('adminCreateArtwork') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
@@ -1172,7 +1284,7 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/admin-art/collection', 'adminArtCollection')} className="flex items-center gap-2">
+                <a role="button" tabIndex={0} onKeyDown={activateOnKey} onClick={() => handleMenuNavigation('/admin-art/collection', 'adminArtCollection')} className="flex items-center gap-2">
                   {isItemNavigating('adminArtCollection') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
@@ -1188,7 +1300,7 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/marketplace/nftsToMint', 'nftsToMint')} className="flex items-center gap-2">
+                <a role="button" tabIndex={0} onKeyDown={activateOnKey} onClick={() => handleMenuNavigation('/marketplace/nftsToMint', 'nftsToMint')} className="flex items-center gap-2">
                   {isItemNavigating('nftsToMint') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
@@ -1204,7 +1316,7 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/marketplace/royaltiesSettings', 'royaltiesSettings')} className="flex items-center gap-2">
+                <a role="button" tabIndex={0} onKeyDown={activateOnKey} onClick={() => handleMenuNavigation('/marketplace/royaltiesSettings', 'royaltiesSettings')} className="flex items-center gap-2">
                   {isItemNavigating('royaltiesSettings') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
@@ -1220,7 +1332,7 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/marketplace/marketplaceListing', 'marketplaceListing')} className="flex items-center gap-2">
+                <a role="button" tabIndex={0} onKeyDown={activateOnKey} onClick={() => handleMenuNavigation('/marketplace/marketplaceListing', 'marketplaceListing')} className="flex items-center gap-2">
                   {isItemNavigating('marketplaceListing') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
@@ -1236,7 +1348,7 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/marketplace/transactions', 'transactions')} className="flex items-center gap-2">
+                <a role="button" tabIndex={0} onKeyDown={activateOnKey} onClick={() => handleMenuNavigation('/marketplace/transactions', 'transactions')} className="flex items-center gap-2">
                   {isItemNavigating('transactions') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
@@ -1252,7 +1364,7 @@ export default function NavbarMenu() {
                 </a>
               </li>
               <li>
-                <a onClick={() => handleMenuNavigation('/marketplace/invoices', 'invoices')} className="flex items-center gap-2">
+                <a role="button" tabIndex={0} onKeyDown={activateOnKey} onClick={() => handleMenuNavigation('/marketplace/invoices', 'invoices')} className="flex items-center gap-2">
                   {isItemNavigating('invoices') ? (
                     <>
                       <span className="loading loading-spinner loading-sm"></span>
@@ -1278,6 +1390,9 @@ export default function NavbarMenu() {
             <ul className="p-2 bg-background-white dark:bg-background-white rounded-lg mt-1 border border-border dark:border-border">
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleMenuNavigation(
                       "/tools/webp-converter",
@@ -1312,9 +1427,15 @@ export default function NavbarMenu() {
     <>
       {/* Menu hamburger pour mobile */}
       <div className="dropdown" ref={mobileMenuRef}>
-        <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
+        <div
+          tabIndex={0}
+          role="button"
+          aria-label={t("openMenu")}
+          className="btn btn-ghost lg:hidden"
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
             className="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
@@ -1346,6 +1467,9 @@ export default function NavbarMenu() {
             <ul className="menu menu-horizontal px-1">
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleDesktopNavigation(
                       "/art/create-artist-profile",
@@ -1371,6 +1495,9 @@ export default function NavbarMenu() {
             <ul className="menu menu-horizontal px-1">
               <li>
                 <a
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={activateOnKey}
                   onClick={() =>
                     handleDesktopNavigation("/dashboard", "dashboard")
                   }
@@ -1392,6 +1519,9 @@ export default function NavbarMenu() {
                   <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                     <li>
                       <a
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={activateOnKey}
                         onClick={() =>
                           handleDesktopNavigation(
                             "/art/edit-artist-profile",
@@ -1417,6 +1547,9 @@ export default function NavbarMenu() {
                   <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                     <li>
                       <a
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={activateOnKey}
                         onClick={() =>
                           handleDesktopNavigation(
                             "/art/create-presale-artwork",
@@ -1431,6 +1564,9 @@ export default function NavbarMenu() {
                     </li>
                     <li>
                       <a
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={activateOnKey}
                         onClick={() =>
                           handleDesktopNavigation(
                             "/art/my-artworks",
@@ -1457,6 +1593,9 @@ export default function NavbarMenu() {
                     <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                       <li>
                         <a
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={activateOnKey}
                           onClick={() =>
                             handleDesktopNavigation(
                               "/art/myPhysicalArtwork",
@@ -1471,6 +1610,9 @@ export default function NavbarMenu() {
                       </li>
                       <li>
                         <a
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={activateOnKey}
                           onClick={() =>
                             handleDesktopNavigation(
                               "/art/physicalCollection",
@@ -1495,6 +1637,9 @@ export default function NavbarMenu() {
           <ul className="menu menu-horizontal px-1">
             <li>
               <a
+                role="button"
+                tabIndex={0}
+                onKeyDown={activateOnKey}
                 onClick={() =>
                   handleDesktopNavigation("/dashboard", "dashboard")
                 }
@@ -1515,6 +1660,9 @@ export default function NavbarMenu() {
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60 max-h-80 overflow-y-auto">
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/landing/languages",
@@ -1529,6 +1677,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/landing/translations",
@@ -1543,6 +1694,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation("/landing/team", "team")
                       }
@@ -1554,6 +1708,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation("/landing/faq", "faq")
                       }
@@ -1565,6 +1722,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/landing/detailedFaq",
@@ -1579,6 +1739,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/landing/detailedFaqPage",
@@ -1593,6 +1756,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/landing/detailedGlossary",
@@ -1607,6 +1773,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/landing/landingArtists",
@@ -1621,6 +1790,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/landing/indexArtitude",
@@ -1635,6 +1807,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/landing/presaleArtworks",
@@ -1649,6 +1824,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation("/landing/blog", "blog")
                       }
@@ -1660,6 +1838,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/landing/sticky-footer",
@@ -1685,6 +1866,9 @@ export default function NavbarMenu() {
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60">
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/landing/ugc/top-artists",
@@ -1699,6 +1883,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           '/landing/ugc/artist-profiles',
@@ -1723,6 +1910,9 @@ export default function NavbarMenu() {
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60">
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/dataAdministration/artists",
@@ -1737,6 +1927,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/dataAdministration/artist-categories",
@@ -1751,6 +1944,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/dataAdministration/artwork-mediums",
@@ -1765,6 +1961,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/dataAdministration/artwork-styles",
@@ -1779,6 +1978,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/dataAdministration/artwork-techniques",
@@ -1793,6 +1995,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/landing/blog-categories",
@@ -1817,6 +2022,9 @@ export default function NavbarMenu() {
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation("/boAdmin/users", "boUsers")
                       }
@@ -1828,6 +2036,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/boAdmin/create-member",
@@ -1842,6 +2053,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/boAdmin/inventoryLanding",
@@ -1866,6 +2080,9 @@ export default function NavbarMenu() {
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/blockchain/smartContracts",
@@ -1880,6 +2097,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/blockchain/collections",
@@ -1894,6 +2114,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/blockchain/royaltyBeneficiaries",
@@ -1918,6 +2141,9 @@ export default function NavbarMenu() {
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border w-60">
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/admin-art/createArtwork",
@@ -1932,6 +2158,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/admin-art/collection",
@@ -1946,6 +2175,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/marketplace/nftsToMint",
@@ -1960,6 +2192,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/marketplace/royaltiesSettings",
@@ -1974,6 +2209,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/marketplace/marketplaceListing",
@@ -1988,6 +2226,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/marketplace/transactions",
@@ -2002,6 +2243,9 @@ export default function NavbarMenu() {
                   </li>
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/marketplace/invoices",
@@ -2026,6 +2270,9 @@ export default function NavbarMenu() {
                 <ul className="bg-background-white dark:bg-background-white backdrop-blur-md rounded-t-none p-2 shadow-2xl border-2 border-border dark:border-border">
                   <li>
                     <a
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={activateOnKey}
                       onClick={() =>
                         handleDesktopNavigation(
                           "/tools/webp-converter",
