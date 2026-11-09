@@ -3,11 +3,14 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { Invoice, InvoiceType } from '@/src/generated/prisma/client'
+import { requireAdmin } from '@/lib/auth-helpers'
 
 /**
  * Récupère une facture par son ID
  */
 export async function getInvoiceById(id: number): Promise<Invoice | null> {
+    await requireAdmin()
+
     try {
         return await prisma.invoice.findUnique({
             where: { id },
@@ -25,6 +28,8 @@ export async function getInvoiceById(id: number): Promise<Invoice | null> {
  * Met à jour le statut de paiement d'une facture
  */
 export async function updateInvoicePaymentStatus(id: number, isPaid: boolean) {
+    await requireAdmin()
+
     try {
         const updatedInvoice = await prisma.invoice.update({
             where: { id },
@@ -54,6 +59,8 @@ export async function updateInvoicePaymentStatus(id: number, isPaid: boolean) {
  * Télécharge une facture (simulation - à implémenter avec un système de génération de PDF)
  */
 export async function downloadInvoice(id: number) {
+    await requireAdmin()
+
     try {
         // Vérifier si la facture existe
         const invoice = await prisma.invoice.findUnique({
@@ -91,6 +98,8 @@ export async function searchInvoices(filters: {
     startDate?: Date
     endDate?: Date
 }) {
+    await requireAdmin()
+
     try {
         const { customerEmail, invoiceNumber, isPaid, startDate, endDate } = filters
 

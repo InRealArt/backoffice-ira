@@ -104,8 +104,21 @@ function exportedFunctions(sf, { routeHandlers }) {
 }
 
 function collect() {
+    const actionFiles = new Set(walk(path.join(ROOT, 'lib/actions'), (f) => /\.tsx?$/.test(f)))
+
+    // Toute Server Action est un endpoint public, où qu'elle soit : on ajoute aussi tous les
+    // fichiers marqués 'use server' hors lib/actions (app/, lib/, components/, hooks/).
+    const USE_SERVER = /^(?:\s*(?:\/\/[^\n]*\n|\/\*[\s\S]*?\*\/))*\s*['"]use server['"]/
+    for (const dir of ['app', 'lib', 'components', 'hooks']) {
+        const root = path.join(ROOT, dir)
+        if (!fs.existsSync(root)) continue
+        for (const f of walk(root, (file) => /\.tsx?$/.test(file) && !/\/route\.tsx?$/.test(file))) {
+            if (USE_SERVER.test(fs.readFileSync(f, 'utf8'))) actionFiles.add(f)
+        }
+    }
+
     const targets = [
-        ...walk(path.join(ROOT, 'lib/actions'), (f) => /\.tsx?$/.test(f)).map((f) => ({ file: f, routeHandlers: false })),
+        ...[...actionFiles].map((f) => ({ file: f, routeHandlers: false })),
         ...walk(path.join(ROOT, 'app/api'), (f) => /\/route\.tsx?$/.test(f)).map((f) => ({ file: f, routeHandlers: true })),
     ]
 

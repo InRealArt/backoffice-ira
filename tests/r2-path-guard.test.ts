@@ -18,15 +18,17 @@ describe('isAllowedStoragePath', () => {
         }
     })
 
-    it('réserve team/ à l\'admin', () => {
-        expect(isAllowedStoragePath('team/jean-12-1.webp', admin)).toBe(true)
-        expect(isAllowedStoragePath('team/jean-12-1.webp', artist)).toBe(false)
-        expect(isAllowedStoragePath('team/jean-12-1.webp', null)).toBe(false)
+    it('laisse l\'admin écrire partout (dossiers admin) mais pas un non-admin', () => {
+        for (const path of ['team/jean-12-1.webp', 'exhibitions/x/y.webp', 'agency-events/e/y.webp', 'ARTITUDE/a/b/c.webp', 'artistsUGC/u/v.webp']) {
+            expect(isAllowedStoragePath(path, admin)).toBe(true)
+            expect(isAllowedStoragePath(path, artist)).toBe(false)
+            expect(isAllowedStoragePath(path, null)).toBe(false)
+        }
     })
 
-    it('refuse les préfixes inconnus, y compris pour l\'admin', () => {
+    it('refuse les préfixes proches ou vides pour un non-admin', () => {
         for (const path of ['secrets/key.txt', 'Artists/x.webp', 'artists', 'artists/', 'x/artists/a.webp']) {
-            expect(isAllowedStoragePath(path, admin)).toBe(false)
+            expect(isAllowedStoragePath(path, artist)).toBe(false)
         }
     })
 

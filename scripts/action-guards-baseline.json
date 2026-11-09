@@ -1,10 +1,5 @@
 {
   "unguarded": [
-    "app/api/auth/checkAdminRole/route.ts#POST",
-    "app/api/auth/saveShopifyUser/route.ts#POST",
-    "app/api/shopify/isAdmin/route.ts#POST",
-    "app/api/shopify/isArtistAndGranted/route.ts#POST",
-    "app/api/user/linkedWallets/route.ts#GET",
     "lib/actions/art-actions.ts#getUserByEmail",
     "lib/actions/auth-actions.ts#checkAuthorizedUser",
     "lib/actions/auth-actions.ts#checkIsAdmin",

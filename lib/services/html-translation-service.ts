@@ -1,5 +1,5 @@
-'use server'
-
+// Pas de 'use server' : ces fonctions ne sont appelées que côté serveur (scripts, services) ;
+// une directive en ferait des endpoints publics sans garde.
 // Interface pour les éléments HTML à traduire
 interface HtmlElement {
     tag: string

@@ -75,7 +75,7 @@ describe('/api/r2/presign', () => {
         expect((await call('secrets/x')).status).toBe(403)
         as('admin')
         expect((await call('team/x.webp')).status).toBe(200)
-        expect((await call('secrets/x')).status).toBe(403)
+        expect((await call('artists/../x')).status).toBe(403)
     })
 })
 

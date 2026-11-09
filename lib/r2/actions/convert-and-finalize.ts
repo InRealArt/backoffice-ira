@@ -4,6 +4,8 @@ import { GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from '@aws-sd
 import sharp from 'sharp'
 import { r2Client, R2_BUCKET_NAME } from '@/lib/r2/client'
 import type { Readable } from 'stream'
+import { requireBackofficeUser } from '@/lib/auth-helpers'
+import { isAllowedStoragePath } from '@/lib/r2/path-guard'
 
 interface ConvertAndFinalizeResult {
     success: true
@@ -29,8 +31,19 @@ export async function convertAndFinalize(
     tempKey: string,
     finalKey: string
 ): Promise<ConvertAndFinalizeResult> {
+    // Server Action = endpoint HTTP public : session backoffice exigée, et clés validées côté serveur.
+    // Sans cela, n'importe qui pourrait lire/supprimer un objet quelconque du bucket (tempKey)
+    // ou écrire n'importe où (finalKey).
+    const session = await requireBackofficeUser()
+
     if (!tempKey || !finalKey) {
         throw new Error('convertAndFinalize: tempKey and finalKey are required')
+    }
+    if (!tempKey.startsWith('temp/') || !isAllowedStoragePath(tempKey, session.user.role)) {
+        throw new Error('convertAndFinalize: tempKey non autorisée')
+    }
+    if (!isAllowedStoragePath(finalKey, session.user.role)) {
+        throw new Error('convertAndFinalize: finalKey non autorisée')
     }
 
     // Step 1: Fetch the raw image bytes from R2
