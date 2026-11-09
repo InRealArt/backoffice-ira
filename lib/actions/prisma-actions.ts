@@ -8,7 +8,9 @@ import { revalidatePath } from "next/cache";
 import { Prisma } from '@/src/generated/prisma/client'
 import { getLandingArtistByArtistId } from "./artist-actions";
 import { getAuthenticatedUserEmail } from "@/lib/auth-helpers";
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdmin, requireAuthUserAccess, requireBackofficeUser, UnauthorizedError } from '@/lib/auth-helpers'
+import { requireItemAccess, requirePhysicalItemAccess } from '@/lib/auth-ownership'
+import { BackofficeUserRoles } from '@/lib/types/roles'
 
 type CreateMemberResult = {
   success: boolean
@@ -103,6 +105,8 @@ function serializeData(data: any): any {
 }
 
 export async function createMember(data: MemberFormData): Promise<CreateMemberResult> {
+    await requireAdmin()
+
   try {
     // Valider les données avec Zod
     const validatedData = memberSchema.parse(data)
@@ -464,6 +468,12 @@ export async function getBackofficeUserByEmail(email: string) {
 
 // Fonction pour récupérer les adresses d'un utilisateur backoffice
 export async function getBackofficeUserAddresses(email: string) {
+  // Un non-admin ne peut lire que ses propres adresses
+  const session = await requireBackofficeUser()
+  if (session.user.role !== BackofficeUserRoles.admin && session.user.email !== email) {
+    throw new UnauthorizedError()
+  }
+
   try {
     // Récupérer le BackofficeAuthUser avec ses adresses via la relation
     const backofficeUser = await prisma.backofficeAuthUser.findUnique({
@@ -578,6 +588,14 @@ export async function createItemRecord(
     price?: number,
   } | null
 ) {
+  // L'item doit appartenir à l'appelant ; un non-admin ne peut l'attribuer qu'à son propre artiste
+  const session = await requireAuthUserAccess(userId)
+  if (session.user.role !== BackofficeUserRoles.admin && itemData?.artistId != null) {
+    if (itemData.artistId !== (session.user as { artistId?: number | null }).artistId) {
+      throw new UnauthorizedError()
+    }
+  }
+
   try {
     // S'assurer que les tags sont bien un tableau de chaînes
     const processedTags = Array.isArray(tags)
@@ -700,6 +718,13 @@ export async function updateItemStatus(
   itemId: number,
   newStatus: string
 ): Promise<StatusUpdateResult> {
+  // Propriétaire de l'item ; un non-admin ne peut que soumettre son œuvre à validation ("pending"),
+  // les autres statuts (listed, etc.) sont réservés à l'admin
+  const session = await requireItemAccess(itemId)
+  if (session.user.role !== BackofficeUserRoles.admin && newStatus !== 'pending') {
+    throw new UnauthorizedError()
+  }
+
   try {
     // Vérifier si l'item existe
     const existingItem = await prisma.item.findUnique({
@@ -826,6 +851,8 @@ export async function saveAuthCertificate(itemId: number, fileData: Uint8Array) 
  * Sauvegarde un certificat d'œuvre physique pour un item spécifique
  */
 export async function savePhysicalCertificate(itemId: number, fileData: Uint8Array) {
+    await requireItemAccess(itemId)
+
   try {
     // D'abord récupérer l'item pour obtenir le PhysicalItem associé
     const physicalItem = await prisma.physicalItem.findUnique({
@@ -859,6 +886,8 @@ export async function savePhysicalCertificate(itemId: number, fileData: Uint8Arr
  * Sauvegarde un certificat NFT pour un item spécifique
  */
 export async function saveNftCertificate(itemId: number, fileData: Uint8Array) {
+    await requireItemAccess(itemId)
+
   try {
     // D'abord récupérer l'item pour obtenir le PhysicalItem associé
     const physicalItem = await prisma.physicalItem.findUnique({
@@ -893,6 +922,8 @@ export async function saveNftCertificate(itemId: number, fileData: Uint8Array) {
  * Récupère le certificat d'œuvre physique pour un item spécifique
  */
 export async function getPhysicalCertificateByItemId(itemId: number) {
+    await requireItemAccess(itemId)
+
   try {
     // D'abord récupérer le PhysicalItem associé à l'item
     // Sélection explicite pour éviter les champs qui n'existent pas en base
@@ -957,6 +988,8 @@ export async function getUserByItemId(itemId: number) {
 
 // Fonction pour récupérer un item par son ID
 export async function getItemById(itemId: number) {
+    await requireItemAccess(itemId)
+
   try {
     const item = await prisma.item.findUnique({
       where: { id: itemId },
@@ -1193,6 +1226,8 @@ export async function createNftResource(params: {
 }
 
 export async function getPendingItemsCount() {
+    await requireBackofficeUser()
+
   try {
     // Optimisation : compter directement sur PhysicalItem au lieu de passer par Item
     // Cela évite une jointure inutile et utilise l'index sur status
@@ -1213,6 +1248,8 @@ export async function getPendingItemsCount() {
  * @returns Un objet contenant le nombre d'artistes visibles
  */
 export async function getVisibleLandingArtistsCount() {
+    await requireBackofficeUser()
+
   try {
     const count = await prisma.landingArtist.count()
     return { count }
@@ -1319,6 +1356,8 @@ export async function getActiveCollections() {
 }
 
 export async function getUserMintedItemsCount(userId: string) {
+    await requireAuthUserAccess(userId)
+
   try {
     const count = await prisma.item.count({
       where: {
@@ -1333,6 +1372,8 @@ export async function getUserMintedItemsCount(userId: string) {
 }
 
 export async function getUserListedItemsCount(userId: string) {
+    await requireAuthUserAccess(userId)
+
   try {
     // Optimisation : utiliser une jointure directe avec PhysicalItem
     // au lieu d'un OR avec relation nested
@@ -1352,6 +1393,8 @@ export async function getUserListedItemsCount(userId: string) {
 }
 
 export async function getUserPhysicalItemsCount(userId: string) {
+    await requireAuthUserAccess(userId)
+
   try {
     // Compter les physicalItems disponibles d'un utilisateur
     const availableCount = await prisma.physicalItem.count({
@@ -1385,6 +1428,8 @@ export async function getUserPhysicalItemsCount(userId: string) {
 }
 
 export async function getUserPhysicalCollectionsCount() {
+    await requireBackofficeUser()
+
   try {
     // Récupérer l'email de l'utilisateur authentifié (même logique que getPhysicalCollectionsWithItems)
     const userEmail = await getAuthenticatedUserEmail()
@@ -1982,6 +2027,8 @@ export async function getAllGalleries() {
  * Récupère un artiste par son ID
  */
 export async function getArtistById(id: number) {
+    await requireBackofficeUser()
+
   try {
     const artist = await prisma.artist.findUnique({
       where: { id },
@@ -2159,6 +2206,14 @@ export async function updateItemRecord(
     }
   }
 ): Promise<{ success: boolean, message?: string, item?: any }> {
+  // Propriétaire de l'item uniquement ; un non-admin ne peut pas le réattribuer à un autre artiste
+  const session = await requireItemAccess(itemId)
+  if (session.user.role !== BackofficeUserRoles.admin && data?.artistId != null) {
+    if (data.artistId !== (session.user as { artistId?: number | null }).artistId) {
+      throw new UnauthorizedError()
+    }
+  }
+
   try {
     // Vérifier si l'item existe et récupérer les associations existantes
     const existingItem = await prisma.item.findUnique({
@@ -2409,6 +2464,8 @@ export async function saveItemImages(
   mainImageUrl: string | null | undefined,
   secondaryImageUrls: string[] = []
 ) {
+    await requireItemAccess(itemId)
+
   try {
     console.log(`Début de la sauvegarde des images pour l'item #${itemId}`);
     console.log(`- URL principale: ${mainImageUrl || '(aucune modification)'}`);
@@ -2473,6 +2530,8 @@ export async function savePhysicalItemImage(
   alt?: string | null,
   order?: number | null
 ) {
+    await requirePhysicalItemAccess(physicalItemId)
+
   try {
     const image = await prisma.physicalItemImage.create({
       data: {
@@ -2537,6 +2596,8 @@ export async function deletePhysicalItemImageByUrl(
   imageUrl: string,
   imageType: string
 ) {
+    await requirePhysicalItemAccess(physicalItemId)
+
   try {
     // Trouver l'image par URL et type
     const image = await prisma.physicalItemImage.findFirst({
@@ -2579,6 +2640,8 @@ export async function deletePhysicalItemImageByUrl(
  * @returns Images groupées par type
  */
 export async function getPhysicalItemImagesByType(physicalItemId: bigint) {
+    await requirePhysicalItemAccess(physicalItemId)
+
   try {
     const images = await prisma.physicalItemImage.findMany({
       where: { physicalItemId },
@@ -2621,6 +2684,8 @@ export async function removeSecondaryImage(
   itemId: number,
   imageUrl: string
 ) {
+    await requireItemAccess(itemId)
+
   try {
     console.log(`Suppression de l'image secondaire pour l'item #${itemId}`);
     console.log(`URL à supprimer: ${imageUrl}`);
@@ -2680,6 +2745,8 @@ export async function removeSecondaryImage(
 export async function deletePhysicalItem(
   physicalItemId: number
 ): Promise<{ success: boolean; message?: string }> {
+    await requirePhysicalItemAccess(physicalItemId)
+
   try {
     // Vérifier si le physicalItem existe
     const physicalItem = await prisma.physicalItem.findUnique({
@@ -2733,6 +2800,8 @@ export async function deletePhysicalItem(
  * Récupère tous les mediums artistiques
  */
 export async function getAllArtworkMediums() {
+    await requireBackofficeUser()
+
   try {
     return await prisma.artworkMedium.findMany({
       orderBy: { name: 'asc' }
@@ -2747,6 +2816,8 @@ export async function getAllArtworkMediums() {
  * Récupère tous les styles artistiques
  */
 export async function getAllArtworkStyles() {
+    await requireBackofficeUser()
+
   try {
     return await prisma.artworkStyle.findMany({
       orderBy: { name: 'asc' }
@@ -2761,6 +2832,8 @@ export async function getAllArtworkStyles() {
  * Récupère toutes les techniques artistiques
  */
 export async function getAllArtworkTechniques() {
+    await requireBackofficeUser()
+
   try {
     return await prisma.artworkTechnique.findMany({
       orderBy: { name: 'asc' }
@@ -2775,6 +2848,8 @@ export async function getAllArtworkTechniques() {
  * Récupère tous les thèmes artistiques
  */
 export async function getAllArtworkThemes() {
+    await requireBackofficeUser()
+
   try {
     return await prisma.artworkTheme.findMany({
       orderBy: { name: 'asc' }

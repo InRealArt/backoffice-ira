@@ -31,7 +31,19 @@ const ROOT = process.env.GUARDS_ROOT
     : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const BASELINE_PATH = path.join(ROOT, 'scripts/action-guards-baseline.json')
 
-const GUARD_NAMES = new Set(['requireAdmin', 'requireRole', 'requireSession'])
+const GUARD_NAMES = new Set([
+    'requireAdmin',
+    'requireRole',
+    'requireSession',
+    'requireBackofficeUser',
+    'requireArtistAccess',
+    'requireAuthUserAccess',
+    'requirePresaleArtworkAccess',
+    'requireItemAccess',
+    'requirePhysicalItemAccess',
+    'requirePhysicalCollectionAccess',
+    'requireArtistAddressAccess',
+])
 const HTTP_METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'])
 
 const args = new Set(process.argv.slice(2))

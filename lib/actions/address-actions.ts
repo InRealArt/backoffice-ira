@@ -3,10 +3,13 @@
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ArtistAddress } from '@/src/generated/prisma/client'
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdmin, requireAuthUserAccess } from '@/lib/auth-helpers'
+import { requireArtistAddressAccess } from '@/lib/auth-ownership'
 
 // Récupérer les adresses d'un utilisateur BackofficeAuthUser (schéma backoffice)
 export async function getAddresses(backofficeAuthUserId: string) {
+    await requireAuthUserAccess(backofficeAuthUserId)
+
     try {
         const addresses = await prisma.artistAddress.findMany({
             where: {
@@ -112,6 +115,8 @@ export async function getAllAddressesForAdmin() {
 
 // Récupérer une adresse par son ID
 export async function getAddressById(id: number) {
+    await requireArtistAddressAccess(id)
+
     try {
         const address = await prisma.artistAddress.findUnique({
             where: {
@@ -150,6 +155,8 @@ export async function createAddress(data: {
     vatNumber?: string
     backofficeAuthUserId: string
 }) {
+    await requireAuthUserAccess(data.backofficeAuthUserId)
+
     try {
         // Ajout des champs obligatoires manquants
         const enrichedData = {
@@ -189,6 +196,8 @@ export async function updateAddress(id: number, data: {
     countryCode?: string
     vatNumber?: string
 }) {
+    await requireArtistAddressAccess(id)
+
     try {
         const address = await prisma.artistAddress.findUnique({
             where: { id }
@@ -231,7 +240,7 @@ export async function updateAddress(id: number, data: {
 
 // Supprimer une adresse
 export async function deleteAddress(id: number) {
-    await requireAdmin()
+    await requireArtistAddressAccess(id)
 
     try {
         const address = await prisma.artistAddress.findUnique({

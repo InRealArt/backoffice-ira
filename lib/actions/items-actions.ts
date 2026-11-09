@@ -2,6 +2,9 @@
 
 import { prisma } from '@/lib/prisma'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
+import { requirePhysicalItemAccess, requireItemAccess } from '@/lib/auth-ownership'
+import { requireBackofficeUser, UnauthorizedError } from '@/lib/auth-helpers'
+import { BackofficeUserRoles } from '@/lib/types/roles'
 
 /**
  * Récupère le nombre de vues depuis PhysicalArtworkView pour plusieurs artworks
@@ -101,6 +104,12 @@ export type ItemsDataResult = {
 }
 
 export async function fetchItemsData(email: string): Promise<ItemsDataResult> {
+    // Un non-admin ne peut lire que ses propres items
+    const session = await requireBackofficeUser()
+    if (session.user.role !== BackofficeUserRoles.admin && session.user.email !== email) {
+        throw new UnauthorizedError()
+    }
+
     try {
         // Récupérer l'utilisateur par email
         const user = await getBackofficeUserByEmail(email)
@@ -222,6 +231,8 @@ export async function getMonthlyViewStats(physicalItemId: bigint): Promise<Array
     viewCount: number
     monthLabel: string
 }>> {
+    await requirePhysicalItemAccess(physicalItemId)
+
     try {
         const stats = await prisma.$queryRawUnsafe<Array<{
             year: number
@@ -261,6 +272,8 @@ export async function getMonthlyViewStats(physicalItemId: bigint): Promise<Array
  * @returns ID du PhysicalItem (BigInt) ou null
  */
 export async function getPhysicalItemIdByItemId(itemId: number): Promise<bigint | null> {
+    await requireItemAccess(itemId)
+
     try {
         const physicalItem = await prisma.physicalItem.findUnique({
             where: { itemId },

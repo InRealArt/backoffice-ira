@@ -4,12 +4,16 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { PresaleArtwork } from '@/src/generated/prisma/client'
 import { toRelativePath } from '@/lib/r2/url'
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdmin, requireArtistAccess, requireBackofficeUser } from '@/lib/auth-helpers'
+import { requirePresaleArtworkAccess } from '@/lib/auth-ownership'
+import { BackofficeUserRoles } from '@/lib/types/roles'
 
 /**
  * Récupère toutes les œuvres en prévente
  */
 export async function getAllPresaleArtworks() {
+    await requireBackofficeUser()
+
     try {
         const presaleArtworks = await prisma.presaleArtwork.findMany({
             include: {
@@ -31,6 +35,8 @@ export async function getAllPresaleArtworks() {
  * Récupère une œuvre en prévente par son ID
  */
 export async function getPresaleArtworkById(id: number) {
+    await requireBackofficeUser()
+
     try {
         const presaleArtwork = await prisma.presaleArtwork.findUnique({
             where: { id },
@@ -50,6 +56,8 @@ export async function getPresaleArtworkById(id: number) {
  * Récupère l'ordre maximum des œuvres en prévente
  */
 export async function getMaxPresaleArtworkOrder() {
+    await requireBackofficeUser()
+
     try {
         const result = await prisma.presaleArtwork.aggregate({
             _max: {
@@ -69,6 +77,8 @@ export async function getMaxPresaleArtworkOrder() {
  * Compte le nombre d'œuvres en prévente pour un artiste
  */
 export async function getPresaleArtworkCountByArtist(artistId: number) {
+    await requireBackofficeUser()
+
     try {
         const count = await prisma.presaleArtwork.count({
             where: {
@@ -168,6 +178,12 @@ export async function createPresaleArtwork(data: {
     isTopArtwork?: boolean
     isFeatured?: boolean
 }) {
+    // Artiste : uniquement pour lui-même, sans les drapeaux de mise en avant (réservés à l'admin)
+    const session = await requireArtistAccess(data.artistId)
+    if (session.user.role !== BackofficeUserRoles.admin) {
+        data = { ...data, isFeatured: false, isTopArtwork: false, isSold: false }
+    }
+
     try {
         // Si aucun ordre n'est fourni, utiliser l'ordre maximum + 1
         let orderToUse = data.order
@@ -244,6 +260,14 @@ export async function updatePresaleArtwork(id: number, data: {
     isTopArtwork?: boolean
     isFeatured?: boolean
 }) {
+    // Propriétaire de l'œuvre uniquement ; un non-admin ne peut ni la réattribuer ni toucher
+    // aux drapeaux de mise en avant / à l'ordre (réservés à l'admin)
+    const session = await requirePresaleArtworkAccess(id)
+    if (session.user.role !== BackofficeUserRoles.admin) {
+        const { artistId: _artistId, isFeatured: _f, isTopArtwork: _t, isSold: _s, order: _o, ...allowed } = data
+        data = allowed
+    }
+
     try {
         // Utiliser une transaction pour garantir l'atomicité de la contrainte d'unicité isFeatured
         const presaleArtwork = await prisma.$transaction(async (tx) => {
@@ -326,6 +350,8 @@ export async function updatePresaleArtwork(id: number, data: {
  * Supprime une œuvre en prévente
  */
 export async function deletePresaleArtwork(id: number) {
+    await requirePresaleArtworkAccess(id)
+
     try {
         // Récupérer l'œuvre avec l'artiste pour connaître son ordre et les infos de l'artiste
         const artwork = await prisma.presaleArtwork.findUnique({
@@ -409,6 +435,8 @@ export async function createBulkPresaleArtworks(data: {
         height?: number | null
     }>
 }) {
+    await requireArtistAccess(data.artistId)
+
     try {
         // Récupérer l'ordre maximum actuel
         const maxOrder = await getMaxPresaleArtworkOrder()

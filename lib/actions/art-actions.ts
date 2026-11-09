@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache'
 import { getItemById } from './prisma-actions';
 import { HeartIcon } from 'lucide-react';
+import { requireBackofficeUser, UnauthorizedError } from '@/lib/auth-helpers'
+import { BackofficeUserRoles } from '@/lib/types/roles'
 
 type CreateCollectionResult = {
   success: boolean
@@ -66,6 +68,12 @@ export async function getUserByEmail(email: string) {
 }
 
 export async function createArtwork(formData: FormData): Promise<CreateArtworkResult> {
+  // userEmail vient du client : un non-admin ne peut créer une œuvre que pour son propre compte
+  const session = await requireBackofficeUser()
+  if (session.user.role !== BackofficeUserRoles.admin && session.user.email !== formData.get('userEmail')) {
+    throw new UnauthorizedError()
+  }
+
   try {
     const title = formData.get('title') as string
     const description = formData.get('description') as string

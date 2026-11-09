@@ -1,6 +1,6 @@
 'use server'
 
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdmin, requireBackofficeUser } from '@/lib/auth-helpers'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ArtworkStyle } from '@/src/generated/prisma/client'
@@ -18,6 +18,8 @@ export interface ActionResult {
 
 // Fonction pour récupérer tous les styles d'œuvre (pour le composant server)
 export async function getAllArtworkStyles(): Promise<ArtworkStyle[]> {
+    await requireBackofficeUser()
+
     try {
         const artworkStyles = await prisma.artworkStyle.findMany({
             orderBy: {

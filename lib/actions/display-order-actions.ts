@@ -2,7 +2,8 @@
 
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdmin, requireArtistAccess, requireBackofficeUser, UnauthorizedError } from '@/lib/auth-helpers'
+import { BackofficeUserRoles } from '@/lib/types/roles'
 
 /**
  * Interface générique pour les entités avec displayOrder
@@ -25,6 +26,16 @@ export async function updateDisplayOrder<T extends DisplayOrderEntity>(
     updates: Array<{ id: number; displayOrder: number | null }>,
     revalidatePaths: string[] = []
 ): Promise<{ success: boolean; message?: string }> {
+    // Un non-admin ne peut réordonner que ses propres œuvres : toutes les ids doivent lui appartenir
+    const session = await requireBackofficeUser()
+    if (session.user.role !== BackofficeUserRoles.admin) {
+        const ids = [...new Set(updates.map(u => u.id))]
+        const ownedCount = await prisma.presaleArtwork.count({
+            where: { id: { in: ids }, artistId: (session.user as { artistId?: number | null }).artistId ?? -1 }
+        })
+        if (ownedCount !== ids.length) throw new UnauthorizedError()
+    }
+
     try {
         // Utiliser une transaction pour garantir l'atomicité
         await prisma.$transaction(
@@ -86,6 +97,8 @@ export async function resetDisplayOrderForArtist(
     artistId: number,
     revalidatePaths: string[] = []
 ): Promise<{ success: boolean; message?: string }> {
+    await requireArtistAccess(artistId)
+
     try {
         // Récupérer toutes les œuvres de l'artiste, triées par order puis par id
         const artworks = await prisma.presaleArtwork.findMany({

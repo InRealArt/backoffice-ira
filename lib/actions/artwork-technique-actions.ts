@@ -1,6 +1,6 @@
 'use server'
 
-import { requireAdmin } from '@/lib/auth-helpers'
+import { requireAdmin, requireBackofficeUser } from '@/lib/auth-helpers'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { ArtworkTechnique } from '@/src/generated/prisma/client'
@@ -18,6 +18,8 @@ export interface ActionResult {
 
 // Fonction pour récupérer toutes les techniques d'œuvre (pour le composant server)
 export async function getAllArtworkTechniques(): Promise<ArtworkTechnique[]> {
+    await requireBackofficeUser()
+
     try {
         const artworkTechniques = await prisma.artworkTechnique.findMany({
             orderBy: {
