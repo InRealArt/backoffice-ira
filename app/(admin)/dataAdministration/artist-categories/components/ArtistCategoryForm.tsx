@@ -9,7 +9,7 @@ import { useToast } from '@/app/components/Toast/ToastContext'
 import TranslationField from '@/app/components/TranslationField'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import Image from 'next/image'
 import { generateSlug } from '@/lib/utils'
 
@@ -44,7 +44,7 @@ export default function ArtistCategoryForm({ artistCategory }: ArtistCategoryFor
     setValue,
     watch
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodFormResolver(formSchema),
     defaultValues: {
       name: artistCategory?.name || '',
       description: artistCategory?.description || '',

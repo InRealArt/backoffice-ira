@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/app/components/Toast/ToastContext";
@@ -156,7 +156,7 @@ export default function PresaleArtworkForm({
     watch,
     formState: { errors },
   } = useForm<PresaleArtworkFormValues>({
-    resolver: zodResolver(createPresaleArtworkSchema(t)),
+    resolver: zodFormResolver(createPresaleArtworkSchema(t)),
     defaultValues: {
       name: "",
       artistId: defaultArtistId ? defaultArtistId.toString() : "",

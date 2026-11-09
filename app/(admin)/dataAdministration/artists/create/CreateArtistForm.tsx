@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/app/components/Toast/ToastContext";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import { createArtist } from "@/lib/actions/artist-actions";
 import styles from "./createArtistForm.module.scss";
 import CountrySelect from "@/app/components/Common/CountrySelect";
@@ -146,7 +146,7 @@ export default function CreateArtistForm() {
     setValue,
     formState: { errors, isDirty, isValid },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodFormResolver(formSchema),
     defaultValues: {
       name: "",
       surname: "",

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import { useDropzone } from 'react-dropzone'
 import { X, Upload, Film, ImageIcon, Instagram, Youtube, Facebook, Linkedin, Twitter, Globe } from 'lucide-react'
 import { useToast } from '@/app/components/Toast/ToastContext'
@@ -199,7 +199,7 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
     }
 
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormValues>({
-        resolver: zodResolver(formSchema),
+        resolver: zodFormResolver(formSchema),
         defaultValues: {
             name: profile?.name ?? '',
             surname: profile?.surname ?? '',

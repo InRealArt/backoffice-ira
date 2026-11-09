@@ -33,13 +33,13 @@ export const physicalArtworkSchema = z.object({
         .min(1, "Le support/medium est requis"),
     styleIds: z.array(z.union([z.string(), z.number()]))
         .min(1, "Au moins un style est requis")
-        .default([]),
+        .prefault([]), // zod 4 : .default() ne valide plus la valeur par défaut
     techniqueIds: z.array(z.union([z.string(), z.number()]))
         .min(1, "Au moins une technique est requise")
-        .default([]),
+        .prefault([]), // zod 4 : .default() ne valide plus la valeur par défaut
     themeIds: z.array(z.union([z.string(), z.number()]))
         .min(1, "Au moins un thème est requis")
-        .default([]),
+        .prefault([]), // zod 4 : .default() ne valide plus la valeur par défaut
     width: z.string()
         .min(1, "La largeur est obligatoire")
         .refine((val) => !isNaN(parseFloat(val)), "La largeur doit être un nombre valide"),
@@ -79,7 +79,7 @@ export const physicalArtworkSchema = z.object({
         .min(1, "La collection est obligatoire")
         .refine(val => val !== '', "La collection doit être sélectionnée"),
     commercialStatus: z.enum(["AVAILABLE", "UNAVAILABLE"], {
-        required_error: "Le statut commercial est obligatoire",
+        error: "Le statut commercial est obligatoire",
     }).default("AVAILABLE")
 });
 
@@ -113,13 +113,13 @@ export const physicalArtworkEditSchema = z.object({
         .min(1, "Le support/medium est requis"),
     styleIds: z.array(z.union([z.string(), z.number()]))
         .min(1, "Au moins un style est requis")
-        .default([]),
+        .prefault([]), // zod 4 : .default() ne valide plus la valeur par défaut
     techniqueIds: z.array(z.union([z.string(), z.number()]))
         .min(1, "Au moins une technique est requise")
-        .default([]),
+        .prefault([]), // zod 4 : .default() ne valide plus la valeur par défaut
     themeIds: z.array(z.union([z.string(), z.number()]))
         .min(1, "Au moins un thème est requis")
-        .default([]),
+        .prefault([]), // zod 4 : .default() ne valide plus la valeur par défaut
     width: z.string()
         .min(1, "La largeur est obligatoire")
         .refine((val) => !isNaN(parseFloat(val)), "La largeur doit être un nombre valide"),
@@ -159,7 +159,7 @@ export const physicalArtworkEditSchema = z.object({
         .min(1, "La collection est obligatoire")
         .refine(val => val !== '', "La collection doit être sélectionnée"),
     commercialStatus: z.enum(["AVAILABLE", "UNAVAILABLE"], {
-        required_error: "Le statut commercial est obligatoire",
+        error: "Le statut commercial est obligatoire",
     }).default("AVAILABLE")
 });
 

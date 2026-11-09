@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import { z } from 'zod'
 import Image from 'next/image'
 import { Camera, X } from 'lucide-react'
@@ -66,7 +66,7 @@ export default function AgencyEventForm({ mode, agencyEvent }: AgencyEventFormPr
     watch,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodFormResolver(formSchema),
     defaultValues: {
       name: agencyEvent?.name ?? '',
       imageUrl: agencyEvent?.imageUrl ?? '',

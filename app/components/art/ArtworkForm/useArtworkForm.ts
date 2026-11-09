@@ -932,7 +932,7 @@ export function useArtworkForm({
                 const validationResult = physicalArtworkSchema.safeParse(data)
 
                 if (!validationResult.success) {
-                    console.error('Erreurs de validation:', validationResult.error.errors)
+                    console.error('Erreurs de validation:', validationResult.error.issues)
                     // Les erreurs de validation sont maintenant affichées dans la modale
                     // Plus besoin de toast d'erreur ici
                     setIsSubmitting(false)

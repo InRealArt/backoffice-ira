@@ -8,7 +8,7 @@ import { useToast } from "@/app/components/Toast/ToastContext";
 import Image from "next/image";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import { X, Plus } from "lucide-react";
 import { generateSlug } from "@/lib/utils";
 import CountrySelect from "@/app/components/Common/CountrySelect";
@@ -135,7 +135,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
     setValue,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodFormResolver(formSchema),
     defaultValues: {
       name: artist.name ?? "",
       surname: artist.surname ?? "",

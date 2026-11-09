@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useToast } from "@/app/components/Toast/ToastContext";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import {
   updateUserArtistProfile,
   getLandingArtistByArtistId,
@@ -197,7 +197,7 @@ export default function EditArtistProfileForm({
     control,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(createFormSchema(t)),
+    resolver: zodFormResolver(createFormSchema(t)),
     defaultValues: {
       pseudo: artist.pseudo ?? "",
       description: artist.description,
