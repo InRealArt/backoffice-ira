@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireBackofficeUser } from '@/lib/auth-helpers'
+import { requirePhysicalItemAccess } from '@/lib/auth-ownership'
+import { unauthorizedResponse } from '@/lib/api-auth'
 
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Session backoffice exigée ; la propriété de l'œuvre est vérifiée plus bas
+        await requireBackofficeUser()
+
         const resolvedParams = await params
         const id = parseInt(resolvedParams.id)
 
@@ -21,6 +27,9 @@ export async function GET(
             return new NextResponse('Certificat non trouvé', { status: 404 })
         }
 
+        // Admin, ou propriétaire de l'œuvre associée au certificat
+        await requirePhysicalItemAccess(certificate.physicalItemId)
+
         // Construire la réponse avec le fichier PDF
         const response = new NextResponse(Buffer.from(certificate.file), {
             headers: {
@@ -31,6 +40,10 @@ export async function GET(
 
         return response
     } catch (error) {
+        const denied = unauthorizedResponse(error)
+        if (denied) {
+            return new NextResponse(error instanceof Error ? error.message : 'Non autorisé', { status: denied.status })
+        }
         console.error('Erreur lors de la récupération du certificat:', error)
         return new NextResponse('Erreur serveur', { status: 500 })
     }
