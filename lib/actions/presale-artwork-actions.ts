@@ -178,10 +178,10 @@ export async function createPresaleArtwork(data: {
     isTopArtwork?: boolean
     isFeatured?: boolean
 }) {
-    // Artiste : uniquement pour lui-même, sans les drapeaux de mise en avant (réservés à l'admin)
+    // Artiste : uniquement pour lui-même, sans les drapeaux de mise en avant (réservés à l'admin) ; isSold reste modifiable
     const session = await requireArtistAccess(data.artistId)
     if (session.user.role !== BackofficeUserRoles.admin) {
-        data = { ...data, isFeatured: false, isTopArtwork: false, isSold: false }
+        data = { ...data, isFeatured: false, isTopArtwork: false }
     }
 
     try {
@@ -261,10 +261,10 @@ export async function updatePresaleArtwork(id: number, data: {
     isFeatured?: boolean
 }) {
     // Propriétaire de l'œuvre uniquement ; un non-admin ne peut ni la réattribuer ni toucher
-    // aux drapeaux de mise en avant / à l'ordre (réservés à l'admin)
+    // aux drapeaux de mise en avant / à l'ordre (réservés à l'admin) ; isSold reste modifiable
     const session = await requirePresaleArtworkAccess(id)
     if (session.user.role !== BackofficeUserRoles.admin) {
-        const { artistId: _artistId, isFeatured: _f, isTopArtwork: _t, isSold: _s, order: _o, ...allowed } = data
+        const { artistId: _artistId, isFeatured: _f, isTopArtwork: _t, order: _o, ...allowed } = data
         data = allowed
     }
 
