@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { SeoCategory, SeoPost, Language } from '@/src/generated/prisma/browser'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import { Accordion, AccordionItem } from '@/app/components/Accordion'
 import SelectField from '@/app/components/Forms/SelectField'
 import InputField from '@/app/components/Forms/InputField'
@@ -212,7 +212,7 @@ export default function SeoPostForm({
     setValue,
     getValues,
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodFormResolver(formSchema),
     defaultValues,
   })
 

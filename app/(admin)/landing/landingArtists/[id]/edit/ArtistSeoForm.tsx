@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import Image from 'next/image'
 import { GripVertical, X, Plus, Search } from 'lucide-react'
 import { useToast } from '@/app/components/Toast/ToastContext'
@@ -80,7 +80,7 @@ export default function ArtistSeoForm({
     formState: { errors },
     watch,
   } = useForm<SeoFormValues>({
-    resolver: zodResolver(seoSchema),
+    resolver: zodFormResolver(seoSchema),
     defaultValues: {
       isTopArtist: initialIsTopArtist,
       seoTitle: initialSeo?.seoTitle ?? '',

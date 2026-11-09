@@ -6,7 +6,7 @@ import { Language, Translation } from '@/src/generated/prisma/browser'
 import { useToast } from '@/app/components/Toast/ToastContext' 
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import { updateTranslation } from '@/lib/actions/translation-actions'
 import SelectField from '@/app/components/Forms/SelectField'
 import InputField from '@/app/components/Forms/InputField'
@@ -55,7 +55,7 @@ export default function TranslationEditForm({ translation, languages, models }: 
     watch,
     formState: { errors }
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodFormResolver(formSchema),
     defaultValues: {
       entityType: translation.entityType,
       entityId: translation.entityId,

@@ -16,7 +16,7 @@ const smartContractSchema = z.object({
         .min(1, 'L\'adresse du contrat marketplace est requise')
         .regex(/^0x[a-fA-F0-9]{40}$/, 'Adresse Ethereum invalide'),
     network: z.enum(['mainnet', 'sepolia', 'polygon', 'polygonAmoy', 'arbitrum', 'base', 'sepoliaBase'], {
-        required_error: 'Veuillez sélectionner un réseau',
+        error: 'Veuillez sélectionner un réseau',
     }),
     active: z.boolean().default(true)
 })

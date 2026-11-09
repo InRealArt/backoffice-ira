@@ -6,7 +6,7 @@ import { useToast } from "@/app/components/Toast/ToastContext";
 import Image from "next/image";
 import { z } from "zod";
 import { useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import { X, Plus } from "lucide-react";
 import { updateLandingArtistAction } from "@/lib/actions/landing-artist-actions";
 import TranslationField from "@/app/components/TranslationField";
@@ -234,7 +234,7 @@ export default function LandingArtistEditForm({
     control,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodFormResolver(formSchema),
     defaultValues: {
       intro: landingArtist.intro || "",
       description: landingArtist.description || "",

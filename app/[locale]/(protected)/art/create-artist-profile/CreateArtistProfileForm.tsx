@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/app/components/Toast/ToastContext";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import { checkNewArtistName, createUserArtistProfile } from "@/lib/actions/artist-actions";
 import CountrySelect from "@/app/components/Common/CountrySelect";
 import { getCountries } from "@/lib/utils";
@@ -131,7 +131,7 @@ export default function CreateArtistProfileForm({
     getValues,
     formState: { errors, dirtyFields },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodFormResolver(formSchema),
     defaultValues: {
       name: "",
       surname: "",

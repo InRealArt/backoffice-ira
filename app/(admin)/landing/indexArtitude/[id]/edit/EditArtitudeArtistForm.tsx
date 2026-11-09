@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@/app/components/Toast/ToastContext'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 import {
   updateArtitudeArtistAction,
   geocodeAddressAction,
@@ -167,7 +167,7 @@ export default function EditArtitudeArtistForm({
     watch,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodFormResolver(formSchema),
     defaultValues: {
       addressLine1: artitudeArtist.addressLine1,
       addressLine2: artitudeArtist.addressLine2 ?? '',

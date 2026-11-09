@@ -6,7 +6,7 @@ import { createLanguage } from '@/lib/actions/language-actions'
 import { useToast } from '@/app/components/Toast/ToastContext' 
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
 
 // Schéma de validation
 const formSchema = z.object({
@@ -26,7 +26,7 @@ export default function NewLanguageForm() {
     handleSubmit,
     formState: { errors }
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodFormResolver(formSchema),
     defaultValues: {
       name: '',
       code: '',
