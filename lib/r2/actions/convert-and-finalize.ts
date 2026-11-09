@@ -4,6 +4,8 @@ import { GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from '@aws-sd
 import sharp from 'sharp'
 import { r2Client, R2_BUCKET_NAME } from '@/lib/r2/client'
 import type { Readable } from 'stream'
+import { requireBackofficeUser } from '@/lib/auth-helpers'
+import { assertStorageAccess } from '@/lib/r2/storage-access'
 
 interface ConvertAndFinalizeResult {
     success: true
@@ -29,9 +31,20 @@ export async function convertAndFinalize(
     tempKey: string,
     finalKey: string
 ): Promise<ConvertAndFinalizeResult> {
+    // Server Action = endpoint HTTP public : session backoffice exigée, et clés validées côté serveur.
+    // Sans cela, n'importe qui pourrait lire/supprimer un objet quelconque du bucket (tempKey)
+    // ou écrire n'importe où (finalKey).
+    const session = await requireBackofficeUser()
+
     if (!tempKey || !finalKey) {
         throw new Error('convertAndFinalize: tempKey and finalKey are required')
     }
+    if (!tempKey.startsWith('temp/')) {
+        throw new Error('convertAndFinalize: tempKey non autorisée')
+    }
+    // Cloisonnement : tempKey sous temp/ (uuid) et finalKey dans le dossier de l'artiste (sauf admin)
+    await assertStorageAccess(session, tempKey, 'delete')
+    await assertStorageAccess(session, finalKey, 'write')
 
     // Step 1: Fetch the raw image bytes from R2
     const getCommand = new GetObjectCommand({

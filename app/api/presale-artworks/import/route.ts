@@ -1,32 +1,18 @@
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from '@/lib/landing-revalidation' // + purge du landing (IRA-22)
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth-helpers'
+import { requireAdmin } from '@/lib/auth-helpers'
+import { unauthorizedResponse } from '@/lib/api-auth'
 
 /**
  * Route handler pour l'import Excel de presale artworks
  * Accepte multipart/form-data avec le fichier Excel
- * Nécessite une authentification + rôle admin ou propriétaire de l'artiste
+ * Réservé aux administrateurs
  */
 export async function POST(request: NextRequest) {
     try {
-        // Vérifier l'authentification
-        const session = await getSession()
-        if (!session?.user) {
-            return NextResponse.json(
-                { success: false, message: 'Non authentifié' },
-                { status: 401 }
-            )
-        }
-
-        // Vérifier le rôle admin
-        const isAdmin = session.user.role === 'admin'
-        if (!isAdmin) {
-            return NextResponse.json(
-                { success: false, message: 'Accès non autorisé' },
-                { status: 403 }
-            )
-        }
+        // Réservé aux administrateurs
+        await requireAdmin()
 
         const formData = await request.formData()
         const file = formData.get('file') as File
@@ -210,6 +196,8 @@ export async function POST(request: NextRequest) {
             count: createdArtworks.length
         })
     } catch (error) {
+        const denied = unauthorizedResponse(error)
+        if (denied) return denied
         console.error('Erreur lors de l\'import Excel:', error)
         return NextResponse.json(
             {

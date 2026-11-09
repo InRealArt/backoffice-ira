@@ -2,19 +2,14 @@ import { NextResponse } from "next/server"
 import { PutObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { r2Client, R2_BUCKET_NAME } from "@/lib/r2/client"
-import { auth } from "@/lib/auth"
-import { headers } from "next/headers"
+import { requireBackofficeUser } from "@/lib/auth-helpers"
+import { unauthorizedResponse } from "@/lib/api-auth"
+import { assertStorageAccess } from "@/lib/r2/storage-access"
 
 export async function POST(request: Request) {
   try {
-    // Vérifier que l'utilisateur est authentifié
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
-    }
+    // Utilisateur du backoffice authentifié (admin, artiste ou responsable de galerie)
+    const session = await requireBackofficeUser()
 
     const { storagePath, contentType, fileSize } = await request.json()
 
@@ -24,6 +19,9 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    // Cloisonnement : un non-admin n'écrit que dans le dossier de son artiste (ou temp/)
+    await assertStorageAccess(session, storagePath, "write")
 
     // Server-side size guard — enforced before issuing the presigned URL so an
     // attacker who calls this endpoint directly cannot obtain a URL for a large upload.
@@ -51,6 +49,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ uploadUrl, relativePath: storagePath })
   } catch (error) {
+    const denied = unauthorizedResponse(error)
+    if (denied) return denied
     console.error("Erreur lors de la génération de la presigned URL:", error)
     return NextResponse.json(
       { error: "Erreur lors de la génération de la presigned URL" },

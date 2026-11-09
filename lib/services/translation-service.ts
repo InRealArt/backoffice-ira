@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { generateSeoJsonLd, generateSeoHtml, generateArticleHtml, SeoPostData } from '@/lib/utils/seo-generators'
 import { calculateReadingTime } from '@/lib/utils/reading-time-calculator'
 import { BlogContent, ElementType } from '@/app/components/BlogEditor/types'
+import { requireAdmin } from '@/lib/auth-helpers'
 
 export interface FieldsToTranslate {
     title: string
@@ -429,6 +430,8 @@ export async function translateSeoPostFields(
     fields: FieldsToTranslate,
     targetLanguageCode: string
 ): Promise<TranslatedFields> {
+    await requireAdmin()
+
     // Vérifier que la langue cible existe en DB
     const targetLanguage = await prisma.language.findUnique({
         where: { code: targetLanguageCode }
@@ -460,6 +463,8 @@ export async function translateSeoPostFields(
 export async function translateFieldsToEnglish(
     fields: FieldsToTranslate
 ): Promise<{ fields: TranslatedFields; translationFailed: boolean }> {
+    await requireAdmin()
+
     try {
         const translated = await translateAllFields(fields, 'en', 'auto')
         return {
@@ -493,12 +498,16 @@ export async function translateFieldsToEnglish(
 
 // Nouvelles fonctions utilitaires
 export async function getLanguageByCode(code: string) {
+    await requireAdmin()
+
     return await prisma.language.findUnique({
         where: { code }
     })
 }
 
 export async function getAllLanguages() {
+    await requireAdmin()
+
     return await prisma.language.findMany({
         orderBy: { isDefault: 'desc' }
     })
@@ -508,6 +517,8 @@ export async function checkTranslationExists(
     postId: number,
     languageCode: string
 ): Promise<boolean> {
+    await requireAdmin()
+
     const language = await getLanguageByCode(languageCode)
     if (!language) return false
 
@@ -567,6 +578,8 @@ export async function handleSeoPostTranslationsOnUpdate(
     postId: number,
     updatedFields: FieldsToTranslate
 ): Promise<{ success: boolean; message?: string; translationsCreated: number; translationsUpdated: number }> {
+    await requireAdmin()
+
     try {
         // Récupérer le post original avec TOUS les champs nécessaires
         const originalPost = await prisma.seoPost.findUnique({

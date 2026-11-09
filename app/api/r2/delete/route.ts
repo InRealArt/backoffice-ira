@@ -1,19 +1,14 @@
 import { NextResponse } from "next/server"
 import { DeleteObjectCommand } from "@aws-sdk/client-s3"
 import { r2Client, R2_BUCKET_NAME } from "@/lib/r2/client"
-import { auth } from "@/lib/auth"
-import { headers } from "next/headers"
+import { requireBackofficeUser } from "@/lib/auth-helpers"
+import { unauthorizedResponse } from "@/lib/api-auth"
+import { assertStorageAccess } from "@/lib/r2/storage-access"
 
 export async function DELETE(request: Request) {
   try {
-    // Vérifier que l'utilisateur est authentifié
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
-    }
+    // Utilisateur du backoffice authentifié (admin, artiste ou responsable de galerie)
+    const session = await requireBackofficeUser()
 
     const { storagePath } = await request.json()
 
@@ -23,6 +18,9 @@ export async function DELETE(request: Request) {
         { status: 400 }
       )
     }
+
+    // Cloisonnement : un non-admin ne supprime que dans le dossier de son artiste (ou temp/)
+    await assertStorageAccess(session, storagePath, "delete")
 
     const command = new DeleteObjectCommand({
       Bucket: R2_BUCKET_NAME,
@@ -34,6 +32,8 @@ export async function DELETE(request: Request) {
     console.log(`✅ [R2 delete] Fichier supprimé: ${storagePath}`)
     return NextResponse.json({ success: true })
   } catch (error: any) {
+    const denied = unauthorizedResponse(error)
+    if (denied) return denied
     // R2 retourne NoSuchKey si le fichier n'existe pas
     if (error?.name === "NoSuchKey" || error?.$metadata?.httpStatusCode === 404) {
       return NextResponse.json({ success: true, notFound: true }, { status: 404 })
