@@ -23,14 +23,6 @@ const routes = [
         load: async () => (await import('@/app/api/inventory/export-self-added/route')).GET(),
         action: generateSelfAddedInventoryExcel,
     },
-    {
-        name: 'POST /api/tools/webp-converter',
-        load: async () =>
-            (await import('@/app/api/tools/webp-converter/route')).POST(
-                new NextRequest('http://localhost/api/tools/webp-converter', { method: 'POST', body: new FormData() }),
-            ),
-        action: null,
-    },
 ]
 
 describe.each(routes)('$name', ({ load, action }) => {
@@ -58,5 +50,31 @@ describe.each(routes)('$name', ({ load, action }) => {
         withRole('admin')
         const res = await load()
         expect([401, 403]).not.toContain(res.status)
+    })
+})
+
+describe('POST /api/tools/webp-converter (tout utilisateur du backoffice)', () => {
+    const call = async () =>
+        (await import('@/app/api/tools/webp-converter/route')).POST(
+            new NextRequest('http://localhost/api/tools/webp-converter', { method: 'POST', body: new FormData() }),
+        )
+
+    beforeEach(() => getSessionMock.mockReset())
+
+    it('renvoie 401 sans session', async () => {
+        withRole(null)
+        expect((await call()).status).toBe(401)
+    })
+
+    it('laisse passer admin, artiste et responsable de galerie (400 : aucune image fournie)', async () => {
+        for (const role of ['admin', 'artist', 'galleryManager']) {
+            withRole(role)
+            expect((await call()).status).toBe(400)
+        }
+    })
+
+    it('renvoie 403 pour une session sans rôle', async () => {
+        getSessionMock.mockResolvedValue({ user: { id: 'u', role: null } })
+        expect((await call()).status).toBe(403)
     })
 })

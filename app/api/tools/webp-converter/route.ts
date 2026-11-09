@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sharp from 'sharp'
 import { v4 as uuidv4 } from 'uuid'
-import { requireAdmin, UnauthorizedError } from '@/lib/auth-helpers'
+import { requireBackofficeUser, UnauthorizedError } from '@/lib/auth-helpers'
 
 // Configuration Vercel pour éviter les timeouts
 export const runtime = 'nodejs'
@@ -9,7 +9,9 @@ export const maxDuration = 30 // Augmenter à 30 secondes pour les conversions
 
 export async function POST(request: NextRequest) {
     try {
-        await requireAdmin()
+        // Convertisseur sans état, utilisé aussi par les flux artistes (profil, œuvres) :
+        // tout utilisateur du backoffice authentifié, pas seulement l'admin
+        await requireBackofficeUser()
         const formData = await request.formData()
         const files = formData.getAll('images') as File[]
 
