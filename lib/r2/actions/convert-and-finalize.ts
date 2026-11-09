@@ -5,7 +5,7 @@ import sharp from 'sharp'
 import { r2Client, R2_BUCKET_NAME } from '@/lib/r2/client'
 import type { Readable } from 'stream'
 import { requireBackofficeUser } from '@/lib/auth-helpers'
-import { isAllowedStoragePath } from '@/lib/r2/path-guard'
+import { assertStorageAccess } from '@/lib/r2/storage-access'
 
 interface ConvertAndFinalizeResult {
     success: true
@@ -39,12 +39,12 @@ export async function convertAndFinalize(
     if (!tempKey || !finalKey) {
         throw new Error('convertAndFinalize: tempKey and finalKey are required')
     }
-    if (!tempKey.startsWith('temp/') || !isAllowedStoragePath(tempKey, session.user.role)) {
+    if (!tempKey.startsWith('temp/')) {
         throw new Error('convertAndFinalize: tempKey non autorisée')
     }
-    if (!isAllowedStoragePath(finalKey, session.user.role)) {
-        throw new Error('convertAndFinalize: finalKey non autorisée')
-    }
+    // Cloisonnement : tempKey sous temp/ (uuid) et finalKey dans le dossier de l'artiste (sauf admin)
+    await assertStorageAccess(session, tempKey, 'delete')
+    await assertStorageAccess(session, finalKey, 'write')
 
     // Step 1: Fetch the raw image bytes from R2
     const getCommand = new GetObjectCommand({

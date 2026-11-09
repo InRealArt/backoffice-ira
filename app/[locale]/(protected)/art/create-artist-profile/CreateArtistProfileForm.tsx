@@ -6,7 +6,7 @@ import { useToast } from "@/app/components/Toast/ToastContext";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createUserArtistProfile } from "@/lib/actions/artist-actions";
+import { checkNewArtistName, createUserArtistProfile } from "@/lib/actions/artist-actions";
 import CountrySelect from "@/app/components/Common/CountrySelect";
 import { getCountries } from "@/lib/utils";
 import Button from "@/app/components/Button/Button";
@@ -244,6 +244,18 @@ export default function CreateArtistProfileForm({
         setProgressError("Veuillez sélectionner une photo de profil");
         setFormError("Veuillez sélectionner une photo de profil");
         errorToast("Veuillez sélectionner une photo de profil");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Le nom sert de dossier de stockage : le valider avant tout upload
+      const nameCheck = await checkNewArtistName(data.name, data.surname);
+      if (!nameCheck.success) {
+        const message = nameCheck.message || "Prénom ou nom invalide";
+        updateStepStatus("validation", "error");
+        setProgressError(message);
+        setFormError(message);
+        errorToast(message);
         setIsSubmitting(false);
         return;
       }

@@ -11,6 +11,7 @@ const prismaMock = {
     authCertificatePhysicalArtwork: { findUnique: vi.fn() },
     physicalItem: { findUnique: vi.fn() },
     item: { findUnique: vi.fn() },
+    artist: { findUnique: vi.fn(), findMany: vi.fn() },
 }
 vi.mock('@/lib/prisma', () => ({ prisma: prismaMock }))
 
@@ -36,6 +37,8 @@ beforeEach(() => {
     prismaMock.authCertificatePhysicalArtwork.findUnique.mockReset()
     prismaMock.physicalItem.findUnique.mockReset()
     prismaMock.item.findUnique.mockReset()
+    prismaMock.artist.findUnique.mockReset().mockResolvedValue({ name: 'A', surname: 'B', pseudo: null })
+    prismaMock.artist.findMany.mockReset().mockResolvedValue([])
 })
 
 describe.each([
@@ -73,6 +76,7 @@ describe('/api/r2/presign', () => {
         expect((await call('team/x.webp')).status).toBe(403)
         expect((await call('artists/../team/x.webp')).status).toBe(403)
         expect((await call('secrets/x')).status).toBe(403)
+        expect((await call('artists/Autre Artiste/x.webp')).status).toBe(403)
         as('admin')
         expect((await call('team/x.webp')).status).toBe(200)
         expect((await call('artists/../x')).status).toBe(403)
@@ -93,6 +97,7 @@ describe('/api/r2/delete', () => {
         as('artist')
         expect((await call('team/x.webp')).status).toBe(403)
         expect((await call('artists/../x')).status).toBe(403)
+        expect((await call('artists/Autre Artiste/x.webp')).status).toBe(403)
         expect(s3Send).not.toHaveBeenCalled()
     })
 

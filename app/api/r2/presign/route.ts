@@ -4,7 +4,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { r2Client, R2_BUCKET_NAME } from "@/lib/r2/client"
 import { requireBackofficeUser } from "@/lib/auth-helpers"
 import { unauthorizedResponse } from "@/lib/api-auth"
-import { isAllowedStoragePath } from "@/lib/r2/path-guard"
+import { assertStorageAccess } from "@/lib/r2/storage-access"
 
 export async function POST(request: Request) {
   try {
@@ -20,9 +20,8 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!isAllowedStoragePath(storagePath, session.user.role)) {
-      return NextResponse.json({ error: "Chemin de stockage non autorisé" }, { status: 403 })
-    }
+    // Cloisonnement : un non-admin n'écrit que dans le dossier de son artiste (ou temp/)
+    await assertStorageAccess(session, storagePath, "write")
 
     // Server-side size guard — enforced before issuing the presigned URL so an
     // attacker who calls this endpoint directly cannot obtain a URL for a large upload.

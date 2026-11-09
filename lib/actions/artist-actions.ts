@@ -7,6 +7,7 @@ import { generateSlug, toCamelCase, getCountries } from '@/lib/utils'
 import { toRelativePath } from '@/lib/r2/url'
 import { requireAdmin, requireArtistAccess, requireRole, UnauthorizedError, requireBackofficeUser } from '@/lib/auth-helpers'
 import { BackofficeUserRoles } from '@/lib/types/roles'
+import { validateNewArtistName } from '@/lib/r2/folder-keys'
 
 export async function getArtistById(id: number): Promise<Artist | null> {
     await requireBackofficeUser()
@@ -243,6 +244,21 @@ export async function createArtist(data: CreateArtistData): Promise<{ success: b
 }
 
 /**
+ * Pré-validation du nom d'un futur profil artiste, appelée AVANT les uploads d'images :
+ * les images sont écrites sous un dossier dérivé du nom, un nom déjà pris ferait échouer
+ * l'upload avec une erreur peu parlante.
+ */
+export async function checkNewArtistName(
+    name: string,
+    surname: string
+): Promise<{ success: boolean; message?: string }> {
+    await requireRole(BackofficeUserRoles.admin, BackofficeUserRoles.artist)
+
+    const error = validateNewArtistName({ name, surname }, await prisma.artist.findMany({ select: { name: true, surname: true } }))
+    return error ? { success: false, message: error } : { success: true }
+}
+
+/**
  * Crée un profil artiste complet (Artist + LandingArtist) et l'associe à un utilisateur
  */
 export async function createUserArtistProfile(
@@ -301,6 +317,12 @@ export async function createUserArtistProfile(
                 success: false,
                 message: 'Ce pseudo est déjà utilisé'
             }
+        }
+
+        // Le nom sert de clé de dossier de stockage : exploitable et sans collision avec un artiste existant
+        const nameError = validateNewArtistName({ name, surname }, await prisma.artist.findMany({ select: { name: true, surname: true } }))
+        if (nameError) {
+            return { success: false, message: nameError }
         }
 
         // Vérifier que l'utilisateur existe et a le rôle artist

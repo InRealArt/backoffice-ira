@@ -3,7 +3,7 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3"
 import { r2Client, R2_BUCKET_NAME } from "@/lib/r2/client"
 import { requireBackofficeUser } from "@/lib/auth-helpers"
 import { unauthorizedResponse } from "@/lib/api-auth"
-import { isAllowedStoragePath } from "@/lib/r2/path-guard"
+import { assertStorageAccess } from "@/lib/r2/storage-access"
 
 export async function DELETE(request: Request) {
   try {
@@ -19,9 +19,8 @@ export async function DELETE(request: Request) {
       )
     }
 
-    if (!isAllowedStoragePath(storagePath, session.user.role)) {
-      return NextResponse.json({ error: "Chemin de stockage non autorisé" }, { status: 403 })
-    }
+    // Cloisonnement : un non-admin ne supprime que dans le dossier de son artiste (ou temp/)
+    await assertStorageAccess(session, storagePath, "delete")
 
     const command = new DeleteObjectCommand({
       Bucket: R2_BUCKET_NAME,
