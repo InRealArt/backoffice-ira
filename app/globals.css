@@ -1010,3 +1010,46 @@ body.dark {
     @apply text-gray-100 bg-gray-800;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Accessibilité : anneau de focus clavier et réduction des animations
+   --------------------------------------------------------------------------- */
+
+/* Anneau visible uniquement à la navigation clavier (pas au clic souris) */
+:where(a, button, [role='button'], [role='link'], summary, select, input, textarea, [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Lignes de tableau et éléments de menu : anneau interne pour ne pas être rogné */
+.data-table tbody tr:focus-visible,
+.side-menu .menu-item:focus-visible,
+.side-menu .submenu-item:focus-visible {
+  outline-offset: -2px;
+}
+
+/* En-tête triable : le bouton hérite de la typo du <th> */
+.sortable-header-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+/* Respecte le réglage système « réduire les animations » */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -26,7 +26,7 @@ export default function BackofficeAdminSubMenu({ isActive, isOpen, toggleSubmenu
       />
       
       {isOpen && !isCollapsed && (
-        <ul className="submenu">
+        <ul className="submenu" role="group">
           <SideMenuItem 
             label="Gestion des Membres" 
             isSubmenuItem={true}
@@ -37,7 +37,7 @@ export default function BackofficeAdminSubMenu({ isActive, isOpen, toggleSubmenu
       )}
       
       {isOpen && isCollapsed && (
-        <ul className="submenu visible">
+        <ul className="submenu visible" role="group">
           <SideMenuItem 
             label="Gestion des Membres" 
             isSubmenuItem={true}

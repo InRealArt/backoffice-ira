@@ -31,12 +31,24 @@ export default function SideMenuItem({
     <li 
       className={`${baseClass} ${activeClass} ${submenuClass} ${submenuOpenClass} ${collapsedClass}`} 
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick?.()
+        }
+      }}
+      tabIndex={0}
+      role={hasSubmenu ? 'button' : 'link'}
+      aria-label={isCollapsed ? label : undefined}
+      aria-current={isActive && !hasSubmenu ? 'page' : undefined}
+      aria-expanded={hasSubmenu ? isSubmenuOpen : undefined}
       data-label={label}
     >
       {icon && <span className="menu-item-icon">{icon}</span>}
       {(!isCollapsed || isSubmenuItem) && <span className="menu-item-label">{label}</span>}
       {hasSubmenu && !isCollapsed && (
-        <span className="submenu-indicator">
+        <span className="submenu-indicator" aria-hidden="true">
           {isSubmenuOpen ? '▼' : '▶'}
         </span>
       )}

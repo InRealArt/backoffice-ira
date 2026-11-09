@@ -77,25 +77,45 @@ export function DataTable<T>({
         <table className="data-table">
           <thead>
             <tr>
-              {columns.map((column) => (
-                <th 
-                  key={column.key}
-                  className={`${column.sortable ? 'sortable-column' : ''} ${column.className || ''}`}
-                  style={column.width ? { width: column.width } : {}}
-                  onClick={column.sortable && onSort ? () => onSort(column.key) : undefined}
-                >
-                  {column.sortable && sortColumn === column.key ? (
-                    <div className="d-flex align-items-center gap-xs">
-                      {column.header}
-                      <span className="sort-icon">
-                        {sortDirection === 'asc' ? '▲' : '▼'}
-                      </span>
-                    </div>
-                  ) : (
-                    column.header
-                  )}
-                </th>
-              ))}
+              {columns.map((column) => {
+                const isSortable = !!column.sortable && !!onSort
+                const isSorted = !!column.sortable && sortColumn === column.key
+                const ariaSort: React.AriaAttributes['aria-sort'] = isSorted
+                  ? sortDirection === 'asc' ? 'ascending' : 'descending'
+                  : column.sortable ? 'none' : undefined
+
+                return (
+                  <th
+                    key={column.key}
+                    scope="col"
+                    aria-sort={ariaSort}
+                    className={`${column.sortable ? 'sortable-column' : ''} ${column.className || ''}`}
+                    style={column.width ? { width: column.width } : {}}
+                    onClick={isSortable ? () => onSort(column.key) : undefined}
+                  >
+                    {isSortable ? (
+                      <button
+                        type="button"
+                        className="sortable-header-button"
+                        onClick={(e) => {
+                          // Évite le double déclenchement avec le onClick du <th>
+                          e.stopPropagation()
+                          onSort(column.key)
+                        }}
+                      >
+                        {column.header}
+                        {isSorted && (
+                          <span className="sort-icon" aria-hidden="true">
+                            {sortDirection === 'asc' ? '▲' : '▼'}
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      column.header
+                    )}
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>
@@ -122,10 +142,22 @@ export function DataTable<T>({
                 }
               }
 
+              const handleRowKeyDown = (e: React.KeyboardEvent<HTMLTableRowElement>) => {
+                // Seulement si la ligne elle-même a le focus (pas un bouton/lien/champ enfant)
+                if (e.target !== e.currentTarget) return
+                if ((e.key === 'Enter' || e.key === ' ') && onRowClick && !isLoading) {
+                  e.preventDefault()
+                  onRowClick(item)
+                }
+              }
+
               return (
-                <tr 
+                <tr
                   key={key}
                   onClick={handleRowClick}
+                  onKeyDown={onRowClick ? handleRowKeyDown : undefined}
+                  tabIndex={onRowClick && !isLoading ? 0 : undefined}
+                  aria-busy={isRowLoading || undefined}
                   className={`
                     ${onRowClick ? 'clickable-row' : ''}
                     ${isRowLoading ? 'loading-row' : ''}
