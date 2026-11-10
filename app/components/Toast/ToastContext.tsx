@@ -39,6 +39,8 @@ export function ToastProvider({ children }: ToastProviderProps) {
     return toast.custom(
       (t) => (
         <div 
+          role={type === 'error' ? 'alert' : 'status'}
+          aria-live={type === 'error' ? 'assertive' : 'polite'}
           className={`toast-notification toast-${type} ${t.visible ? 'animate-enter' : 'animate-leave'}`}
           onClick={() => toast.dismiss(t.id)}
         >

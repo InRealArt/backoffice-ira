@@ -2,6 +2,7 @@
 
 import React, { useRef, useCallback } from 'react'
 import { useState, useEffect } from 'react'
+import { useToast } from '@/app/components/Toast/ToastContext'
 import { 
   PlusCircle, Trash2, ImageIcon, ListOrdered, 
   List, Quote, SaveIcon, Eye, Code, ArrowDown, ArrowUp,
@@ -282,6 +283,7 @@ const FormattingToolbar = ({
 }
 
 const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls = false }: SEOContentGeneratorProps) => {
+  const toast = useToast()
   // Fonction pour nettoyer les valeurs de texte
   const cleanValue = (text: string | undefined): string => {
     if (!text) return '';
@@ -1516,8 +1518,11 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
                 type="button" 
                 onClick={() => {
                   navigator.clipboard.writeText(previewHtml)
-                    .then(() => alert('HTML copié dans le presse-papiers'))
-                    .catch(err => console.error('Erreur lors de la copie: ', err))
+                    .then(() => toast.success('HTML copié dans le presse-papiers'))
+                    .catch(err => {
+                      console.error('Erreur lors de la copie: ', err)
+                      toast.error('Impossible de copier le HTML')
+                    })
                 }} 
                 className="btn btn-primary btn-medium mt-2"
               >

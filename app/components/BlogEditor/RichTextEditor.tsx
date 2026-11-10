@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { RichContent, TextSegment } from './types'
 import LinkModal from './LinkModal'
+import { useToast } from '@/app/components/Toast/ToastContext'
 
 interface RichTextEditorProps {
   content: string
@@ -20,6 +21,7 @@ export default function RichTextEditor({
   placeholder = "Contenu du paragraphe",
   rows = 4
 }: RichTextEditorProps) {
+  const toast = useToast()
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false)
   const [selectedText, setSelectedText] = useState('')
   const [selectionStart, setSelectionStart] = useState(0)
@@ -79,7 +81,7 @@ export default function RichTextEditor({
     if (selectedText.trim()) {
       setIsLinkModalOpen(true)
     } else {
-      alert('Veuillez sélectionner du texte pour créer un lien')
+      toast.warning('Veuillez sélectionner du texte pour créer un lien')
     }
   }
 

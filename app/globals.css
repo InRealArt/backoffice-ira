@@ -1181,6 +1181,70 @@ body.dark {
 }
 
 /* ---------------------------------------------------------------------------
+   Squelettes de chargement (loading.tsx) : lignes neutres avec un léger balayage
+   --------------------------------------------------------------------------- */
+.skeleton-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.skeleton-line {
+  display: block;
+  height: 0.9rem;
+  background: linear-gradient(
+    90deg,
+    var(--color-background-light) 25%,
+    var(--color-background-hover) 50%,
+    var(--color-background-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-title {
+  width: 40%;
+  height: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.skeleton-card {
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  background-color: var(--color-background-white);
+  border: 1px solid var(--color-border);
+}
+
+.skeleton-input {
+  height: 2.5rem;
+}
+
+.skeleton-table {
+  background-color: var(--color-background-white);
+  border: 1px solid var(--color-border);
+}
+
+.skeleton-row {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.skeleton-row:last-child {
+  border-bottom: 0;
+}
+
+.skeleton-row .skeleton-line {
+  flex: 1;
+}
+
+@keyframes skeleton-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* ---------------------------------------------------------------------------
    Accessibilité : anneau de focus clavier et réduction des animations
    --------------------------------------------------------------------------- */
 

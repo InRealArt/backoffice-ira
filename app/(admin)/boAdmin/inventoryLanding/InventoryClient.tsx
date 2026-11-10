@@ -18,6 +18,7 @@ import { InventoryFilter } from "./InventoryFilter";
 import type { ArtistWithCount } from "@/lib/types/artist";
 import { getArtistFullName } from "@/lib/utils";
 import { getImageUrl } from "@/lib/r2/url";
+import { useToast } from "@/app/components/Toast/ToastContext";
 
 interface InventoryClientProps {
   artists: ArtistWithCount[];
@@ -30,6 +31,7 @@ export default function InventoryClient({ artists }: InventoryClientProps) {
   const [isGeneratingSelfAddedExcel, setIsGeneratingSelfAddedExcel] =
     useState(false);
   const router = useRouter();
+  const toast = useToast();
 
   // Détecte si l'écran est de taille mobile
   useEffect(() => {
@@ -50,7 +52,7 @@ export default function InventoryClient({ artists }: InventoryClientProps) {
     dateValue: string
   ) => {
     if (!artist.landingArtistId) {
-      alert("Cet artiste n'a pas de profil LandingArtist associé");
+      toast.warning("Cet artiste n'a pas de profil LandingArtist associé");
       return;
     }
 
@@ -68,13 +70,14 @@ export default function InventoryClient({ artists }: InventoryClientProps) {
       );
 
       if (result.success) {
+        toast.success("Date d'onboarding mise à jour");
         router.refresh();
       } else {
-        alert(result.message || "Erreur lors de la mise à jour");
+        toast.error(result.message || "Erreur lors de la mise à jour");
       }
     } catch (error) {
       console.error("Erreur lors de la mise à jour:", error);
-      alert("Une erreur est survenue");
+      toast.error("Une erreur est survenue");
     } finally {
       setUpdatingIds((prev) => {
         const newSet = new Set(prev);
@@ -120,7 +123,7 @@ export default function InventoryClient({ artists }: InventoryClientProps) {
       document.body.removeChild(a);
     } catch (error) {
       console.error("Erreur lors de la génération de l'Excel:", error);
-      alert("Une erreur est survenue lors de la génération du fichier Excel");
+      toast.error("Une erreur est survenue lors de la génération du fichier Excel");
     } finally {
       setIsGeneratingExcel(false);
     }
@@ -149,7 +152,7 @@ export default function InventoryClient({ artists }: InventoryClientProps) {
       document.body.removeChild(a);
     } catch (error) {
       console.error("Erreur lors de la génération de l'Excel:", error);
-      alert("Une erreur est survenue lors de la génération du fichier Excel");
+      toast.error("Une erreur est survenue lors de la génération du fichier Excel");
     } finally {
       setIsGeneratingSelfAddedExcel(false);
     }
