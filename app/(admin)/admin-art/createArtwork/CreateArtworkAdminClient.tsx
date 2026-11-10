@@ -90,7 +90,7 @@ export default function CreateArtworkAdminClient({
   }, [selectedArtist])
   
   return (
-    <>
+    <div className={styles.page}>
       <div className={styles.artworkCreationHeader}>
         <h1>Créer une œuvre en tant qu'Administrateur</h1>
         <p className={styles.subtitle}>
@@ -184,6 +184,6 @@ export default function CreateArtworkAdminClient({
           <p>Veuillez sélectionner un artiste pour continuer.</p>
         </div>
       )}
-    </>
+    </div>
   )
 } 

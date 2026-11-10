@@ -324,7 +324,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   };
 
   return (
-    <div className="max-w-5xl">
+    <div className="max-w-5xl mx-auto">
       <div className="page-header">
         <div className="header-top-section">
           <h1 className="page-title">Modifier l'artiste</h1>

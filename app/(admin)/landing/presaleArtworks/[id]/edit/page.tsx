@@ -28,7 +28,7 @@ export default async function EditPresaleArtworkPage({ params }: EditPresaleArtw
   }
   
   return (
-    <div className="page-container">
+    <div className="page-container max-w-5xl mx-auto">
       <div className="page-header">
         <h1 className="page-title">Modifier une œuvre en prévente</h1>
         <p className="page-subtitle">

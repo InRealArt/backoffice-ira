@@ -21,7 +21,7 @@ export default function ArtistEditTabs({ profileForm, seoForm, artistName }: Art
   const [activeTab, setActiveTab] = useState<TabId>('profile')
 
   return (
-    <div>
+    <div className={formKit.tabsRoot}>
       {/* Tab bar */}
       <div className={formKit.tabBar}>
         <div
