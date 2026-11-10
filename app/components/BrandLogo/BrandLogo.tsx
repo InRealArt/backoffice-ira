@@ -25,7 +25,7 @@ export default function BrandLogo({ size = 'md', caption, className = '' }: Bran
       aria-label={caption ? `InRealArt ${caption}` : 'InRealArt'}
     >
       <span
-        className={cormorant.className}
+        className={`${cormorant.className} brand-wordmark`}
         aria-hidden="true"
         style={{
           fontSize: wordmarkSize,

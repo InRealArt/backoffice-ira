@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import styles from "./DynamicFormList.module.scss";
 import { useTranslations } from "next-intl";
 import {
   UseFormRegister,
@@ -139,38 +140,38 @@ export default function DynamicFormList<T extends Record<string, any>>({
   };
 
   return (
-    <div className={`mb-6 ${className}`}>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+    <div className={`${styles.list} ${className}`}>
+      <div className={styles.head}>
+        <h3 className={styles.title}>
           {title}
         </h3>
         {description && (
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className={styles.description}>
             {description}
           </p>
         )}
         {maxItems && (
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+          <p className={styles.limit}>
             Maximum {maxItems} élément{maxItems > 1 ? "s" : ""}
           </p>
         )}
       </div>
 
-      <div className="space-y-4">
+      <div className={styles.items}>
         {items.map((item, index) => (
           <div
             key={index}
-            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50"
+            className={styles.item}
           >
-            <div className="flex items-start justify-between mb-3">
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div className={styles.itemHead}>
+              <h4 className={styles.itemTitle}>
                 {itemLabel ? itemLabel(item, index) : `${title} ${index + 1}`}
               </h4>
               {items.length > minItems && (
                 <button
                   type="button"
                   onClick={() => removeItem(index)}
-                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                  className={styles.remove}
                   aria-label={`Supprimer ${title} ${index + 1}`}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -409,8 +410,8 @@ export default function DynamicFormList<T extends Record<string, any>>({
         ))}
 
         {items.length === 0 && (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-            <p className="text-sm">{t("noItemsAdded")}</p>
+          <div className={styles.empty}>
+            <p>{t("noItemsAdded")}</p>
           </div>
         )}
       </div>
@@ -420,7 +421,7 @@ export default function DynamicFormList<T extends Record<string, any>>({
           type="button"
           variant="secondary"
           onClick={addItem}
-          className="mt-4"
+          className={styles.add}
         >
           <Plus className="w-4 h-4 mr-2" />
           {t("add")} {title}

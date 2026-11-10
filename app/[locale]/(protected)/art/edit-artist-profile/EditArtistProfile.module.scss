@@ -1,0 +1,290 @@
+// Page « Modifier mon profil artiste » : même direction que le reste du backoffice
+// (coins carrés, filets fins, doré en accent, tokens du thème). Mobile d'abord.
+
+.page {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+// ── En-tête ───────────────────────────────────────────────────────────────
+
+.header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header .eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  overflow-wrap: anywhere;
+}
+
+.header .title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+
+.header .subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+// ── Carte du formulaire ───────────────────────────────────────────────────
+
+.card {
+  padding: clamp(1.25rem, 3.5vw, 2.5rem);
+  background-color: var(--color-background-white);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  min-width: 0;
+
+  // Champs : coins carrés et cible tactile confortable (16 px : pas de zoom automatique sur iOS)
+  :global(.form-input),
+  :global(.form-select),
+  :global(.form-textarea) {
+    min-height: 2.75rem;
+    font-size: 1rem;
+    border-radius: 0;
+  }
+
+  :global(.form-group) {
+    margin-bottom: 0;
+    min-width: 0;
+  }
+
+  :global(.form-label) {
+    margin-bottom: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  :global(.form-help),
+  :global(.form-error) {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+}
+
+// ── Sections ──────────────────────────────────────────────────────────────
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.sectionHead {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sectionHead .sectionTitle {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.sectionHead .sectionHelp {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+// ── Grilles : une colonne sur mobile, deux à partir de 640 px ────────────
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+// Photo de profil + identité : empilés sur mobile, côte à côte ensuite
+.basic {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+.avatarCol {
+  min-width: 0;
+}
+
+.fieldsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+@media (min-width: 720px) {
+  .basic {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+}
+
+// ── Interrupteur « page artistes » ────────────────────────────────────────
+
+.switchRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.switchRow .switchState {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  transition: color 0.2s;
+}
+
+.switchRow .switchState.switchStateOn {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 3rem;
+  height: 1.625rem;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-text-tertiary);
+    border: 1px solid var(--color-text-tertiary);
+    border-radius: 999px;
+    transition:
+      background-color 0.25s,
+      border-color 0.25s;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0.1875rem;
+    left: 0.1875rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    transition: transform 0.25s;
+  }
+
+  &:has(input:checked)::before {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  &:has(input:checked)::after {
+    transform: translateX(1.375rem);
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+}
+
+// ── Expositions ───────────────────────────────────────────────────────────
+
+.exhibition {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid var(--color-border);
+  border-left: 2px solid var(--color-accent);
+  background-color: var(--color-background-light);
+}
+
+.exhibition .exhibitionTitle {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────
+
+.actions {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+
+  :global(.btn) {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .actions {
+    flex-direction: row;
+    justify-content: space-between;
+
+    :global(.btn) {
+      width: auto;
+      min-width: 12rem;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch::before,
+  .switch::after,
+  .switchState {
+    transition: none;
+  }
+}

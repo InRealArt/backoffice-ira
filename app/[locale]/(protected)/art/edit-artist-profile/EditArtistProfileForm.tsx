@@ -5,14 +5,11 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useToast } from "@/app/components/Toast/ToastContext";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodFormResolver } from '@/lib/forms/zod-form-resolver'
-import {
-  updateUserArtistProfile,
-  getLandingArtistByArtistId,
-} from "@/lib/actions/artist-actions";
+import { updateUserArtistProfile } from "@/lib/actions/artist-actions";
 import CountrySelect from "@/app/components/Common/CountrySelect";
-import { getCountries, getArtistFullName } from "@/lib/utils";
+import { getCountries } from "@/lib/utils";
 import type { ArtistName } from "@/lib/types/artist";
 import Button from "@/app/components/Button/Button";
 import ArtistImageUpload from "../create-artist-profile/ArtistImageUpload";
@@ -20,7 +17,7 @@ import OptionalImageUpload from "../create-artist-profile/OptionalImageUpload";
 import ProgressModal from "../create-artist-profile/ProgressModal";
 import DynamicFormList from "@/app/components/Forms/DynamicFormList/DynamicFormList";
 import MultiSelect from "@/app/components/Forms/MultiSelect";
-import { Controller } from "react-hook-form";
+import styles from "./EditArtistProfile.module.scss";
 
 // Fonction pour créer le schéma de validation avec traductions
 const createFormSchema = (t: (key: string) => string) => z.object({
@@ -245,8 +242,9 @@ export default function EditArtistProfileForm({
       biographyText3: landingArtist?.biographyText3 || "",
       biographyHeader4: landingArtist?.biographyHeader4 || "",
       biographyText4: landingArtist?.biographyText4 || "",
+      specialtyIds: specialtyIds,
     });
-  }, [artist, landingArtist, reset]);
+  }, [artist, landingArtist, specialtyIds, reset]);
 
   const updateStepStatus = (
     stepId: string,
@@ -565,7 +563,7 @@ export default function EditArtistProfileForm({
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="pl-6 sm:pl-8 md:pl-10">
+      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         {formError && (
           <div className="alert alert-danger mb-4">
             <p>{formError}</p>
@@ -573,14 +571,14 @@ export default function EditArtistProfileForm({
         )}
 
         {/* Section Informations de base */}
-        <div className="form-group mb-4">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+        <div className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h3 className={styles.sectionTitle}>
               {t("sections.basicInfo")}
             </h3>
           </div>
-          <div className="d-flex gap-lg align-items-start">
-            <div style={{ width: "200px", flexShrink: 0 }}>
+          <div className={styles.basic}>
+            <div className={styles.avatarCol}>
               <ArtistImageUpload
                 onFileSelect={(file) => {
                   setSelectedImageFile(file);
@@ -600,9 +598,9 @@ export default function EditArtistProfileForm({
               />
             </div>
 
-            <div style={{ flex: 1 }}>
-              <div className="d-flex gap-md mb-3">
-                <div className="form-group" style={{ flex: 1 }}>
+            <div className={styles.fieldsCol}>
+              <div className={styles.row}>
+                <div className="form-group">
                   <label htmlFor="name" className="form-label">
                     {t("fields.firstName")}
                   </label>
@@ -618,13 +616,12 @@ export default function EditArtistProfileForm({
                     }}
                   />
                   <p
-                    className="form-help text-muted mt-1"
-                    style={{ fontSize: "0.875rem" }}
+                    className="form-help text-muted"
                   >
                     {t("fields.firstNameHelp")}
                   </p>
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
+                <div className="form-group">
                   <label htmlFor="surname" className="form-label">
                     {t("fields.lastName")}
                   </label>
@@ -640,8 +637,7 @@ export default function EditArtistProfileForm({
                     }}
                   />
                   <p
-                    className="form-help text-muted mt-1"
-                    style={{ fontSize: "0.875rem" }}
+                    className="form-help text-muted"
                   >
                     {t("fields.lastNameHelp")}
                   </p>
@@ -667,14 +663,14 @@ export default function EditArtistProfileForm({
         </div>
 
         {/* Section Images supplémentaires */}
-        <div className="form-group mb-4">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+        <div className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h3 className={styles.sectionTitle}>
               {t("sections.additionalImages")}
             </h3>
           </div>
-          <div className="d-flex gap-md" style={{ flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 300px", minWidth: "250px" }}>
+          <div className={styles.row}>
+            <div>
               <OptionalImageUpload
                 onFileSelect={(file) => {
                   setSecondaryImageFile(file);
@@ -699,7 +695,7 @@ export default function EditArtistProfileForm({
                 allowDelete={true}
               />
             </div>
-            <div style={{ flex: "1 1 300px", minWidth: "250px" }}>
+            <div>
               <OptionalImageUpload
                 onFileSelect={(file) => {
                   setStudioImageFile(file);
@@ -727,7 +723,7 @@ export default function EditArtistProfileForm({
           </div>
         </div>
 
-        <div className="form-group mb-4">
+        <div className={styles.section}>
           <label htmlFor="description" className="form-label">
             {t("fields.description")} *
           </label>
@@ -748,63 +744,23 @@ export default function EditArtistProfileForm({
           </p>
         </div>
 
-        <div className="form-group mb-4">
-          <label className="form-label">{t("fields.artistsPage")}</label>
-          <div className="d-flex align-items-center gap-md">
-            <span
-              className={!artistsPage ? "text-primary" : "text-muted"}
-              style={{ fontWeight: !artistsPage ? "bold" : "normal" }}
-            >
+        <div className={styles.section}>
+          <span className="form-label" id="artistsPageLabel">
+            {t("fields.artistsPage")}
+          </span>
+          <div className={styles.switchRow}>
+            <span className={`${styles.switchState} ${!artistsPage ? styles.switchStateOn : ""}`}>
               {t("fields.artistsPageNotDisplayed")}
             </span>
-            <label
-              style={{
-                position: "relative",
-                display: "inline-block",
-                width: "60px",
-                height: "30px",
-              }}
-            >
+            <label className={styles.switch}>
               <input
                 type="checkbox"
+                role="switch"
+                aria-labelledby="artistsPageLabel"
                 {...register("artistsPage")}
-                style={{ opacity: 0, width: 0, height: 0 }}
               />
-              <span
-                style={{
-                  position: "absolute",
-                  cursor: "pointer",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: artistsPage ? "var(--color-primary-dark)" : "var(--color-text-muted)",
-                  borderRadius: "34px",
-                  transition: "0.4s",
-                }}
-              >
-                <span
-                  style={{
-                    position: "absolute",
-                    content: '""',
-                    height: "22px",
-                    width: "22px",
-                    left: "4px",
-                    bottom: "4px",
-                    backgroundColor: "white",
-                    borderRadius: "50%",
-                    transition: "0.4s",
-                    transform: artistsPage
-                      ? "translateX(30px)"
-                      : "translateX(0)",
-                  }}
-                ></span>
-              </span>
             </label>
-            <span
-              className={artistsPage ? "text-primary" : "text-muted"}
-              style={{ fontWeight: artistsPage ? "bold" : "normal" }}
-            >
+            <span className={`${styles.switchState} ${artistsPage ? styles.switchStateOn : ""}`}>
               {t("fields.artistsPageDisplayed")}
             </span>
           </div>
@@ -813,8 +769,8 @@ export default function EditArtistProfileForm({
           </p>
         </div>
 
-        <div className="d-flex gap-md mb-4">
-          <div className="form-group" style={{ flex: 1 }}>
+        <div className={styles.row}>
+          <div className="form-group">
             <label htmlFor="birthYear" className="form-label">
               {t("fields.birthYear")}
             </label>
@@ -835,7 +791,7 @@ export default function EditArtistProfileForm({
               <p className="form-error">{errors.birthYear.message}</p>
             )}
           </div>
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label htmlFor="countryCode" className="form-label">
               {t("fields.country")}
             </label>
@@ -853,12 +809,12 @@ export default function EditArtistProfileForm({
         </div>
 
         {/* Section Spécialités */}
-        <div className="form-group mb-4">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+        <div className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h3 className={styles.sectionTitle}>
               {t("sections.specialties")}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className={styles.sectionHelp}>
               {t("fields.specialtiesHelp")}
             </p>
           </div>
@@ -882,7 +838,7 @@ export default function EditArtistProfileForm({
         </div>
 
         {/* Section Récompenses */}
-        <div className="form-group mb-4">
+        <div className={styles.section}>
           <DynamicFormList
             title={t("sections.awards")}
             description={t("fields.awardsDescription")}
@@ -938,12 +894,12 @@ export default function EditArtistProfileForm({
         </div>
 
         {/* Section Expositions */}
-        <div className="form-group mb-4">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+        <div className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h3 className={styles.sectionTitle}>
               {t("sections.exhibitions")}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            <p className={styles.sectionHelp}>
               {t("fields.exhibitionsDescription")}
             </p>
           </div>
@@ -970,20 +926,8 @@ export default function EditArtistProfileForm({
               textKey: "biographyText4" as const,
             },
           ].map(({ num, headerKey, textKey }) => (
-            <div
-              key={num}
-              className="mb-4"
-              style={{
-                padding: "1.5rem",
-                border: "1px solid var(--color-border)",
-                borderRadius: "8px",
-                backgroundColor: "var(--color-background-light)",
-              }}
-            >
-              <h4
-                className="h6 mb-3"
-                style={{ color: "var(--color-text-secondary)", fontWeight: 600 }}
-              >
+            <div key={num} className={styles.exhibition}>
+              <h4 className={styles.exhibitionTitle}>
                 {t("fields.exhibition", { num })}
               </h4>
               <div className="form-group mb-3">
@@ -1014,9 +958,9 @@ export default function EditArtistProfileForm({
           ))}
         </div>
 
-        <div className="form-group mb-4">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+        <div className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h3 className={styles.sectionTitle}>
               {t("sections.socialNetworks")}
             </h3>
           </div>
@@ -1036,8 +980,8 @@ export default function EditArtistProfileForm({
             )}
           </div>
 
-          <div className="d-flex gap-md">
-            <div className="form-group" style={{ flex: 1 }}>
+          <div className={styles.row}>
+            <div className="form-group">
               <label htmlFor="facebookUrl" className="form-label">
                 {t("fields.facebook")}
               </label>
@@ -1054,7 +998,7 @@ export default function EditArtistProfileForm({
                 <p className="form-error">{errors.facebookUrl.message}</p>
               )}
             </div>
-            <div className="form-group" style={{ flex: 1 }}>
+            <div className="form-group">
               <label htmlFor="instagramUrl" className="form-label">
                 {t("fields.instagram")}
               </label>
@@ -1073,8 +1017,8 @@ export default function EditArtistProfileForm({
             </div>
           </div>
 
-          <div className="d-flex gap-md mt-3">
-            <div className="form-group" style={{ flex: 1 }}>
+          <div className={styles.row}>
+            <div className="form-group">
               <label htmlFor="twitterUrl" className="form-label">
                 {t("fields.twitter")}
               </label>
@@ -1091,7 +1035,7 @@ export default function EditArtistProfileForm({
                 <p className="form-error">{errors.twitterUrl.message}</p>
               )}
             </div>
-            <div className="form-group" style={{ flex: 1 }}>
+            <div className="form-group">
               <label htmlFor="linkedinUrl" className="form-label">
                 {t("fields.linkedin")}
               </label>
@@ -1111,7 +1055,7 @@ export default function EditArtistProfileForm({
           </div>
         </div>
 
-        <div className="form-actions mt-4 d-flex justify-content-between gap-md">
+        <div className={styles.actions}>
           <Button
             variant="secondary"
             onClick={() => router.push("/dashboard")}
