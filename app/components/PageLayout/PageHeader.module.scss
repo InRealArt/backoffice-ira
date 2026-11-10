@@ -1,0 +1,56 @@
+// En-tête des pages de liste : même langage que FormPageHeader (titre, sous-titre, filet fin),
+// actions alignées à droite, empilées sur mobile.
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.text {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.header .title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-align: left;
+  color: var(--color-text-primary);
+}
+
+.header .subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (max-width: 639px) {
+  .actions {
+    width: 100%;
+  }
+
+  .actions > * {
+    flex: 1 1 100%;
+  }
+
+  .actions :global(.btn) {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+}

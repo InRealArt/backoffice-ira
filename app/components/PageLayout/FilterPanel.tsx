@@ -22,14 +22,14 @@ export function FilterPanel({
   return (
     <section
       aria-label={title}
-      className={`mb-6 rounded-lg border border-border bg-background-white p-5 ${className}`}
+      className={`filter-panel mb-6 border border-border bg-background-white p-5 ${className}`}
     >
       <header className="mb-4">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-900 dark:text-gray-100">
+        <h2 className="filter-panel-title">
           {title}
         </h2>
         {description && (
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{description}</p>
+          <p className="filter-panel-description">{description}</p>
         )}
       </header>
       {children}
