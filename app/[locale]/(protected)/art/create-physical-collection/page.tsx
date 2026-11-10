@@ -1,6 +1,7 @@
 import { getAuthenticatedUserEmail } from "@/lib/auth-helpers";
 import { getBackofficeUserByEmail } from "@/lib/actions/prisma-actions";
 import { redirect } from "next/navigation";
+import { FormCard, FormPage, FormPageHeader } from "@/app/components/Forms/FormKit/FormKit";
 import CreatePhysicalCollectionForm from "./CreatePhysicalCollectionForm";
 
 export default async function CreatePhysicalCollectionPage() {
@@ -16,17 +17,14 @@ export default async function CreatePhysicalCollectionPage() {
   }
 
   return (
-    <div className="page-content">
-      <div className="card max-w-5xl mx-auto px-8">
-        <div className="card-body">
-          <h1 className="page-title text-3xl">Créer une collection</h1>
-          <p className="text-muted mb-4">
-            Créez une nouvelle collection pour organiser vos œuvres. Vous
-            pourrez ensuite y associer vos œuvres physiques.
-          </p>
-          <CreatePhysicalCollectionForm />
-        </div>
-      </div>
-    </div>
+    <FormPage>
+      <FormPageHeader
+        title="Créer une collection"
+        subtitle="Créez une nouvelle collection pour organiser vos œuvres. Vous pourrez ensuite y associer vos œuvres physiques."
+      />
+      <FormCard>
+        <CreatePhysicalCollectionForm />
+      </FormCard>
+    </FormPage>
   );
 }

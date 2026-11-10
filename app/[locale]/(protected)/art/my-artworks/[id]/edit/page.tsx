@@ -2,6 +2,7 @@ import PresaleArtworkForm from "@/app/components/PresaleArtworkForm/PresaleArtwo
 import { getPresaleArtworkById } from "@/lib/actions/presale-artwork-actions";
 import { getAuthenticatedUserEmail } from "@/lib/auth-helpers";
 import { getBackofficeUserByEmail } from "@/lib/actions/prisma-actions";
+import { FormCard, FormPage, FormPageHeader } from "@/app/components/Forms/FormKit/FormKit";
 import { notFound, redirect } from "next/navigation";
 
 export const metadata = {
@@ -44,15 +45,14 @@ export default async function EditPresaleArtworkPage({
   }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1 className="page-title">Modifier une œuvre en prévente</h1>
-        <p className="page-subtitle">
-          Modification de l'œuvre: {presaleArtwork.name}
-        </p>
-      </div>
+    <FormPage>
+      <FormPageHeader
+        eyebrow={presaleArtwork.name}
+        title="Modifier une œuvre en prévente"
+        subtitle="Modifiez les informations de votre œuvre en prévente."
+      />
 
-      <div className="page-content">
+      <FormCard>
         <PresaleArtworkForm
           mode="edit"
           presaleArtworkId={presaleArtworkId}
@@ -60,8 +60,8 @@ export default async function EditPresaleArtworkPage({
           redirectUrl="/art/my-artworks"
           showFeatured={false}
         />
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   );
 }
 

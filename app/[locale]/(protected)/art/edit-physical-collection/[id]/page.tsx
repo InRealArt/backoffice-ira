@@ -2,6 +2,7 @@ import { getAuthenticatedUserEmail } from "@/lib/auth-helpers";
 import { getBackofficeUserByEmail } from "@/lib/actions/prisma-actions";
 import { redirect, notFound } from "next/navigation";
 import { getPhysicalCollectionById } from "@/lib/actions/physical-collection-actions";
+import { FormCard, FormPage, FormPageHeader } from "@/app/components/Forms/FormKit/FormKit";
 import EditPhysicalCollectionForm from "./EditPhysicalCollectionForm";
 
 interface EditPhysicalCollectionPageProps {
@@ -38,18 +39,14 @@ export default async function EditPhysicalCollectionPage({
   }
 
   return (
-    <div className="page-content">
-      <div className="card max-w-5xl mx-auto px-8">
-        <div className="card-body">
-          <h1 className="page-title text-3xl">Modifier la collection</h1>
-          <p className="text-muted mb-4">
-            Modifiez les informations de votre collection. Vous pourrez
-            continuer à y associer vos œuvres physiques.
-          </p>
-          <EditPhysicalCollectionForm collection={collection} />
-        </div>
-      </div>
-    </div>
+    <FormPage>
+      <FormPageHeader
+        title="Modifier la collection"
+        subtitle="Modifiez les informations de votre collection. Vous pourrez continuer à y associer vos œuvres physiques."
+      />
+      <FormCard>
+        <EditPhysicalCollectionForm collection={collection} />
+      </FormCard>
+    </FormPage>
   );
 }
-

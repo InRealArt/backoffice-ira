@@ -28,6 +28,7 @@ import {
 import { getImageUrl, getImageUrlWithCacheBuster } from "@/lib/r2/url";
 import { normalizeString, getArtistFullName } from "@/lib/utils";
 import type { ArtistName } from "@/lib/types/artist";
+import { formKit } from "@/app/components/Forms/FormKit/FormKit";
 import ProgressModal from "@/app/components/art/ProgressModal";
 
 // Fonction pour créer le schéma de validation avec traductions
@@ -748,7 +749,7 @@ export default function PresaleArtworkForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="form-container">
+    <form onSubmit={handleSubmit(onSubmit)} className={formKit.form}>
       <div className="form-card">
         <div className="card-content">
           {/* isTopArtwork toggle - placed at the top of all fields */}

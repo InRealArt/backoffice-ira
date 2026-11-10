@@ -101,16 +101,7 @@ function ArtworkCharacteristicsSection({
               {...register("mediumId", {
                 required: "Le support/medium est requis",
               })}
-              className={`
-              w-full px-3 py-2 rounded-lg border transition-all duration-200
-              ${
-                errors.mediumId
-                  ? "border-red-500 focus:ring-2 focus:ring-red-200"
-                  : "border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800"
-              }
-              bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
-              disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed
-            `}
+              className={`form-select w-full ${errors.mediumId ? "input-error" : ""}`}
               disabled={isFormReadOnly}
             >
               <option value="">Sélectionnez un support</option>

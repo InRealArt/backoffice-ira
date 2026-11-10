@@ -11,6 +11,7 @@ import {
 import { getPhysicalCollectionsWithItems } from "@/lib/actions/physical-collection-actions";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Address, PhysicalCollection } from "../components/ArtworkForm/types";
+import { FormCard, FormPage, FormPageHeader } from "@/app/components/Forms/FormKit/FormKit";
 import {
   ArtworkMedium,
   ArtworkStyle,
@@ -107,22 +108,14 @@ export default function CreatePhysicalArtworkClient({
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
-      <div className="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-            Créer une œuvre physique
-          </h1>
-          <p className="text-base text-gray-600 dark:text-gray-400">
-            Ajoutez une nouvelle œuvre physique à la collection de{" "}
-            <span className="font-semibold text-primary dark:text-primary">
-              {artistName || "votre artiste"}
-            </span>
-          </p>
-        </div>
-      </div>
+    <FormPage wide>
+      <FormPageHeader
+        eyebrow={artistName || null}
+        title="Créer une œuvre physique"
+        subtitle="Ajoutez une nouvelle œuvre physique à la collection de votre artiste."
+      />
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 pt-6 sm:pt-8 md:pt-10 pr-6 sm:pr-8 md:pr-10 pb-6 sm:pb-8 md:pb-10 overflow-hidden">
+      <FormCard>
         <ArtworkForm
           mode="create"
           addresses={addresses}
@@ -149,7 +142,7 @@ export default function CreatePhysicalArtworkClient({
             collectionIdFromUrl ? parseInt(collectionIdFromUrl, 10) : undefined
           }
         />
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   );
 }

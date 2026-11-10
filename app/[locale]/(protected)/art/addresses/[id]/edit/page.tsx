@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { getAddressById, updateAddress } from '@/lib/actions/address-actions'
 import AddressForm from '../../components/AddressForm'
+import { FormCard, FormPage, FormPageHeader } from '@/app/components/Forms/FormKit/FormKit'
 import type { ArtistAddress } from '@/src/generated/prisma/browser'
 
 interface EditAddressPageProps {
@@ -132,12 +133,12 @@ export default function EditAddressPage({ params }: EditAddressPageProps) {
   }
 
   return (
-    <div className="page-container">
-      <h1 className="page-title">Modifier une adresse</h1>
-      
-      <div className="card">
+    <FormPage>
+      <FormPageHeader title="Modifier une adresse" subtitle="Modifiez les informations de cette adresse." />
+
+      <FormCard>
         <AddressForm onSubmit={handleSubmit} address={address} />
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   )
 } 
