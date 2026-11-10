@@ -781,7 +781,7 @@ export default function LandingArtistEditForm({
                   value={slug}
                   readOnly
                   className="form-input"
-                  style={{ backgroundColor: "#f9f9f9" }}
+                  style={{ backgroundColor: "var(--color-background-disabled)" }}
                 />
               </div>
               <div className="d-flex gap-lg align-items-start">

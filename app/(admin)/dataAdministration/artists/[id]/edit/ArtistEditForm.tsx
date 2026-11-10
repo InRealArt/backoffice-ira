@@ -324,7 +324,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-xxl">
+    <div className="max-w-5xl">
       <div className="page-header">
         <div className="header-top-section">
           <h1 className="page-title">Modifier l'artiste</h1>
@@ -337,7 +337,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="form-container">
         <div className="form-card">
           <div className="card-content">
-            <div className="flex gap-xxl">
+            <div className="flex flex-col md:flex-row gap-xxl">
               <div className="flex flex-col gap-md" style={{ width: "200px" }}>
                 <ArtistImageUpload
                   onFileSelect={(file) => {

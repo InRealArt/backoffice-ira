@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { formKit } from '@/app/components/Forms/FormKit/FormKit'
 import { User, Search } from 'lucide-react'
 
 interface ArtistEditTabsProps {
@@ -22,13 +23,9 @@ export default function ArtistEditTabs({ profileForm, seoForm, artistName }: Art
   return (
     <div>
       {/* Tab bar */}
-      <div
-        className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10"
-        style={{ marginBottom: 0 }}
-      >
+      <div className={formKit.tabBar}>
         <div
-          className="flex gap-0"
-          style={{ overflowX: 'auto', scrollbarWidth: 'none' }}
+          className={formKit.tabList}
           role="tablist"
           aria-label="Sections de l'artiste"
         >
@@ -38,18 +35,12 @@ export default function ArtistEditTabs({ profileForm, seoForm, artistName }: Art
             return (
               <button
                 key={tab.id}
+                id={`tab-${tab.id}`}
                 role="tab"
                 aria-selected={isActive}
                 aria-controls={`panel-${tab.id}`}
                 onClick={() => setActiveTab(tab.id)}
-                className={`
-                  flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
-                  ${isActive
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
-                  }
-                `}
+                className={`${formKit.tabBtn} ${isActive ? formKit.tabBtnActive : ''}`}
                 type="button"
               >
                 <Icon size={16} />

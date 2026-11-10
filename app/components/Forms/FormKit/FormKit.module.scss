@@ -379,3 +379,59 @@
     transition: none;
   }
 }
+
+// ── Barre d'onglets des pages d'édition (profil / SEO…) ──────────────────
+
+.tabBar {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabList {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tabBtn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 3rem;
+  padding: 0 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    border-color 0.2s;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -4px;
+  }
+}
+
+.tabBtnActive {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+
+  &:hover {
+    color: var(--color-accent);
+  }
+}

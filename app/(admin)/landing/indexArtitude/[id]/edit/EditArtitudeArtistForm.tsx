@@ -540,7 +540,7 @@ export default function EditArtitudeArtistForm({
               {...register('latitude')}
               readOnly={geocodingStatus !== 'not-found'}
               className={`form-input ${errors.latitude ? 'input-error' : ''}`}
-              style={geocodingStatus !== 'not-found' ? { backgroundColor: '#f9f9f9' } : undefined}
+              style={geocodingStatus !== 'not-found' ? { backgroundColor: 'var(--color-background-disabled)' } : undefined}
               placeholder="48.856614"
             />
             {errors.latitude && <p className="form-error">{errors.latitude.message}</p>}
@@ -558,7 +558,7 @@ export default function EditArtitudeArtistForm({
               {...register('longitude')}
               readOnly={geocodingStatus !== 'not-found'}
               className={`form-input ${errors.longitude ? 'input-error' : ''}`}
-              style={geocodingStatus !== 'not-found' ? { backgroundColor: '#f9f9f9' } : undefined}
+              style={geocodingStatus !== 'not-found' ? { backgroundColor: 'var(--color-background-disabled)' } : undefined}
               placeholder="2.352222"
             />
             {errors.longitude && <p className="form-error">{errors.longitude.message}</p>}

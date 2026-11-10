@@ -852,14 +852,14 @@ export default function CreateArtistForm() {
           <button
             type="button"
             onClick={handleCancel}
-            className={`${styles.btn} ${styles["btn-secondary"]} ${styles["btn-medium"]}`}
+            className="btn btn-secondary btn-medium"
             disabled={isSubmitting}
           >
             Annuler
           </button>
           <button
             type="submit"
-            className={`${styles.btn} ${styles["btn-primary"]} ${styles["btn-medium"]}`}
+            className="btn btn-primary btn-medium"
             disabled={isSubmitting || !isDirty}
           >
             {isSubmitting ? (

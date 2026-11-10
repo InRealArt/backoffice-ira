@@ -13,9 +13,7 @@ export default function CreateAgencyEventPage() {
         <p className="page-subtitle">Ajoutez un nouvel événement agence au site</p>
       </div>
 
-      <div className="page-content">
-        <AgencyEventForm mode="create" />
-      </div>
+      <AgencyEventForm mode="create" />
     </div>
   )
 }
