@@ -34,6 +34,13 @@ body.light {
   --color-accent: #8a6f43; /* doré du site corpo, assombri pour le contraste sur fond clair (≈4,8:1) */
   --color-border-input: #e2e8f0;
   --color-border-light: #f0f0f0;
+
+  /* Boutons : langage du site corpo (encre inversée, bordure fine) */
+  --btn-ink: #111111;
+  --btn-ink-inverse: #ffffff;
+  --btn-line: #111111;
+  --btn-danger: #b91c1c;
+  --btn-focus: #6052ff;
 }
 
 .dark-theme,
@@ -70,6 +77,13 @@ body.dark {
   --color-border-input: rgba(255, 255, 255, 0.14);
   --color-border-light: rgba(255, 255, 255, 0.05);
   --color-accent: #c9ae84;
+
+  /* Boutons */
+  --btn-ink: #ececf0;
+  --btn-ink-inverse: #0e0e10;
+  --btn-line: rgba(255, 255, 255, 0.55);
+  --btn-danger: #f87171;
+  --btn-focus: #8b7fff;
 
   --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
@@ -727,59 +741,144 @@ body.dark {
      BUTTON COMPONENTS
      ======================================== */
 
-  /* Base Button */
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 font-medium rounded border-none cursor-pointer transition-all duration-200;
+  /* Base Button : bordure fine, coins carrés, majuscules espacées (cf. .btn-cta du site).
+     Préfixe :root = spécificité > règle générale "button { color }" du thème sombre et > DaisyUI. */
+  :root .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: auto;
+    min-height: 0;
+    padding: 0.875rem 1.5rem;
+    border: 1px solid var(--btn-line);
+    border-radius: 0;
+    background: transparent;
+    color: var(--btn-ink);
+    box-shadow: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    animation: none;
+    transition: background-color 0.5s cubic-bezier(0.19, 1, 0.22, 1),
+      color 0.5s cubic-bezier(0.19, 1, 0.22, 1),
+      border-color 0.5s cubic-bezier(0.19, 1, 0.22, 1);
   }
 
-  .btn:disabled {
-    @apply opacity-70 cursor-not-allowed;
+  /* Secondaire (défaut) : le survol remplit */
+  :root .btn:hover:not(:disabled),
+  :root .btn.btn-secondary:hover:not(:disabled) {
+    background: var(--btn-ink);
+    color: var(--btn-ink-inverse);
+    border-color: var(--btn-ink);
+    transform: none;
   }
 
-  /* Button Variants */
-  .btn-primary {
-    @apply bg-purple text-white border border-white;
+  :root .btn:active:not(:disabled) {
+    transform: none;
   }
 
-  .btn-primary:hover:not(:disabled) {
-    background-color: rgba(96, 82, 255, 0.9);
+  :root .btn:focus-visible {
+    outline: 2px solid var(--btn-focus);
+    outline-offset: 3px;
   }
 
-  .btn-secondary {
-    @apply bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600;
+  :root .btn:disabled,
+  :root .btn[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
-  .btn-secondary:hover:not(:disabled) {
-    @apply bg-gray-200 dark:bg-gray-600;
+  /* Primaire : aplat d'encre, le survol l'inverse en contour (une seule par écran) */
+  :root .btn.btn-primary {
+    background: var(--btn-ink);
+    color: var(--btn-ink-inverse);
+    border-color: var(--btn-ink);
   }
 
-  .btn-danger {
-    @apply bg-red-500 text-white;
+  :root .btn.btn-primary:hover:not(:disabled) {
+    background: transparent;
+    color: var(--btn-ink);
+    border-color: var(--btn-line);
   }
 
-  .btn-danger:hover:not(:disabled) {
-    @apply bg-red-600;
+  /* Ghost : texte seul, doré et souligné au survol */
+  :root .btn.btn-ghost {
+    border-color: transparent;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 
-  .btn-success {
-    @apply bg-green-500 text-white;
+  :root .btn.btn-ghost:hover:not(:disabled) {
+    background: transparent;
+    color: var(--color-accent);
+    border-color: transparent;
+    text-decoration: underline;
+    text-underline-offset: 6px;
   }
 
-  .btn-success:hover:not(:disabled) {
-    @apply bg-green-600;
+  /* Danger : contour rouge, le survol remplit */
+  :root .btn.btn-danger {
+    border-color: var(--btn-danger);
+    color: var(--btn-danger);
   }
 
-  /* Button Sizes */
-  .btn-small {
-    @apply px-3 py-2 text-sm;
+  :root .btn.btn-danger:hover:not(:disabled) {
+    background: var(--btn-danger);
+    color: var(--btn-ink-inverse);
+    border-color: var(--btn-danger);
   }
 
-  .btn-medium {
-    @apply px-5 py-2.5 text-base;
+  /* Succès : aligné sur le primaire (le vert n'est plus utilisé) */
+  :root .btn.btn-success {
+    background: var(--btn-ink);
+    color: var(--btn-ink-inverse);
+    border-color: var(--btn-ink);
   }
 
-  .btn-large {
-    @apply px-6 py-3 text-lg;
+  :root .btn.btn-success:hover:not(:disabled) {
+    background: transparent;
+    color: var(--btn-ink);
+    border-color: var(--btn-line);
+  }
+
+  /* Boutons icône seule (avatar, suppression en liste) */
+  :root .btn.btn-circle,
+  :root .btn.btn-square {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+  }
+
+  :root .btn.btn-circle {
+    border-radius: 9999px;
+  }
+
+  :root .btn.btn-square.btn-sm {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  /* Button Sizes (btn-sm = alias Daisy) */
+  :root .btn.btn-small,
+  :root .btn.btn-sm {
+    padding: 0.625rem 1rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+  }
+
+  :root .btn.btn-medium {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.75rem;
+  }
+
+  :root .btn.btn-large {
+    padding: 1.0625rem 2rem;
+    font-size: 0.8125rem;
   }
 
   /* Button Layout */
