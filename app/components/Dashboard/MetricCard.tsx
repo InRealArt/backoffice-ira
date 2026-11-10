@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, LucideIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import NextLink from "next/link";
 import { Link } from "@/i18n/navigation";
 
 interface MetricCardProps {
@@ -102,8 +103,11 @@ export function MetricCard({
   const style = { ["--i" as string]: index };
 
   if (buttonRoute) {
+    // Seules les pages artiste (/art/…) sont sous [locale] ; les pages d'administration n'ont pas de
+    // préfixe de langue : le Link d'i18n y ajouterait /fr et mènerait à une 404.
+    const CardLink = buttonRoute.startsWith("/art/") ? Link : NextLink;
     return (
-      <Link
+      <CardLink
         href={buttonRoute}
         className="metric-card metric-card-link"
         style={style}
@@ -114,7 +118,7 @@ export function MetricCard({
         }
       >
         {content}
-      </Link>
+      </CardLink>
     );
   }
 
