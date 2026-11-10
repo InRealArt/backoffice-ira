@@ -51,6 +51,15 @@ body.dark {
     letter-spacing: -0.01em;
   }
 
+  // Couleurs sémantiques (erreur, succès, info, alerte) : la règle générale ci-dessus les écrasait.
+  // Variantes éclaircies pour rester lisibles sur fond sombre (les badges en 800 sont gérés plus bas).
+  [class*="text-red-4"], [class*="text-red-5"], [class*="text-red-6"], [class*="text-red-7"] { color: #f87171; }
+  [class*="text-green-4"], [class*="text-green-5"], [class*="text-green-6"], [class*="text-green-7"] { color: #4ade80; }
+  [class*="text-blue-4"], [class*="text-blue-5"], [class*="text-blue-6"], [class*="text-blue-7"] { color: #60a5fa; }
+  [class*="text-yellow-5"], [class*="text-yellow-6"], [class*="text-yellow-7"],
+  [class*="text-amber-5"], [class*="text-amber-6"], [class*="text-amber-7"] { color: #fbbf24; }
+  [class*="text-orange-5"], [class*="text-orange-6"], [class*="text-orange-7"] { color: #fb923c; }
+
   // Classes de texte atténué (sémantiques et Tailwind en dur), plus spécifiques que la règle ci-dessus
   .text-secondary,
   [class*="text-secondary"],
