@@ -36,7 +36,9 @@ export default function ProgressModal({ isOpen, steps, currentError, onClose, ti
     >
       <div
         style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--color-background-white)',
+          border: '1px solid var(--color-border)',
+          color: 'var(--color-text-primary)',
           borderRadius: '8px',
           padding: '2rem',
           maxWidth: '500px',
@@ -63,14 +65,14 @@ export default function ProgressModal({ isOpen, steps, currentError, onClose, ti
               transition: 'background-color 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f3f4f6'
+              e.currentTarget.style.backgroundColor = 'var(--color-background-hover)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent'
             }}
             aria-label="Fermer"
           >
-            <X size={20} color="#6b7280" />
+            <X size={20} color="currentColor" />
           </button>
         )}
         <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.5rem', fontWeight: 'bold' }}>
@@ -87,7 +89,7 @@ export default function ProgressModal({ isOpen, steps, currentError, onClose, ti
                 gap: '0.75rem',
                 padding: '0.75rem',
                 borderRadius: '6px',
-                backgroundColor: step.status === 'error' ? '#fee' : step.status === 'completed' ? '#efe' : '#f5f5f5'
+                backgroundColor: step.status === 'error' ? 'rgba(220, 38, 38, 0.12)' : step.status === 'completed' ? 'rgba(34, 197, 94, 0.12)' : 'var(--color-background-light)'
               }}
             >
               {/* Icône de statut */}
@@ -133,7 +135,7 @@ export default function ProgressModal({ isOpen, steps, currentError, onClose, ti
                   style={{
                     width: '16px',
                     height: '16px',
-                    border: '2px solid #e5e7eb',
+                    border: '2px solid var(--color-border)',
                     borderTopColor: '#3b82f6',
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite'
@@ -149,7 +151,7 @@ export default function ProgressModal({ isOpen, steps, currentError, onClose, ti
             style={{
               marginTop: '1.5rem',
               padding: '1rem',
-              backgroundColor: '#fee',
+              backgroundColor: 'rgba(220, 38, 38, 0.12)',
               borderRadius: '6px',
               color: '#dc2626',
               fontSize: '0.875rem'

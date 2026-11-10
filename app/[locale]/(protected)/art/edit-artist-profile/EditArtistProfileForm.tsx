@@ -613,7 +613,7 @@ export default function EditArtistProfileForm({
                     readOnly
                     className="form-input"
                     style={{
-                      backgroundColor: "#f5f5f5",
+                      backgroundColor: "var(--color-background-disabled)",
                       cursor: "not-allowed",
                     }}
                   />
@@ -635,7 +635,7 @@ export default function EditArtistProfileForm({
                     readOnly
                     className="form-input"
                     style={{
-                      backgroundColor: "#f5f5f5",
+                      backgroundColor: "var(--color-background-disabled)",
                       cursor: "not-allowed",
                     }}
                   />
