@@ -903,6 +903,38 @@ body.dark {
     font-size: 0.8125rem;
   }
 
+  /* Sélecteur multiple (MultiSelect) : puces et options sur les tokens du thème */
+  :root .ms-chip {
+    background-color: var(--color-background-hover);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+  }
+
+  :root .ms-chip-remove {
+    color: var(--color-text-secondary);
+  }
+
+  :root .ms-chip-remove:hover {
+    color: var(--btn-danger);
+  }
+
+  :root .ms-option {
+    color: var(--color-text-primary);
+  }
+
+  :root .ms-option:hover {
+    background-color: var(--color-background-hover);
+  }
+
+  :root .ms-option.ms-option-selected {
+    background-color: var(--color-background-hover);
+    font-weight: 600;
+  }
+
+  :root .ms-check {
+    color: var(--color-accent);
+  }
+
   /* Button Layout */
   .btn-full-width {
     @apply w-full;

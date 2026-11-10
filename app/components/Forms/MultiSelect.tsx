@@ -164,14 +164,14 @@ export default function MultiSelect({
             selectedOptions.map(option => (
               <span
                 key={option.id}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 transition-colors hover:bg-blue-200 dark:hover:bg-blue-800"
+                className="ms-chip inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-sm font-medium transition-colors"
               >
                 {option.name}
                 <button
                   type="button"
                   onClick={(e) => removeOption(option.id, e)}
                   disabled={disabled}
-                  className="ml-0.5 hover:text-blue-600 dark:hover:text-blue-300 focus:outline-none disabled:cursor-not-allowed"
+                  className="ms-chip-remove ml-0.5 focus:outline-none disabled:cursor-not-allowed"
                   aria-label={`Supprimer ${option.name}`}
                 >
                   <X size={14} strokeWidth={2.5} />
@@ -228,15 +228,12 @@ export default function MultiSelect({
                     }}
                     className={`
                       flex items-center justify-between px-4 py-2.5 cursor-pointer transition-colors
-                      ${isSelected 
-                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' 
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-                      }
+                      ms-option ${isSelected ? 'ms-option-selected' : ''}
                     `}
                   >
                     <span className="text-sm font-medium">{option.name}</span>
                     {isSelected && (
-                      <Check size={18} className="text-blue-600 dark:text-blue-400" strokeWidth={2.5} />
+                      <Check size={18} className="ms-check" strokeWidth={2.5} />
                     )}
                   </div>
                 )
