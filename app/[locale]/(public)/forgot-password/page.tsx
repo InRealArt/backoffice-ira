@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
 import Button from '@/app/components/Button/Button'
+import { getClientBaseUrl } from '@/lib/app-url'
 import AuthShell, { AuthAlert, AuthField, AuthGhostButton, AuthSuccess } from '@/app/components/AuthShell/AuthShell'
 
 export default function ForgotPasswordPage() {
@@ -21,7 +22,7 @@ export default function ForgotPasswordPage() {
     setFormError(null)
 
     try {
-      const baseURL = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      const baseURL = getClientBaseUrl()
 
       // Better Auth 1.5 : requestPasswordReset (forgetPassword est déprécié).
       // La réponse est volontairement identique que l'email existe ou non

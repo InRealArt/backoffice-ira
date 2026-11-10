@@ -1,7 +1,8 @@
 import { createAuthClient } from 'better-auth/react'
+import { getClientBaseUrl } from './app-url'
 
 export const authClient = createAuthClient({
-    baseURL: process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : ''),
+    baseURL: getClientBaseUrl(),
     // Désactiver le polling automatique pour éviter les appels multiples
     fetchOptions: {
         credentials: 'include'
