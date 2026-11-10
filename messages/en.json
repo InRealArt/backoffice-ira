@@ -81,7 +81,27 @@
       "fetchingItems": "Error fetching items count:",
       "userNotFound": "Backoffice user not found for this email",
       "fetchingStats": "Error fetching item statistics:"
-    }
+    },
+    "greeting": "Hello, {name}",
+    "greetingAnonymous": "Hello",
+    "role": {
+      "admin": "Administrator",
+      "artist": "Artist"
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "createPhysical": "Create a physical artwork",
+      "createPresale": "Create a presale artwork",
+      "myArtworks": "My physical artworks",
+      "adminArtists": "Manage artists",
+      "adminPresale": "Presale artworks",
+      "adminUsers": "Users"
+    },
+    "profileBanner": {
+      "title": "Complete your artist profile",
+      "description": "Create your profile to publish your artworks on the marketplace."
+    },
+    "viewDetails": "View details"
   },
   "art": {
     "myArtworks": "My Artworks",

@@ -64,6 +64,9 @@ export function DashboardStats({
           icon={Users}
           color="#b89c72"
           isLoading={isLoadingArtistsCount}
+          buttonTitle={t("quickActions.adminArtists")}
+          buttonRoute="/landing/landingArtists"
+          index={0}
         />
       </div>
     );
@@ -79,6 +82,7 @@ export function DashboardStats({
         isLoading={isLoadingPresaleCount}
         buttonTitle={t("physical.viewArtworks")}
         buttonRoute="/art/presale-artworks"
+        index={0}
       />
       {!isProduction && (
         <>
@@ -90,6 +94,7 @@ export function DashboardStats({
             isLoading={isLoadingAvailablePhysicalItemsCount}
             buttonTitle={t("physical.viewArtworks")}
             buttonRoute="/art/myPhysicalArtwork?commercialStatus=AVAILABLE"
+        index={1}
           />
           <MetricCard
             title={t("physical.unavailableTitle")}
@@ -99,6 +104,7 @@ export function DashboardStats({
             isLoading={isLoadingUnavailablePhysicalItemsCount}
             buttonTitle={t("physical.viewArtworks")}
             buttonRoute="/art/myPhysicalArtwork?commercialStatus=UNAVAILABLE"
+        index={2}
           />
           <MetricCard
             title={t("physical.collectionsTitle")}
@@ -108,6 +114,7 @@ export function DashboardStats({
             isLoading={isLoadingPhysicalCollectionsCount}
             buttonTitle={t("physical.viewCollections")}
             buttonRoute="/art/physicalCollection"
+        index={3}
           />
         </>
       )}
