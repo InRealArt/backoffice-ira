@@ -40,7 +40,7 @@ body.light {
   --btn-ink-inverse: #ffffff;
   --btn-line: #111111;
   --btn-danger: #b91c1c;
-  --btn-focus: #6052ff;
+  --btn-focus: var(--color-accent);
 }
 
 .dark-theme,
@@ -83,7 +83,7 @@ body.dark {
   --btn-ink-inverse: #0e0e10;
   --btn-line: rgba(255, 255, 255, 0.55);
   --btn-danger: #f87171;
-  --btn-focus: #8b7fff;
+  --btn-focus: var(--color-accent);
 
   --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
@@ -769,6 +769,15 @@ body.dark {
       border-color 0.5s cubic-bezier(0.19, 1, 0.22, 1);
   }
 
+  /* Les enfants (texte, icône, spinner) suivent la couleur du bouton : sans cela la règle sombre
+     générale `span, div, p { color }` les remet à la couleur d'encre, invisible sur un primaire plein. */
+  :root .btn span,
+  :root .btn div,
+  :root .btn p,
+  :root .btn svg {
+    color: inherit;
+  }
+
   /* Secondaire (défaut) : le survol remplit */
   :root .btn:hover:not(:disabled),
   :root .btn.btn-secondary:hover:not(:disabled) {
@@ -831,6 +840,18 @@ body.dark {
     background: var(--btn-danger);
     color: var(--btn-ink-inverse);
     border-color: var(--btn-danger);
+  }
+
+  /* Avertissement : contour doré, le survol remplit */
+  :root .btn.btn-warning {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  :root .btn.btn-warning:hover:not(:disabled) {
+    background: var(--color-accent);
+    color: var(--btn-ink-inverse);
+    border-color: var(--color-accent);
   }
 
   /* Succès : aligné sur le primaire (le vert n'est plus utilisé) */
@@ -1137,8 +1158,17 @@ textarea:focus-visible,
 tr:focus-visible,
 li:focus-visible,
 div:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* Champs de saisie : bordure et halo dorés au focus (remplace les bleus/violets dispersés
+   dans les classes Tailwind et les SCSS). Sélecteurs simples : Turbopack supprime :is()/:where(). */
+:root input:focus,
+:root textarea:focus,
+:root select:focus {
+  border-color: var(--color-accent);
+  --tw-ring-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
 }
 
 /* Lignes de tableau et éléments de menu : anneau interne pour ne pas être rogné */

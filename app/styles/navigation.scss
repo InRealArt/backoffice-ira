@@ -85,7 +85,7 @@
       
       &:focus {
         outline: none;
-        box-shadow: 0 0 0 2px rgba($color-primary, 0.3);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 40%, transparent);
         border-radius: $border-radius-sm;
       }
     }

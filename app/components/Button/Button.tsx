@@ -43,7 +43,7 @@ export default function Button({
             message="" 
             size="small" 
             inline={true} 
-            color={variant === 'primary' ? 'light' : 'primary'} 
+            color="current"
           />
           <span className="btn-loading-text">{loadingText}</span>
         </span>
