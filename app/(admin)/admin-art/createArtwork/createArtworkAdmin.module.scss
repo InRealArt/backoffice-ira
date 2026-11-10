@@ -32,12 +32,13 @@
   border-radius: 0;
   margin-bottom: 2rem;
 
+  // `.artistSelectionSection h2.title` : plus spécifique que la règle de texte du thème sombre
   h2 {
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--color-accent);
+    color: var(--color-accent) !important;
     margin-bottom: 1.5rem;
   }
 }
