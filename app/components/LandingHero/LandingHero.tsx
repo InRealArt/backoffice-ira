@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { Cormorant_Garamond } from 'next/font/google'
+import ArtGallery, { type HeroArtwork } from '../ArtGallery/ArtGallery'
 import styles from './LandingHero.module.scss'
 
 // Même mot-symbole que inrealart.com : Cormorant Garamond léger, majuscules, interlettrage large.
@@ -14,6 +15,8 @@ const cormorant = Cormorant_Garamond({
 const WORDMARK = 'INREALART'
 
 interface LandingHeroProps {
+  artworks?: HeroArtwork[]
+  artworksLabel?: string
   /** Titre complet, lu par les lecteurs d'écran à la place des lettres animées */
   title: string
   caption: string
@@ -26,6 +29,8 @@ interface LandingHeroProps {
 }
 
 export default function LandingHero({
+  artworks = [],
+  artworksLabel = '',
   title,
   caption,
   tagline,
@@ -36,6 +41,7 @@ export default function LandingHero({
   onSignUp,
 }: LandingHeroProps) {
   const heroRef = useRef<HTMLElement>(null)
+  const hasArt = artworks.length > 0
 
   // Parallaxe douce de la lueur : le pointeur déplace deux calques à des vitesses différentes.
   // Désactivée avec « réduire les animations » et sur écran tactile.
@@ -72,7 +78,7 @@ export default function LandingHero({
   }, [])
 
   return (
-    <section ref={heroRef} className={styles.hero}>
+    <section ref={heroRef} className={`${styles.hero} ${hasArt ? styles.split : ''}`}>
       {/* Décor : tout est masqué aux technologies d'assistance */}
       <div className={styles.glowWide} aria-hidden="true" />
       <div className={styles.glowCore} aria-hidden="true" />
@@ -82,6 +88,7 @@ export default function LandingHero({
       </div>
       <div className={styles.grain} aria-hidden="true" />
 
+      <div className={styles.layout}>
       <div className={styles.content}>
         <h1 className={`${styles.wordmark} ${cormorant.className}`} aria-label={title}>
           {WORDMARK.split('').map((letter, index) => (
@@ -114,6 +121,9 @@ export default function LandingHero({
             </div>
           </>
         )}
+      </div>
+
+      {hasArt && <ArtGallery artworks={artworks} label={artworksLabel} delay="0.9s" />}
       </div>
     </section>
   )

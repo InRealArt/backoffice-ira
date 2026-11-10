@@ -39,7 +39,18 @@
     "signInButton": "Se connecter",
     "signUpButton": "S'inscrire",
     "caption": "Backoffice",
-    "tagline": "Votre espace pour gérer vos artistes, vos œuvres et vos collections."
+    "tagline": "Votre espace pour gérer vos artistes, vos œuvres et vos collections.",
+    "artworksLabel": "Œuvres à l'honneur",
+    "artworks": {
+      "klimt": "Le Baiser de Gustav Klimt : un couple enlacé dans des étoffes d'or ornées de motifs géométriques",
+      "monet": "Impression, soleil levant de Claude Monet : un port dans la brume avec un soleil orange",
+      "vangogh": "La Nuit étoilée de Vincent van Gogh : un ciel tourbillonnant au-dessus d'un village endormi",
+      "turner": "Le Dernier Voyage du Téméraire de J. M. W. Turner : un navire de guerre remorqué au coucher du soleil"
+    },
+    "gallery": {
+      "pause": "Mettre le défilement en pause",
+      "play": "Reprendre le défilement"
+    }
   },
   "dashboard": {
     "title": "Tableau de bord",
