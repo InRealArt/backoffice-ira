@@ -22,6 +22,8 @@ module.exports = {
           /^role-/,
           /^blockchain-/,
           /^address-/,
+          // Classes à opacité sur le doré (primary/purple) : l'extracteur par défaut de PurgeCSS coupe sur « / »
+          /^((focus|hover|focus-visible|focus-within)\\?:)?(bg|border|ring|from|to|via)-(primary|purple)\\?\/(5|10|20|40|50|80|90)$/,
           // Classes pour les animations
           /^animate-/,
           // Utilitaires
