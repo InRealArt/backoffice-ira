@@ -290,8 +290,8 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
             <div className="section-header mt-lg d-flex justify-content-between align-items-center">
               <h2 className="section-title">Ajouter une question</h2>
               <div className="section-badge" style={{ 
-                backgroundColor: '#e0e7ff', 
-                color: '#4f46e5', 
+                backgroundColor: '#f4eee3', 
+                color: 'var(--color-primary)', 
                 padding: '4px 12px', 
                 borderRadius: '16px', 
                 fontSize: '0.85rem', 
@@ -313,7 +313,7 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
                 entityId={null}
                 field="question"
                 label={<div className="d-flex align-items-center">
-                  <span style={{ color: '#6366f1', marginRight: '8px' }}>Q:</span>
+                  <span style={{ color: 'var(--color-primary)', marginRight: '8px' }}>Q:</span>
                   Question
                 </div>}
                 className="mt-sm"
@@ -334,7 +334,7 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
                 entityId={null}
                 field="answer"
                 label={<div className="d-flex align-items-center">
-                  <span style={{ color: '#6366f1', marginRight: '8px' }}>R:</span>
+                  <span style={{ color: 'var(--color-primary)', marginRight: '8px' }}>R:</span>
                   Réponse
                 </div>}
                 className="mt-md"
@@ -360,7 +360,7 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
-                    backgroundColor: (!newQuestion.trim() || !newAnswer.trim() || isSubmitting) ? '#9ca3af' : '#4f46e5'
+                    backgroundColor: (!newQuestion.trim() || !newAnswer.trim() || isSubmitting) ? '#9ca3af' : undefined
                   }}
                 >
                   <Plus size={16} />
@@ -401,7 +401,7 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
                         marginBottom: '8px',
                         color: '#111827'
                       }}>
-                        <span style={{ marginRight: '8px', color: '#6366f1' }}>{index + 1}.</span>
+                        <span style={{ marginRight: '8px', color: 'var(--color-primary)' }}>{index + 1}.</span>
                         {item.question}
                         <TranslationIcon 
                           entityType="DetailedFaqItem" 

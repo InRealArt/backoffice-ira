@@ -266,8 +266,8 @@ export default function DetailedFaqPageEditForm({ faqPage }: DetailedFaqPageEdit
             <div className="section-header mt-lg d-flex justify-content-between align-items-center">
               <h2 className="section-title">Ajouter une question</h2>
               <div className="section-badge" style={{ 
-                backgroundColor: '#e0e7ff', 
-                color: '#4f46e5', 
+                backgroundColor: '#f4eee3', 
+                color: 'var(--color-primary)', 
                 padding: '4px 12px', 
                 borderRadius: '16px', 
                 fontSize: '0.85rem', 
@@ -477,7 +477,7 @@ export default function DetailedFaqPageEditForm({ faqPage }: DetailedFaqPageEdit
                             marginBottom: '8px',
                             color: '#111827'
                           }}>
-                            <span style={{ marginRight: '8px', color: '#6366f1' }}>{item.order}.</span>
+                            <span style={{ marginRight: '8px', color: 'var(--color-primary)' }}>{item.order}.</span>
                             {item.question}
                             <TranslationIcon 
                               entityType="DetailedFaqPageItem" 

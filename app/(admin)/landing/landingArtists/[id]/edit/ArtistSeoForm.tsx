@@ -354,7 +354,7 @@ export default function ArtistSeoForm({
 
                 {/* Numéro d'ordre */}
                 <div
-                  className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold"
+                  className="flex-shrink-0 w-7 h-7 rounded-full ink-active flex items-center justify-center text-sm font-semibold"
                   style={{ minWidth: 28 }}
                 >
                   {index + 1}

@@ -23,7 +23,7 @@ export default function LanguageSwitcher () {
           onClick={() => handleLocaleChange(locale)}
           className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
             currentLocale === locale
-              ? 'bg-primary text-white'
+              ? 'ink-active'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
           aria-label={`Changer la langue en ${locale.toUpperCase()}`}

@@ -180,7 +180,7 @@ body.dark {
 
     &[class*="text-indigo-800"],
     &[class*="text-purple-800"] {
-      color: #c4b5fd;
+      color: #d8c49e;
       border-color: rgba(167, 139, 250, 0.3);
     }
 
@@ -229,6 +229,6 @@ body.dark {
   }
 
   ::selection {
-    background: rgba(139, 127, 255, 0.35);
+    background: rgba(201, 174, 132, 0.35);
   }
 }

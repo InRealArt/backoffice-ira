@@ -795,7 +795,7 @@ export default function SeoPostForm({
               <span
                 style={{
                   fontWeight: !isFeatured ? 'bold' : 'normal',
-                  color: !isFeatured ? '#4f46e5' : '#9ca3af',
+                  color: !isFeatured ? 'var(--color-primary)' : '#9ca3af',
                 }}
               >
                 Non
@@ -821,7 +821,7 @@ export default function SeoPostForm({
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: isFeatured ? '#4f46e5' : '#ccc',
+                    backgroundColor: isFeatured ? 'var(--color-primary)' : '#ccc',
                     borderRadius: '34px',
                     transition: '0.4s',
                   }}
@@ -845,7 +845,7 @@ export default function SeoPostForm({
               <span
                 style={{
                   fontWeight: isFeatured ? 'bold' : 'normal',
-                  color: isFeatured ? '#4f46e5' : '#9ca3af',
+                  color: isFeatured ? 'var(--color-primary)' : '#9ca3af',
                 }}
               >
                 Article du moment
@@ -882,8 +882,8 @@ export default function SeoPostForm({
                           gap: '0.75rem',
                           padding: '0.625rem 0.875rem',
                           borderRadius: '8px',
-                          border: `1px solid ${isSelected ? '#6366f1' : '#e5e7eb'}`,
-                          background: isSelected ? '#eef2ff' : '#ffffff',
+                          border: `1px solid ${isSelected ? 'var(--color-primary)' : '#e5e7eb'}`,
+                          background: isSelected ? '#f4eee3' : '#ffffff',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease',
                           userSelect: 'none'
@@ -893,10 +893,10 @@ export default function SeoPostForm({
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleToggleRelatedPost(post)}
-                          style={{ accentColor: '#6366f1', width: '16px', height: '16px', flexShrink: 0 }}
+                          style={{ accentColor: 'var(--color-primary)', width: '16px', height: '16px', flexShrink: 0 }}
                         />
                         <div style={{ minWidth: 0 }}>
-                          <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 600, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             {post.categoryName}
                           </p>
                           <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -982,7 +982,7 @@ export default function SeoPostForm({
                 checked={forceTranslate}
                 onChange={(e) => setForceTranslate(e.target.checked)}
                 disabled={isSubmitting}
-                style={{ accentColor: '#4f46e5', width: '16px', height: '16px' }}
+                style={{ accentColor: 'var(--color-primary)', width: '16px', height: '16px' }}
               />
               Retraduire en anglais
             </label>

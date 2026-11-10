@@ -259,7 +259,7 @@ export default function NewTeamMemberForm() {
                     style={{
                       position: 'absolute', cursor: 'pointer',
                       top: 0, left: 0, right: 0, bottom: 0,
-                      backgroundColor: visible ? '#4f46e5' : '#ccc',
+                      backgroundColor: visible ? 'var(--color-primary)' : '#ccc',
                       borderRadius: '34px', transition: '0.4s',
                     }}
                   >

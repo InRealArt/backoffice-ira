@@ -153,13 +153,13 @@ function CollectionCard({
   return (
     <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_12px_rgba(0,0,0,0.04),0_0_0_1px_rgba(0,0,0,0.02)] border border-gray-200/80 dark:border-gray-700/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_6px_rgba(0,0,0,0.07),0_10px_24px_rgba(0,0,0,0.08),0_0_0_1px_rgba(59,130,246,0.1)] hover:border-blue-200 dark:hover:border-blue-400/40 relative group">
       {/* Bandeau de gradient en haut au hover */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       {/* Header de la collection */}
-      <div className="flex items-center justify-between gap-4 p-7 px-8 border-b border-purple-200/50 dark:border-purple-700/40 collection-header-bg">
+      <div className="flex items-center justify-between gap-4 p-7 px-8 border-b border-border collection-header-bg">
         <div className="flex items-center gap-4 flex-1 min-w-0">
           {/* Icon avec gradient comme dans le dashboard */}
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white flex-shrink-0 shadow-[0_4px_12px_rgba(59,130,246,0.3)]">
+          <div className="w-12 h-12 rounded-xl ink-active flex items-center justify-center flex-shrink-0">
             <svg
               width="24"
               height="24"
@@ -199,7 +199,7 @@ function CollectionCard({
         <div className="flex items-center flex-shrink-0">
           <NavigationButton
             href={`/art/createPhysicalArtwork?collectionId=${collection.id}`}
-            className="flex items-center gap-2 bg-purple text-white border border-white px-4 py-2 rounded-md cursor-pointer text-sm font-medium transition-all duration-200 hover:bg-purple/90 [&_svg]:shrink-0"
+            className="btn btn-primary btn-small"
             aria-label="Ajouter une œuvre"
           >
             <svg

@@ -1,7 +1,7 @@
 @use "../../styles/button-mixins" as *;
 
 // Variables de couleurs
-$color-primary: #4f46e5; // Indigo
+$color-primary: #8a6f43; // Doré (accent du site)
 $color-secondary: #f97316; // Orange
 $color-success: #10b981; // Vert émeraude
 $color-warning: #eab308; // Jaune
@@ -26,7 +26,7 @@ $color-nft: #ec4899; // Rose
   border-radius: 999px;
   font-size: 0.92rem;
   font-weight: 500;
-  background: #ede9fe;
+  background: #f4eee3;
   color: #6d28d9;
   box-shadow: 0 1px 4px rgba(109, 40, 217, 0.07);
   letter-spacing: 0.01em;

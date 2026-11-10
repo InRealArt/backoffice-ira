@@ -62,7 +62,7 @@ export function DashboardStats({
           title={t("admin.artistsCount")}
           value={visibleArtistsCount}
           icon={Users}
-          color="#6052ff"
+          color="#b89c72"
           isLoading={isLoadingArtistsCount}
         />
       </div>
@@ -75,7 +75,7 @@ export function DashboardStats({
         title={t("presale.artworksCount")}
         value={presaleArtworkCount}
         icon={Package}
-        color="#6052ff"
+        color="#b89c72"
         isLoading={isLoadingPresaleCount}
         buttonTitle={t("physical.viewArtworks")}
         buttonRoute="/art/presale-artworks"
@@ -104,7 +104,7 @@ export function DashboardStats({
             title={t("physical.collectionsTitle")}
             value={physicalCollectionsCount}
             icon={FolderOpen}
-            color="#8b5cf6"
+            color="#a08659"
             isLoading={isLoadingPhysicalCollectionsCount}
             buttonTitle={t("physical.viewCollections")}
             buttonRoute="/art/physicalCollection"

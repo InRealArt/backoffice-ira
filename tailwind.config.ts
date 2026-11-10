@@ -14,19 +14,20 @@ const config: Config = {
       colors: {
         // DA alignée sur le site corpo : gris neutres (sans teinte bleutée)
         gray: colors.neutral,
-        // Échelle violette centrée sur #6052ff (couleur primaire du site corpo)
+        // Échelle dorée dérivée de l'accent du site corpo (#b89c72). 600 = #8a6f43 : 4,8:1 avec du texte blanc.
+        // Les anciennes classes indigo-* et purple-* du code pointent vers cette échelle.
         indigo: {
-          50: "#f1f0ff",
-          100: "#e6e4ff",
-          200: "#d0ccff",
-          300: "#b0a8ff",
-          400: "#8a7eff",
-          500: "#6f63ff",
-          600: "#6052ff",
-          700: "#4d3ee6",
-          800: "#3f33bd",
-          900: "#352d94",
-          950: "#241f66",
+          50: "#faf7f2",
+          100: "#f4eee3",
+          200: "#e8dcc4",
+          300: "#d8c49e",
+          400: "#c9ae84",
+          500: "#b89c72",
+          600: "#8a6f43",
+          700: "#725a35",
+          800: "#5b4829",
+          900: "#46361f",
+          950: "#2d2314",
         },
         gold: "var(--color-accent)",
         // Map your CSS variables to Tailwind colors
@@ -37,6 +38,16 @@ const config: Config = {
         },
         purple: {
           DEFAULT: "var(--color-purple)",
+          50: "#faf7f2",
+          100: "#f4eee3",
+          200: "#e8dcc4",
+          300: "#d8c49e",
+          400: "#c9ae84",
+          500: "#b89c72",
+          600: "#8a6f43",
+          700: "#725a35",
+          800: "#5b4829",
+          900: "#46361f",
         },
         secondary: {
           DEFAULT: "#6b7280",

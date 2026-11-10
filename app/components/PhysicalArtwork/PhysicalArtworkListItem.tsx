@@ -120,7 +120,7 @@ export default function PhysicalArtworkListItem({
           {editHref ? (
             <NavigationButton
               href={editHref}
-              className="inline-flex items-center gap-2 border border-indigo-600 px-3 py-2 rounded-full bg-indigo-600 text-white font-semibold cursor-pointer transition-colors hover:bg-indigo-700 hover:border-indigo-700"
+              className="btn btn-primary btn-small"
             >
               Modifier
             </NavigationButton>
@@ -128,7 +128,7 @@ export default function PhysicalArtworkListItem({
             <button
               type="button"
               onClick={onEditClick}
-              className="inline-flex items-center gap-2 border border-indigo-600 px-3 py-2 rounded-full bg-indigo-600 text-white font-semibold cursor-pointer transition-colors hover:bg-indigo-700 hover:border-indigo-700"
+              className="btn btn-primary btn-small"
             >
               Modifier
             </button>

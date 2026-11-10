@@ -63,7 +63,7 @@ export default function ShippingAddressSection({
             type="button"
             onClick={() => router.push('/art/addresses/create')}
             disabled={isFormReadOnly}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn btn-primary btn-medium whitespace-nowrap"
           >
             <Plus size={16} />
             Créer une adresse
