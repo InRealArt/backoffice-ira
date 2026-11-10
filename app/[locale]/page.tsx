@@ -5,6 +5,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import Navbar from "../components/Navbar/Navbar";
 import AuthObserver from "../components/Auth/AuthObserver";
+import LandingHero from "../components/LandingHero/LandingHero";
 import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner";
 import { authClient } from "@/lib/auth-client";
 import { useAuthorization } from "../hooks/useAuthorization";
@@ -86,32 +87,16 @@ export default function Main() {
         </div>
         */}
       </div>
-      <div className="flex flex-col items-center justify-center gap-5">
-        <h1 className="text-3xl font-semibold mb-8 text-center animate-titleLanding origin-center transition-all duration-300 text-text-primary dark:text-text-primary">
-          {t("title")}
-        </h1>
-        {!isLoggedIn && (
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-sm text-text-secondary mt-4 opacity-90 italic text-center dark:text-text-secondary">
-              {t("loginPrompt")}
-            </p>
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => router.push("/sign-in")}
-                className="btn btn-primary btn-medium"
-              >
-                {t("signInButton")}
-              </button>
-              <button
-                onClick={() => router.push("/sign-up")}
-                className="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/90 transition-colors font-medium"
-              >
-                {t("signUpButton")}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <LandingHero
+        title={t("title")}
+        caption={t("caption")}
+        tagline={t("tagline")}
+        showActions={!isLoggedIn}
+        signInLabel={t("signInButton")}
+        signUpLabel={t("signUpButton")}
+        onSignIn={() => router.push("/sign-in")}
+        onSignUp={() => router.push("/sign-up")}
+      />
     </div>
   );
 }
