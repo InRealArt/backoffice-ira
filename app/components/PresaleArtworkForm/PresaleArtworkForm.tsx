@@ -785,7 +785,7 @@ export default function PresaleArtworkForm({
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: isTopArtwork ? "#4f46e5" : "#ccc",
+                    backgroundColor: isTopArtwork ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                     borderRadius: "34px",
                     transition: "0.4s",
                   }}
@@ -849,7 +849,7 @@ export default function PresaleArtworkForm({
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: isFeatured ? "#4f46e5" : "#ccc",
+                    backgroundColor: isFeatured ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                     borderRadius: "34px",
                     transition: "0.4s",
                   }}
@@ -957,7 +957,7 @@ export default function PresaleArtworkForm({
                   {...getMainImageRootProps()}
                   style={{
                     border: `2px dashed ${
-                      isMainImageDragActive ? "#4dabf7" : "#ccc"
+                      isMainImageDragActive ? "var(--color-primary)" : "var(--color-border-input)"
                     }`,
                     borderRadius: "8px",
                     padding: "1.5rem",
@@ -965,7 +965,7 @@ export default function PresaleArtworkForm({
                     cursor: "pointer",
                     backgroundColor: isMainImageDragActive
                       ? "#f0f8ff"
-                      : "#fafafa",
+                      : "var(--color-background-light)",
                     transition: "all 0.2s ease",
                   }}
                 >
@@ -992,7 +992,7 @@ export default function PresaleArtworkForm({
                       }
                     }}
                   >
-                    <Camera size={24} color="#666" />
+                    <Camera size={24} color="var(--color-text-muted)" />
                     <p
                       style={{
                         margin: 0,
@@ -1005,7 +1005,7 @@ export default function PresaleArtworkForm({
                         : t("fields.clickOrDrag")}
                     </p>
                     <p
-                      style={{ margin: 0, fontSize: "0.75rem", color: "#666" }}
+                      style={{ margin: 0, fontSize: "0.75rem", color: "var(--color-text-muted)" }}
                     >
                       {t("fields.formats")}
                     </p>
@@ -1135,7 +1135,7 @@ export default function PresaleArtworkForm({
                           left: 0,
                           right: 0,
                           bottom: 0,
-                          backgroundColor: isSold ? "#4f46e5" : "#ccc",
+                          backgroundColor: isSold ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                           borderRadius: "34px",
                           transition: "0.4s",
                         }}
@@ -1266,12 +1266,12 @@ export default function PresaleArtworkForm({
             <div
               {...getMockupRootProps()}
               style={{
-                border: `2px dashed ${isMockupDragActive ? "#4dabf7" : "#ccc"}`,
+                border: `2px dashed ${isMockupDragActive ? "var(--color-primary)" : "var(--color-border-input)"}`,
                 borderRadius: "8px",
                 padding: "1.5rem",
                 textAlign: "center",
                 cursor: "pointer",
-                backgroundColor: isMockupDragActive ? "#f0f8ff" : "#fafafa",
+                backgroundColor: isMockupDragActive ? "var(--color-primary-light)" : "var(--color-background-light)",
                 transition: "all 0.2s ease",
                 marginBottom: "1rem",
               }}
@@ -1285,13 +1285,13 @@ export default function PresaleArtworkForm({
                   gap: "0.5rem",
                 }}
               >
-                <Camera size={24} color="#666" />
+                <Camera size={24} color="var(--color-text-muted)" />
                 <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 600 }}>
                   {isMockupDragActive
                     ? t("fields.dropMockupHere")
                     : t("fields.clickOrDragMockup")}
                 </p>
-                <p style={{ margin: 0, fontSize: "0.75rem", color: "#666" }}>
+                <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
                   {t("fields.formats")}
                 </p>
               </div>

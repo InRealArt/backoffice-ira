@@ -208,7 +208,7 @@ export default function ArtistSeoForm({
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: isTopArtist ? "#4f46e5" : "#ccc",
+                  backgroundColor: isTopArtist ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                   borderRadius: "34px",
                   transition: "0.4s",
                 }}

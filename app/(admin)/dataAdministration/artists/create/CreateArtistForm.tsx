@@ -540,7 +540,7 @@ export default function CreateArtistForm() {
                           left: 0,
                           right: 0,
                           bottom: 0,
-                          backgroundColor: isGallery ? "#4f46e5" : "#ccc",
+                          backgroundColor: isGallery ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                           borderRadius: "34px",
                           transition: "0.4s",
                         }}

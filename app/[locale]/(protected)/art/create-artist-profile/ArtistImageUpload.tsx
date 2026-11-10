@@ -115,22 +115,22 @@ export default function ArtistImageUpload({ onFileSelect, onDelete, previewUrl, 
         <div
           {...getRootProps()}
           style={{
-            border: `2px dashed ${isDragActive ? '#4dabf7' : '#ccc'}`,
+            border: `2px dashed ${isDragActive ? "var(--color-primary)" : "var(--color-border-input)"}`,
             borderRadius: '8px',
             padding: '2rem',
             textAlign: 'center',
             cursor: 'pointer',
-            backgroundColor: isDragActive ? '#f0f8ff' : '#fafafa',
+            backgroundColor: isDragActive ? "var(--color-primary-light)" : "var(--color-background-light)",
             transition: 'all 0.2s ease'
           }}
         >
           <input {...getInputProps()} />
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-            <Camera size={32} color="#666" />
+            <Camera size={32} color="var(--color-text-muted)" />
             <p style={{ margin: 0, fontWeight: 600 }}>
               {isDragActive ? t('dropHere') : t('clickOrDrag')}
             </p>
-            <p style={{ margin: 0, fontSize: '0.875rem', color: '#666' }}>
+            <p style={{ margin: 0, fontSize: '0.875rem', color: "var(--color-text-secondary)" }}>
               {t('formats')}
             </p>
           </div>

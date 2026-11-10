@@ -1,14 +1,14 @@
-// Feuille de style spécifique au mode sombre avec une spécificité élevée
-@use './variables.scss' as *;
+// Thème sombre du backoffice.
+// Les couleurs viennent des tokens `--color-*` définis dans app/globals.css (.dark-theme).
+// Ce fichier ne porte que les surcharges nécessaires pour les composants dont les couleurs
+// sont codées en dur (classes Tailwind gris/blanc, badges, tooltips).
 
-// Application forcée des styles en mode sombre
-body.dark,
-html.dark-theme {
-  // Couleurs de fond générales
-  background-color: $color-background-main !important;
-  color: #ffffff !important;
-  
-  // Toutes les mises en page et conteneurs
+html.dark-theme,
+body.dark {
+  background-color: var(--color-background-main);
+  color: var(--color-text-primary);
+
+  // Conteneurs de page : fond canvas
   .page-layout,
   .dashboard-page,
   .pageLayout,
@@ -22,104 +22,203 @@ html.dark-theme {
   .pageContainer,
   [class*="pageContainer"],
   [class*="page-container"] {
-    background-color: $color-background-main !important;
-    color: #ffffff !important;
+    background-color: var(--color-background-main) !important;
+    color: var(--color-text-primary) !important;
   }
-  
-  // Tous les éléments texte
-  p, h1, h2, h3, h4, h5, h6, span, div, a, button, input, textarea, select, li, td, th {
-    color: #ffffff !important;
+
+  // Barre de navigation : fond de carte translucide (le dégradé gray-900 de Tailwind est bleuté)
+  .navbar {
+    background-color: color-mix(in srgb, var(--color-background-white) 95%, transparent) !important;
   }
-  
-  // Exception pour les badges - conserver les couleurs de texte originales
-  // Badges avec texte vert (success)
-  span.inline-flex[class*="text-green-800"] {
-    color: #166534 !important; // green-800
-  }
-  
-  // Badges avec texte bleu (info)
-  span.inline-flex[class*="text-blue-800"] {
-    color: #1e40af !important; // blue-800
-  }
-  
-  // Badges avec texte amber (warning)
-  span.inline-flex[class*="text-amber-800"] {
-    color: #92400e !important; // amber-800
-  }
-  
-  // Badges avec texte rouge (danger)
-  span.inline-flex[class*="text-red-800"] {
-    color: #991b1b !important; // red-800
-  }
-  
-  // Badges avec texte indigo (primary)
-  span.inline-flex[class*="text-indigo-800"] {
-    color: #3730a3 !important; // indigo-800
-  }
-  
-  // Badges avec texte gris (secondary)
-  span.inline-flex[class*="text-gray-800"] {
-    color: #1f2937 !important; // gray-800
-  }
-  
-  // Exception pour le point d'interrogation du InfoTooltip - doit être noir en dark mode
-  span.info-tooltip-icon {
-    color: #000000 !important; // noir pour contraste sur fond gris
-  }
-  
-  // Exception pour la popup du InfoTooltip - doit être sombre en dark mode
-  div.info-tooltip-popup {
-    background-color: #111827 !important; // gray-900
-    border-color: #374151 !important; // gray-700
-    color: #e5e7eb !important; // gray-200
-    
-    .info-tooltip-header {
-      background-color: #1f2937 !important; // gray-800
-      border-color: #374151 !important; // gray-700
-    }
-    
-    .info-tooltip-title {
-      color: #f3f4f6 !important; // gray-100
-    }
-    
-    .info-tooltip-close {
-      color: #9ca3af !important; // gray-400
-      
-      &:hover {
-        color: #e5e7eb !important; // gray-200
-      }
-    }
-    
-    .info-tooltip-content {
-      color: #e5e7eb !important; // gray-200
-    }
-  }
-  
-  // Les StatusBadge gardent le texte blanc (déjà défini dans globals.css)
-  // Pas besoin d'exception ici car ils utilisent text-white en light mode
-  
-  // Classes secondaires
-  .text-secondary,
-  [class*="text-secondary"],
-  .secondary-text,
-  [class*="secondary-text"] {
-    color: $color-text-secondary !important;
-  }
-  
-  // Classes muettes
-  .text-muted,
-  [class*="text-muted"],
-  .muted-text,
-  [class*="muted-text"] {
-    color: $color-text-muted !important;
-  }
-  
-  // Ajouter spécifiquement les classes de contenu de page
+
+  // Contenu de page : carte (élévation 1), bordure fine plutôt qu'une ombre lourde
   .page-content,
   .pageContent,
   [class*="pageContent"],
   [class*="page-content"] {
-    background-color: $color-background-white !important; // Utilise la variable pour le fond sombre
-    color: #ffffff !important;
+    background-color: var(--color-background-white) !important;
+    color: var(--color-text-primary) !important;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-card);
   }
-} 
+
+  // Texte : blanc cassé par défaut, la hiérarchie vient des classes de texte atténué
+  p, h1, h2, h3, h4, h5, h6, span, div, a, button, input, textarea, select, li, td, th, label {
+    color: var(--color-text-primary);
+  }
+
+  h1, h2, h3 {
+    letter-spacing: -0.01em;
+  }
+
+  // Classes de texte atténué (sémantiques et Tailwind en dur), plus spécifiques que la règle ci-dessus
+  .text-secondary,
+  [class*="text-secondary"],
+  .secondary-text,
+  [class*="secondary-text"],
+  [class*="text-gray-600"],
+  [class*="text-gray-700"],
+  [class*="text-neutral-600"],
+  [class*="text-neutral-700"] {
+    color: var(--color-text-secondary);
+  }
+
+  .text-muted,
+  [class*="text-muted"],
+  .muted-text,
+  [class*="muted-text"],
+  [class*="text-gray-400"],
+  [class*="text-gray-500"],
+  [class*="text-neutral-400"],
+  [class*="text-neutral-500"] {
+    color: var(--color-text-muted);
+  }
+
+  [class*="text-gray-900"],
+  [class*="text-gray-800"],
+  [class*="text-neutral-900"],
+  [class*="text-neutral-800"] {
+    color: var(--color-text-primary);
+  }
+
+  // Surfaces Tailwind en dur
+  [class*="bg-white"]:not([class*="bg-white/"]) {
+    background-color: var(--color-background-white);
+  }
+
+  [class*="bg-gray-200"] {
+    background-color: var(--color-background-hover);
+
+    &:hover {
+      background-color: #303035;
+    }
+  }
+
+  [class*="bg-gray-50"],
+  [class*="bg-gray-100"],
+  [class*="bg-neutral-50"],
+  [class*="bg-neutral-100"] {
+    background-color: var(--color-background-light);
+  }
+
+  [class*="border-gray-100"],
+  [class*="border-gray-200"],
+  [class*="border-gray-300"],
+  [class*="border-neutral-200"],
+  [class*="border-neutral-300"] {
+    border-color: var(--color-border-input);
+  }
+
+  // Champs de formulaire
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    background-color: var(--color-background-light);
+    border-color: var(--color-border-input);
+
+    &::placeholder {
+      color: var(--color-text-muted);
+      opacity: 1;
+    }
+
+    &:hover:not(:disabled) {
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    &:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(139, 127, 255, 0.25);
+    }
+
+    &:disabled {
+      background-color: var(--color-background-disabled);
+      color: var(--color-text-muted);
+    }
+  }
+
+  // Badges : fond teinté translucide + texte clair (au lieu de texte foncé sur fond sombre)
+  span.inline-flex {
+    &[class*="bg-green-100"] { background-color: rgba(74, 222, 128, 0.14); }
+    &[class*="bg-blue-100"] { background-color: rgba(96, 165, 250, 0.14); }
+    &[class*="bg-amber-100"],
+    &[class*="bg-yellow-100"] { background-color: rgba(251, 191, 36, 0.14); }
+    &[class*="bg-red-100"] { background-color: rgba(248, 113, 113, 0.14); }
+    &[class*="bg-indigo-100"],
+    &[class*="bg-purple-100"] { background-color: rgba(167, 139, 250, 0.16); }
+    &[class*="bg-gray-100"] { background-color: rgba(255, 255, 255, 0.08); }
+
+    &[class*="text-green-800"] {
+      color: #86efac;
+      border-color: rgba(74, 222, 128, 0.3);
+    }
+
+    &[class*="text-blue-800"] {
+      color: #93c5fd;
+      border-color: rgba(96, 165, 250, 0.3);
+    }
+
+    &[class*="text-amber-800"],
+    &[class*="text-yellow-800"] {
+      color: #fcd34d;
+      border-color: rgba(251, 191, 36, 0.3);
+    }
+
+    &[class*="text-red-800"] {
+      color: #fca5a5;
+      border-color: rgba(248, 113, 113, 0.3);
+    }
+
+    &[class*="text-indigo-800"],
+    &[class*="text-purple-800"] {
+      color: #c4b5fd;
+      border-color: rgba(167, 139, 250, 0.3);
+    }
+
+    &[class*="text-gray-800"] {
+      color: var(--color-text-secondary);
+      border-color: var(--color-border-input);
+    }
+  }
+
+  // Tooltip d'aide : popover (élévation 3)
+  span.info-tooltip-icon {
+    color: var(--color-background-main);
+  }
+
+  div.info-tooltip-popup {
+    background-color: var(--color-background-hover);
+    border-color: var(--color-border-input);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-popover);
+
+    .info-tooltip-header {
+      background-color: var(--color-background-light);
+      border-color: var(--color-border);
+    }
+
+    .info-tooltip-title {
+      color: var(--color-text-primary);
+    }
+
+    .info-tooltip-close {
+      color: var(--color-text-muted);
+
+      &:hover {
+        color: var(--color-text-primary);
+      }
+    }
+
+    .info-tooltip-content {
+      color: var(--color-text-secondary);
+    }
+  }
+
+  // Barres de défilement discrètes
+  * {
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  }
+
+  ::selection {
+    background: rgba(139, 127, 255, 0.35);
+  }
+}

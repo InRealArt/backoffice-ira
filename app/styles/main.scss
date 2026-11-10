@@ -56,7 +56,7 @@ body.dark {
   .pageLayout,
   [class*="pageLayout"],
   [class*="page-layout"] {
-    background-color: $color-background-main !important;
+    background-color: var(--color-background-main) !important;
   }
   
   // Styles spécifiques pour les conteneurs en mode sombre
@@ -64,7 +64,7 @@ body.dark {
   .contentContainer,
   [class*="contentContainer"], 
   [class*="content-container"] {
-    background-color: $color-background-main !important;
+    background-color: var(--color-background-main) !important;
   }
   
   // Améliorer le contraste des bordures

@@ -15,7 +15,7 @@ body.light {
   /* Couleurs en mode clair */
   --color-primary: #6052ff;
   --color-primary-dark: #4d3ee6;
-  --color-primary-light: #444e6e;
+  --color-primary-light: #eef2ff;
   --color-purple: #6052ff;
   --color-error: #dc2626;
   --color-error-dark: #b91c1c;
@@ -31,40 +31,49 @@ body.light {
   --color-background-hover: #f7f9fc;
   --color-background-disabled: #f0f0f0;
   --color-border: #eee;
-  --color-accent: #b89c72; /* doré, repris du site corpo */
+  --color-accent: #8a6f43; /* doré du site corpo, assombri pour le contraste sur fond clair (≈4,8:1) */
   --color-border-input: #e2e8f0;
   --color-border-light: #f0f0f0;
 }
 
 .dark-theme,
 body.dark {
-  --background: #131313;
-  --foreground: #ffffff; /* Plus blanc pour le mode sombre */
+  --background: #0e0e10;
+  --foreground: #ececf0;
   --navbar-height: 90px;
   --sidemenu-width: 250px;
 
-  /* Couleurs en mode sombre */
-  --color-primary: #7a6fff;
+  /* Mode sombre : échelle d'élévation neutre (plus une surface est haute, plus elle est claire)
+     canvas #0e0e10 < carte #161618 < surface relevée #1e1e21 < survol #26262a */
+  --color-primary: #8b7fff; /* violet éclairci : 6:1 sur les cartes */
   --color-primary-dark: #6052ff;
-  --color-primary-light: #352d94;
+  --color-primary-light: rgba(139, 127, 255, 0.16); /* fond teinté (badges, sélection) */
   --color-purple: #6052ff;
-  --color-error: #ef4444;
-  --color-error-dark: #dc2626;
-  --color-error-light: #f87171;
-  --color-text-primary: #ffffff; /* Plus blanc pour le texte principal */
-  --color-text-secondary: #f3f4f6; /* Plus blanc pour le texte secondaire */
-  --color-text-tertiary: #e5e7eb;
-  --color-text-light: #d1d5db;
-  --color-text-muted: #d1d5db; /* Plus blanc pour le texte muté */
-  --color-background-main: #131313;
-  --color-background-white: #1d1c1c;
-  --color-background-light: #262626;
-  --color-background-hover: #242323;
-  --color-background-disabled: #262626;
-  --color-border: #2e2e2e;
-  --color-accent: #b89c72;
-  --color-border-input: #3a3a3a;
-  --color-border-light: #2a2a2a;
+  --color-error: #f87171;
+  --color-error-dark: #ef4444;
+  --color-error-light: #fca5a5;
+
+  /* Hiérarchie de texte : blanc cassé, pas de blanc pur partout */
+  --color-text-primary: #ececf0;
+  --color-text-secondary: #b4b4bf;
+  --color-text-tertiary: #9a9aa6;
+  --color-text-light: #8a8a96;
+  --color-text-muted: #8a8a96;
+
+  --color-background-main: #0e0e10;
+  --color-background-white: #161618;
+  --color-background-light: #1e1e21;
+  --color-background-hover: #26262a;
+  --color-background-disabled: #1a1a1c;
+
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-input: rgba(255, 255, 255, 0.14);
+  --color-border-light: rgba(255, 255, 255, 0.05);
+  --color-accent: #c9ae84;
+
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-popover: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  color-scheme: dark;
 }
 
 html {
@@ -129,8 +138,8 @@ body.dark .dashboard-page,
 body.dark .pageLayout,
 body.dark [class*="pageLayout"],
 body.dark [class*="page-layout"] {
-  background-color: #111827 !important;
-  color: #ffffff !important;
+  background-color: var(--color-background-main) !important;
+  color: var(--color-text-primary) !important;
 }
 
 html.dark-theme .page-layout,
@@ -138,13 +147,13 @@ html.dark-theme .dashboard-page,
 html.dark-theme .pageLayout,
 html.dark-theme [class*="pageLayout"],
 html.dark-theme [class*="page-layout"] {
-  background-color: #111827 !important;
-  color: #ffffff !important;
+  background-color: var(--color-background-main) !important;
+  color: var(--color-text-primary) !important;
 }
 
 /* Assurer également que les styles pour l'élément parent sont corrects */
 body.dark {
-  background-color: #111827 !important;
+  background-color: var(--color-background-main) !important;
 }
 
 /* ===== STYLES PAGINATION ===== */

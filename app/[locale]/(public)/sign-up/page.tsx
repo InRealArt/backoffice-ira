@@ -3,10 +3,10 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { authClient } from '@/lib/auth-client'
 import Button from '@/app/components/Button/Button'
 import { useToast } from '@/app/components/Toast/ToastContext'
+import BrandLogo from '@/app/components/BrandLogo/BrandLogo'
 
 export default function SignUpPage () {
   const router = useRouter()
@@ -54,16 +54,7 @@ export default function SignUpPage () {
       <div className='card w-full max-w-md bg-base-100 shadow-xl'>
         <div className='card-body'>
           <div className='flex items-center justify-center gap-3 mb-6 pb-6 border-b border-base-300'>
-            <div className='bg-black rounded-md p-1 flex items-center justify-center w-[70px] h-[70px]'>
-              <Image
-                src='/img/Logo_InRealArt.svg'
-                alt='InRealArt Logo'
-                width={60}
-                height={60}
-                className='logo-image'
-              />
-            </div>
-            <span className='text-xl font-semibold text-gray-900 dark:text-white'>InRealArt backoffice</span>
+            <BrandLogo size="lg" caption="Backoffice" />
           </div>
           <h2 className='card-title text-2xl'>Créer un compte</h2>
           <form onSubmit={onSubmit} className='space-y-5'>
