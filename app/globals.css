@@ -776,6 +776,7 @@ body.dark {
   :root .btn p,
   :root .btn svg {
     color: inherit;
+    flex-shrink: 0;
   }
 
   /* Secondaire (défaut) : le survol remplit */
