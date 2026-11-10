@@ -8,7 +8,7 @@ interface SEOAssistantButtonProps {
 export default function SEOAssistantButton({ onClick }: SEOAssistantButtonProps) {
   return (
     <button 
-      className="fixed left-[calc(50%-500px)] top-1/2 -translate-y-1/2 z-[100] bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-none rounded-lg px-6 py-3.5 font-semibold text-base cursor-pointer shadow-lg transition-all duration-300 flex items-center gap-2 hover:-translate-y-[calc(50%+2px)] hover:shadow-xl active:-translate-y-[calc(50%+1px)] md:left-4 md:bottom-4 md:top-auto md:translate-y-0 md:px-5 md:py-3 md:text-sm md:hover:translate-y-[-2px] md:active:translate-y-[-1px]" 
+      className="fixed left-[calc(50%-500px)] top-1/2 -translate-y-1/2 z-[100] bg-gradient-to-r from-indigo-600 to-indigo-700 text-white border-none rounded-lg px-6 py-3.5 font-semibold text-base cursor-pointer shadow-lg transition-all duration-300 flex items-center gap-2 hover:-translate-y-[calc(50%+2px)] hover:shadow-xl active:-translate-y-[calc(50%+1px)] md:left-4 md:bottom-4 md:top-auto md:translate-y-0 md:px-5 md:py-3 md:text-sm md:hover:translate-y-[-2px] md:active:translate-y-[-1px]" 
       onClick={onClick}
       title="Prévisualiser l'article en temps réel"
     >

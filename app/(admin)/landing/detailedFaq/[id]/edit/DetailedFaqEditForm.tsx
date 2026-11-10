@@ -290,7 +290,7 @@ export default function DetailedFaqEditForm({ faqHeader }: DetailedFaqEditFormPr
             <div className="section-header mt-lg d-flex justify-content-between align-items-center">
               <h2 className="section-title">Ajouter une question</h2>
               <div className="section-badge" style={{ 
-                backgroundColor: '#f4eee3', 
+                backgroundColor: 'var(--color-primary-light)', 
                 color: 'var(--color-primary)', 
                 padding: '4px 12px', 
                 borderRadius: '16px', 

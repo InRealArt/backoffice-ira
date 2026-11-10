@@ -32,12 +32,12 @@ const config: Config = {
         gold: "var(--color-accent)",
         // Map your CSS variables to Tailwind colors
         primary: {
-          DEFAULT: "var(--color-primary)",
+          DEFAULT: "rgb(var(--color-primary-rgb) / <alpha-value>)",
           dark: "var(--color-primary-dark)",
           light: "var(--color-primary-light)",
         },
         purple: {
-          DEFAULT: "var(--color-purple)",
+          DEFAULT: "rgb(var(--color-purple-rgb) / <alpha-value>)",
           50: "#faf7f2",
           100: "#f4eee3",
           200: "#e8dcc4",
