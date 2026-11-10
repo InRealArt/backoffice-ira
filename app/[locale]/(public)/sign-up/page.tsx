@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
 import Button from '@/app/components/Button/Button'
-import { useToast } from '@/app/components/Toast/ToastContext'
-import AuthShell, { AuthField } from '@/app/components/AuthShell/AuthShell'
+import AuthShell, { AuthAlert, AuthField } from '@/app/components/AuthShell/AuthShell'
+
+const MIN_PASSWORD_LENGTH = 8
 
 export default function SignUpPage () {
   const router = useRouter()
@@ -15,11 +16,16 @@ export default function SignUpPage () {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { error: errorToast } = useToast()
+  const [passwordError, setPasswordError] = useState<string | null>(null)
 
   const onSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
+    setPasswordError(null)
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setPasswordError(`Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`)
+      return
+    }
     setIsLoading(true)
 
     try {
@@ -34,7 +40,7 @@ export default function SignUpPage () {
       })
 
       if (authError) {
-        errorToast(authError.message || 'Vous n\'êtes pas autorisé à utiliser le backoffice')
+        setError(authError.message || 'Vous n\'êtes pas autorisé à utiliser le backoffice')
         setIsLoading(false)
         return
       }
@@ -44,10 +50,10 @@ export default function SignUpPage () {
     } catch (err) {
       console.error('Erreur lors du signup:', err)
       const errorMessage = 'Une erreur inattendue s\'est produite'
-      errorToast(errorMessage)
+      setError(errorMessage)
       setIsLoading(false)
     }
-  }, [name, email, password, router, errorToast])
+  }, [name, email, password, router])
 
   return (
     <AuthShell
@@ -88,10 +94,12 @@ export default function SignUpPage () {
           onChange={e => setPassword(e.target.value)}
           required
           autoComplete='new-password'
+          hint={`${MIN_PASSWORD_LENGTH} caractères minimum.`}
+          error={passwordError}
           placeholder='••••••••'
         />
         {error ? (
-          <div role='alert' className='alert alert-error text-sm'>{error}</div>
+          <AuthAlert>{error}</AuthAlert>
         ) : null}
         <Button
           variant='primary'
