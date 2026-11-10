@@ -1163,10 +1163,10 @@ div:focus-visible {
 }
 
 /* Champs de saisie : bordure et halo dorés au focus (remplace les bleus/violets dispersés
-   dans les classes Tailwind et les SCSS). Sélecteurs simples : Turbopack supprime :is()/:where(). */
-:root input:focus,
-:root textarea:focus,
-:root select:focus {
+   dans les classes Tailwind et les SCSS). Les champs en erreur gardent leur rouge. Sélecteurs simples : Turbopack supprime :is()/:where(). */
+:root input:focus:not(.input-error):not([aria-invalid="true"]):not([class*="border-red"]),
+:root textarea:focus:not(.input-error):not([aria-invalid="true"]):not([class*="border-red"]),
+:root select:focus:not(.input-error):not([aria-invalid="true"]):not([class*="border-red"]) {
   border-color: var(--color-accent);
   --tw-ring-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
 }
