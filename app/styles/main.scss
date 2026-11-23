@@ -74,7 +74,18 @@ body.dark {
   }
   
   // Améliorer les inputs en mode sombre
-  input, select, textarea {
+  // Champs en erreur : fond et texte du thème sombre, bordure laissée à leur style d'erreur
+  input.input-error, input[class*="border-red"],
+  select.input-error, select[class*="border-red"],
+  textarea.input-error, textarea[class*="border-red"] {
+    background-color: var(--color-background-light);
+    color: var(--color-text-primary);
+  }
+
+  // Les champs en erreur gardent leur propre bordure (rouge)
+  input:not(.input-error):not([class*="border-red"]),
+  select:not(.input-error):not([class*="border-red"]),
+  textarea:not(.input-error):not([class*="border-red"]) {
     background-color: var(--color-background-light);
     border-color: var(--color-border-input);
     color: var(--color-text-primary);

@@ -119,9 +119,10 @@ body.dark {
   }
 
   // Champs de formulaire
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-  textarea,
-  select {
+  // Les champs en erreur (.input-error, border-red-*) gardent leur propre bordure
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(.input-error):not([class*="border-red"]),
+  textarea:not(.input-error):not([class*="border-red"]),
+  select:not(.input-error):not([class*="border-red"]) {
     background-color: var(--color-background-light);
     border-color: var(--color-border-input);
 
@@ -136,7 +137,7 @@ body.dark {
 
     &:focus {
       border-color: var(--color-accent);
-      box-shadow: 0 0 0 3px rgba(139, 127, 255, 0.25);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 30%, transparent);
     }
 
     &:disabled {
