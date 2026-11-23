@@ -242,8 +242,9 @@
   color: var(--color-text-secondary, #{$color-text-secondary});
 }
 
+/* #9ca3af n'atteignait que 2,5:1 sur blanc : on utilise le token tertiaire (≥ 4,5:1) */
 .text-muted {
-  color: $color-text-light;
+  color: var(--color-text-tertiary);
 }
 
 .text-danger {

@@ -14,18 +14,18 @@ body.light {
 
   /* Couleurs en mode clair */
   /* Le violet historique est remplacé par le doré du site corpo (accent de marque) */
-  --color-primary: #8a6f43;
-  --color-primary-rgb: 138 111 67; /* canaux pour bg-primary/10, ring-primary/20… (Tailwind <alpha-value>) */
+  --color-primary: #856a3f;
+  --color-primary-rgb: 133 106 63; /* canaux pour bg-primary/10, ring-primary/20… (Tailwind <alpha-value>) */
   --color-primary-dark: #725a35;
   --color-primary-light: #f4eee3;
-  --color-purple: #8a6f43;
-  --color-purple-rgb: 138 111 67;
+  --color-purple: #856a3f;
+  --color-purple-rgb: 133 106 63;
   --color-error: #dc2626;
   --color-error-dark: #b91c1c;
   --color-error-light: #f87171;
   --color-text-primary: #333;
   --color-text-secondary: #666;
-  --color-text-tertiary: #888;
+  --color-text-tertiary: #6f6f6f; /* ≥ 4,5:1 sur blanc, #f9f9f9 et #f5f5f5 */
   --color-text-light: #9ca3af;
   --color-text-muted: #a0aec0;
   --color-background-main: #f9f9f9;
@@ -34,7 +34,7 @@ body.light {
   --color-background-hover: #f7f9fc;
   --color-background-disabled: #f0f0f0;
   --color-border: #eee;
-  --color-accent: #8a6f43; /* doré du site corpo, assombri pour le contraste sur fond clair (≈4,8:1) */
+  --color-accent: #856a3f; /* doré du site corpo, assombri : ≥ 4,5:1 sur blanc, #f9f9f9 et #f5f5f5 */
   --color-border-input: #e2e8f0;
   --color-border-light: #f0f0f0;
 
@@ -1082,9 +1082,23 @@ body.dark {
      BADGE COMPONENTS
      ======================================== */
 
-  /* Status Badge */
+  /* Status Badge : pastille teintée à texte foncé (contraste ≥ 4,5:1 dans les deux thèmes), coins carrés */
   .status-badge {
-    @apply inline-block px-2 py-1 rounded text-xs font-medium capitalize;
+    --badge-fg: var(--color-text-secondary);
+    --badge-bg: var(--color-background-light);
+    --badge-bd: var(--color-border-input);
+
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+    text-transform: uppercase;
+    color: var(--badge-fg);
+    background-color: var(--badge-bg);
+    border: 1px solid var(--badge-bd);
+    border-radius: 0;
   }
 
   .status-badge.badge-small {
@@ -1092,28 +1106,69 @@ body.dark {
   }
 
   /* Badge Variants */
-  .status-badge.status-default {
-    @apply bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-600;
-  }
-
   .status-badge.status-success {
-    @apply bg-green-500 dark:bg-green-900/30 text-white dark:text-white;
+    --badge-fg: #166534;
+    --badge-bg: #f0fdf4;
+    --badge-bd: #bbf7d0;
   }
 
   .status-badge.status-warning {
-    @apply bg-orange-500 dark:bg-orange-900/30 text-white dark:text-white;
+    --badge-fg: #9a3412;
+    --badge-bg: #fff7ed;
+    --badge-bd: #fed7aa;
   }
 
   .status-badge.status-error {
-    @apply bg-red-500 dark:bg-red-900/30 text-white dark:text-white;
+    --badge-fg: #991b1b;
+    --badge-bg: #fef2f2;
+    --badge-bd: #fecaca;
   }
 
   .status-badge.status-info {
-    @apply bg-blue-500 dark:bg-blue-900/30 text-white dark:text-white;
+    --badge-fg: #1e40af;
+    --badge-bg: #eff6ff;
+    --badge-bd: #bfdbfe;
   }
 
   .status-badge.status-primary {
-    @apply bg-indigo-600 dark:bg-indigo-900/30 text-white dark:text-white;
+    --badge-fg: #6b5433;
+    --badge-bg: #faf6ee;
+    --badge-bd: #e5d7bd;
+  }
+
+  .dark-theme .status-badge.status-success,
+  body.dark .status-badge.status-success {
+    --badge-fg: #86efac;
+    --badge-bg: rgba(34, 197, 94, 0.12);
+    --badge-bd: rgba(34, 197, 94, 0.35);
+  }
+
+  .dark-theme .status-badge.status-warning,
+  body.dark .status-badge.status-warning {
+    --badge-fg: #fdba74;
+    --badge-bg: rgba(249, 115, 22, 0.12);
+    --badge-bd: rgba(249, 115, 22, 0.35);
+  }
+
+  .dark-theme .status-badge.status-error,
+  body.dark .status-badge.status-error {
+    --badge-fg: #fca5a5;
+    --badge-bg: rgba(239, 68, 68, 0.12);
+    --badge-bd: rgba(239, 68, 68, 0.35);
+  }
+
+  .dark-theme .status-badge.status-info,
+  body.dark .status-badge.status-info {
+    --badge-fg: #93c5fd;
+    --badge-bg: rgba(59, 130, 246, 0.12);
+    --badge-bd: rgba(59, 130, 246, 0.35);
+  }
+
+  .dark-theme .status-badge.status-primary,
+  body.dark .status-badge.status-primary {
+    --badge-fg: #e0c9a0;
+    --badge-bg: rgba(201, 174, 132, 0.12);
+    --badge-bd: rgba(201, 174, 132, 0.35);
   }
 
   /* Info Badge */
@@ -1401,3 +1456,4 @@ section.filter-panel p.filter-panel-description {
   font-size: 1rem;
   border-radius: 0;
 }
+
