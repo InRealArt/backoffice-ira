@@ -1,6 +1,6 @@
 'use client'
 
-import { Search, X } from 'lucide-react'
+import SearchInput from '@/app/components/PageLayout/SearchInput'
 import { useCallback, useEffect, useState } from 'react'
 import { useQueryStates } from 'nuqs'
 import { seoPostsSearchParams } from './searchParams'
@@ -68,37 +68,21 @@ export function SeoPostFilter({ languages, categories }: SeoPostFilterProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-4 items-end">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-          </div>
-          <input
-            type="text"
-            value={titleInput}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="Rechercher par titre..."
-            className="w-full pl-10 pr-10 py-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md dark:shadow-gray-900/20"
-          />
-          {titleInput && (
-            <button
-              onClick={handleClear}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-r-lg"
-              aria-label="Effacer la recherche"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="filter-language" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="filter-grid">
+        <SearchInput
+          value={titleInput}
+          onChange={(value) => (value ? handleSearchChange(value) : handleClear())}
+          placeholder="Rechercher par titre..."
+        />
+        <div className="filter-field">
+          <label htmlFor="filter-language" className="form-label">
             Langue
           </label>
           <select
             id="filter-language"
             value={searchParams.language || ''}
             onChange={(e) => handleLanguageChange(e.target.value)}
-            className="w-[140px] max-w-full py-3 px-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200"
+            className="form-select w-full md:w-[160px]"
           >
             <option value="">Toutes les langues</option>
             {languages.map((lang) => (
@@ -108,15 +92,15 @@ export function SeoPostFilter({ languages, categories }: SeoPostFilterProps) {
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="filter-category" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className="filter-field">
+          <label htmlFor="filter-category" className="form-label">
             Catégorie
           </label>
           <select
             id="filter-category"
             value={searchParams.category || ''}
             onChange={(e) => handleCategoryChange(e.target.value)}
-            className="w-[140px] max-w-full py-3 px-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200"
+            className="form-select w-full md:w-[160px]"
           >
             <option value="">Toutes les catégories</option>
             {categories.map((cat) => (
@@ -131,7 +115,7 @@ export function SeoPostFilter({ languages, categories }: SeoPostFilterProps) {
         <button
           type="button"
           onClick={handleClearAll}
-          className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline"
+          className="text-sm underline text-text-secondary hover:text-text-primary"
         >
           Réinitialiser les filtres
         </button>

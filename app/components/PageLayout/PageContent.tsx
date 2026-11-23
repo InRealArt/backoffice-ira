@@ -16,7 +16,7 @@ export function PageContent({
   loadingComponent = null
 }: PageContentProps) {
   return (
-    <div className={`bg-background-white rounded-md overflow-hidden ${className}`}>
+    <div className={`bg-background-white border border-border overflow-hidden ${className}`}>
       {isLoading && loadingComponent ? loadingComponent : children}
     </div>
   )
