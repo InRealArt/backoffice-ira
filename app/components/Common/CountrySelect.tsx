@@ -51,12 +51,12 @@ export default function CountrySelect({ countries, value, onChange, placeholder 
           left: `${rect.left}px`,
           width: `${rect.width}px`,
           zIndex: 1000,
-          background: 'white',
-          border: '1px solid #e5e7eb',
-          borderRadius: 6,
+          background: 'var(--color-background-white)',
+          border: '1px solid var(--color-border-input)',
+          borderRadius: 0,
           maxHeight: 200,
           overflowY: 'auto',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          boxShadow: 'var(--shadow-popover, 0 4px 12px rgba(0, 0, 0, 0.15))'
         })
       } else {
         // Position normale en dessous
@@ -66,13 +66,13 @@ export default function CountrySelect({ countries, value, onChange, placeholder 
           left: 0,
           right: 0,
           zIndex: 1000,
-          background: 'white',
-          border: '1px solid #e5e7eb',
-          borderRadius: 6,
+          background: 'var(--color-background-white)',
+          border: '1px solid var(--color-border-input)',
+          borderRadius: 0,
           marginTop: 4,
           maxHeight: 200,
           overflowY: 'auto',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          boxShadow: 'var(--shadow-popover, 0 4px 12px rgba(0, 0, 0, 0.15))'
         })
       }
     }
@@ -113,7 +113,7 @@ export default function CountrySelect({ countries, value, onChange, placeholder 
           style={dropdownStyle}
         >
           {filtered.length === 0 ? (
-            <div style={{ padding: '8px 12px', color: '#6b7280' }}>Aucun pays</div>
+            <div style={{ padding: '8px 12px', color: 'var(--color-text-secondary)' }}>Aucun pays</div>
           ) : (
             filtered.map(c => (
               <button
@@ -130,7 +130,7 @@ export default function CountrySelect({ countries, value, onChange, placeholder 
                 }}
               >
                 <span style={{ fontWeight: 600, marginRight: 8 }}>{c.code}</span>
-                <span style={{ color: '#374151' }}>{c.name}</span>
+                <span style={{ color: 'var(--color-text-secondary)' }}>{c.name}</span>
               </button>
             ))
           )}

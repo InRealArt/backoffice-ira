@@ -1457,3 +1457,20 @@ section.filter-panel p.filter-panel-description {
   border-radius: 0;
 }
 
+
+/* Sélecteur de pays : même gabarit que les autres champs, quel que soit le formulaire qui l'accueille */
+.country-select .form-input {
+  min-height: 2.75rem;
+  font-size: 1rem;
+  border-radius: 0;
+}
+
+.country-select .dropdown-item {
+  color: var(--color-text-primary);
+}
+
+.country-select .dropdown-item:hover,
+.country-select .dropdown-item:focus-visible {
+  background-color: var(--color-background-hover) !important;
+  outline: none;
+}
