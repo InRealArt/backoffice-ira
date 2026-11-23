@@ -46,7 +46,7 @@ describe('getAccessRequirement', () => {
     it.each([
         '/dataAdministration/artists', '/fr/dataAdministration/artists/57/edit', '/landing/seo-posts',
         '/landing', '/marketplace/invoices', '/boAdmin/users', '/tools/webp-converter', '/blockchain/factories',
-        '/admin-art', '/presale-artworks', '/presale-artworks/new', '/en/landing/exhibitions', '//dataAdministration', '/dataAdministration/',
+        '/admin-art', '/presale-artworks', '/presale-artworks/new', '/audits', '/audits/create', '/audits/abc123', '/fr/audits', '/en/landing/exhibitions', '//dataAdministration', '/dataAdministration/',
         '/DataAdministration/artists', '/%64ataAdministration/artists',
     ])('%s est réservé aux admins', (p) => {
         expect(getAccessRequirement(p)).toBe('admin')

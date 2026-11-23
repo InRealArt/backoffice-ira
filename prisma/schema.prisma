@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
     provider = "postgresql"
-    schemas  = ["auth", "public", "landing", "marketplace", "blockchain", "landingUi", "landingUgc", "backoffice", "statistics"]
+    schemas  = ["auth", "public", "agency", "landing", "marketplace", "blockchain", "landingUi", "landingUgc", "backoffice", "statistics"]
 }
 
 // Orders in the Marketplace
@@ -1936,4 +1936,73 @@ model ArtistApplicationForm {
 
     @@index([email])
     @@schema("landing")
+}
+
+// ─── Audit de carrière payant (formulaire client à lien privé) ───
+
+enum AuditPaymentType {
+    DEPOSIT // Acompte
+    FULL // Totalité
+
+    @@schema("agency")
+}
+
+enum AuditStatus {
+    OPEN // Lien créé, formulaire non commencé
+    DRAFT // Brouillon en cours
+    SUBMITTED // Soumis (lecture seule)
+
+    @@schema("agency")
+}
+
+enum AuditFileKind {
+    CV_PORTFOLIO
+    REVENUE_DECLARATIONS
+    GALLERY_CONTRACTS
+    INVENTORY
+    PRICE_LIST
+    RETIREMENT_STATEMENT
+
+    @@schema("agency")
+}
+
+// Audit vendu à un artiste ; le client accède à son formulaire via un jeton secret (seul le hash SHA-256 est stocké)
+model AuditClient {
+    id                   String           @id @default(cuid())
+    createdAt            DateTime         @default(now())
+    updatedAt            DateTime         @updatedAt
+    clientName           String
+    clientEmail          String
+    auditorName          String?
+    paymentType          AuditPaymentType
+    paidAt               DateTime?
+    dueDate              DateTime // « À retourner avant le »
+    tokenHash            String           @unique // SHA-256 du jeton (jamais le jeton en clair)
+    expiresAt            DateTime
+    revokedAt            DateTime?
+    status               AuditStatus      @default(OPEN)
+    questionnaireVersion Int              @default(1)
+    answers              Json             @default("{}") // clés stables q1..q38
+    consentAt            DateTime?
+    signatureName        String?
+    submittedAt          DateTime?
+    files                AuditFile[]
+
+    @@index([status])
+    @@schema("agency")
+}
+
+model AuditFile {
+    id            String        @id @default(cuid())
+    auditClientId String
+    auditClient   AuditClient   @relation(fields: [auditClientId], references: [id], onDelete: Cascade)
+    kind          AuditFileKind
+    r2Key         String // audits/<auditClientId>/<uuid>-<nom>
+    filename      String
+    mimeType      String
+    sizeBytes     Int
+    createdAt     DateTime      @default(now())
+
+    @@index([auditClientId])
+    @@schema("agency")
 }

@@ -27,7 +27,7 @@ const PUBLIC_PATHS = new Set([
 ])
 
 /** Racines des sections réservées aux administrateurs (groupe de routes `(admin)`). */
-const ADMIN_ROOTS = ['/boAdmin', '/dataAdministration', '/landing', '/marketplace', '/tools', '/blockchain', '/presale-artworks']
+const ADMIN_ROOTS = ['/boAdmin', '/dataAdministration', '/landing', '/marketplace', '/tools', '/blockchain', '/presale-artworks', '/audits']
 const ADMIN_PREFIX = '/admin-'
 
 /** Racines réservées aux utilisateurs du backoffice (admin, artiste ou responsable de galerie). */

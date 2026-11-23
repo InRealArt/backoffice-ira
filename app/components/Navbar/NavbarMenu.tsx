@@ -40,6 +40,7 @@ import {
   UserCircle,
   Package,
   CalendarDays,
+  ClipboardList,
 } from "lucide-react";
 
 // Les entrées de menu sont des <a> sans href : on les rend atteignables et
@@ -943,6 +944,30 @@ export default function NavbarMenu() {
                   )}
                 </a>
               </li>
+              {isAdmin && (
+                <li>
+                  <a
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={activateOnKey}
+                    onClick={() => handleMenuNavigation("/audits", "auditClients")}
+                    className="flex items-center gap-2"
+                  >
+                    {isItemNavigating("auditClients") ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm"></span>
+                        <ClipboardList size={18} />
+                        <span>{t("landing.auditClients")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardList size={18} />
+                        <span>{t("landing.auditClients")}</span>
+                      </>
+                    )}
+                  </a>
+                </li>
+              )}
             </ul>
           </li>
           <li className="divider my-1"></li>
@@ -1898,6 +1923,22 @@ export default function NavbarMenu() {
                       Profils Artistes Agence
                     </a>
                   </li>
+                  {isAdmin && (
+                    <li>
+                      <a
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={activateOnKey}
+                        onClick={() =>
+                          handleDesktopNavigation("/audits", "auditClients")
+                        }
+                        className="flex items-center gap-2"
+                      >
+                        <ClipboardList size={18} />
+                        Audit Client
+                      </a>
+                    </li>
+                  )}
                 </ul>
               </details>
             </li>
