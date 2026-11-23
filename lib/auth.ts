@@ -3,21 +3,24 @@ import { APIError } from 'better-auth/api'
 import { after } from 'next/server'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { prisma } from './prisma'
+import { resolveAuthUrls } from './auth-urls'
 import { sendEmailViaBrevo } from './services/brevo'
 import { getResetPasswordEmailTemplate } from './templates/reset-password-email'
+
+const { baseURL, previewOrigins } = resolveAuthUrls(process.env)
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: 'postgresql'
     }),
     // URL de base utilisée pour construire les liens (ex. lien de reset password dans l'email).
-    // BETTER_AUTH_URL en priorité ; en production Vercel, fallback sur le domaine officiel.
-    baseURL: process.env.BETTER_AUTH_URL
-        || (process.env.VERCEL_ENV === 'production' ? 'https://backoffice-inrealart.vercel.app' : undefined),
+    // Voir lib/auth-urls.ts : URL de la branche en prévisualisation, BETTER_AUTH_URL ailleurs.
+    baseURL,
     // Origines de confiance pour CORS et sécurité
     trustedOrigins: [
         'https://backoffice-shopify.vercel.app',
         'https://backoffice-inrealart.vercel.app',
+        ...previewOrigins,
         ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:3000'] : [])
     ],
     // Garde la fonction serverless en vie jusqu'à la fin de l'envoi de l'email
