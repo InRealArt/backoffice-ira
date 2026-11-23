@@ -141,17 +141,24 @@ export default function MultiSelect({
 
       {/* Conteneur principal */}
       <div
-        className={`
-          relative min-h-[42px] w-full rounded-lg border transition-all duration-200
-          ${error 
-            ? 'border-red-500 focus-within:ring-2 focus-within:ring-red-200' 
-            : 'border-gray-300 dark:border-gray-600 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 dark:focus-within:ring-blue-800'
+        className={`ms-control relative w-full border transition-all duration-200 ${error ? 'ms-control-error' : ''} ${disabled ? 'ms-control-disabled cursor-not-allowed' : 'cursor-pointer'}`}
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        aria-label={label}
+        aria-disabled={disabled || undefined}
+        tabIndex={disabled ? -1 : 0}
+        onKeyDown={(e) => {
+          // Seulement les touches du champ lui-même (pas celles des boutons de retrait des puces)
+          if (disabled || e.target !== e.currentTarget) return
+          if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+            e.preventDefault()
+            setIsOpen(true)
+          } else if (e.key === 'Escape') {
+            setIsOpen(false)
+            setSearchTerm('')
           }
-          ${disabled 
-            ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' 
-            : 'bg-white dark:bg-gray-900 cursor-pointer hover:border-gray-400 dark:hover:border-gray-500'
-          }
-        `}
+        }}
         onClick={() => !disabled && setIsOpen(!isOpen)}
       >
         {/* Selected items + placeholder */}
@@ -171,7 +178,7 @@ export default function MultiSelect({
                   type="button"
                   onClick={(e) => removeOption(option.id, e)}
                   disabled={disabled}
-                  className="ms-chip-remove ml-0.5 focus:outline-none disabled:cursor-not-allowed"
+                  className="ms-chip-remove ml-0.5 disabled:cursor-not-allowed"
                   aria-label={`Supprimer ${option.name}`}
                 >
                   <X size={14} strokeWidth={2.5} />
@@ -182,7 +189,7 @@ export default function MultiSelect({
         </div>
 
         {/* Chevron icon */}
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="ms-chevron absolute right-2 pointer-events-none">
           <ChevronDown
             size={20}
             className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -194,7 +201,7 @@ export default function MultiSelect({
       {isOpen && !disabled && (
         <div 
           ref={dropdownRef}
-          className={`fixed bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl max-h-64 overflow-hidden`}
+          className="ms-dropdown fixed border shadow-xl max-h-64 overflow-hidden"
           style={{ ...dropdownStyle, zIndex: 10000 }}
         >
           {/* Search input */}
@@ -207,6 +214,12 @@ export default function MultiSelect({
               placeholder="Rechercher..."
               className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-100"
               onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setIsOpen(false)
+                  setSearchTerm('')
+                }
+              }}
             />
           </div>
 

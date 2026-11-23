@@ -668,3 +668,26 @@
     background-position: 200% 0;
   }
 } 
+
+// Petits écrans : la barre de navigation doit tenir sur une ligne (menu, logo, langue, thème, profil).
+// Le padding est posé en inline dans Navbar.tsx, d'où les !important.
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 12px !important;
+
+    .navbar-start {
+      min-width: 0;
+      gap: 0.25rem;
+    }
+
+    .navbar-end > div {
+      gap: 0.5rem;
+    }
+
+    .brand-wordmark {
+      font-size: 1rem !important;
+      letter-spacing: 0.26em !important;
+      margin-right: -0.26em !important;
+    }
+  }
+}
