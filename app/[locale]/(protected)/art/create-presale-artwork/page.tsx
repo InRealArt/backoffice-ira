@@ -2,6 +2,7 @@ import { getAuthenticatedUserEmail } from '@/lib/auth-helpers'
 import { getBackofficeUserByEmail } from '@/lib/actions/prisma-actions'
 import { redirect } from 'next/navigation'
 import PresaleArtworkForm from '@/app/components/PresaleArtworkForm/PresaleArtworkForm'
+import { FormCard, FormPage, FormPageHeader } from '@/app/components/Forms/FormKit/FormKit'
 import { getTranslations } from 'next-intl/server'
 
 export async function generateMetadata() {
@@ -25,23 +26,18 @@ export default async function CreatePresaleArtworkPage() {
   }
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1 className="page-title">{t('pageTitle')}</h1>
-        <p className="page-subtitle">
-          {t('pageSubtitle')}
-        </p>
-      </div>
-      
-      <div className="page-content">
+    <FormPage>
+      <FormPageHeader title={t('pageTitle')} subtitle={t('pageSubtitle')} />
+
+      <FormCard>
         <PresaleArtworkForm
           mode="create"
           defaultArtistId={backofficeUser.artistId}
           redirectUrl="/art/my-artworks"
           showFeatured={false}
         />
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   )
 }
 

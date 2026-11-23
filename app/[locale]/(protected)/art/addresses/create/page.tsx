@@ -6,6 +6,7 @@ import LoadingSpinner from "@/app/components/LoadingSpinner/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { getBackofficeUserByEmail } from "@/lib/actions/prisma-actions";
 import { createAddress } from "@/lib/actions/address-actions";
+import { FormCard, FormPage, FormPageHeader } from "@/app/components/Forms/FormKit/FormKit";
 import AddressForm from "../components/AddressForm";
 
 type BackofficeUserResult = Awaited<
@@ -99,10 +100,10 @@ export default function CreateAddressPage() {
   }
 
   return (
-    <div className="page-container">
-      <h1 className="page-title">Ajouter une adresse</h1>
+    <FormPage>
+      <FormPageHeader title="Ajouter une adresse" subtitle="Renseignez l'adresse utilisée pour l'expédition de vos œuvres." />
 
-      <div className="card">
+      <FormCard>
         <AddressForm
           onSubmit={handleSubmit}
           defaultFirstName={
@@ -114,7 +115,7 @@ export default function CreateAddressPage() {
               : ""
           }
         />
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   );
 }

@@ -17,7 +17,7 @@ import OptionalImageUpload from "../create-artist-profile/OptionalImageUpload";
 import ProgressModal from "../create-artist-profile/ProgressModal";
 import DynamicFormList from "@/app/components/Forms/DynamicFormList/DynamicFormList";
 import MultiSelect from "@/app/components/Forms/MultiSelect";
-import styles from "./EditArtistProfile.module.scss";
+import { FormSwitch, formKit as styles } from "@/app/components/Forms/FormKit/FormKit";
 
 // Fonction pour créer le schéma de validation avec traductions
 const createFormSchema = (t: (key: string) => string) => z.object({
@@ -745,25 +745,14 @@ export default function EditArtistProfileForm({
         </div>
 
         <div className={styles.section}>
-          <span className="form-label" id="artistsPageLabel">
-            {t("fields.artistsPage")}
-          </span>
-          <div className={styles.switchRow}>
-            <span className={`${styles.switchState} ${!artistsPage ? styles.switchStateOn : ""}`}>
-              {t("fields.artistsPageNotDisplayed")}
-            </span>
-            <label className={styles.switch}>
-              <input
-                type="checkbox"
-                role="switch"
-                aria-labelledby="artistsPageLabel"
-                {...register("artistsPage")}
-              />
-            </label>
-            <span className={`${styles.switchState} ${artistsPage ? styles.switchStateOn : ""}`}>
-              {t("fields.artistsPageDisplayed")}
-            </span>
-          </div>
+          <FormSwitch
+            id="artistsPage"
+            label={t("fields.artistsPage")}
+            offLabel={t("fields.artistsPageNotDisplayed")}
+            onLabel={t("fields.artistsPageDisplayed")}
+            checked={artistsPage}
+            {...register("artistsPage")}
+          />
           <p className="form-help text-muted mt-1">
             {t("fields.artistsPageHelp")}
           </p>
@@ -926,8 +915,8 @@ export default function EditArtistProfileForm({
               textKey: "biographyText4" as const,
             },
           ].map(({ num, headerKey, textKey }) => (
-            <div key={num} className={styles.exhibition}>
-              <h4 className={styles.exhibitionTitle}>
+            <div key={num} className={styles.panel}>
+              <h4 className={styles.panelTitle}>
                 {t("fields.exhibition", { num })}
               </h4>
               <div className="form-group mb-3">

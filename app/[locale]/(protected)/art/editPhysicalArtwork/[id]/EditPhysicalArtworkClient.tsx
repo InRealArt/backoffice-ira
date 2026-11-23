@@ -18,6 +18,7 @@ import {
   Address,
   PhysicalCollection,
 } from "@/app/components/art/ArtworkForm/types";
+import { FormCard, FormPage, FormPageHeader } from "@/app/components/Forms/FormKit/FormKit";
 import {
   ArtworkMedium,
   ArtworkStyle,
@@ -252,32 +253,19 @@ export default function EditPhysicalArtworkClient({
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
-      <div className="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-            Modifier l'œuvre physique{" "}
-            {item?.name && (
-              <span className="font-semibold text-primary dark:text-primary">
-                "{item.name}"
-              </span>
-            )}{" "}
-          </h1>
-          <p className="text-base text-gray-600 dark:text-gray-400">
-            Modifiez les informations de l'œuvre de{" "}
-            <span className="font-semibold text-primary dark:text-primary">
-              {artistName || "votre artiste"}
-            </span>
-          </p>
-        </div>
-      </div>
+    <FormPage wide>
+      <FormPageHeader
+        eyebrow={artistName || null}
+        title={item?.name ? `Modifier l'œuvre physique « ${item.name} »` : "Modifier l'œuvre physique"}
+        subtitle="Modifiez les informations de l'œuvre."
+      />
 
       {error ? (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg mb-6">
+        <div role="alert" className="alert alert-error">
           {error}
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 pt-6 sm:pt-8 md:pt-10 pr-6 sm:pr-8 md:pr-10 pb-6 sm:pb-8 md:pb-10 overflow-hidden">
+        <FormCard>
           <ArtworkForm
             mode="edit"
             addresses={addresses}
@@ -353,8 +341,8 @@ export default function EditPhysicalArtworkClient({
             }}
             onSuccess={handleSuccess}
           />
-        </div>
+        </FormCard>
       )}
-    </div>
+    </FormPage>
   );
 }

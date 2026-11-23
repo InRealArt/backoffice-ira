@@ -13,6 +13,7 @@ import Button from "@/app/components/Button/Button";
 import ArtistImageUpload from "./ArtistImageUpload";
 import OptionalImageUpload from "./OptionalImageUpload";
 import ProgressModal from "./ProgressModal";
+import { FormSwitch, formKit as styles } from "@/app/components/Forms/FormKit/FormKit";
 import DynamicFormList from "@/app/components/Forms/DynamicFormList/DynamicFormList";
 
 // Schéma de validation simplifié pour un utilisateur
@@ -441,7 +442,7 @@ export default function CreateArtistProfileForm({
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="pl-6 sm:pl-8 md:pl-10">
+      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         {formError && (
           <div className="alert alert-danger mb-4">
             <p>{formError}</p>
@@ -449,18 +450,12 @@ export default function CreateArtistProfileForm({
         )}
 
         {/* Section Informations de base */}
-        <div className="form-group mb-4">
-          <h3
-            className="h5 mb-3"
-            style={{
-              borderBottom: "2px solid #e0e0e0",
-              paddingBottom: "0.5rem",
-            }}
-          >
-            Informations de base
-          </h3>
-          <div className="d-flex gap-lg align-items-start">
-            <div style={{ width: "200px", flexShrink: 0 }}>
+        <div className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h3 className={styles.sectionTitle}>Informations de base</h3>
+          </div>
+          <div className={styles.basic}>
+            <div className={styles.avatarCol}>
               <ArtistImageUpload
                 onFileSelect={setSelectedImageFile}
                 error={
@@ -471,9 +466,9 @@ export default function CreateArtistProfileForm({
               />
             </div>
 
-            <div style={{ flex: 1 }}>
-              <div className="d-flex gap-md mb-3">
-                <div className="form-group" style={{ flex: 1 }}>
+            <div className={styles.fieldsCol}>
+              <div className={styles.row}>
+                <div className="form-group">
                   <label htmlFor="name" className="form-label">
                     Prénom *
                   </label>
@@ -487,7 +482,7 @@ export default function CreateArtistProfileForm({
                     <p className="form-error">{errors.name.message}</p>
                   )}
                 </div>
-                <div className="form-group" style={{ flex: 1 }}>
+                <div className="form-group">
                   <label htmlFor="surname" className="form-label">
                     Nom *
                   </label>
@@ -524,25 +519,19 @@ export default function CreateArtistProfileForm({
         </div>
 
         {/* Section Images supplémentaires */}
-        <div className="form-group mb-4">
-          <h3
-            className="h5 mb-3"
-            style={{
-              borderBottom: "2px solid #e0e0e0",
-              paddingBottom: "0.5rem",
-            }}
-          >
-            Images supplémentaires (optionnel)
-          </h3>
-          <div className="d-flex gap-md" style={{ flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 300px", minWidth: "250px" }}>
+        <div className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h3 className={styles.sectionTitle}>Images supplémentaires (optionnel)</h3>
+          </div>
+          <div className={styles.row}>
+            <div>
               <OptionalImageUpload
                 onFileSelect={setSecondaryImageFile}
                 label="Image secondaire de l'artiste"
                 description="Une photo supplémentaire de vous pour enrichir votre profil"
               />
             </div>
-            <div style={{ flex: "1 1 300px", minWidth: "250px" }}>
+            <div>
               <OptionalImageUpload
                 onFileSelect={setStudioImageFile}
                 label="Image de votre studio"
@@ -552,7 +541,7 @@ export default function CreateArtistProfileForm({
           </div>
         </div>
 
-        <div className="form-group mb-4">
+        <div className={styles.section}>
           <label htmlFor="description" className="form-label">
             Description *
           </label>
@@ -574,74 +563,23 @@ export default function CreateArtistProfileForm({
           </p>
         </div>
 
-        <div className="form-group mb-4">
-          <label className="form-label">Affichage sur la page d'accueil</label>
-          <div className="d-flex align-items-center gap-md">
-            <span
-              className={!artistsPage ? "text-primary" : "text-muted"}
-              style={{ fontWeight: !artistsPage ? "bold" : "normal" }}
-            >
-              Non affiché
-            </span>
-            <label
-              style={{
-                position: "relative",
-                display: "inline-block",
-                width: "60px",
-                height: "30px",
-              }}
-            >
-              <input
-                type="checkbox"
-                {...register("artistsPage")}
-                style={{ opacity: 0, width: 0, height: 0 }}
-              />
-              <span
-                style={{
-                  position: "absolute",
-                  cursor: "pointer",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: artistsPage ? "var(--color-primary-dark)" : "var(--color-text-muted)",
-                  borderRadius: "34px",
-                  transition: "0.4s",
-                }}
-              >
-                <span
-                  style={{
-                    position: "absolute",
-                    content: '""',
-                    height: "22px",
-                    width: "22px",
-                    left: "4px",
-                    bottom: "4px",
-                    backgroundColor: "white",
-                    borderRadius: "50%",
-                    transition: "0.4s",
-                    transform: artistsPage
-                      ? "translateX(30px)"
-                      : "translateX(0)",
-                  }}
-                ></span>
-              </span>
-            </label>
-            <span
-              className={artistsPage ? "text-primary" : "text-muted"}
-              style={{ fontWeight: artistsPage ? "bold" : "normal" }}
-            >
-              Affiché
-            </span>
-          </div>
+        <div className={styles.section}>
+          <FormSwitch
+            id="artistsPage"
+            label="Affichage sur la page d'accueil"
+            offLabel="Non affiché"
+            onLabel="Affiché"
+            checked={artistsPage}
+            {...register("artistsPage")}
+          />
           <p className="form-help text-muted mt-1">
             Activez cette option pour afficher votre profil sur la page
             d'accueil du site.
           </p>
         </div>
 
-        <div className="d-flex gap-md mb-4">
-          <div className="form-group" style={{ flex: 1 }}>
+        <div className={styles.row}>
+          <div className="form-group">
             <label htmlFor="birthYear" className="form-label">
               Année de naissance
             </label>
@@ -658,7 +596,7 @@ export default function CreateArtistProfileForm({
               <p className="form-error">{errors.birthYear.message}</p>
             )}
           </div>
-          <div className="form-group" style={{ flex: 1 }}>
+          <div className="form-group">
             <label htmlFor="countryCode" className="form-label">
               Pays
             </label>
@@ -675,7 +613,7 @@ export default function CreateArtistProfileForm({
         </div>
 
         {/* Section Récompenses */}
-        <div className="form-group mb-4">
+        <div className={styles.section}>
           <DynamicFormList
             title="Récompenses"
             description="Ajoutez jusqu'à 3 récompenses ou distinctions que vous avez reçues"
@@ -731,20 +669,11 @@ export default function CreateArtistProfileForm({
         </div>
 
         {/* Section Expositions */}
-        <div className="form-group mb-4">
-          <h3
-            className="h5 mb-3"
-            style={{
-              borderBottom: "2px solid #e0e0e0",
-              paddingBottom: "0.5rem",
-            }}
-          >
-            Expositions et parcours (optionnel)
-          </h3>
-          <p
-            className="form-help text-muted mb-3"
-            style={{ fontSize: "0.875rem" }}
-          >
+        <div className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h3 className={styles.sectionTitle}>Expositions et parcours (optionnel)</h3>
+          </div>
+          <p className={styles.sectionHelp}>
             Vous pouvez ajouter jusqu'à 4 expositions ou événements marquants de
             votre parcours artistique.
           </p>
@@ -771,20 +700,8 @@ export default function CreateArtistProfileForm({
               textKey: "biographyText4" as const,
             },
           ].map(({ num, headerKey, textKey }) => (
-            <div
-              key={num}
-              className="mb-4"
-              style={{
-                padding: "1.5rem",
-                border: "1px solid var(--color-border)",
-                borderRadius: "8px",
-                backgroundColor: "var(--color-background-light)",
-              }}
-            >
-              <h4
-                className="h6 mb-3"
-                style={{ color: "var(--color-text-secondary)", fontWeight: 600 }}
-              >
+            <div key={num} className={styles.panel}>
+              <h4 className={styles.panelTitle}>
                 Exposition {num}
               </h4>
               <div className="form-group mb-3">
@@ -815,16 +732,10 @@ export default function CreateArtistProfileForm({
           ))}
         </div>
 
-        <div className="form-group mb-4">
-          <h3
-            className="h5 mb-3"
-            style={{
-              borderBottom: "2px solid #e0e0e0",
-              paddingBottom: "0.5rem",
-            }}
-          >
-            Réseaux sociaux (facultatif)
-          </h3>
+        <div className={styles.section}>
+          <div className={styles.sectionHead}>
+            <h3 className={styles.sectionTitle}>Réseaux sociaux (facultatif)</h3>
+          </div>
           <div className="form-group mb-3">
             <label htmlFor="websiteUrl" className="form-label">
               Site web
@@ -841,8 +752,8 @@ export default function CreateArtistProfileForm({
             )}
           </div>
 
-          <div className="d-flex gap-md">
-            <div className="form-group" style={{ flex: 1 }}>
+          <div className={styles.row}>
+            <div className="form-group">
               <label htmlFor="facebookUrl" className="form-label">
                 Facebook
               </label>
@@ -859,7 +770,7 @@ export default function CreateArtistProfileForm({
                 <p className="form-error">{errors.facebookUrl.message}</p>
               )}
             </div>
-            <div className="form-group" style={{ flex: 1 }}>
+            <div className="form-group">
               <label htmlFor="instagramUrl" className="form-label">
                 Instagram
               </label>
@@ -878,8 +789,8 @@ export default function CreateArtistProfileForm({
             </div>
           </div>
 
-          <div className="d-flex gap-md mt-3">
-            <div className="form-group" style={{ flex: 1 }}>
+          <div className={styles.row}>
+            <div className="form-group">
               <label htmlFor="twitterUrl" className="form-label">
                 Twitter
               </label>
@@ -896,7 +807,7 @@ export default function CreateArtistProfileForm({
                 <p className="form-error">{errors.twitterUrl.message}</p>
               )}
             </div>
-            <div className="form-group" style={{ flex: 1 }}>
+            <div className="form-group">
               <label htmlFor="linkedinUrl" className="form-label">
                 LinkedIn
               </label>
@@ -916,7 +827,7 @@ export default function CreateArtistProfileForm({
           </div>
         </div>
 
-        <div className="form-actions mt-4 d-flex justify-content-between gap-md">
+        <div className={styles.actions}>
           <Button
             variant="secondary"
             onClick={() => router.push("/dashboard")}

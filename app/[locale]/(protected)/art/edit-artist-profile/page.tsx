@@ -12,7 +12,7 @@ import { getAllArtistSpecialties } from "@/lib/actions/artist-specialty-actions"
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import EditArtistProfileForm from "./EditArtistProfileForm";
-import styles from "./EditArtistProfile.module.scss";
+import { FormCard, FormPage, FormPageHeader } from "@/app/components/Forms/FormKit/FormKit";
 
 export default async function EditArtistProfilePage() {
   const t = await getTranslations("art.editArtistProfilePage");
@@ -41,14 +41,13 @@ export default async function EditArtistProfilePage() {
   }
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        {artist.pseudo && <p className={styles.eyebrow}>{artist.pseudo}</p>}
-        <h1 className={styles.title}>{t("title")}</h1>
-        <p className={styles.subtitle}>{t("subtitle")}</p>
-      </header>
-
-      <div className={styles.card}>
+    <FormPage>
+      <FormPageHeader
+        eyebrow={artist.pseudo}
+        title={t("title")}
+        subtitle={t("subtitle")}
+      />
+      <FormCard>
         <EditArtistProfileForm
           artist={artist}
           landingArtist={landingArtist}
@@ -61,7 +60,7 @@ export default async function EditArtistProfilePage() {
           specialtyIds={artistSpecialtyIds}
           allSpecialties={allSpecialties}
         />
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   );
 }

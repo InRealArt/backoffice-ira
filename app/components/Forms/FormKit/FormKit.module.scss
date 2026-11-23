@@ -1,10 +1,15 @@
-// Page « Modifier mon profil artiste » : même direction que le reste du backoffice
-// (coins carrés, filets fins, doré en accent, tokens du thème). Mobile d'abord.
+// Kit de formulaires du backoffice (création et édition) : coins carrés, filets fins, doré en accent,
+// tokens du thème, mobile d'abord. Les règles de champ sont scopées à `.form` : seules les pages qui
+// utilisent le kit changent d'aspect. Voir FormKit.tsx.
 
 .page {
   width: 100%;
   max-width: 64rem;
   margin: 0 auto;
+}
+
+.page.pageWide {
+  max-width: 80rem;
 }
 
 // ── En-tête ───────────────────────────────────────────────────────────────
@@ -47,7 +52,6 @@
   padding: clamp(1.25rem, 3.5vw, 2.5rem);
   background-color: var(--color-background-white);
   border: 1px solid var(--color-border);
-  overflow: hidden;
 }
 
 .form {
@@ -55,15 +59,6 @@
   flex-direction: column;
   gap: 2.5rem;
   min-width: 0;
-
-  // Champs : coins carrés et cible tactile confortable (16 px : pas de zoom automatique sur iOS)
-  :global(.form-input),
-  :global(.form-select),
-  :global(.form-textarea) {
-    min-height: 2.75rem;
-    font-size: 1rem;
-    border-radius: 0;
-  }
 
   :global(.form-group) {
     margin-bottom: 0;
@@ -82,6 +77,42 @@
     margin-top: 0.5rem;
     font-size: 0.8125rem;
     line-height: 1.5;
+  }
+}
+
+// Les anciens conteneurs de formulaire (form-card / card-content) sont aplatis : la carte du kit les remplace.
+.form {
+  max-width: none;
+  margin: 0;
+
+  :global(.form-card) {
+    margin-bottom: 0;
+    overflow: visible;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  :global(.card-content) {
+    padding: 0;
+  }
+
+  // Formulaires hérités (sans FormSection) : les groupes gardent un espacement vertical
+  :global(.form-card) :global(.form-group) {
+    margin-bottom: 1.25rem;
+  }
+}
+
+// Champs : coins carrés et cible tactile confortable (16 px : pas de zoom automatique sur iOS).
+// Appliqué à la carte entière pour que les gros formulaires (œuvres, adresses) en profitent aussi.
+.card,
+.form {
+  :global(.form-input),
+  :global(.form-select),
+  :global(.form-textarea) {
+    min-height: 2.75rem;
+    font-size: 1rem;
+    border-radius: 0;
   }
 }
 
@@ -126,6 +157,25 @@
 @media (min-width: 640px) {
   .row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+// Trois colonnes à partir de 900 px (une puis deux avant)
+.row3 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .row3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .row3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -235,7 +285,7 @@
 
 // ── Expositions ───────────────────────────────────────────────────────────
 
-.exhibition {
+.panel {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -245,13 +295,54 @@
   background-color: var(--color-background-light);
 }
 
-.exhibition .exhibitionTitle {
+.panel .panelTitle {
   margin: 0;
   font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-secondary);
+}
+
+// ── Choix segmenté (ex. saisie auto / manuelle) ───────────────────────────
+
+.segmented {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--color-border-input);
+}
+
+.segmented button {
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+
+  & + button {
+    border-left: 1px solid var(--color-border-input);
+  }
+
+  &:hover:not([aria-pressed='true']) {
+    color: var(--color-text-primary);
+  }
+
+  &[aria-pressed='true'] {
+    color: var(--btn-ink-inverse);
+    background-color: var(--btn-ink);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -4px;
+  }
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────
