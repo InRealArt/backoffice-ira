@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth-client";
 import Image from "next/image";
-import { User, Settings, FolderOpen, PlusCircle } from "lucide-react";
+import { User, Users, Package, FolderOpen, PlusCircle } from "lucide-react";
 import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 import NavigationButton from "../NavigationButton";
+import { Link } from "@/i18n/navigation";
 import { DashboardCard } from "./DashboardCard/DashboardCard";
 import {
   getPendingItemsCount,
@@ -24,6 +25,8 @@ import { getImageUrlWithCacheBuster } from "@/lib/r2/url";
 
 export default function Dashboard() {
   const t = useTranslations("dashboard");
+  const locale = useLocale();
+  const [todayLabel, setTodayLabel] = useState("");
   const { data: session } = authClient.useSession();
   const user = session?.user;
   // Note: primaryWallet sera géré plus tard dans une migration séparée des wallets
@@ -60,6 +63,16 @@ export default function Dashboard() {
     setIsLoadingPhysicalCollectionsCount,
   ] = useState(true);
   const { isAdmin, isLoading } = useIsAdmin();
+
+  // Date du jour calculée côté client uniquement (évite un écart serveur/client à minuit)
+  useEffect(() => {
+    const label = new Intl.DateTimeFormat(locale, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(new Date());
+    setTodayLabel(label.charAt(0).toUpperCase() + label.slice(1));
+  }, [locale]);
 
   const truncateAddress = (address: string | undefined) => {
     if (!address) return t("notDefined");
@@ -206,9 +219,58 @@ export default function Dashboard() {
 
   if (isLoading) return <LoadingSpinner fullPage message={t("loading")} />;
 
+  // Prénom affiché dans le message d'accueil : pseudo/prénom de l'artiste, sinon nom du compte
+  const rawName = isAdmin
+    ? user?.name
+    : associatedArtist?.pseudo || associatedArtist?.name || user?.name;
+  const firstName = rawName?.trim().split(/\s+/)[0] || "";
+
+  // Raccourcis selon le rôle. Les fonctions marketplace sont masquées en production, comme les cartes.
+  const isProduction = process.env.NODE_ENV === "production";
+  const quickActions = isAdmin
+    ? [
+        { href: "/dataAdministration/artists", icon: Users, label: t("quickActions.adminArtists"), primary: true },
+        { href: "/landing/presaleArtworks", icon: Package, label: t("quickActions.adminPresale") },
+        { href: "/boAdmin/users", icon: User, label: t("quickActions.adminUsers") },
+      ]
+    : associatedArtist
+      ? [
+          { href: "/art/create-presale-artwork", icon: PlusCircle, label: t("quickActions.createPresale"), primary: true },
+          ...(!isProduction
+            ? [
+                { href: "/art/createPhysicalArtwork", icon: PlusCircle, label: t("quickActions.createPhysical") },
+                { href: "/art/myPhysicalArtwork", icon: FolderOpen, label: t("quickActions.myArtworks") },
+              ]
+            : []),
+        ]
+      : [];
+
   return (
     <div className="dashboard-container">
-      <h2 className="dashboard-title">{t("title")}</h2>
+      <div className="dashboard-header">
+        <div>
+          {todayLabel && <p className="dashboard-eyebrow">{todayLabel}</p>}
+          <h2 className="dashboard-title">
+            <span className="sr-only">{t("title")} : </span>
+            {firstName ? t("greeting", { name: firstName }) : t("greetingAnonymous")}
+          </h2>
+        </div>
+        <span className="dashboard-role">
+          {isAdmin ? t("role.admin") : t("role.artist")}
+        </span>
+      </div>
+
+      {!isAdmin && !isLoadingArtist && !associatedArtist && (
+        <div className="dashboard-banner" role="note">
+          <div>
+            <strong>{t("profileBanner.title")}</strong>
+            <p>{t("profileBanner.description")}</p>
+          </div>
+          <NavigationButton href="/art/create-artist-profile" variant="primary">
+            {t("userInfo.createProfile")}
+          </NavigationButton>
+        </div>
+      )}
 
       <DashboardStats
         presaleArtworkCount={presaleArtworkCount}
@@ -235,6 +297,26 @@ export default function Dashboard() {
         isLoadingArtistsCount={isLoadingArtistsCount}
         isAdmin={isAdmin}
       />
+
+      {quickActions.length > 0 && (
+        <section className="dashboard-quick" aria-labelledby="dashboard-quick-title">
+          <h3 id="dashboard-quick-title" className="dashboard-section-title">
+            {t("quickActions.title")}
+          </h3>
+          <div className="dashboard-quick-list">
+            {quickActions.map(({ href, icon: Icon, label, primary }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`btn btn-medium${primary ? " btn-primary" : ""}`}
+              >
+                <Icon size={16} aria-hidden="true" />
+                {label}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="dashboard-content">
         <DashboardCard
@@ -304,50 +386,6 @@ export default function Dashboard() {
           )}
         </DashboardCard>
 
-        {isAdmin ? (
-          <>
-            <DashboardCard
-              title={t("admin.title")}
-              icon={<Settings />}
-              description={t("admin.description")}
-            >
-              <p>{t("admin.viewUsersDescription")}</p>
-              <NavigationButton href="/boAdmin/users">
-                {t("admin.viewUsers")}
-              </NavigationButton>
-            </DashboardCard>
-          </>
-        ) : (
-          <>
-            {!isLoadingArtist && associatedArtist && (
-              <>
-                {/* <DashboardCard
-                  title="Mes Collections"
-                  icon={<FolderOpen />}
-                  description="Explorez et gérez vos œuvres"
-                >
-                  <p>Explorez et gérez votre collection d'œuvres d'art.</p>
-                  <Button
-                    onClick={() => router.push("/art/physicalCollection")}
-                  >
-                    Voir mes collections
-                  </Button>
-                </DashboardCard> */}
-
-                <DashboardCard
-                  title={t("presale.title")}
-                  icon={<PlusCircle />}
-                  description={t("presale.description")}
-                >
-                  <p>{t("presale.createDescription")}</p>
-                  <NavigationButton href="/art/create-presale-artwork">
-                    {t("presale.createArtwork")}
-                  </NavigationButton>
-                </DashboardCard>
-              </>
-            )}
-          </>
-        )}
       </div>
     </div>
   );
