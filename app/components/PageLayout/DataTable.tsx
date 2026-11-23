@@ -74,7 +74,7 @@ export function DataTable<T>({
   return (
     <div className={`data-table-wrapper ${className}`}>
       <div className="table-container">
-        <table className="data-table">
+        <table className="data-table" aria-busy={isLoading || undefined}>
           <thead>
             <tr>
               {columns.map((column) => {

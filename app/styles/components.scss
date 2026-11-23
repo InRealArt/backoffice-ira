@@ -380,15 +380,19 @@
   border-top: 1px solid $color-border;
 }
 
-// Notification Toast
+// Notification Toast : carte neutre sur les tokens du thème, barre latérale colorée selon le type
 .toast-notification {
   position: fixed;
   top: $spacing-xl;
   left: 50%;
   transform: translateX(-50%);
   padding: $spacing-md $spacing-lg;
-  border-radius: $border-radius-sm;
-  box-shadow: $shadow-lg;
+  background-color: var(--color-background-white, #ffffff);
+  color: var(--color-text-primary, #333333);
+  border: 1px solid var(--color-border, #eeeeee);
+  border-left-width: 3px;
+  border-radius: 0;
+  box-shadow: var(--shadow-popover, #{$shadow-lg});
   display: flex;
   align-items: center;
   gap: $spacing-sm;
@@ -398,50 +402,57 @@
   font-weight: $font-weight-medium;
   min-width: 280px;
   max-width: 450px;
-  opacity: 0.95;
+  cursor: pointer;
 
+  // Pictogramme décoratif (le sens est porté par le texte et la barre)
   &::before {
     font-size: $font-size-lg;
     margin-right: $spacing-xs;
+    font-weight: 700;
   }
 
   &.toast-success {
-    background-color: #10b981;
-    color: white;
-    border-left: 4px solid #047857;
+    border-left-color: #16a34a;
 
     &::before {
       content: "✓";
+      color: #16a34a;
     }
   }
 
   &.toast-error {
-    background-color: #ef4444;
-    color: white;
-    border-left: 4px solid #b91c1c;
+    border-left-color: var(--btn-danger, #b91c1c);
 
     &::before {
       content: "✗";
+      color: var(--btn-danger, #b91c1c);
     }
   }
 
   &.toast-warning {
-    background-color: #f59e0b;
-    color: white;
-    border-left: 4px solid #b45309;
+    border-left-color: var(--color-accent, #8a6f43);
 
     &::before {
-      content: "⚠";
+      content: "!";
+      color: var(--color-accent, #8a6f43);
     }
   }
 
   &.toast-info {
-    background-color: #3b82f6;
-    color: white;
-    border-left: 4px solid #1d4ed8;
+    border-left-color: var(--btn-ink, #111111);
 
     &::before {
-      content: "ℹ";
+      content: "i";
+      color: var(--btn-ink, #111111);
+    }
+  }
+
+  // Vert de succès plus clair sur fond sombre
+  .dark-theme &.toast-success {
+    border-left-color: #4ade80;
+
+    &::before {
+      color: #4ade80;
     }
   }
 }
