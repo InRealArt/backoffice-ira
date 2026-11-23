@@ -9,7 +9,7 @@ import MarketplaceSubMenu from './MarketplaceSubMenu'
 import DataAdministrationSubMenu from './DataAdministrationSubMenu'
 import LandingSubMenu from './LandingSubMenu'
 import ToolsSubMenu from './ToolsSubMenu'
-import { LayoutDashboard, Image, MapPin, PlusCircle } from 'lucide-react'
+import { LayoutDashboard, Image, MapPin, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 
 // Composant de fallback pour le chargement
 function SideMenuSkeleton({ isMenuCollapsed }: { isMenuCollapsed: boolean }) {
@@ -20,13 +20,13 @@ function SideMenuSkeleton({ isMenuCollapsed }: { isMenuCollapsed: boolean }) {
         disabled
         aria-label="Chargement du menu"
       >
-        <span className="toggle-icon">
-          {isMenuCollapsed ? '→' : '←'}
+        <span className="toggle-icon" aria-hidden="true">
+          {isMenuCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </span>
       </button>
-      <ul className="menu-list">
-        <li className="menu-item skeleton">
-          <span className="menu-item-icon">📊</span>
+      <ul className="menu-list" role="group" aria-label="Navigation principale">
+        <li className="menu-item skeleton" role="presentation" aria-busy="true">
+          <span className="menu-item-icon" aria-hidden="true"><LayoutDashboard size={20} /></span>
           {!isMenuCollapsed && <span className="menu-item-label">Chargement...</span>}
         </li>
       </ul>
@@ -73,13 +73,14 @@ export default function SideMenu() {
         className="side-menu-toggle" 
         onClick={toggleMenuCollapse}
         aria-label={isMenuCollapsed ? 'Déplier le menu' : 'Plier le menu'}
+        aria-expanded={!isMenuCollapsed}
       >
-        <span className="toggle-icon">
-          {isMenuCollapsed ? '→' : '←'}
+        <span className="toggle-icon" aria-hidden="true">
+          {isMenuCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </span>
       </button>
-      <ul className="menu-list">
-        <SideMenuItem 
+      <ul className="menu-list" role="group" aria-label="Navigation principale">
+        <SideMenuItem
           label="Dashboard"
           isActive={activeItem === 'dashboard'}
           onClick={() => handleNavigation('/dashboard', 'dashboard')}

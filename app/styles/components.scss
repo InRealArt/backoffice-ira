@@ -1142,10 +1142,6 @@
     background-color: rgba(0, 0, 0, 0.2);
   }
 
-  &:focus {
-    outline: none;
-  }
-
   // Identique en light et dark mode
   .dark-mode & {
     color: #000000; // Texte en noir pour être visible sur fond purple

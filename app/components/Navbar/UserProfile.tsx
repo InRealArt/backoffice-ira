@@ -4,12 +4,10 @@ import { authClient } from "@/lib/auth-client";
 import { useTranslations } from "next-intl";
 import { useSessionRole } from "@/app/hooks/useSessionRole";
 import { Badge } from "@/app/components/PageLayout";
-import { User, LogOut, UserCircle, Key } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { User, LogOut, UserCircle } from "lucide-react";
 
 export default function UserProfile() {
   const t = useTranslations("user");
-  const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
   const isLoggedIn = !!session;
@@ -17,10 +15,6 @@ export default function UserProfile() {
 
   const handleSignOut = async () => {
     await authClient.signOut();
-  };
-
-  const handleChangePassword = () => {
-    router.push("/change-password");
   };
 
   // Fonction pour déterminer le variant du badge selon le rôle
@@ -76,6 +70,7 @@ export default function UserProfile() {
       <div
         tabIndex={0}
         role="button"
+        aria-label={t("accountMenu")}
         className="btn btn-ghost btn-circle avatar"
       >
         <div className="w-10 rounded-full bg-neutral text-neutral-content flex items-center justify-center">
@@ -86,10 +81,10 @@ export default function UserProfile() {
         tabIndex={0}
         className="menu menu-sm dropdown-content bg-background-white dark:bg-background-white backdrop-blur-md rounded-box z-[1] mt-3 w-52 p-2 shadow-2xl border-2 border-border dark:border-border"
       >
-        <li>
-          <a className="justify-between font-semibold">
+        <li className="menu-title p-0">
+          <div className="flex items-center justify-between px-3 py-2 font-semibold text-base-content">
             <span className="flex items-center gap-2">
-              <User className="w-4 h-4" />
+              <User className="w-4 h-4" aria-hidden="true" />
               {t("profile")}
             </span>
             <Badge
@@ -97,20 +92,24 @@ export default function UserProfile() {
               text={getRoleText(userRole)}
               size="small"
             />
-          </a>
+          </div>
         </li>
-        <li className="divider my-0"></li>
-        <li>
-          <a className="text-sm text-base-content/70">{user?.email}</a>
+        <li className="divider my-0" role="separator"></li>
+        <li className="menu-title p-0">
+          <div className="px-3 py-2 text-sm text-base-content/70 break-all">
+            {user?.email}
+          </div>
         </li>
-        <li className="divider my-0"></li>
+        <li className="divider my-0" role="separator"></li>
         <li>
-          <a onClick={handleSignOut} className="text-error hover:bg-error/10">
-            <span className="flex items-center gap-2">
-              <LogOut className="w-4 h-4" />
-              {t("signOut")}
-            </span>
-          </a>
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="text-error hover:bg-error/10"
+          >
+            <LogOut className="w-4 h-4" aria-hidden="true" />
+            {t("signOut")}
+          </button>
         </li>
       </ul>
     </div>

@@ -555,6 +555,7 @@
   "user": {
     "profile": "Profil",
     "signOut": "Déconnexion",
+    "accountMenu": "Menu du compte",
     "roles": {
       "admin": "Admin",
       "artist": "Artiste",
