@@ -1,31 +1,22 @@
 'use client'
 
-import Image from 'next/image'
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle'
 import NavbarMenu from './NavbarMenu'
 import UserProfile from './UserProfile'
 import LanguageSwitcher from '../LanguageSwitcher'
+import BrandLogo from '@/app/components/BrandLogo/BrandLogo'
 
 export default function Navbar() {
 
   return (
     <div 
-      className="navbar fixed top-0 w-full z-50 border-b border-border backdrop-blur-md bg-white/95 dark:bg-gray-900/95 transition-all duration-300 font-sans" 
+      className="navbar fixed top-0 w-full z-50 border-b border-border backdrop-blur-md bg-white/95 transition-all duration-300 font-sans" 
       style={{ padding: '0 32px', height: '90px' }}
     >
       <div className="navbar-start">
         <NavbarMenu />
         <div className="flex items-center gap-3">
-          <div className="bg-black rounded-md p-1 flex items-center justify-center w-[70px] h-[70px]">
-            <Image
-              src="/img/Logo_InRealArt.svg"
-              alt="InRealArt Logo"
-              width={60}
-              height={60}
-              className="logo-image"
-            />
-          </div>
-          <span className="text-base font-light uppercase text-gray-900 dark:text-white" style={{ letterSpacing: "0.25em" }}>InRealArt backoffice</span>
+          <BrandLogo size="md" caption="Backoffice" />
         </div>
       </div>
       

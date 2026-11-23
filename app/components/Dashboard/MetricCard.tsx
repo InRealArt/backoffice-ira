@@ -17,7 +17,7 @@ export function MetricCard({
   title,
   value,
   icon: Icon,
-  color = "#6052ff",
+  color = "var(--color-primary)",
   isLoading,
   buttonTitle,
   buttonRoute,
@@ -28,7 +28,7 @@ export function MetricCard({
         {Icon && (
           <div
             className="metric-icon"
-            style={{ backgroundColor: `${color}15`, color }}
+            style={{ backgroundColor: "color-mix(in srgb, currentColor 14%, transparent)", color }}
           >
             <Icon size={24} />
           </div>

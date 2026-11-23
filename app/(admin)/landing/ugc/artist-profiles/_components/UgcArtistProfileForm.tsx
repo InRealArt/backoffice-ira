@@ -679,7 +679,7 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                                         style={{
                                             position: 'absolute', cursor: 'pointer',
                                             top: 0, left: 0, right: 0, bottom: 0,
-                                            backgroundColor: visible ? '#4f46e5' : '#ccc',
+                                            backgroundColor: visible ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                                             borderRadius: '34px', transition: '0.4s',
                                         }}
                                     >
@@ -1121,28 +1121,28 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                             <div
                                 {...getMediaRootProps()}
                                 style={{
-                                    border: `2px dashed ${isMediaDragActive ? '#4dabf7' : '#ccc'}`,
+                                    border: `2px dashed ${isMediaDragActive ? "var(--color-primary)" : "var(--color-border-input)"}`,
                                     borderRadius: '8px',
                                     padding: '2rem',
                                     textAlign: 'center',
                                     cursor: 'pointer',
-                                    backgroundColor: isMediaDragActive ? '#f0f8ff' : '#fafafa',
+                                    backgroundColor: isMediaDragActive ? "var(--color-primary-light)" : "var(--color-background-light)",
                                     transition: 'all 0.2s ease',
                                 }}
                             >
                                 <input {...getMediaInputProps()} />
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                                     <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                        <ImageIcon size={24} color="#666" />
-                                        <Film size={24} color="#666" />
-                                        <Upload size={24} color="#666" />
+                                        <ImageIcon size={24} color="var(--color-text-muted)" />
+                                        <Film size={24} color="var(--color-text-muted)" />
+                                        <Upload size={24} color="var(--color-text-muted)" />
                                     </div>
                                     <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500 }}>
                                         {isMediaDragActive
                                             ? 'Déposez vos fichiers ici...'
                                             : 'Cliquez ou glissez-déposez des images et vidéos'}
                                     </p>
-                                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#666' }}>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', color: "var(--color-text-secondary)" }}>
                                         Images : JPEG, PNG, GIF, WebP — Vidéos : MP4, WebM, MOV, AVI
                                     </p>
                                     <p style={{ margin: 0, fontSize: '0.75rem', color: '#888' }}>

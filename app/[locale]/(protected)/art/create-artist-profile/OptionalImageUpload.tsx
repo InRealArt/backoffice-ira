@@ -126,7 +126,7 @@ export default function OptionalImageUpload({
             borderRadius: "8px",
             overflow: "hidden",
             marginBottom: "0.5rem",
-            border: "1px solid #e0e0e0",
+            border: "1px solid var(--color-border)",
           }}
         >
           <Image
@@ -167,12 +167,12 @@ export default function OptionalImageUpload({
         <div
           {...getRootProps()}
           style={{
-            border: `2px dashed ${isDragActive ? "#4dabf7" : "#ccc"}`,
+            border: `2px dashed ${isDragActive ? "var(--color-primary)" : "var(--color-border-input)"}`,
             borderRadius: "8px",
             padding: "1.5rem",
             textAlign: "center",
             cursor: "pointer",
-            backgroundColor: isDragActive ? "#f0f8ff" : "#fafafa",
+            backgroundColor: isDragActive ? "var(--color-primary-light)" : "var(--color-background-light)",
             transition: "all 0.2s ease",
           }}
         >
@@ -185,13 +185,13 @@ export default function OptionalImageUpload({
               gap: "0.5rem",
             }}
           >
-            <Camera size={24} color="#666" />
+            <Camera size={24} color="var(--color-text-muted)" />
             <p style={{ margin: 0, fontSize: "0.875rem", fontWeight: 500 }}>
               {isDragActive
                 ? t("dropImageHere")
                 : t("clickOrDragImage")}
             </p>
-            <p style={{ margin: 0, fontSize: "0.75rem", color: "#666" }}>
+            <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
               {t("formats")}
             </p>
           </div>

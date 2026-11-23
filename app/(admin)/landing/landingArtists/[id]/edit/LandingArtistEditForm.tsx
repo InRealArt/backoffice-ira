@@ -903,7 +903,7 @@ export default function LandingArtistEditForm({
                             left: 0,
                             right: 0,
                             bottom: 0,
-                            backgroundColor: artistsPage ? "#4f46e5" : "#ccc",
+                            backgroundColor: artistsPage ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                             borderRadius: "34px",
                             transition: "0.4s",
                           }}
@@ -972,7 +972,7 @@ export default function LandingArtistEditForm({
                             left: 0,
                             right: 0,
                             bottom: 0,
-                            backgroundColor: isCurrentlyExposed ? "#4f46e5" : "#ccc",
+                            backgroundColor: isCurrentlyExposed ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                             borderRadius: "34px",
                             transition: "0.4s",
                           }}
@@ -1038,7 +1038,7 @@ export default function LandingArtistEditForm({
                             left: 0,
                             right: 0,
                             bottom: 0,
-                            backgroundColor: isFeatured ? "#4f46e5" : "#ccc",
+                            backgroundColor: isFeatured ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                             borderRadius: "34px",
                             transition: "0.4s",
                           }}

@@ -604,7 +604,7 @@ export default function CreateArtistProfileForm({
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: artistsPage ? "#4f46e5" : "#ccc",
+                  backgroundColor: artistsPage ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                   borderRadius: "34px",
                   transition: "0.4s",
                 }}
@@ -776,14 +776,14 @@ export default function CreateArtistProfileForm({
               className="mb-4"
               style={{
                 padding: "1.5rem",
-                border: "1px solid #e0e0e0",
+                border: "1px solid var(--color-border)",
                 borderRadius: "8px",
-                backgroundColor: "#fafafa",
+                backgroundColor: "var(--color-background-light)",
               }}
             >
               <h4
                 className="h6 mb-3"
-                style={{ color: "#666", fontWeight: 600 }}
+                style={{ color: "var(--color-text-secondary)", fontWeight: 600 }}
               >
                 Exposition {num}
               </h4>

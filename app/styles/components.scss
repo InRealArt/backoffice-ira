@@ -787,8 +787,8 @@
   color: #6b7280;
   margin: 0;
 
-  .dark-mode & {
-    color: #9ca3af;
+  .dark-theme & {
+    color: #8a8a96;
   }
 }
 
@@ -817,8 +817,8 @@
   overflow: hidden;
   position: relative;
 
-  .dark-mode & {
-    background-color: #374151;
+  .dark-theme & {
+    background-color: #26262a;
   }
 }
 
@@ -829,8 +829,8 @@
   background-size: 200% 100%;
   animation: loading-shimmer 1.5s infinite;
 
-  .dark-mode & {
-    background: linear-gradient(90deg, #4b5563 0%, #374151 50%, #4b5563 100%);
+  .dark-theme & {
+    background: linear-gradient(90deg, #3a3a40 0%, #26262a 50%, #3a3a40 100%);
     background-size: 200% 100%;
   }
 }
@@ -934,8 +934,8 @@
       margin-bottom: 0;
     }
 
-    .dark-mode & {
-      color: #d1d5db;
+    .dark-theme & {
+      color: #b4b4bf;
     }
   }
 
@@ -943,8 +943,8 @@
     font-weight: 600;
     color: #111827;
 
-    .dark-mode & {
-      color: #f9fafb;
+    .dark-theme & {
+      color: #ececf0;
     }
   }
 
@@ -1004,7 +1004,7 @@
       height: auto;
     }
 
-    .dark-mode & {
+    .dark-theme & {
       border-color: rgba(75, 85, 99, 0.4);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(75, 85, 99, 0.3);
 
@@ -1036,7 +1036,7 @@
     outline: none;
   }
 
-  .dark-mode & {
+  .dark-theme & {
     background-color: $color-background-dark-card;
     border-color: $color-border-dark;
 
@@ -1058,7 +1058,7 @@
   font-weight: 500;
 
   // Identique en light et dark mode
-  .dark-mode & {
+  .dark-theme & {
     background-color: #6052ff; // Couleur purple du bouton primary
     color: #000000; // Texte en noir
   }
@@ -1085,7 +1085,7 @@
   }
 
   // Identique en light et dark mode
-  .dark-mode & {
+  .dark-theme & {
     color: #000000; // Texte en noir pour être visible sur fond purple
 
     &:hover {
@@ -1108,7 +1108,7 @@
     color: $color-text-muted;
   }
 
-  .dark-mode & {
+  .dark-theme & {
     color: $color-text-dark-primary;
 
     &::placeholder {

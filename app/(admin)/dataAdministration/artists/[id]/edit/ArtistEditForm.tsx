@@ -384,7 +384,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                     >
                       Artiste
                     </span>
-                    <label className="relative w-[60px] h-[30px]">
+                    <label className="relative" style={{ display: "inline-block", width: 60, height: 30, flexShrink: 0 }}>
                       <input
                         type="checkbox"
                         {...register("isGallery")}
@@ -398,7 +398,7 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
                           left: 0,
                           right: 0,
                           bottom: 0,
-                          backgroundColor: isGallery ? "#4f46e5" : "#ccc",
+                          backgroundColor: isGallery ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                           borderRadius: "34px",
                           transition: "0.4s",
                         }}

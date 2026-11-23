@@ -255,12 +255,12 @@ export default function AgencyEventForm({ mode, agencyEvent }: AgencyEventFormPr
               <div
                 {...getRootProps()}
                 style={{
-                  border: `2px dashed ${isDragActive ? '#4dabf7' : '#ccc'}`,
+                  border: `2px dashed ${isDragActive ? "var(--color-primary)" : "var(--color-border-input)"}`,
                   borderRadius: '8px',
                   padding: '1.5rem',
                   textAlign: 'center',
                   cursor: 'pointer',
-                  backgroundColor: isDragActive ? '#f0f8ff' : '#fafafa',
+                  backgroundColor: isDragActive ? "var(--color-primary-light)" : "var(--color-background-light)",
                   transition: 'all 0.2s ease',
                 }}
               >
@@ -273,11 +273,11 @@ export default function AgencyEventForm({ mode, agencyEvent }: AgencyEventFormPr
                     gap: '0.5rem',
                   }}
                 >
-                  <Camera size={24} color="#666" />
+                  <Camera size={24} color="var(--color-text-muted)" />
                   <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600 }}>
                     {isDragActive ? 'Déposez l\'image ici' : 'Cliquez ou glissez une image'}
                   </p>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#666' }}>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: "var(--color-text-secondary)" }}>
                     JPG, PNG, GIF, WebP — max 4 Mo
                   </p>
                 </div>
@@ -341,18 +341,18 @@ export default function AgencyEventForm({ mode, agencyEvent }: AgencyEventFormPr
                 <div
                   {...getRootProps()}
                   style={{
-                    border: `2px dashed ${isDragActive ? '#4dabf7' : '#ccc'}`,
+                    border: `2px dashed ${isDragActive ? "var(--color-primary)" : "var(--color-border-input)"}`,
                     borderRadius: '8px',
                     padding: '1rem',
                     textAlign: 'center',
                     cursor: 'pointer',
-                    backgroundColor: isDragActive ? '#f0f8ff' : '#fafafa',
+                    backgroundColor: isDragActive ? "var(--color-primary-light)" : "var(--color-background-light)",
                     flex: 1,
                   }}
                 >
                   <input {...getInputProps()} />
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                    <Camera size={20} color="#666" />
+                    <Camera size={20} color="var(--color-text-muted)" />
                     <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 600 }}>
                       {isDragActive ? 'Déposez ici' : 'Changer l\'image'}
                     </p>
@@ -443,7 +443,7 @@ export default function AgencyEventForm({ mode, agencyEvent }: AgencyEventFormPr
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    backgroundColor: isFeatured ? "#4f46e5" : "#ccc",
+                    backgroundColor: isFeatured ? "var(--color-primary-dark)" : "var(--color-text-muted)",
                     borderRadius: "34px",
                     transition: "0.4s",
                   }}
