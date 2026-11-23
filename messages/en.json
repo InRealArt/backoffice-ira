@@ -37,7 +37,9 @@
     "checkingAccess": "Checking your access...",
     "loginPrompt": "Sign in to access the backoffice",
     "signInButton": "Sign In",
-    "signUpButton": "Sign Up"
+    "signUpButton": "Sign Up",
+    "caption": "Backoffice",
+    "tagline": "Your workspace to manage your artists, artworks and collections."
   },
   "dashboard": {
     "title": "Dashboard",

@@ -37,7 +37,9 @@
     "checkingAccess": "Vérification de vos accès...",
     "loginPrompt": "Connectez-vous pour accéder au backoffice",
     "signInButton": "Se connecter",
-    "signUpButton": "S'inscrire"
+    "signUpButton": "S'inscrire",
+    "caption": "Backoffice",
+    "tagline": "Votre espace pour gérer vos artistes, vos œuvres et vos collections."
   },
   "dashboard": {
     "title": "Tableau de bord",
