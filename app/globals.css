@@ -1016,7 +1016,17 @@ body.dark {
    --------------------------------------------------------------------------- */
 
 /* Anneau visible uniquement à la navigation clavier (pas au clic souris) */
-:where(a, button, [role='button'], [role='link'], summary, select, input, textarea, [tabindex]:not([tabindex='-1'])):focus-visible {
+a:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible,
+[role='link']:focus-visible,
+summary:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+tr:focus-visible,
+li:focus-visible,
+div:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
