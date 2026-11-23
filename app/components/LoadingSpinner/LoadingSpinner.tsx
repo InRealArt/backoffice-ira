@@ -5,7 +5,7 @@ export interface LoadingSpinnerProps {
   size?: 'small' | 'medium' | 'large'
   fullPage?: boolean
   inline?: boolean
-  color?: 'primary' | 'light' | 'dark'
+  color?: 'primary' | 'light' | 'dark' | 'current'
 }
 
 const sizeClass: Record<NonNullable<LoadingSpinnerProps['size']>, string> = {
@@ -18,6 +18,7 @@ const colorClass: Record<NonNullable<LoadingSpinnerProps['color']>, string> = {
   primary: 'border-primary',
   light: 'border-white',
   dark: 'border-gray-900',
+  current: 'border-current',
 }
 
 export default function LoadingSpinner({ 

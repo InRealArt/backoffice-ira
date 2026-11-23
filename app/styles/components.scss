@@ -60,8 +60,8 @@
 
     &:focus {
       outline: none;
-      border-color: $color-primary;
-      box-shadow: 0 0 0 1px rgba($color-primary, 0.2);
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
     }
   }
 
@@ -88,8 +88,8 @@
 
     &:focus {
       outline: none;
-      border-color: $color-primary;
-      box-shadow: 0 0 0 1px rgba($color-primary, 0.2);
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent);
     }
 
     &::placeholder {
@@ -1032,8 +1032,8 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus-within {
-    border-color: $color-primary;
-    box-shadow: 0 0 0 2px rgba($color-primary, 0.2);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 35%, transparent);
     outline: none;
   }
 
@@ -1042,8 +1042,8 @@
     border-color: $color-border-dark;
 
     &:focus-within {
-      border-color: $color-primary-dark;
-      box-shadow: 0 0 0 2px rgba($color-primary-dark, 0.2);
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 35%, transparent);
     }
   }
 }
@@ -1198,6 +1198,6 @@
   }
 
   &:focus {
-    box-shadow: 0 0 0 3px rgba($color-primary, 0.3);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 40%, transparent);
   }
 }
