@@ -15,9 +15,11 @@ body.light {
   /* Couleurs en mode clair */
   /* Le violet historique est remplacé par le doré du site corpo (accent de marque) */
   --color-primary: #8a6f43;
+  --color-primary-rgb: 138 111 67; /* canaux pour bg-primary/10, ring-primary/20… (Tailwind <alpha-value>) */
   --color-primary-dark: #725a35;
   --color-primary-light: #f4eee3;
   --color-purple: #8a6f43;
+  --color-purple-rgb: 138 111 67;
   --color-error: #dc2626;
   --color-error-dark: #b91c1c;
   --color-error-light: #f87171;
@@ -53,10 +55,12 @@ body.dark {
 
   /* Mode sombre : échelle d'élévation neutre (plus une surface est haute, plus elle est claire)
      canvas #0e0e10 < carte #161618 < surface relevée #1e1e21 < survol #26262a */
+  --color-primary-rgb: 201 174 132;
   --color-primary: #c9ae84; /* doré éclairci : fort contraste sur les cartes sombres */
   --color-primary-dark: #b89c72;
   --color-primary-light: rgba(201, 174, 132, 0.16); /* fond teinté (badges, sélection) */
   --color-purple: #c9ae84;
+  --color-purple-rgb: 201 174 132;
   --color-error: #f87171;
   --color-error-dark: #ef4444;
   --color-error-light: #fca5a5;
@@ -437,7 +441,7 @@ body.dark .pagination-btn {
 .dark-theme .pagination-btn:hover:not(:disabled),
 body.dark .pagination-btn:hover:not(:disabled) {
   background-color: var(--color-primary);
-  color: white;
+  color: var(--btn-ink-inverse);
   border-color: var(--color-primary);
   box-shadow: 0 4px 12px rgba(138, 111, 67, 0.4);
 }
@@ -452,7 +456,7 @@ body.dark .pagination-btn:disabled {
 .dark-theme .pagination-btn-active,
 body.dark .pagination-btn-active {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  color: white;
+  color: var(--btn-ink-inverse);
   border-color: var(--color-primary);
   box-shadow: 0 4px 12px rgba(138, 111, 67, 0.5);
 }
@@ -475,6 +479,7 @@ body.dark .pagination-btn-next {
 body.dark .pagination-btn-prev:hover:not(:disabled),
 body.dark .pagination-btn-next:hover:not(:disabled) {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: var(--btn-ink-inverse);
 }
 
 /* Wrapper pour DataTable avec pagination */
@@ -1062,7 +1067,7 @@ body.dark {
   }
 
   .status-badge.status-primary {
-    @apply bg-indigo-500 dark:bg-indigo-900/30 text-white dark:text-white;
+    @apply bg-indigo-600 dark:bg-indigo-900/30 text-white dark:text-white;
   }
 
   /* Info Badge */
