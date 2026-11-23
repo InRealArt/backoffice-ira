@@ -1,0 +1,170 @@
+// Pages d'authentification : deux colonnes, œuvre à gauche, formulaire à droite.
+// Couleurs 100 % sur les tokens du thème (clair/sombre).
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  // Pas de barre de navigation ici : on annule le padding-top global du body
+  margin-top: calc(-1 * var(--navbar-height, 90px));
+  min-height: 100vh;
+  background-color: var(--color-background-main);
+  color: var(--color-text-primary);
+}
+
+// Panneau d'œuvre : masqué sur mobile pour garder le formulaire en premier
+.art {
+  position: relative;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem clamp(2rem, 5vw, 5rem);
+  overflow: hidden;
+  isolation: isolate;
+  background: #0d0c0a;
+  border-right: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+.artGlow {
+  position: absolute;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--color-accent) 22%, transparent),
+    transparent 75%
+  );
+}
+
+// Fond sombre fixe : le cartel, les indicateurs et le bouton pause restent lisibles dans les deux thèmes
+.art {
+  --cartel-artist: #c9ae84;
+  --cartel-title: #f3ece0;
+  --cartel-text: #d9cdb8;
+  --gallery-dot: rgba(217, 205, 184, 0.4);
+}
+
+.panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 26rem;
+}
+
+.logo {
+  margin-bottom: 2.75rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  margin: 0.625rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.card form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-primary);
+}
+
+.input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-size: 1rem; // 16 px : évite le zoom automatique sur iOS
+  color: var(--color-text-primary);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 0; // coins carrés, comme les boutons de la DA galerie
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+
+  &::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.7;
+  }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--color-text-primary) 45%, transparent);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
+}
+
+.card form button[type='submit'] {
+  width: 100%;
+  min-height: 3rem;
+  margin-top: 0.5rem;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+
+  a {
+    color: var(--color-accent);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+
+    &:hover {
+      text-decoration-thickness: 2px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 3px;
+    }
+  }
+}
+
+@media (min-width: 900px) {
+  .shell {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+
+  .art {
+    display: flex;
+  }
+}

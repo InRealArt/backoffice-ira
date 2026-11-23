@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import Navbar from "../components/Navbar/Navbar";
 import AuthObserver from "../components/Auth/AuthObserver";
 import LandingHero from "../components/LandingHero/LandingHero";
+import { useHeroArtworks } from "../components/ArtGallery/heroArtworks";
 import LoadingSpinner from "../components/LoadingSpinner/LoadingSpinner";
 import { authClient } from "@/lib/auth-client";
 import { useAuthorization } from "../hooks/useAuthorization";
@@ -20,6 +21,7 @@ const checkIsDarkSchemePreferred = () => {
 export default function Main() {
   const router = useRouter();
   const t = useTranslations("home");
+  const { artworks, label: artworksLabel } = useHeroArtworks();
   const [isDarkMode, setIsDarkMode] = useState(checkIsDarkSchemePreferred);
   const { data: session, isPending: isSessionPending } =
     authClient.useSession();
@@ -88,6 +90,8 @@ export default function Main() {
         */}
       </div>
       <LandingHero
+        artworks={artworks}
+        artworksLabel={artworksLabel}
         title={t("title")}
         caption={t("caption")}
         tagline={t("tagline")}

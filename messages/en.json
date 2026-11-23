@@ -39,7 +39,18 @@
     "signInButton": "Sign In",
     "signUpButton": "Sign Up",
     "caption": "Backoffice",
-    "tagline": "Your workspace to manage your artists, artworks and collections."
+    "tagline": "Your workspace to manage your artists, artworks and collections.",
+    "artworksLabel": "Featured artworks",
+    "artworks": {
+      "klimt": "The Kiss by Gustav Klimt: a couple embracing in golden robes decorated with geometric patterns",
+      "monet": "Impression, Sunrise by Claude Monet: a harbour in mist under an orange sun",
+      "vangogh": "The Starry Night by Vincent van Gogh: a swirling sky above a sleeping village",
+      "turner": "The Fighting Temeraire by J. M. W. Turner: a warship being towed at sunset"
+    },
+    "gallery": {
+      "pause": "Pause slideshow",
+      "play": "Resume slideshow"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
