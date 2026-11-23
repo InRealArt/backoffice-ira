@@ -5,37 +5,41 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { authClient } from '@/lib/auth-client'
 import Button from '@/app/components/Button/Button'
-import { useToast } from '@/app/components/Toast/ToastContext'
-import AuthShell, { AuthField } from '@/app/components/AuthShell/AuthShell'
+import AuthShell, { AuthAlert, AuthField } from '@/app/components/AuthShell/AuthShell'
 
 export default function SignInPage () {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const { error: errorToast } = useToast()
+  const [formError, setFormError] = useState<string | null>(null)
 
   const onSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setFormError(null)
     setIsLoading(true)
-    const { error: authError } = await authClient.signIn.email({
-      email,
-      password,
-      callbackURL: '/dashboard'
-    }, {
-      onError: ctx => {
-        const errorMessage = ctx.error?.message || 'Erreur de connexion'
-        errorToast(errorMessage)
+    try {
+      const { error: authError } = await authClient.signIn.email({
+        email,
+        password,
+        callbackURL: '/dashboard'
+      })
+      if (authError) {
+        setFormError(
+          authError.code === 'INVALID_EMAIL_OR_PASSWORD'
+            ? 'Email ou mot de passe incorrect.'
+            : authError.message || 'Erreur de connexion'
+        )
+        setIsLoading(false)
+        return
       }
-    })
-    setIsLoading(false)
-    if (!authError) {
       router.push('/dashboard')
-    } else {
-      const errorMessage = authError.message || 'Erreur de connexion'
-      errorToast(errorMessage)
+    } catch (err) {
+      console.error('Erreur lors de la connexion:', err)
+      setFormError('Une erreur inattendue s\'est produite')
+      setIsLoading(false)
     }
-  }, [email, password, router, errorToast])
+  }, [email, password, router])
 
   return (
     <AuthShell
@@ -74,6 +78,7 @@ export default function SignInPage () {
           autoComplete='current-password'
           placeholder='••••••••'
         />
+        {formError ? <AuthAlert>{formError}</AuthAlert> : null}
         <Button
           variant='primary'
           size='medium'
