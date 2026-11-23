@@ -188,24 +188,29 @@ export default function ValidationErrorsModal({
       }}
     >
       <div
-        className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-fadeIn"
+        className="shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-fadeIn"
         onClick={(e) => e.stopPropagation()}
         style={{ 
           position: 'relative', 
           zIndex: 1000000,
-          backgroundColor: 'rgb(254 242 242)'
+          backgroundColor: 'var(--color-background-white)',
+          border: '1px solid var(--color-border)',
+          borderTop: '3px solid var(--btn-danger)'
         }}
       >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-red-200 dark:border-red-800 bg-red-100/50 dark:bg-red-900/30">
+          <div
+            className="flex items-center justify-between px-6 py-4"
+            style={{ backgroundColor: 'var(--color-background-light)', borderBottom: '1px solid var(--color-border)' }}
+          >
             <div className="flex items-center gap-3">
-              <AlertCircle className="w-6 h-6 text-red-500" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 m-0">
+              <AlertCircle className="w-6 h-6" style={{ color: 'var(--btn-danger)' }} />
+              <h2 className="text-xl font-semibold m-0" style={{ color: 'var(--color-text-primary)' }}>
                 Erreurs de validation
               </h2>
             </div>
             <button
-              className="bg-transparent border-0 text-2xl leading-none cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="btn btn-square btn-sm"
               onClick={onClose}
               aria-label="Fermer"
             >
@@ -260,11 +265,14 @@ export default function ValidationErrorsModal({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-red-200 dark:border-red-800 bg-red-100/50 dark:bg-red-900/30 flex justify-end flex-shrink-0">
+          <div
+            className="px-6 py-4 flex justify-end flex-shrink-0"
+            style={{ backgroundColor: 'var(--color-background-light)', borderTop: '1px solid var(--color-border)' }}
+          >
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+              className="btn btn-primary btn-small"
             >
               Fermer
             </button>
