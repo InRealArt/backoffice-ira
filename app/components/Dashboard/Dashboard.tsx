@@ -7,6 +7,7 @@ import Image from "next/image";
 import { User, Users, Package, FolderOpen, PlusCircle } from "lucide-react";
 import LoadingSpinner from "../LoadingSpinner/LoadingSpinner";
 import NavigationButton from "../NavigationButton";
+import NextLink from "next/link";
 import { Link } from "@/i18n/navigation";
 import { DashboardCard } from "./DashboardCard/DashboardCard";
 import {
@@ -22,6 +23,14 @@ import { getPresaleArtworkCountByArtist } from "@/lib/actions/presale-artwork-ac
 import { useIsAdmin } from "@/app/hooks/useIsAdmin";
 import { DashboardStats } from "./DashboardStats";
 import { getImageUrlWithCacheBuster } from "@/lib/r2/url";
+
+interface QuickAction {
+  href: string;
+  plain?: boolean;
+  icon: typeof User;
+  label: string;
+  primary?: boolean;
+}
 
 export default function Dashboard() {
   const t = useTranslations("dashboard");
@@ -227,11 +236,13 @@ export default function Dashboard() {
 
   // Raccourcis selon le rôle. Les fonctions marketplace sont masquées en production, comme les cartes.
   const isProduction = process.env.NODE_ENV === "production";
-  const quickActions = isAdmin
+  // `plain` : les pages d'administration (hors [locale]) n'ont pas de préfixe de langue ;
+  // le Link d'i18n y ajouterait /fr et mènerait à une 404. Les pages artiste, elles, sont sous [locale].
+  const quickActions: QuickAction[] = isAdmin
     ? [
-        { href: "/dataAdministration/artists", icon: Users, label: t("quickActions.adminArtists"), primary: true },
-        { href: "/landing/presaleArtworks", icon: Package, label: t("quickActions.adminPresale") },
-        { href: "/boAdmin/users", icon: User, label: t("quickActions.adminUsers") },
+        { href: "/dataAdministration/artists", plain: true, icon: Users, label: t("quickActions.adminArtists"), primary: true },
+        { href: "/landing/presaleArtworks", plain: true, icon: Package, label: t("quickActions.adminPresale") },
+        { href: "/boAdmin/users", plain: true, icon: User, label: t("quickActions.adminUsers") },
       ]
     : associatedArtist
       ? [
@@ -304,16 +315,19 @@ export default function Dashboard() {
             {t("quickActions.title")}
           </h3>
           <div className="dashboard-quick-list">
-            {quickActions.map(({ href, icon: Icon, label, primary }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`btn btn-medium${primary ? " btn-primary" : ""}`}
-              >
-                <Icon size={16} aria-hidden="true" />
-                {label}
-              </Link>
-            ))}
+            {quickActions.map(({ href, plain, icon: Icon, label, primary }) => {
+              const ActionLink = plain ? NextLink : Link;
+              return (
+                <ActionLink
+                  key={href}
+                  href={href}
+                  className={`btn btn-medium${primary ? " btn-primary" : ""}`}
+                >
+                  <Icon size={16} aria-hidden="true" />
+                  {label}
+                </ActionLink>
+              );
+            })}
           </div>
         </section>
       )}
