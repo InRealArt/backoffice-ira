@@ -9,7 +9,7 @@ interface TeamCreateTabsProps {
 
 export default function TeamCreateTabs({ profileForm }: TeamCreateTabsProps) {
   return (
-    <div>
+    <div className={formKit.tabsRoot}>
       <div className={formKit.tabBar}>
         <div
           className={formKit.tabList}

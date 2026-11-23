@@ -1,29 +1,31 @@
 .container {
-  max-width: 800px;
+  max-width: 80rem;
   margin: 0 auto;
-  padding: 2rem 1rem;
 }
 
 .pageTitle {
-  font-size: 2rem;
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
   margin-bottom: 2rem;
-  color: #333;
-  text-align: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
 }
 
 .error {
-  background-color: #fdeded;
-  color: #d32f2f;
+  background-color: color-mix(in srgb, var(--color-error) 12%, transparent);
+  color: var(--color-error);
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: 0;
   margin-bottom: 1.5rem;
 }
 
 .artistSection {
-  background-color: #f8f9fa;
+  background-color: var(--color-background-light);
   padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border-radius: 0;
+  border: 1px solid var(--color-border);
 }
 
 .artistInfo {
@@ -38,7 +40,7 @@
   gap: 0.5rem;
 
   strong {
-    color: #495057;
+    color: var(--color-text-primary);
     font-weight: 600;
   }
 }
@@ -46,39 +48,39 @@
 .artistBio {
   margin: 0;
   line-height: 1.6;
-  color: #6c757d;
+  color: var(--color-text-secondary);
   background-color: white;
   padding: 1rem;
-  border-radius: 6px;
-  border: 1px solid #dee2e6;
+  border-radius: 0;
+  border: 1px solid var(--color-border);
 }
 
 .artistLink {
-  color: #007bff;
+  color: var(--color-accent);
   text-decoration: none;
   font-weight: 500;
 
   &:hover {
     text-decoration: underline;
-    color: #0056b3;
+    color: var(--color-accent);
   }
 }
 
 .noArtist {
   text-align: center;
-  color: #6c757d;
+  color: var(--color-text-secondary);
   font-style: italic;
   padding: 2rem;
   background-color: white;
-  border-radius: 6px;
-  border: 1px solid #dee2e6;
+  border-radius: 0;
+  border: 1px solid var(--color-border);
 }
 
 .imagePreview {
   width: 100%;
   max-width: 300px;
   margin: 0 auto 2rem;
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   
@@ -92,7 +94,7 @@
 .form {
   background-color: white;
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -104,21 +106,21 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #333;
+  color: var(--color-text-primary);
 }
 
 .input,
 .textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid var(--color-border-input);
+  border-radius: 0;
   font-size: 1rem;
   
   &:focus {
-    border-color: #4a6cf7;
+    border-color: var(--color-accent);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.2);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 25%, transparent);
   }
 }
 

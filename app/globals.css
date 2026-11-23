@@ -593,7 +593,13 @@ body.dark {
   .form-container {
     width: 100%;
     max-width: 64rem;
-    margin-inline: 0;
+    margin-inline: auto;
+  }
+
+  /* Page de formulaire : en-tête et formulaire centrés ensemble sur la même colonne */
+  .page-container:has(.form-container) {
+    max-width: 64rem;
+    margin-inline: auto;
   }
 
   /* Form Card : carte carrée à filet fin */

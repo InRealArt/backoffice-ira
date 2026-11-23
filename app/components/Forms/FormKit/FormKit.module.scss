@@ -435,3 +435,10 @@
     color: var(--color-accent);
   }
 }
+
+// Racine d'une page à onglets : même colonne centrée que les formulaires
+.tabsRoot {
+  width: 100%;
+  max-width: 64rem;
+  margin-inline: auto;
+}

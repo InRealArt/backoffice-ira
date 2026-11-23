@@ -1,34 +1,43 @@
 // Styles pour la création d'œuvre par un administrateur
+.page {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
 .artworkCreationHeader {
   margin-bottom: 2rem;
-  text-align: center;
-  padding: 2rem 0;
-  border-bottom: 1px solid #e0e0e0;
+  text-align: left;
+  padding: 0 0 1.5rem;
+  border-bottom: 1px solid var(--color-border);
 
   h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #333;
+    font-size: clamp(1.6rem, 3vw, 2.25rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
     margin-bottom: 0.5rem;
   }
 
   .subtitle {
-    font-size: 1.1rem;
-    color: #666;
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
     margin: 0;
   }
 }
 
 .artistSelectionSection {
-  background: #f8f9fa;
+  background: var(--color-background-light);
   padding: 2rem;
-  border-radius: 12px;
+  border-radius: 0;
   margin-bottom: 2rem;
 
   h2 {
-    font-size: 1.5rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: #333;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-accent);
     margin-bottom: 1.5rem;
   }
 }
@@ -48,15 +57,15 @@
   flex: 1;
   min-width: 250px;
   padding: 0.75rem 1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  border: 2px solid var(--color-border);
+  border-radius: 0;
   font-size: 1rem;
   transition: border-color 0.2s ease;
 
   &:focus {
     outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent);
   }
 }
 
@@ -64,8 +73,8 @@
   flex: 1;
   min-width: 250px;
   padding: 0.75rem 1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  border: 2px solid var(--color-border);
+  border-radius: 0;
   font-size: 1rem;
   background: white;
   cursor: pointer;
@@ -73,8 +82,8 @@
 
   &:focus {
     outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent);
   }
 }
 
@@ -82,7 +91,7 @@
   h3 {
     font-size: 1.2rem;
     font-weight: 600;
-    color: #333;
+    color: var(--color-text-primary);
     margin-bottom: 1rem;
   }
 }
@@ -93,8 +102,8 @@
   gap: 1rem;
   background: white;
   padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  border-radius: 0;
+  border: 1px solid var(--color-border);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -103,27 +112,27 @@
   height: 60px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--color-border);
 }
 
 .artistDetails {
   h4 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #333;
+    color: var(--color-text-primary);
     margin: 0 0 0.25rem 0;
   }
 }
 
 .artistPseudo {
   font-style: italic;
-  color: #666;
+  color: var(--color-text-secondary);
   margin: 0 0 0.5rem 0;
   font-size: 0.9rem;
 }
 
 .artistDescription {
-  color: #666;
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
   margin: 0;
   line-height: 1.4;
@@ -132,29 +141,29 @@
 .loadingAddresses {
   text-align: center;
   padding: 1rem;
-  color: #666;
+  color: var(--color-text-secondary);
   font-style: italic;
 }
 
 .noArtistSelected {
   text-align: center;
   padding: 3rem 2rem;
-  background: #f8f9fa;
-  border-radius: 12px;
-  border: 2px dashed #e0e0e0;
+  background: var(--color-background-light);
+  border-radius: 0;
+  border: 2px dashed var(--color-border);
 
   p {
     font-size: 1.1rem;
-    color: #666;
+    color: var(--color-text-secondary);
     margin: 0;
   }
 }
 
 .noBackofficeUser {
   padding: 1rem;
-  background: #fff5f5;
-  border: 1px solid #fed7d7;
-  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-error) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-error) 40%, transparent);
+  border-radius: 0;
   margin-top: 1rem;
 
   p {
@@ -165,9 +174,9 @@
 
 .noAddresses {
   padding: 1rem;
-  background: #fffaf0;
-  border: 1px solid #ffc947;
-  border-radius: 8px;
+  background: var(--color-background-light);
+  border: 1px solid var(--color-accent);
+  border-radius: 0;
   margin-top: 1rem;
 
   p {
@@ -177,7 +186,7 @@
 }
 
 .artistHighlight {
-  color: #ffd700;
+  color: var(--color-accent);
   font-weight: 800;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }

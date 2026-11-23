@@ -10,7 +10,7 @@ interface TeamEditTabsProps {
 
 export default function TeamEditTabs({ profileForm, memberName }: TeamEditTabsProps) {
   return (
-    <div>
+    <div className={formKit.tabsRoot}>
       <div className={formKit.tabBar}>
         <div
           className={formKit.tabList}
