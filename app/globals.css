@@ -532,14 +532,20 @@ body.dark {
    ======================================== */
 
 @layer components {
-  /* Page Container - Main wrapper for page content */
+  /* Page Container - Main wrapper for page content (à plat : le fond vient de la mise en page) */
   .page-container {
-    @apply w-full p-xl bg-background-main rounded-lg shadow-md min-h-[calc(100vh-180px)];
+    @apply w-full;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
   }
 
-  /* Page Header - Header section with title and actions */
+  /* Page Header - même langage que FormPageHeader : titre, sous-titre, filet fin */
   .page-header {
-    @apply mb-xxl;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
   }
 
   .page-header .header-top-section {
@@ -547,16 +553,27 @@ body.dark {
   }
 
   .page-header .page-title {
-    @apply text-xl font-semibold mb-sm text-text-primary;
+    margin: 0 0 0.5rem;
+    font-size: clamp(1.6rem, 3vw, 2.25rem);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary);
   }
 
   .page-header .page-subtitle {
-    @apply text-text-secondary text-sm;
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
   }
 
-  /* Page Content - Content area with white background */
+  /* Page Content - zone de contenu : carte carrée à filet fin */
   .page-content {
-    @apply bg-background-white rounded-md overflow-hidden;
+    background-color: var(--color-background-white);
+    border: 1px solid var(--color-border);
+    border-radius: 0;
+    overflow: hidden;
   }
 
   /* Legacy support - keeping for backward compatibility */
@@ -572,14 +589,21 @@ body.dark {
      FORM COMPONENTS
      ======================================== */
 
-  /* Form Container */
+  /* Form Container : colonne de formulaire alignée sur la largeur des pages du kit */
   .form-container {
-    @apply max-w-3xl mx-auto;
+    width: 100%;
+    max-width: 64rem;
+    margin-inline: 0;
   }
 
-  /* Form Card */
+  /* Form Card : carte carrée à filet fin */
   .form-card {
-    @apply bg-background-white rounded-md shadow-sm overflow-hidden mb-xl;
+    margin-bottom: 1.5rem;
+    background-color: var(--color-background-white);
+    border: 1px solid var(--color-border);
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
   }
 
   .card-header {
@@ -587,16 +611,85 @@ body.dark {
   }
 
   .card-title {
-    @apply text-lg font-semibold text-text-primary m-0;
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-accent);
   }
 
   .card-content {
-    @apply p-xl;
+    padding: clamp(1.25rem, 3.5vw, 2.5rem);
+  }
+
+  /* Champs des formulaires hérités : coins carrés, 44 px, 16 px (pas de zoom iOS) */
+  .form-container .form-input,
+  .form-container .form-select,
+  .form-container .form-textarea {
+    min-height: 2.75rem;
+    font-size: 1rem;
+    border-radius: 0;
+  }
+
+  .form-container .form-label {
+    margin-bottom: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* Lignes de champs héritées (d-flex + flex: 1) : empilées sur mobile au lieu de déborder */
+  @media (max-width: 639px) {
+    .form-container .d-flex:has(> .form-group),
+    .form-card .d-flex:has(> .form-group),
+    .page-content .d-flex:has(> .form-group) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    /* Lignes qui contiennent des boutons ou des champs de largeur fixe : retour à la ligne */
+    .page-container .d-flex,
+    .form-container .d-flex,
+    .form-card .d-flex {
+      flex-wrap: wrap;
+    }
+
+    /* Bloc photo + champs : empilé */
+    .page-container .d-flex.gap-lg.align-items-start {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .page-container .d-flex.gap-lg.align-items-start > * {
+      flex: none !important;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .page-container .btn {
+      max-width: 100%;
+    }
+
+    .form-container .d-flex > .form-group,
+    .form-card .d-flex > .form-group,
+    .page-content .d-flex > .form-group {
+      flex: none !important;
+      width: 100%;
+      min-width: 0;
+    }
   }
 
   /* Section Title */
   .section-title {
-    @apply text-xl font-semibold mb-lg pb-md border-b-2 border-border text-text-primary;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    border-bottom: 1px solid var(--color-border);
   }
 
   /* Form Title */
@@ -686,7 +779,27 @@ body.dark {
 
   /* Form Actions */
   .form-actions {
-    @apply flex justify-end gap-md mt-lg;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .form-actions .btn {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .form-actions {
+      flex-direction: row;
+      justify-content: flex-end;
+    }
+
+    .form-actions .btn {
+      width: auto;
+      min-width: 10rem;
+    }
   }
 
   /* Edit Form Container */

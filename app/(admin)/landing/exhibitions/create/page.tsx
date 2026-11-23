@@ -16,9 +16,7 @@ export default async function CreateExhibitionPage() {
         <p className="page-subtitle">Ajoutez une nouvelle exposition au site</p>
       </div>
 
-      <div className="page-content">
-        <ExhibitionForm mode="create" artists={artists} />
-      </div>
+      <ExhibitionForm mode="create" artists={artists} />
     </div>
   )
 }

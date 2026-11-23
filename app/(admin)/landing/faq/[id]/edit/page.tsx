@@ -32,16 +32,7 @@ export default async function EditFaqPage({ params }: EditFaqPageProps) {
   
   return (
     <div className="page-container">
-      <div className="page-header">
-        <h1 className="page-title">Modifier une FAQ</h1>
-        <p className="page-subtitle">
-          Modifiez une question fréquemment posée
-        </p>
-      </div>
-      
-      <div className="page-content">
-        <FaqForm mode="edit" faq={faq} />
-      </div>
+      <FaqForm mode="edit" faq={faq} />
     </div>
   )
 } 

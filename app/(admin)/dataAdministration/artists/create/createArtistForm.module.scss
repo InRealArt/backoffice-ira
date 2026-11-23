@@ -1,21 +1,23 @@
 .section-title {
-  font-size: 1.25rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--color-text-primary);
-  margin: 0 0 1rem 0;
-  padding-bottom: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0 0 1.25rem 0;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--color-border);
 }
 
 .form-card {
   background: var(--color-background-white);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border-radius: 0;
   margin-bottom: 1.5rem;
 }
 
 .card-content {
-  padding: 1.5rem;
+  padding: clamp(1.25rem, 3.5vw, 2.5rem);
 }
 
 .form-group {
@@ -24,21 +26,23 @@
 
 .form-label {
   display: block;
-  font-weight: 500;
-  color: var(--color-text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-primary);
   margin-bottom: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 .form-input,
 .form-textarea {
   width: 100%;
   padding: 0.75rem;
+  min-height: 2.75rem;
   border: 1px solid var(--color-border-input);
   background-color: var(--color-background-white);
   color: var(--color-text-primary);
-  border-radius: 6px;
-  font-size: 0.875rem;
+  border-radius: 0;
+  font-size: 1rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
@@ -87,7 +91,7 @@
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 0;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease-in-out;
@@ -160,7 +164,7 @@
 
 .alert {
   padding: 1rem;
-  border-radius: 6px;
+  border-radius: 0;
   margin-bottom: 1rem;
 }
 
@@ -183,4 +187,20 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+// Mobile : lignes de champs et bloc photo + identité empilés au lieu de déborder
+@media (max-width: 639px) {
+  .d-flex:has(> .form-group),
+  .d-flex:has(> div > .form-group) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .d-flex > .form-group,
+  .d-flex > div:has(.form-group) {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0;
+  }
 }

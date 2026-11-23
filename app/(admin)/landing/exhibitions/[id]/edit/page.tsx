@@ -40,14 +40,12 @@ export default async function EditExhibitionPage({ params }: EditExhibitionPageP
         <p className="page-subtitle">Modification de : {exhibition.name}</p>
       </div>
 
-      <div className="page-content">
-        <ExhibitionForm
-          mode="edit"
-          exhibition={exhibition}
-          artists={artists}
-          initialArtistIds={initialArtistIds}
-        />
-      </div>
+      <ExhibitionForm
+        mode="edit"
+        exhibition={exhibition}
+        artists={artists}
+        initialArtistIds={initialArtistIds}
+      />
     </div>
   )
 }

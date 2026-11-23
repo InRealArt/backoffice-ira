@@ -32,9 +32,7 @@ export default async function EditAgencyEventPage({ params }: EditAgencyEventPag
         <p className="page-subtitle">Modification de : {agencyEvent.name}</p>
       </div>
 
-      <div className="page-content">
-        <AgencyEventForm mode="edit" agencyEvent={agencyEvent} />
-      </div>
+      <AgencyEventForm mode="edit" agencyEvent={agencyEvent} />
     </div>
   )
 }

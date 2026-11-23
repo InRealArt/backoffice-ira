@@ -1,5 +1,6 @@
 'use client'
 
+import { formKit } from '@/app/components/Forms/FormKit/FormKit'
 import { UserPlus } from 'lucide-react'
 
 interface TeamCreateTabsProps {
@@ -9,21 +10,18 @@ interface TeamCreateTabsProps {
 export default function TeamCreateTabs({ profileForm }: TeamCreateTabsProps) {
   return (
     <div>
-      <div
-        className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10"
-        style={{ marginBottom: 0 }}
-      >
+      <div className={formKit.tabBar}>
         <div
-          className="flex gap-0"
-          style={{ overflowX: 'auto', scrollbarWidth: 'none' }}
+          className={formKit.tabList}
           role="tablist"
           aria-label="Sections du nouveau membre d'équipe"
         >
           <button
+            id="tab-profile"
             role="tab"
             aria-selected={true}
             aria-controls="panel-profile"
-            className="flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap border-primary text-primary focus:outline-none"
+            className={`${formKit.tabBtn} ${formKit.tabBtnActive}`}
             type="button"
           >
             <UserPlus size={16} />

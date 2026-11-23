@@ -124,9 +124,9 @@ export default function CreateMemberForm() {
   }
   
   return (
-    <div className="page-content">
-      <div className="card">
-        <div className="card-body">
+    <div className="form-container">
+      <div className="form-card">
+        <div className="card-content">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Affichage de l'erreur d'unicité globale */}
             {uniqueError && (
