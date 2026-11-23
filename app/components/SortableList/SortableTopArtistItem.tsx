@@ -103,7 +103,7 @@ export default function SortableTopArtistItem({
       </div>
 
       {/* Order badge */}
-      <div className="flex-shrink-0 flex flex-col items-center justify-center w-9 h-9 rounded-full bg-primary text-white font-bold text-sm shadow-sm">
+      <div className="flex-shrink-0 flex flex-col items-center justify-center w-9 h-9 rounded-full ink-active font-bold text-sm shadow-sm">
         {item.order}
       </div>
 

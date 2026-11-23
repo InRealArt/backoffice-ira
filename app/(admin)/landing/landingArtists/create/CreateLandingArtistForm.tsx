@@ -735,7 +735,7 @@ export default function CreateLandingArtistForm({
                                 right: 0,
                                 bottom: 0,
                                 backgroundColor: artistsPage
-                                  ? "#4f46e5"
+                                  ? 'var(--color-primary)'
                                   : "#ccc",
                                 borderRadius: "34px",
                                 transition: "0.4s",
@@ -807,7 +807,7 @@ export default function CreateLandingArtistForm({
                                 right: 0,
                                 bottom: 0,
                                 backgroundColor: isFeatured
-                                  ? "#4f46e5"
+                                  ? 'var(--color-primary)'
                                   : "#ccc",
                                 borderRadius: "34px",
                                 transition: "0.4s",

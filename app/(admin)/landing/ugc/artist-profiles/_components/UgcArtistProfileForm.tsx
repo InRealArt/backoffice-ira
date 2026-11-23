@@ -780,8 +780,8 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
                                                 gap: '4px',
-                                                backgroundColor: '#e0e7ff',
-                                                color: '#3730a3',
+                                                backgroundColor: '#f4eee3',
+                                                color: '#5b4829',
                                                 borderRadius: '4px',
                                                 padding: '2px 8px',
                                                 fontSize: '0.8rem',
@@ -799,7 +799,7 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                                                     padding: 0,
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                    color: '#6366f1',
+                                                    color: 'var(--color-primary)',
                                                 }}
                                                 aria-label={`Supprimer le tag ${tag}`}
                                             >
@@ -1019,7 +1019,7 @@ export default function UgcArtistProfileForm({ profile, landingArtists }: UgcArt
                                                         height: '150px',
                                                         borderRadius: '8px',
                                                         overflow: 'hidden',
-                                                        border: '2px dashed #6366f1',
+                                                        border: '2px dashed var(--color-primary)',
                                                         background: '#111',
                                                     }}
                                                 >

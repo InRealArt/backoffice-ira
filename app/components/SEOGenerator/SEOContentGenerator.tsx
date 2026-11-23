@@ -1616,13 +1616,15 @@ const SEOContentGenerator = ({ value, onChange, initialData = {}, hideControls =
         }
         
         .btn-primary {
-          background-color: #6052ff;
-          color: white;
-          border: 1px solid white;
+          background-color: var(--btn-ink);
+          color: var(--btn-ink-inverse);
+          border: 1px solid var(--btn-ink);
         }
         
         .btn-primary:hover {
-          background-color: rgba(96, 82, 255, 0.9);
+          background-color: transparent;
+          color: var(--btn-ink);
+          border-color: var(--btn-line);
         }
         
         .btn-secondary {

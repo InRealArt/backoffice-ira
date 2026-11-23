@@ -264,7 +264,7 @@ export default function PresaleArtworkStatsModal({
                   <Bar
                     dataKey="viewCount"
                     name="Vues"
-                    fill="#6366f1"
+                    fill="#b89c72"
                     radius={[8, 8, 0, 0]}
                   />
                 </BarChart>

@@ -13,10 +13,11 @@ body.light {
   --sidemenu-width: 250px; /* Définition d'une variable pour la largeur du menu latéral */
 
   /* Couleurs en mode clair */
-  --color-primary: #6052ff;
-  --color-primary-dark: #4d3ee6;
-  --color-primary-light: #eef2ff;
-  --color-purple: #6052ff;
+  /* Le violet historique est remplacé par le doré du site corpo (accent de marque) */
+  --color-primary: #8a6f43;
+  --color-primary-dark: #725a35;
+  --color-primary-light: #f4eee3;
+  --color-purple: #8a6f43;
   --color-error: #dc2626;
   --color-error-dark: #b91c1c;
   --color-error-light: #f87171;
@@ -52,10 +53,10 @@ body.dark {
 
   /* Mode sombre : échelle d'élévation neutre (plus une surface est haute, plus elle est claire)
      canvas #0e0e10 < carte #161618 < surface relevée #1e1e21 < survol #26262a */
-  --color-primary: #8b7fff; /* violet éclairci : 6:1 sur les cartes */
-  --color-primary-dark: #6052ff;
-  --color-primary-light: rgba(139, 127, 255, 0.16); /* fond teinté (badges, sélection) */
-  --color-purple: #6052ff;
+  --color-primary: #c9ae84; /* doré éclairci : fort contraste sur les cartes sombres */
+  --color-primary-dark: #b89c72;
+  --color-primary-light: rgba(201, 174, 132, 0.16); /* fond teinté (badges, sélection) */
+  --color-purple: #c9ae84;
   --color-error: #f87171;
   --color-error-dark: #ef4444;
   --color-error-light: #fca5a5;
@@ -234,7 +235,7 @@ body.dark {
 .pagination-select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(138, 111, 67, 0.1);
 }
 
 .pagination-controls {
@@ -277,11 +278,9 @@ body.dark {
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  background-color: var(--btn-ink);
+  color: var(--btn-ink-inverse);
+  border-color: var(--btn-ink);
 }
 
 .pagination-btn:hover:not(:disabled)::before {
@@ -290,7 +289,7 @@ body.dark {
 
 .pagination-btn:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
+  box-shadow: 0 2px 6px rgba(138, 111, 67, 0.2);
 }
 
 .pagination-btn:disabled {
@@ -305,13 +304,13 @@ body.dark {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: white;
   border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 4px 12px rgba(138, 111, 67, 0.4);
   transform: translateY(-1px);
 }
 
 .pagination-btn-active:hover {
   background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
-  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.5);
+  box-shadow: 0 6px 16px rgba(138, 111, 67, 0.5);
   transform: translateY(-2px);
 }
 
@@ -425,7 +424,7 @@ body.dark .pagination-select:hover {
 .dark-theme .pagination-select:focus,
 body.dark .pagination-select:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(138, 111, 67, 0.2);
 }
 
 .dark-theme .pagination-btn,
@@ -440,7 +439,7 @@ body.dark .pagination-btn:hover:not(:disabled) {
   background-color: var(--color-primary);
   color: white;
   border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px rgba(138, 111, 67, 0.4);
 }
 
 .dark-theme .pagination-btn:disabled,
@@ -455,13 +454,13 @@ body.dark .pagination-btn-active {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: white;
   border-color: var(--color-primary);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.5);
+  box-shadow: 0 4px 12px rgba(138, 111, 67, 0.5);
 }
 
 .dark-theme .pagination-btn-active:hover,
 body.dark .pagination-btn-active:hover {
   background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.6);
+  box-shadow: 0 6px 16px rgba(138, 111, 67, 0.6);
 }
 
 .dark-theme .pagination-btn-prev,
@@ -935,6 +934,12 @@ body.dark {
     color: var(--color-accent);
   }
 
+  /* Pastille / segment actif : encre inversée (remplace les aplats violets pleins) */
+  :root .ink-active {
+    background-color: var(--btn-ink);
+    color: var(--btn-ink-inverse);
+  }
+
   /* Button Layout */
   .btn-full-width {
     @apply w-full;
@@ -1012,14 +1017,9 @@ body.dark {
     @apply p-4xl text-center text-text-tertiary;
   }
 
-  /* Collection Header Background */
+  /* Collection Header Background : fond neutre (le dégradé violet est retiré) */
   .collection-header-bg {
-    background: linear-gradient(to right, rgb(237, 233, 254), rgb(243, 240, 255), rgba(250, 245, 255, 0.7));
-  }
-
-  .dark .collection-header-bg,
-  .dark-theme .collection-header-bg {
-    background: linear-gradient(to right, rgba(30, 27, 58, 0.7), rgba(37, 33, 64, 0.5), rgba(45, 40, 80, 0.3));
+    background: var(--color-background-light);
   }
 
   /* Responsive Helpers */

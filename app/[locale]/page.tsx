@@ -98,7 +98,7 @@ export default function Main() {
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => router.push("/sign-in")}
-                className="px-6 py-2 bg-purple text-white border border-white rounded-lg hover:bg-purple/90 transition-colors font-medium"
+                className="btn btn-primary btn-medium"
               >
                 {t("signInButton")}
               </button>

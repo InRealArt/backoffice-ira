@@ -714,17 +714,6 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
             onClick={handleDuplicateClick}
             className="btn btn-medium"
             disabled={isSubmitting || isDuplicating}
-            style={{
-              backgroundColor: "#8b5cf6",
-              color: "white",
-              border: "none",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#7c3aed";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "#8b5cf6";
-            }}
           >
             {isDuplicating ? "Duplication en cours..." : "Dupliquer l'artiste"}
           </button>
@@ -764,22 +753,9 @@ export default function ArtistEditForm({ artist }: ArtistEditFormProps) {
               Annuler
             </button>
             <button
-              className="px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="btn btn-primary btn-medium"
               onClick={handleDuplicateConfirm}
               disabled={isDuplicating}
-              style={{
-                backgroundColor: "#8b5cf6",
-              }}
-              onMouseEnter={(e) => {
-                if (!isDuplicating) {
-                  e.currentTarget.style.backgroundColor = "#7c3aed";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isDuplicating) {
-                  e.currentTarget.style.backgroundColor = "#8b5cf6";
-                }
-              }}
             >
               {isDuplicating ? "Duplication en cours..." : "Dupliquer"}
             </button>
