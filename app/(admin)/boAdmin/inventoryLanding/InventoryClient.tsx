@@ -11,6 +11,7 @@ import {
   Badge,
   Column,
   ActionButton,
+  FilterPanel,
 } from "../../../components/PageLayout/index";
 import { updateLandingArtistOnboardingBo } from "@/lib/actions/landing-artist-actions";
 import { InventoryFilter } from "./InventoryFilter";
@@ -241,22 +242,9 @@ export default function InventoryClient({ artists }: InventoryClientProps) {
         }
       />
       <PageContent>
-        <div className="mb-6">
-          <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                  Filtrer les artistes
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Recherchez par nom ou prénom
-                </p>
-              </div>
-            </div>
-            <InventoryFilter />
-          </div>
-        </div>
+        <FilterPanel title="Filtrer les artistes" description="Recherchez par nom ou prénom">
+          <InventoryFilter />
+        </FilterPanel>
         <DataTable
           data={artists}
           columns={columns}

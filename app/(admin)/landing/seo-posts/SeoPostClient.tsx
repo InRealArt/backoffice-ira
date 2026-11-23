@@ -15,7 +15,7 @@ import {
   EmptyState,
   ActionButton,
   Column,
-  Badge
+  Badge, FilterPanel
 } from '../../../components/PageLayout/index'
 import { SeoPostFilter } from './SeoPostFilter'
 import { seoPostsSearchParams } from './searchParams'
@@ -252,22 +252,9 @@ export default function SeoPostClient({ seoPosts, languages, categories }: SeoPo
       />
       
       <PageContent>
-        <div className="mb-6">
-          <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 hover:opacity-100 transition-opacity duration-300" />
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                  Filtrer les articles
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Recherchez par titre, langue ou catégorie
-                </p>
-              </div>
-            </div>
-            <SeoPostFilter languages={languages} categories={categories} />
-          </div>
-        </div>
+        <FilterPanel title="Filtrer les articles" description="Recherchez par titre, langue ou catégorie">
+          <SeoPostFilter languages={languages} categories={categories} />
+        </FilterPanel>
         <DataTable
           data={sortedSeoPosts}
           columns={columns}

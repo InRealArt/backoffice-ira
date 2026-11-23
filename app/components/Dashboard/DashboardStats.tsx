@@ -62,7 +62,7 @@ export function DashboardStats({
           title={t("admin.artistsCount")}
           value={visibleArtistsCount}
           icon={Users}
-          color="#3b82f6"
+          color="#6052ff"
           isLoading={isLoadingArtistsCount}
         />
       </div>
@@ -75,7 +75,7 @@ export function DashboardStats({
         title={t("presale.artworksCount")}
         value={presaleArtworkCount}
         icon={Package}
-        color="#3b82f6"
+        color="#6052ff"
         isLoading={isLoadingPresaleCount}
         buttonTitle={t("physical.viewArtworks")}
         buttonRoute="/art/presale-artworks"
