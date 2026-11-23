@@ -90,7 +90,8 @@ export function MetricCard({
             <div className="metric-loading-bar"></div>
           </div>
         ) : (
-          <span className="metric-value" style={{ color }}>
+          // Valeur en couleur de texte (contraste AA garanti dans les deux thèmes) ; la teinte reste sur l'icône
+          <span className="metric-value">
             {typeof shown === "number" ? shown.toLocaleString(locale) : shown}
           </span>
         )}
@@ -106,7 +107,11 @@ export function MetricCard({
         href={buttonRoute}
         className="metric-card metric-card-link"
         style={style}
-        aria-label={`${title} : ${typeof value === "number" ? value.toLocaleString(locale) : value}. ${buttonTitle ?? t("viewDetails")}`}
+        aria-label={
+          isLoading
+            ? `${title}. ${t("userInfo.loading")}`
+            : `${title} : ${typeof value === "number" ? value.toLocaleString(locale) : value}. ${buttonTitle ?? t("viewDetails")}`
+        }
       >
         {content}
       </Link>
