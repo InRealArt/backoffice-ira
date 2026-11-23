@@ -14,7 +14,8 @@
 .filter-section {
   margin: $spacing-lg 0;
   padding: $spacing-lg;
-  background-color: $color-background-white;
+  background-color: var(--color-background-white, #{$color-background-white});
+  border: 1px solid var(--color-border, transparent);
   border-radius: $border-radius-md;
   box-shadow: $shadow-sm;
 
@@ -32,7 +33,7 @@
 
   .filter-label {
     font-weight: $font-weight-medium;
-    color: $color-text-secondary;
+    color: var(--color-text-secondary, #{$color-text-secondary});
     min-width: 120px;
   }
 
@@ -45,11 +46,11 @@
   .filter-select {
     width: 100%;
     padding: $spacing-sm $spacing-md;
-    border: 1px solid $color-border-input;
+    border: 1px solid var(--color-border-input, #{$color-border-input});
     border-radius: $border-radius-sm;
-    background-color: $color-background-white;
+    background-color: var(--color-background-white, #{$color-background-white});
     font-size: $font-size-sm;
-    color: $color-text-primary;
+    color: var(--color-text-primary, #{$color-text-primary});
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -79,11 +80,11 @@
   .search-input {
     width: 100%;
     padding: $spacing-sm $spacing-lg $spacing-sm $spacing-md;
-    border: 1px solid $color-border-input;
+    border: 1px solid var(--color-border-input, #{$color-border-input});
     border-radius: $border-radius-sm;
-    background-color: $color-background-white;
+    background-color: var(--color-background-white, #{$color-background-white});
     font-size: $font-size-sm;
-    color: $color-text-primary;
+    color: var(--color-text-primary, #{$color-text-primary});
 
     &:focus {
       outline: none;
@@ -172,7 +173,7 @@
   }
 
   .spinner-message {
-    color: $color-text-secondary;
+    color: var(--color-text-secondary, #{$color-text-secondary});
     margin: 0;
     font-size: 0.95rem;
   }
@@ -234,11 +235,11 @@
 
 // Classes utilitaires pour le texte
 .text-primary {
-  color: $color-text-primary;
+  color: var(--color-text-primary, #{$color-text-primary});
 }
 
 .text-secondary {
-  color: $color-text-secondary;
+  color: var(--color-text-secondary, #{$color-text-secondary});
 }
 
 .text-muted {
@@ -328,7 +329,7 @@
 }
 
 .modal-container {
-  background-color: $color-background-white;
+  background-color: var(--color-background-white, #{$color-background-white});
   border-radius: $border-radius-md;
   box-shadow: $shadow-lg;
   width: 100%;
@@ -350,7 +351,7 @@
     margin: 0;
     font-size: $font-size-lg;
     font-weight: $font-weight-semibold;
-    color: $color-text-primary;
+    color: var(--color-text-primary, #{$color-text-primary});
   }
 }
 
@@ -359,10 +360,10 @@
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: $color-text-secondary;
+  color: var(--color-text-secondary, #{$color-text-secondary});
 
   &:hover {
-    color: $color-text-primary;
+    color: var(--color-text-primary, #{$color-text-primary});
   }
 }
 
@@ -1023,11 +1024,11 @@
   flex-wrap: wrap;
   gap: $spacing-sm;
   padding: $spacing-sm;
-  border: 1px solid $color-border-input;
+  border: 1px solid var(--color-border-input, #{$color-border-input});
   border-radius: $border-radius-sm;
   min-height: 42px;
   cursor: text;
-  background-color: $color-background-white;
+  background-color: var(--color-background-white, #{$color-background-white});
   transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus-within {
@@ -1102,7 +1103,7 @@
   outline: none;
   font-size: $font-size-sm;
   background: transparent;
-  color: $color-text-primary;
+  color: var(--color-text-primary, #{$color-text-primary});
 
   &::placeholder {
     color: $color-text-muted;
@@ -1135,9 +1136,9 @@
   font-family: monospace;
   font-size: $font-size-sm;
   padding: $spacing-md $spacing-lg;
-  border: 1px solid $color-border-input;
+  border: 1px solid var(--color-border-input, #{$color-border-input});
   background-color: $color-background-light;
-  color: $color-text-primary;
+  color: var(--color-text-primary, #{$color-text-primary});
   border-radius: $border-radius-sm 0 0 $border-radius-sm;
 
   &:read-only {

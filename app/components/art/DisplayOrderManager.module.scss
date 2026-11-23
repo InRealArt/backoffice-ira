@@ -1,3 +1,5 @@
+@use "../../styles/button-mixins" as *;
+
 .displayOrderManager {
   background-color: #fff;
   border-radius: 12px;
@@ -28,29 +30,8 @@
 }
 
 .backButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  background-color: #f3f4f6;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  @include ink-button-icon(36px);
   flex-shrink: 0;
-
-  &:hover {
-    background-color: #e5e7eb;
-    border-color: #d1d5db;
-    color: #111827;
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
 }
 
 .title {
@@ -74,28 +55,8 @@
 }
 
 .resetButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background-color: #f3f4f6;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover:not(:disabled) {
-    background-color: #e5e7eb;
-    border-color: #d1d5db;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+  @include ink-button;
+  @include ink-button-small;
 }
 
 .content {
@@ -155,28 +116,9 @@
   border-bottom-color: var(--color-border, #374151);
 }
 
-:global(.dark-theme) .backButton,
-:global(body.dark) .backButton {
-  background-color: var(--color-background-light, #374151);
-  color: var(--color-text-primary, #f9fafb);
-  border-color: var(--color-border, #4b5563);
 
-  &:hover {
-    background-color: var(--color-background-hover, #4b5563);
-    color: var(--color-text-primary, #f9fafb);
-  }
-}
 
-:global(.dark-theme) .resetButton,
-:global(body.dark) .resetButton {
-  background-color: var(--color-background-light, #374151);
-  color: var(--color-text-primary, #f9fafb);
-  border-color: var(--color-border, #4b5563);
 
-  &:hover:not(:disabled) {
-    background-color: var(--color-background-hover, #4b5563);
-  }
-}
 
 // Responsive
 @media (max-width: 768px) {
